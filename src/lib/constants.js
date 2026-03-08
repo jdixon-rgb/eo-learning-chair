@@ -1,4 +1,5 @@
-// Fiscal year months (August = 0 through July = 11)
+// Fiscal year months (August = 0 through May = 9)
+// EO FY ends June 30. Last learning event is May (Gratitude Gala).
 export const FISCAL_MONTHS = [
   { index: 0, name: 'August', shortName: 'Aug', calendarMonth: 8 },
   { index: 1, name: 'September', shortName: 'Sep', calendarMonth: 9 },
@@ -10,11 +11,9 @@ export const FISCAL_MONTHS = [
   { index: 7, name: 'March', shortName: 'Mar', calendarMonth: 3 },
   { index: 8, name: 'April', shortName: 'Apr', calendarMonth: 4 },
   { index: 9, name: 'May', shortName: 'May', calendarMonth: 5 },
-  { index: 10, name: 'June', shortName: 'Jun', calendarMonth: 6 },
-  { index: 11, name: 'July', shortName: 'Jul', calendarMonth: 7 },
 ]
 
-// Strategic importance for each month
+// Strategic importance for each month (Aug=0 through May=9)
 export const STRATEGIC_MAP = {
   0: { label: 'KICKOFF', color: 'bg-eo-coral', textColor: 'text-white', description: 'Marquee name. Set the tone. Get members excited.' },
   1: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Build on kickoff energy.' },
@@ -25,9 +24,7 @@ export const STRATEGIC_MAP = {
   6: { label: 'RENEWAL', color: 'bg-eo-coral', textColor: 'text-white', description: 'Critical retention period. Deliver value.' },
   7: { label: 'SUSTAIN', color: 'bg-eo-blue', textColor: 'text-white', description: 'Maintain energy post-renewal.' },
   8: { label: 'SUSTAIN', color: 'bg-eo-blue', textColor: 'text-white', description: 'Spring momentum.' },
-  9: { label: 'SUSTAIN', color: 'bg-eo-blue', textColor: 'text-white', description: 'Keep delivering.' },
-  10: { label: 'CLOSE', color: 'bg-eo-coral', textColor: 'text-white', description: 'End strong. Memorable finish.' },
-  11: { label: 'CLOSE', color: 'bg-eo-coral', textColor: 'text-white', description: 'Final event. Leave them wanting more.' },
+  9: { label: 'GRATITUDE GALA', color: 'bg-eo-coral', textColor: 'text-white', description: 'Final event. Celebrate the year. Leave them grateful.' },
 }
 
 // Speaker pipeline stages
