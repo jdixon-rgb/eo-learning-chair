@@ -1,0 +1,59 @@
+import { NavLink } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  CalendarDays,
+  DollarSign,
+  Settings,
+} from 'lucide-react'
+
+const navItems = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+  { to: '/speakers', icon: Users, label: 'Speakers' },
+  { to: '/events', icon: CalendarDays, label: 'Events' },
+  { to: '/budget', icon: DollarSign, label: 'Budget' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
+]
+
+export default function Sidebar() {
+  return (
+    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-eo-navy text-white flex flex-col z-30">
+      {/* Logo / Title */}
+      <div className="p-6 border-b border-white/10">
+        <h1 className="text-lg font-bold tracking-tight">EO Learning Chair</h1>
+        <p className="text-xs text-white/50 mt-1">Command Center</p>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1">
+        {navItems.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-eo-blue text-white'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-white/10">
+        <div className="text-xs text-white/40">
+          <p>EO Arizona</p>
+          <p className="mt-1">FY 2026–2027</p>
+        </div>
+      </div>
+    </aside>
+  )
+}
