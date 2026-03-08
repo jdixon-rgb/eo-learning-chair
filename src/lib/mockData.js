@@ -150,6 +150,25 @@ export const mockVenues = [
 export const mockSpeakers = [
   // ─── BOOKED / IN PROGRESS ───
   {
+    id: 'spk-salim',
+    chapter_id: mockChapter.id,
+    name: 'Salim Ismail',
+    topic: 'Exponential Organizations — AI, Disruption & the Future',
+    bio: 'Author of "Exponential Organizations." Former Executive Director of Singularity University. Leading voice on how AI and exponential technologies are transforming business and society.',
+    fee_range_low: 30000,
+    fee_range_high: 50000,
+    contact_email: '',
+    contact_phone: '',
+    agency_name: '',
+    agency_contact: '',
+    contact_method: 'direct',
+    pipeline_stage: 'outreach',
+    fit_score: 10,
+    notes: 'KICKOFF SPEAKER. AI-themed kickoff for the "Every Day" theme — every day the world is changing exponentially. Salim shows us how to ride the wave instead of being swept away.',
+    routing_flexibility: false,
+    multi_chapter_interest: true,
+  },
+  {
     id: 'spk-erik',
     chapter_id: mockChapter.id,
     name: 'Erik Weihenmayer',
@@ -162,9 +181,9 @@ export const mockSpeakers = [
     agency_name: 'Chartwell Speakers',
     agency_contact: '',
     contact_method: 'agency',
-    pipeline_stage: 'outreach',
+    pipeline_stage: 'passed',
     fit_score: 9,
-    notes: 'KICKOFF SPEAKER. Sent message via Chartwell Speakers. Blindfold experience: attendees seated by ushers at round tables with unknown dinner partners and finger food. When blindfolds removed, room is pitch black for intro remarks; lights gently dialed up as first slide appears.',
+    notes: 'Originally planned for August kickoff. Replaced with Salim Ismail (AI-themed kickoff). Blindfold experience concept shelved. Could be revisited for a future month.',
     routing_flexibility: false,
     multi_chapter_interest: false,
   },
@@ -406,23 +425,23 @@ export const mockEvents = [
   {
     id: 'evt-aug',
     chapter_id: mockChapter.id,
-    title: 'CHANGE: Seeing the Impossible',
+    title: 'CHANGE: The Exponential Future',
     event_date: '2026-08-13',
     event_time: '18:00',
     month_index: 0,
-    event_type: 'experiential',
+    event_type: 'traditional',
     strategic_importance: 'kickoff',
-    theme_connection: 'CHANGE — What would you do if you couldn\'t see? Erik shows us that every day is a chance to face the impossible and choose to climb anyway.',
+    theme_connection: 'CHANGE — Every day the world is changing exponentially. Salim Ismail shows us how to harness AI and exponential tech to transform our businesses and lives.',
     status: 'planning',
-    speaker_id: 'spk-erik',
+    speaker_id: 'spk-salim',
     venue_id: 'venue-ballroom',
     day_chair_name: '',
     day_chair_phone: '',
-    expected_attendance: 120,
+    expected_attendance: 150,
     actual_attendance: null,
     nps_score: null,
     nps_top_takeaway: null,
-    notes: 'KICKOFF EVENT. Blindfold experience: attendees seated by ushers at round tables with unknown dinner partners and finger food. Goal: discover more about your table mates. When blindfolds removed, room is pitch black for intro remarks; lights gently dialed up as first slide appears.',
+    notes: 'KICKOFF EVENT. AI-themed kickoff with Salim Ismail. Set the tone for the "Every Day" year — the world changes every day, and exponential thinking is how we stay ahead.',
   },
   {
     id: 'evt-sep',
@@ -618,11 +637,11 @@ export const mockEvents = [
 // ── BUDGET ITEMS ────────────────────────────────────────
 
 export const mockBudgetItems = [
-  // August — Erik Weihenmayer
-  { id: uuid(), event_id: 'evt-aug', category: 'speaker_fee', description: 'Erik Weihenmayer keynote', estimated_amount: 40000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-aug', category: 'food_beverage', description: 'Blindfold dinner experience', estimated_amount: 15000, actual_amount: null },
+  // August — Salim Ismail (AI Kickoff)
+  { id: uuid(), event_id: 'evt-aug', category: 'speaker_fee', description: 'Salim Ismail keynote', estimated_amount: 40000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-aug', category: 'food_beverage', description: 'Kickoff dinner', estimated_amount: 15000, actual_amount: null },
   { id: uuid(), event_id: 'evt-aug', category: 'venue_rental', description: 'Ballroom rental', estimated_amount: 5000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-aug', category: 'av_production', description: 'Full AV + lighting for blindfold reveal', estimated_amount: 8000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-aug', category: 'av_production', description: 'AV + screens', estimated_amount: 5000, actual_amount: null },
 
   // September — Brad Montague
   { id: uuid(), event_id: 'evt-sep', category: 'speaker_fee', description: 'Brad Montague keynote', estimated_amount: 15000, actual_amount: null },
@@ -692,6 +711,6 @@ export const mockContractChecklists = [
     cancellation_terms: false,
     recording_rights: false,
     contract_signed: false,
-    contract_notes: 'Chartwell Speakers — awaiting response.',
+    contract_notes: 'Salim Ismail — awaiting response for August kickoff.',
   },
 ]
