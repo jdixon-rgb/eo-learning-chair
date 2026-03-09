@@ -32,12 +32,13 @@ export function StoreProvider({ children }) {
   const [budgetItems, setBudgetItems] = useState(saved?.budgetItems ?? mockBudgetItems)
   const [contractChecklists, setContractChecklists] = useState(saved?.contractChecklists ?? mockContractChecklists)
   const [saps, setSaps] = useState(saved?.saps ?? mockSAPs)
+  const [scenarios, setScenarios] = useState(saved?.scenarios ?? [])
   const [userRole] = useState('learning_chair')
 
   // Persist every state change to localStorage
   useEffect(() => {
-    persistState({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps })
-  }, [chapter, speakers, venues, events, budgetItems, contractChecklists, saps])
+    persistState({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
+  }, [chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios])
 
   // Reset all data back to mock defaults (available via Settings)
   const resetToDefaults = useCallback(() => {
@@ -48,6 +49,7 @@ export function StoreProvider({ children }) {
     setBudgetItems(mockBudgetItems)
     setContractChecklists(mockContractChecklists)
     setSaps(mockSAPs)
+    setScenarios([])
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
@@ -158,6 +160,21 @@ export function StoreProvider({ children }) {
     })))
   }, [])
 
+  // Scenario operations
+  const addScenario = useCallback((scenario) => {
+    const newScenario = { ...scenario, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    setScenarios(prev => [...prev, newScenario])
+    return newScenario
+  }, [])
+
+  const updateScenario = useCallback((id, updates) => {
+    setScenarios(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+  }, [])
+
+  const deleteScenario = useCallback((id) => {
+    setScenarios(prev => prev.filter(s => s.id !== id))
+  }, [])
+
   // Chapter operations
   const updateChapter = useCallback((updates) => {
     setChapter(prev => ({ ...prev, ...updates }))
@@ -177,6 +194,7 @@ export function StoreProvider({ children }) {
     budgetItems,
     contractChecklists,
     saps,
+    scenarios,
     userRole,
 
     // Speaker ops
@@ -207,6 +225,11 @@ export function StoreProvider({ children }) {
     addSAP,
     updateSAP,
     deleteSAP,
+
+    // Scenario ops
+    addScenario,
+    updateScenario,
+    deleteScenario,
 
     // Chapter ops
     updateChapter,

@@ -8,6 +8,7 @@ import EventsPage from '@/pages/EventsPage'
 import EventDetailPage from '@/pages/EventDetailPage'
 import VenuesPage from '@/pages/VenuesPage'
 import BudgetPage from '@/pages/BudgetPage'
+import ScenarioPage from '@/pages/ScenarioPage'
 import SettingsPage from '@/pages/SettingsPage'
 import MemberCalendarPage from '@/pages/MemberCalendarPage'
 
@@ -24,6 +25,7 @@ function App() {
             <Route path="/events/:id" element={<EventDetailPage />} />
             <Route path="/venues" element={<VenuesPage />} />
             <Route path="/budget" element={<BudgetPage />} />
+            <Route path="/scenarios" element={<ScenarioPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           {/* Member-facing calendar (separate layout, no sidebar) */}

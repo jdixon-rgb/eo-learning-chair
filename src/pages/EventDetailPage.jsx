@@ -16,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   ArrowLeft, Calendar, MapPin, Users, DollarSign, FileText, Megaphone,
   Star, Plus, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
-  Handshake, Building2,
+  Handshake, Building2, Lock, LockOpen, Pencil,
 } from 'lucide-react'
 
 export default function EventDetailPage() {
@@ -28,6 +28,9 @@ export default function EventDetailPage() {
     addBudgetItem, updateBudgetItem, deleteBudgetItem,
     getOrCreateChecklist, updateChecklist,
   } = useStore()
+
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
 
   const event = events.find(e => e.id === id)
   if (!event) {
@@ -65,7 +68,50 @@ export default function EventDetailPage() {
                 {month.name} · {strategic.label}
               </Badge>
             )}
-            <h1 className="text-2xl font-bold">{event.title}</h1>
+            <div className="flex items-center gap-2 group">
+              {editingTitle && !event.title_locked ? (
+                <input
+                  className="text-2xl font-bold bg-transparent border-b-2 border-eo-blue outline-none flex-1 min-w-0"
+                  value={titleDraft}
+                  onChange={e => setTitleDraft(e.target.value)}
+                  onBlur={() => {
+                    if (titleDraft.trim()) updateEvent(id, { title: titleDraft.trim() })
+                    setEditingTitle(false)
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') e.target.blur()
+                    if (e.key === 'Escape') { setTitleDraft(event.title); setEditingTitle(false) }
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  className={`text-2xl font-bold ${!event.title_locked ? 'cursor-text hover:text-eo-blue/80 transition-colors' : ''}`}
+                  onClick={() => {
+                    if (!event.title_locked) {
+                      setTitleDraft(event.title)
+                      setEditingTitle(true)
+                    }
+                  }}
+                >
+                  {event.title}
+                </h1>
+              )}
+              {!editingTitle && !event.title_locked && (
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
+              <button
+                onClick={() => updateEvent(id, { title_locked: !event.title_locked })}
+                className={`p-1 rounded-md transition-colors cursor-pointer ${
+                  event.title_locked
+                    ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                    : 'text-muted-foreground hover:text-eo-blue hover:bg-accent'
+                }`}
+                title={event.title_locked ? 'Title is locked — click to unlock' : 'Click to lock title'}
+              >
+                {event.title_locked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
+              </button>
+            </div>
             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
               {event.event_date && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{formatDate(event.event_date)}</span>}
               {eventType && <span style={{ color: eventType.color }}>{eventType.label}</span>}

@@ -6,6 +6,7 @@ import {
   CalendarDays,
   MapPin,
   DollarSign,
+  Shuffle,
   Settings,
   Globe,
   X,
@@ -18,6 +19,7 @@ const navItems = [
   { to: '/events', icon: CalendarDays, label: 'Events' },
   { to: '/venues', icon: MapPin, label: 'Venues' },
   { to: '/budget', icon: DollarSign, label: 'Budget' },
+  { to: '/scenarios', icon: Shuffle, label: 'Scenarios' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
