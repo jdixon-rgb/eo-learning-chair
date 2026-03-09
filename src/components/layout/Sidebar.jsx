@@ -4,8 +4,10 @@ import {
   Calendar,
   Users,
   CalendarDays,
+  MapPin,
   DollarSign,
   Settings,
+  Globe,
 } from 'lucide-react'
 
 const navItems = [
@@ -13,6 +15,7 @@ const navItems = [
   { to: '/calendar', icon: Calendar, label: 'Year Arc' },
   { to: '/speakers', icon: Users, label: 'Speakers' },
   { to: '/events', icon: CalendarDays, label: 'Events' },
+  { to: '/venues', icon: MapPin, label: 'Venues' },
   { to: '/budget', icon: DollarSign, label: 'Budget' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
@@ -46,6 +49,17 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Member Calendar Link */}
+      <div className="px-4 pb-2">
+        <NavLink
+          to="/member-calendar"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+        >
+          <Globe className="h-3.5 w-3.5" />
+          Member Calendar Preview
+        </NavLink>
+      </div>
 
       {/* Footer */}
       <div className="p-4 border-t border-white/10">
