@@ -36,6 +36,16 @@ export const PIPELINE_STAGES = [
   { id: 'confirmed', label: 'Confirmed', color: '#22c55e' },
 ]
 
+// Venue pipeline stages
+export const VENUE_PIPELINE_STAGES = [
+  { id: 'researching', label: 'Researching', color: '#64648c' },
+  { id: 'quote_requested', label: 'Quote Requested', color: '#3d46f2' },
+  { id: 'site_visit', label: 'Site Visit', color: '#8b5cf6' },
+  { id: 'negotiating', label: 'Negotiating', color: '#fa653c' },
+  { id: 'contract', label: 'Contract', color: '#ff346e' },
+  { id: 'confirmed', label: 'Confirmed', color: '#22c55e' },
+]
+
 // Event types (The Four Buckets)
 export const EVENT_TYPES = [
   { id: 'traditional', label: 'Traditional Learning', icon: 'GraduationCap', color: '#3d46f2' },

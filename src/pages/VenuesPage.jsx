@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
-import { AV_QUALITY } from '@/lib/constants'
+import { VENUE_PIPELINE_STAGES, AV_QUALITY } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Plus, Search, MapPin, Users, DollarSign, Volume2, Utensils,
-  Phone, Mail, Trash2, Building2, Pencil,
+  Phone, Mail, Trash2, Building2, GripVertical, Star,
+  Sparkles, Loader2, CalendarDays, Image as ImageIcon,
 } from 'lucide-react'
 
 const VENUE_TYPES = [
@@ -30,6 +31,36 @@ const emptyForm = {
   notes: '', contact_name: '', contact_email: '', contact_phone: '',
   fb_notes: '', fb_estimated_cost: '', fb_vendor: '',
   parking_notes: '', setup_notes: '',
+  description: '', image_url: '', staff_rating: 0, pipeline_stage: 'researching',
+}
+
+// ── Star Rating Component ──────────────────────────────────
+function StarRating({ value, onChange, size = 'sm', readonly = false }) {
+  const [hover, setHover] = useState(0)
+  const sizeClass = size === 'sm' ? 'h-3.5 w-3.5' : size === 'md' ? 'h-5 w-5' : 'h-4 w-4'
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(star => (
+        <button
+          key={star}
+          type="button"
+          disabled={readonly}
+          className={`${readonly ? '' : 'cursor-pointer hover:scale-110'} transition-transform`}
+          onMouseEnter={() => !readonly && setHover(star)}
+          onMouseLeave={() => !readonly && setHover(0)}
+          onClick={() => !readonly && onChange?.(star === value ? 0 : star)}
+        >
+          <Star
+            className={`${sizeClass} ${
+              star <= (hover || value)
+                ? 'text-amber-400 fill-amber-400'
+                : 'text-gray-200'
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  )
 }
 
 export default function VenuesPage() {
@@ -38,13 +69,10 @@ export default function VenuesPage() {
   const [editVenue, setEditVenue] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [search, setSearch] = useState('')
-  const [viewMode, setViewMode] = useState('cards')
-
-  const filteredVenues = venues.filter(v =>
-    v.name.toLowerCase().includes(search.toLowerCase()) ||
-    v.address?.toLowerCase().includes(search.toLowerCase()) ||
-    v.venue_type?.toLowerCase().includes(search.toLowerCase())
-  )
+  const [viewMode, setViewMode] = useState('pipeline') // pipeline or table
+  const [dragVenue, setDragVenue] = useState(null)
+  const [lookupLoading, setLookupLoading] = useState(false)
+  const [lookupError, setLookupError] = useState(null)
 
   // Map venue → events
   const venueEventMap = {}
@@ -55,6 +83,22 @@ export default function VenuesPage() {
     }
   })
 
+  // Default missing pipeline_stage to 'researching' so older saved venues still appear
+  const normalizedVenues = venues.map(v => ({
+    ...v,
+    pipeline_stage: v.pipeline_stage || 'researching',
+    staff_rating: v.staff_rating || null,
+  }))
+
+  const filteredVenues = normalizedVenues.filter(v =>
+    v.pipeline_stage !== 'passed' &&
+    (v.name.toLowerCase().includes(search.toLowerCase()) ||
+     v.address?.toLowerCase().includes(search.toLowerCase()) ||
+     v.venue_type?.toLowerCase().includes(search.toLowerCase()))
+  )
+
+  const passedVenues = normalizedVenues.filter(v => v.pipeline_stage === 'passed')
+
   const handleSubmit = () => {
     if (!form.name) return
     const data = {
@@ -63,6 +107,7 @@ export default function VenuesPage() {
       base_rental_cost: form.base_rental_cost ? parseFloat(form.base_rental_cost) : null,
       av_cost_estimate: form.av_cost_estimate ? parseFloat(form.av_cost_estimate) : null,
       fb_estimated_cost: form.fb_estimated_cost ? parseFloat(form.fb_estimated_cost) : null,
+      staff_rating: form.staff_rating || null,
     }
     if (editVenue) {
       updateVenue(editVenue.id, data)
@@ -93,34 +138,200 @@ export default function VenuesPage() {
       fb_vendor: venue.fb_vendor || '',
       parking_notes: venue.parking_notes || '',
       setup_notes: venue.setup_notes || '',
+      description: venue.description || '',
+      image_url: venue.image_url || '',
+      staff_rating: venue.staff_rating || 0,
+      pipeline_stage: venue.pipeline_stage || 'researching',
     })
+    setLookupError(null)
     setShowForm(true)
   }
 
   const handleDelete = (venue) => {
     const linkedEvents = venueEventMap[venue.id] || []
     const msg = linkedEvents.length > 0
-      ? `Delete "${venue.name}"? It's linked to ${linkedEvents.length} event(s): ${linkedEvents.map(e => e.title).join(', ')}. The events will keep their data but lose the venue link.`
+      ? `Delete "${venue.name}"? It's linked to ${linkedEvents.length} event(s). Events will keep their data but lose the venue link.`
       : `Delete "${venue.name}"?`
     if (window.confirm(msg)) {
-      // Clear venue_id from linked events
-      linkedEvents.forEach(evt => {
-        updateEvent(evt.id, { venue_id: null })
-      })
+      linkedEvents.forEach(evt => updateEvent(evt.id, { venue_id: null }))
       deleteVenue(venue.id)
     }
   }
 
+  // ── Auto-Lookup ────────────────────────────────────────────
+  const handleLookup = async () => {
+    if (!form.name) return
+    setLookupLoading(true)
+    setLookupError(null)
+    try {
+      const res = await fetch('/api/venues/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.name, location: 'Phoenix/Scottsdale, Arizona' }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Lookup failed' }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      const data = await res.json()
+      setForm(prev => ({
+        ...prev,
+        address: data.address || data.google_verified_address || prev.address,
+        description: data.description || prev.description,
+        venue_type: data.category || prev.venue_type,
+        capacity: data.capacity_estimate || prev.capacity,
+        image_url: data.image_url || prev.image_url,
+      }))
+    } catch (e) {
+      setLookupError(e.message)
+    } finally {
+      setLookupLoading(false)
+    }
+  }
+
+  // ── Drag & Drop ────────────────────────────────────────────
+  const handleDragStart = (venue) => setDragVenue(venue)
+  const handleDragOver = (e) => e.preventDefault()
+  const handleDrop = (stageId) => {
+    if (dragVenue) {
+      updateVenue(dragVenue.id, { pipeline_stage: stageId })
+      setDragVenue(null)
+    }
+  }
+
   const getVenueTypeLabel = (id) => VENUE_TYPES.find(t => t.id === id)?.label || id
+
+  // ── Venue Card (Pipeline Kanban) ───────────────────────────
+  const VenueCard = ({ venue }) => {
+    const linkedEvents = venueEventMap[venue.id] || []
+    return (
+      <div
+        draggable
+        onDragStart={() => handleDragStart(venue)}
+        className="rounded-lg border bg-white shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing overflow-hidden"
+        onClick={() => openEdit(venue)}
+      >
+        {/* Image or Type Banner */}
+        {venue.image_url ? (
+          <div className="h-24 bg-gray-100 relative overflow-hidden">
+            <img
+              src={venue.image_url}
+              alt={venue.name}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.style.display = 'none' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute bottom-1.5 left-2.5 right-2.5 flex items-center justify-between">
+              <span className="text-[10px] font-medium text-white/90">{getVenueTypeLabel(venue.venue_type)}</span>
+              {venue.capacity && (
+                <span className="text-[10px] text-white/80 flex items-center gap-0.5">
+                  <Users className="h-2.5 w-2.5" />{venue.capacity}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-eo-navy px-3 py-1.5 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Building2 className="h-3 w-3 text-white/60" />
+              <span className="text-[10px] font-medium text-white/60">{getVenueTypeLabel(venue.venue_type)}</span>
+            </div>
+            {venue.capacity && (
+              <span className="text-[10px] text-white/60 flex items-center gap-0.5">
+                <Users className="h-2.5 w-2.5" />{venue.capacity}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="p-3">
+          {/* Name + Drag Handle */}
+          <div className="flex items-start gap-1.5">
+            <GripVertical className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+            <h4 className="text-sm font-semibold leading-tight">{venue.name}</h4>
+          </div>
+
+          {/* Address */}
+          {venue.address && (
+            <div className="flex items-start gap-1 mt-1 text-[11px] text-muted-foreground">
+              <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{venue.address}</span>
+            </div>
+          )}
+
+          {/* Rating */}
+          {venue.staff_rating > 0 && (
+            <div className="mt-1.5">
+              <StarRating value={venue.staff_rating} readonly size="sm" />
+            </div>
+          )}
+
+          {/* Cost */}
+          <div className="flex items-center gap-2.5 mt-2">
+            {venue.base_rental_cost > 0 && (
+              <span className="text-[11px] font-medium">{formatCurrency(venue.base_rental_cost)}</span>
+            )}
+            {venue.av_quality && (
+              <Badge
+                variant="outline"
+                className="text-[9px] h-4"
+                style={{
+                  borderColor: venue.av_quality === 'excellent' ? '#22c55e' : venue.av_quality === 'good' ? '#3d46f2' : '#fa653c',
+                  color: venue.av_quality === 'excellent' ? '#22c55e' : venue.av_quality === 'good' ? '#3d46f2' : '#fa653c',
+                }}
+              >
+                AV: {venue.av_quality}
+              </Badge>
+            )}
+          </div>
+
+          {/* Linked Events */}
+          {linkedEvents.length > 0 && (
+            <div className="mt-2 pt-2 border-t space-y-1">
+              {linkedEvents.map(evt => {
+                const candidateSpeakers = (evt.candidate_speaker_ids || [])
+                  .map(sid => speakers.find(s => s.id === sid)).filter(Boolean)
+                const confirmedSpeaker = speakers.find(s => s.id === evt.speaker_id)
+                return (
+                  <div key={evt.id} className="text-xs">
+                    <div className="flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <p className="font-medium text-[11px] truncate">{evt.title}</p>
+                    </div>
+                    {candidateSpeakers.length > 0 ? (
+                      <div className="flex flex-wrap gap-x-1 ml-4 text-[10px]">
+                        {candidateSpeakers.map(s => (
+                          <span key={s.id} className={s.id === evt.speaker_id ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}>
+                            {s.name}{s.id === evt.speaker_id ? ' ★' : ''}{s.id !== candidateSpeakers[candidateSpeakers.length - 1]?.id ? ',' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    ) : confirmedSpeaker ? (
+                      <p className="text-[10px] text-eo-blue font-medium ml-4">{confirmedSpeaker.name} ★</p>
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Description preview */}
+          {venue.description && (
+            <p className="mt-2 text-[10px] text-muted-foreground line-clamp-2 italic">{venue.description}</p>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Venues</h1>
+          <h1 className="text-2xl font-bold">Venue Pipeline</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {venues.length} venues &middot; Manage locations, F&B, and logistics
+            {venues.length} venues &middot; Manage locations, logistics, and staff ratings
           </p>
         </div>
         <div className="flex gap-2">
@@ -133,139 +344,39 @@ export default function VenuesPage() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="sm" onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}>
-            {viewMode === 'cards' ? 'Table View' : 'Card View'}
+          <Button variant="outline" size="sm" onClick={() => setViewMode(viewMode === 'pipeline' ? 'table' : 'pipeline')}>
+            {viewMode === 'pipeline' ? 'Table View' : 'Pipeline View'}
           </Button>
-          <Button size="sm" onClick={() => { setEditVenue(null); setForm(emptyForm); setShowForm(true) }}>
+          <Button size="sm" onClick={() => { setEditVenue(null); setForm(emptyForm); setLookupError(null); setShowForm(true) }}>
             <Plus className="h-4 w-4" /> Add Venue
           </Button>
         </div>
       </div>
 
-      {/* Cards View */}
-      {viewMode === 'cards' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredVenues.map(venue => {
-            const linkedEvents = venueEventMap[venue.id] || []
-            const totalCost = (venue.base_rental_cost || 0) + (venue.av_cost_estimate || 0)
-
+      {/* Pipeline (Kanban) View */}
+      {viewMode === 'pipeline' ? (
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {VENUE_PIPELINE_STAGES.map(stage => {
+            const stageVenues = filteredVenues.filter(v => v.pipeline_stage === stage.id)
             return (
               <div
-                key={venue.id}
-                className="rounded-xl border bg-card shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => openEdit(venue)}
+                key={stage.id}
+                className="flex-shrink-0 w-72"
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(stage.id)}
               >
-                {/* Type Banner */}
-                <div className="bg-eo-navy px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-white/70" />
-                    <span className="text-xs font-medium text-white/70">{getVenueTypeLabel(venue.venue_type)}</span>
-                  </div>
-                  {venue.capacity && (
-                    <div className="flex items-center gap-1 text-xs text-white/70">
-                      <Users className="h-3 w-3" />
-                      {venue.capacity}
-                    </div>
-                  )}
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
+                  <span className="text-sm font-semibold">{stage.label}</span>
+                  <span className="text-xs text-muted-foreground">({stageVenues.length})</span>
                 </div>
-
-                <div className="p-4">
-                  <h3 className="text-base font-semibold leading-tight">{venue.name}</h3>
-                  {venue.address && (
-                    <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      {venue.address}
-                    </div>
-                  )}
-
-                  {/* Cost Summary */}
-                  <div className="flex items-center gap-3 mt-3">
-                    {venue.base_rental_cost > 0 && (
-                      <div className="flex items-center gap-1 text-xs">
-                        <DollarSign className="h-3 w-3 text-eo-coral" />
-                        <span className="font-medium">{formatCurrency(venue.base_rental_cost)}</span>
-                        <span className="text-muted-foreground">rental</span>
-                      </div>
-                    )}
-                    {venue.av_cost_estimate > 0 && (
-                      <div className="flex items-center gap-1 text-xs">
-                        <Volume2 className="h-3 w-3 text-purple-500" />
-                        <span className="font-medium">{formatCurrency(venue.av_cost_estimate)}</span>
-                        <span className="text-muted-foreground">AV</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* AV Quality Badge */}
-                  {venue.av_quality && (
-                    <div className="mt-2">
-                      <Badge
-                        variant="outline"
-                        className="text-[10px]"
-                        style={{
-                          borderColor: venue.av_quality === 'excellent' ? '#22c55e' : venue.av_quality === 'good' ? '#3d46f2' : venue.av_quality === 'fair' ? '#fa653c' : '#64648c',
-                          color: venue.av_quality === 'excellent' ? '#22c55e' : venue.av_quality === 'good' ? '#3d46f2' : venue.av_quality === 'fair' ? '#fa653c' : '#64648c',
-                        }}
-                      >
-                        AV: {AV_QUALITY.find(a => a.id === venue.av_quality)?.label || venue.av_quality}
-                      </Badge>
-                    </div>
-                  )}
-
-                  {/* Linked Events */}
-                  {linkedEvents.length > 0 && (
-                    <div className="mt-3 pt-3 border-t">
-                      <p className="text-[11px] font-medium text-muted-foreground mb-1">LINKED EVENTS</p>
-                      <div className="space-y-2">
-                        {linkedEvents.map(evt => {
-                          const confirmedSpeaker = speakers.find(s => s.id === evt.speaker_id)
-                          const candidateSpeakers = (evt.candidate_speaker_ids || [])
-                            .map(sid => speakers.find(s => s.id === sid))
-                            .filter(Boolean)
-                          const checklist = evt.id // we'll check contract_signed via store if available
-                          const isFinalized = confirmedSpeaker && candidateSpeakers.length <= 1
-
-                          return (
-                            <div key={evt.id} className="text-xs">
-                              <p className="font-medium text-[11px]">{evt.title}</p>
-                              {candidateSpeakers.length > 0 ? (
-                                <div className="flex flex-wrap gap-1 mt-0.5">
-                                  {candidateSpeakers.map(s => (
-                                    <span
-                                      key={s.id}
-                                      className={`text-[10px] ${s.id === evt.speaker_id ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}`}
-                                    >
-                                      {s.name}{s.id === evt.speaker_id ? ' ★' : ''}
-                                      {s.id !== candidateSpeakers[candidateSpeakers.length - 1]?.id ? ', ' : ''}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : confirmedSpeaker ? (
-                                <p className="text-[10px] text-eo-blue font-medium mt-0.5">{confirmedSpeaker.name} ★</p>
-                              ) : (
-                                <p className="text-[10px] text-muted-foreground mt-0.5">No speaker</p>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notes preview */}
-                  {venue.notes && (
-                    <p className="mt-3 text-[11px] text-muted-foreground line-clamp-2 italic">{venue.notes}</p>
-                  )}
-
-                  {/* Contact info */}
-                  {(venue.contact_name || venue.contact_email) && (
-                    <div className="mt-3 pt-2 border-t flex items-center gap-2 text-[11px] text-muted-foreground">
-                      {venue.contact_name && <span>{venue.contact_name}</span>}
-                      {venue.contact_email && (
-                        <span className="flex items-center gap-0.5">
-                          <Mail className="h-2.5 w-2.5" /> {venue.contact_email}
-                        </span>
-                      )}
+                <div className="space-y-2 min-h-[200px] rounded-lg bg-muted/30 p-2">
+                  {stageVenues.map(venue => (
+                    <VenueCard key={venue.id} venue={venue} />
+                  ))}
+                  {stageVenues.length === 0 && (
+                    <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
+                      Drag venues here
                     </div>
                   )}
                 </div>
@@ -281,55 +392,67 @@ export default function VenuesPage() {
               <tr className="border-b bg-muted/50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Venue</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Capacity</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Cap</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Rental</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">AV</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Rating</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stage</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Events</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Contact</th>
                 <th className="px-4 py-3 w-10"></th>
               </tr>
             </thead>
             <tbody>
               {filteredVenues.map(venue => {
                 const linkedEvents = venueEventMap[venue.id] || []
+                const stage = VENUE_PIPELINE_STAGES.find(s => s.id === venue.pipeline_stage)
                 return (
                   <tr key={venue.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEdit(venue)}>
                     <td className="px-4 py-3">
-                      <div>
-                        <span className="text-sm font-medium">{venue.name}</span>
-                        {venue.address && <p className="text-[11px] text-muted-foreground">{venue.address}</p>}
+                      <div className="flex items-center gap-3">
+                        {venue.image_url ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                            <img src={venue.image_url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-eo-navy/10 flex items-center justify-center shrink-0">
+                            <Building2 className="h-4 w-4 text-eo-navy/50" />
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-sm font-medium">{venue.name}</span>
+                          {venue.address && <p className="text-[11px] text-muted-foreground truncate max-w-[200px]">{venue.address}</p>}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs">{getVenueTypeLabel(venue.venue_type)}</td>
                     <td className="px-4 py-3 text-sm">{venue.capacity || '—'}</td>
                     <td className="px-4 py-3 text-sm">{venue.base_rental_cost ? formatCurrency(venue.base_rental_cost) : '—'}</td>
                     <td className="px-4 py-3">
-                      <div className="text-sm">
-                        {venue.av_cost_estimate ? formatCurrency(venue.av_cost_estimate) : '—'}
-                        {venue.av_quality && (
-                          <Badge variant="outline" className="text-[9px] ml-1">
-                            {venue.av_quality}
-                          </Badge>
-                        )}
-                      </div>
+                      {venue.staff_rating > 0 ? (
+                        <StarRating value={venue.staff_rating} readonly size="sm" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px]"
+                        style={{ borderColor: stage?.color, color: stage?.color }}
+                      >
+                        {stage?.label || venue.pipeline_stage}
+                      </Badge>
                     </td>
                     <td className="px-4 py-3">
                       {linkedEvents.length > 0 ? (
                         <div className="space-y-1">
                           {linkedEvents.map(evt => {
                             const candidateNames = (evt.candidate_speaker_ids || [])
-                              .map(sid => speakers.find(s => s.id === sid))
-                              .filter(Boolean)
+                              .map(sid => speakers.find(s => s.id === sid)).filter(Boolean)
                               .map(s => s.id === evt.speaker_id ? `${s.name} ★` : s.name)
-                            const confirmedName = !candidateNames.length && evt.speaker_id
-                              ? speakers.find(s => s.id === evt.speaker_id)?.name + ' ★'
-                              : null
                             return (
                               <div key={evt.id}>
                                 <p className="text-[11px] font-medium">{evt.title}</p>
-                                <p className="text-[9px] text-muted-foreground">
-                                  {candidateNames.length > 0 ? candidateNames.join(', ') : confirmedName || 'No speaker'}
-                                </p>
+                                <p className="text-[9px] text-muted-foreground">{candidateNames.join(', ') || 'No speaker'}</p>
                               </div>
                             )
                           })}
@@ -338,7 +461,6 @@ export default function VenuesPage() {
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{venue.contact_name || '—'}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(venue) }}
@@ -356,7 +478,21 @@ export default function VenuesPage() {
         </div>
       )}
 
-      {/* Add/Edit Venue Dialog */}
+      {/* Passed Venues Archive */}
+      {passedVenues.length > 0 && (
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">Passed ({passedVenues.length})</h3>
+          <div className="flex flex-wrap gap-2">
+            {passedVenues.map(v => (
+              <Badge key={v.id} variant="secondary" className="cursor-pointer" onClick={() => openEdit(v)}>
+                {v.name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Add/Edit Venue Dialog ─────────────────────────────── */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -373,15 +509,71 @@ export default function VenuesPage() {
 
             {/* Details Tab */}
             <TabsContent value="details">
-              <div className="space-y-3 mt-3">
+              <div className="space-y-3 mt-3 max-h-[55vh] overflow-y-auto pr-1">
+                {/* Venue Name + Auto-Lookup */}
+                <div>
+                  <label className="text-xs font-medium">Venue Name *</label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.name}
+                      onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                      placeholder="e.g., The Wrigley Mansion"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!form.name || lookupLoading}
+                      onClick={handleLookup}
+                      className="shrink-0 text-eo-blue border-eo-blue/30 hover:bg-eo-blue/10"
+                    >
+                      {lookupLoading ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Looking up...</>
+                      ) : (
+                        <><Sparkles className="h-4 w-4" /> Auto-Lookup</>
+                      )}
+                    </Button>
+                  </div>
+                  {lookupError && (
+                    <p className="text-[11px] text-eo-pink mt-1">{lookupError}</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Auto-Lookup uses AI to fill in address, description, and photo. Requires API keys in Vercel.
+                  </p>
+                </div>
+
+                {/* Image Preview */}
+                {form.image_url && (
+                  <div className="relative rounded-lg overflow-hidden h-32 bg-gray-100">
+                    <img src={form.image_url} alt="Venue" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                    <button
+                      type="button"
+                      className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70"
+                      onClick={() => setForm(p => ({ ...p, image_url: '' }))}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Description */}
+                {form.description && (
+                  <div>
+                    <label className="text-xs font-medium">Description</label>
+                    <Textarea
+                      value={form.description}
+                      onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                      rows={2}
+                    />
+                  </div>
+                )}
+
+                {/* Address + Type + Capacity */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <label className="text-xs font-medium">Venue Name *</label>
-                    <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g., The Wrigley Mansion" />
-                  </div>
-                  <div className="col-span-2">
                     <label className="text-xs font-medium">Address</label>
-                    <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} placeholder="Phoenix, AZ" />
+                    <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} placeholder="Full street address" />
                   </div>
                   <div>
                     <label className="text-xs font-medium">Venue Type</label>
@@ -407,7 +599,43 @@ export default function VenuesPage() {
                     <label className="text-xs font-medium">AV Cost Estimate ($)</label>
                     <Input type="number" value={form.av_cost_estimate} onChange={e => setForm(p => ({ ...p, av_cost_estimate: e.target.value }))} placeholder="3000" />
                   </div>
+                  <div>
+                    <label className="text-xs font-medium">Pipeline Stage</label>
+                    <Select value={form.pipeline_stage} onChange={e => setForm(p => ({ ...p, pipeline_stage: e.target.value }))}>
+                      {VENUE_PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                    </Select>
+                  </div>
                 </div>
+
+                {/* Staff Rating */}
+                <div>
+                  <label className="text-xs font-medium">Staff Rating</label>
+                  <div className="flex items-center gap-3 mt-1">
+                    <StarRating
+                      value={form.staff_rating}
+                      onChange={(val) => setForm(p => ({ ...p, staff_rating: val }))}
+                      size="md"
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {form.staff_rating === 0 ? 'Not rated' : `${form.staff_rating}/5`}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1">Rate this venue from 1 (poor) to 5 (excellent).</p>
+                </div>
+
+                {/* Image URL (manual) */}
+                {!form.image_url && (
+                  <div>
+                    <label className="text-xs font-medium">Image URL (optional)</label>
+                    <Input
+                      value={form.image_url}
+                      onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))}
+                      placeholder="https://... (or use Auto-Lookup)"
+                    />
+                  </div>
+                )}
+
+                {/* Notes */}
                 <div>
                   <label className="text-xs font-medium">Notes</label>
                   <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="General venue notes..." rows={3} />
@@ -488,16 +716,27 @@ export default function VenuesPage() {
           <div className="flex gap-2 pt-4 border-t mt-4">
             <Button onClick={handleSubmit} className="flex-1">{editVenue ? 'Save Changes' : 'Add Venue'}</Button>
             {editVenue && (
-              <Button
-                variant="outline"
-                className="text-eo-pink border-eo-pink hover:bg-eo-pink/10"
-                onClick={() => {
-                  handleDelete(editVenue)
-                  setShowForm(false)
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-1" /> Delete
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="text-muted-foreground"
+                  onClick={() => {
+                    if (confirm('Move this venue to Passed?')) {
+                      updateVenue(editVenue.id, { pipeline_stage: 'passed' })
+                      setShowForm(false)
+                    }
+                  }}
+                >
+                  Mark Passed
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-eo-pink border-eo-pink hover:bg-eo-pink/10"
+                  onClick={() => { handleDelete(editVenue); setShowForm(false) }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Delete
+                </Button>
+              </>
             )}
           </div>
         </DialogContent>
