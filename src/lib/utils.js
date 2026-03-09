@@ -23,6 +23,16 @@ export function formatDate(dateStr) {
   })
 }
 
+export function formatDateWithDay(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 export function daysUntil(dateStr) {
   if (!dateStr) return null
   const diff = new Date(dateStr) - new Date()

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES } from '@/lib/constants'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDateWithDay } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -115,8 +115,15 @@ export default function CalendarPage() {
                             )}
                           </div>
 
-                          {speaker && (
+                          {event.event_date && (
                             <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              {formatDateWithDay(event.event_date)}
+                            </div>
+                          )}
+
+                          {speaker && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                               <MapPin className="h-3 w-3" />
                               {speaker.name}
                             </div>
