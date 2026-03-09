@@ -46,6 +46,16 @@ export const VENUE_PIPELINE_STAGES = [
   { id: 'confirmed', label: 'Confirmed', color: '#22c55e' },
 ]
 
+// Event formats (duration / structure)
+export const EVENT_FORMATS = [
+  { id: 'keynote', label: 'Keynote', duration: '~2 hrs', color: '#3d46f2' },
+  { id: 'workshop_2hr', label: '2-Hour Workshop', duration: '2 hrs', color: '#8b5cf6' },
+  { id: 'workshop_4hr', label: '4-Hour Workshop', duration: '4 hrs', color: '#fa653c' },
+  { id: 'workshop_8hr', label: '8-Hour Workshop', duration: '8 hrs', color: '#ff346e' },
+  { id: 'tour', label: 'Once-in-a-Lifetime Tour', duration: 'Varies', color: '#22c55e' },
+  { id: 'dinner', label: 'Dinner / Social', duration: '~3 hrs', color: '#64648c' },
+]
+
 // Event types (The Four Buckets)
 export const EVENT_TYPES = [
   { id: 'traditional', label: 'Traditional Learning', icon: 'GraduationCap', color: '#3d46f2' },

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, createContext, useContext, createElement } from 'react'
-import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists } from './mockData'
+import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs } from './mockData'
 
 // Persisted store — saves to localStorage on every change, hydrates on load.
 // Will be replaced with real Supabase calls when connected.
@@ -31,12 +31,13 @@ export function StoreProvider({ children }) {
   const [events, setEvents] = useState(saved?.events ?? mockEvents)
   const [budgetItems, setBudgetItems] = useState(saved?.budgetItems ?? mockBudgetItems)
   const [contractChecklists, setContractChecklists] = useState(saved?.contractChecklists ?? mockContractChecklists)
+  const [saps, setSaps] = useState(saved?.saps ?? mockSAPs)
   const [userRole] = useState('learning_chair')
 
   // Persist every state change to localStorage
   useEffect(() => {
-    persistState({ chapter, speakers, venues, events, budgetItems, contractChecklists })
-  }, [chapter, speakers, venues, events, budgetItems, contractChecklists])
+    persistState({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps })
+  }, [chapter, speakers, venues, events, budgetItems, contractChecklists, saps])
 
   // Reset all data back to mock defaults (available via Settings)
   const resetToDefaults = useCallback(() => {
@@ -46,6 +47,7 @@ export function StoreProvider({ children }) {
     setEvents(mockEvents)
     setBudgetItems(mockBudgetItems)
     setContractChecklists(mockContractChecklists)
+    setSaps(mockSAPs)
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
@@ -136,6 +138,26 @@ export function StoreProvider({ children }) {
     setContractChecklists(prev => prev.map(c => c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c))
   }, [])
 
+  // SAP operations
+  const addSAP = useCallback((sap) => {
+    const newSAP = { ...sap, id: crypto.randomUUID(), chapter_id: chapter.id, created_at: new Date().toISOString() }
+    setSaps(prev => [...prev, newSAP])
+    return newSAP
+  }, [chapter.id])
+
+  const updateSAP = useCallback((id, updates) => {
+    setSaps(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
+  }, [])
+
+  const deleteSAP = useCallback((id) => {
+    setSaps(prev => prev.filter(s => s.id !== id))
+    // Also remove this SAP from any events that reference it
+    setEvents(prev => prev.map(e => ({
+      ...e,
+      sap_ids: (e.sap_ids || []).filter(sid => sid !== id),
+    })))
+  }, [])
+
   // Chapter operations
   const updateChapter = useCallback((updates) => {
     setChapter(prev => ({ ...prev, ...updates }))
@@ -154,6 +176,7 @@ export function StoreProvider({ children }) {
     events,
     budgetItems,
     contractChecklists,
+    saps,
     userRole,
 
     // Speaker ops
@@ -179,6 +202,11 @@ export function StoreProvider({ children }) {
     // Contract ops
     getOrCreateChecklist,
     updateChecklist,
+
+    // SAP ops
+    addSAP,
+    updateSAP,
+    deleteSAP,
 
     // Chapter ops
     updateChapter,

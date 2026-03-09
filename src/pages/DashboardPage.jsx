@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
-import { FISCAL_MONTHS, STRATEGIC_MAP, PIPELINE_STAGES, EVENT_TYPES } from '@/lib/constants'
+import { FISCAL_MONTHS, STRATEGIC_MAP, PIPELINE_STAGES, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {

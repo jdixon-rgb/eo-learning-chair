@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import {
-  FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES,
+  FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES, EVENT_FORMATS,
   BUDGET_CATEGORIES, CONTRACT_CHECKLIST_ITEMS, DEFAULT_MARKETING_MILESTONES,
 } from '@/lib/constants'
 import { formatCurrency, formatDate, daysUntil } from '@/lib/utils'
@@ -16,13 +16,14 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   ArrowLeft, Calendar, MapPin, Users, DollarSign, FileText, Megaphone,
   Star, Plus, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
+  Handshake, Building2,
 } from 'lucide-react'
 
 export default function EventDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const {
-    events, speakers, venues, budgetItems, contractChecklists,
+    events, speakers, venues, budgetItems, contractChecklists, saps,
     updateEvent, deleteEvent,
     addBudgetItem, updateBudgetItem, deleteBudgetItem,
     getOrCreateChecklist, updateChecklist,
@@ -41,6 +42,7 @@ export default function EventDetailPage() {
   const month = event.month_index != null ? FISCAL_MONTHS[event.month_index] : null
   const strategic = event.month_index != null ? STRATEGIC_MAP[event.month_index] : null
   const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
+  const eventFormat = EVENT_FORMATS.find(f => f.id === event.event_format)
   const status = EVENT_STATUSES.find(s => s.id === event.status)
   const speaker = speakers.find(s => s.id === event.speaker_id)
   const venue = venues.find(v => v.id === event.venue_id)
@@ -67,6 +69,7 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
               {event.event_date && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{formatDate(event.event_date)}</span>}
               {eventType && <span style={{ color: eventType.color }}>{eventType.label}</span>}
+              {eventFormat && <Badge variant="outline" style={{ borderColor: eventFormat.color, color: eventFormat.color }}>{eventFormat.label} ({eventFormat.duration})</Badge>}
               {status && <Badge variant="outline" style={{ borderColor: status.color, color: status.color }}>{status.label}</Badge>}
             </div>
           </div>
@@ -124,6 +127,13 @@ export default function EventDetailPage() {
                   <Select value={event.event_type || ''} onChange={e => updateEvent(id, { event_type: e.target.value })}>
                     <option value="">Select...</option>
                     {EVENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Event Format</label>
+                  <Select value={event.event_format || ''} onChange={e => updateEvent(id, { event_format: e.target.value })}>
+                    <option value="">Select format...</option>
+                    {EVENT_FORMATS.map(f => <option key={f.id} value={f.id}>{f.label} ({f.duration})</option>)}
                   </Select>
                 </div>
                 <div>
@@ -283,6 +293,74 @@ export default function EventDetailPage() {
                   </div>
                 </div>
                 <p className="text-[11px] text-muted-foreground italic">Pro tip: Volunteer frequent complainers as Day Chair.</p>
+              </div>
+
+              {/* Strategic Alliance Partners */}
+              <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
+                <div className="flex items-center gap-2">
+                  <Handshake className="h-4 w-4 text-eo-coral" />
+                  <h3 className="text-sm font-semibold">Strategic Alliance Partners</h3>
+                </div>
+                <p className="text-[11px] text-muted-foreground">SAPs are sponsors who support EO and can run workshops or contribute to events.</p>
+
+                {/* Current SAPs for this event */}
+                {(() => {
+                  const eventSAPs = (event.sap_ids || []).map(sid => (saps || []).find(s => s.id === sid)).filter(Boolean)
+                  const availableSAPs = (saps || []).filter(s => !(event.sap_ids || []).includes(s.id))
+
+                  const addSAPToEvent = (sapId) => {
+                    if (!sapId) return
+                    const current = event.sap_ids || []
+                    if (!current.includes(sapId)) {
+                      updateEvent(id, { sap_ids: [...current, sapId] })
+                    }
+                  }
+
+                  const removeSAPFromEvent = (sapId) => {
+                    updateEvent(id, { sap_ids: (event.sap_ids || []).filter(sid => sid !== sapId) })
+                  }
+
+                  return (
+                    <>
+                      {eventSAPs.length > 0 ? (
+                        <div className="space-y-2">
+                          {eventSAPs.map(sap => (
+                            <div key={sap.id} className="flex items-start justify-between p-3 rounded-lg border border-eo-coral/30 bg-eo-coral/5">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="h-3.5 w-3.5 text-eo-coral" />
+                                  <span className="text-sm font-semibold">{sap.name}</span>
+                                  <Badge variant="outline" className="text-[9px] border-eo-coral/50 text-eo-coral">{sap.company}</Badge>
+                                </div>
+                                {sap.contribution_type && (
+                                  <p className="text-xs text-muted-foreground mt-1 capitalize">{sap.contribution_type}: {sap.contribution_description}</p>
+                                )}
+                              </div>
+                              <button onClick={() => removeSAPFromEvent(sap.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5 ml-2">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No SAPs linked to this event</p>
+                      )}
+
+                      {availableSAPs.length > 0 && (
+                        <Select
+                          value=""
+                          onChange={e => { addSAPToEvent(e.target.value); e.target.value = '' }}
+                          className="text-xs"
+                        >
+                          <option value="">+ Link a SAP to this event...</option>
+                          {availableSAPs.map(s => (
+                            <option key={s.id} value={s.id}>{s.name} — {s.company}</option>
+                          ))}
+                        </Select>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
 
               <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">

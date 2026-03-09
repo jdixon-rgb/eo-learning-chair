@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
-import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES } from '@/lib/constants'
+import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2 } from 'lucide-react'
+import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2, Handshake } from 'lucide-react'
 
 export default function EventsPage() {
   const navigate = useNavigate()
-  const { events, speakers, venues, budgetItems, deleteEvent } = useStore()
+  const { events, speakers, venues, budgetItems, saps, deleteEvent } = useStore()
 
   const sortedEvents = [...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99))
 
@@ -30,7 +30,9 @@ export default function EventsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedEvents.map(event => {
           const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
+          const eventFormat = EVENT_FORMATS.find(f => f.id === event.event_format)
           const status = EVENT_STATUSES.find(s => s.id === event.status)
+          const eventSAPs = (event.sap_ids || []).map(sid => (saps || []).find(s => s.id === sid)).filter(Boolean)
           const primarySpeaker = speakers.find(s => s.id === event.speaker_id)
           const candidateSpeakers = (event.candidate_speaker_ids || [])
             .map(sid => speakers.find(s => s.id === sid))
@@ -62,11 +64,18 @@ export default function EventsPage() {
                     )}
                     <h3 className="text-base font-semibold leading-tight">{event.title}</h3>
                   </div>
-                  {eventType && (
-                    <Badge variant="outline" className="text-[10px] shrink-0" style={{ borderColor: eventType.color, color: eventType.color }}>
-                      {eventType.label.split(' ')[0]}
-                    </Badge>
-                  )}
+                  <div className="flex gap-1 shrink-0">
+                    {eventFormat && (
+                      <Badge variant="outline" className="text-[10px]" style={{ borderColor: eventFormat.color, color: eventFormat.color }}>
+                        {eventFormat.label}
+                      </Badge>
+                    )}
+                    {eventType && (
+                      <Badge variant="outline" className="text-[10px]" style={{ borderColor: eventType.color, color: eventType.color }}>
+                        {eventType.label.split(' ')[0]}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -101,6 +110,12 @@ export default function EventsPage() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <DollarSign className="h-3 w-3" />
                       {formatCurrency(budget)}
+                    </div>
+                  )}
+                  {eventSAPs.length > 0 && (
+                    <div className="flex items-center gap-2 text-xs text-eo-coral">
+                      <Handshake className="h-3 w-3" />
+                      {eventSAPs.map(s => s.company).join(', ')}
                     </div>
                   )}
                 </div>

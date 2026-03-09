@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
-import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES } from '@/lib/constants'
+import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDateWithDay } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,13 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Sparkles, Calendar, MapPin, DollarSign } from 'lucide-react'
+import { Plus, Sparkles, Calendar, MapPin, DollarSign, Handshake } from 'lucide-react'
 
 export default function CalendarPage() {
   const navigate = useNavigate()
-  const { chapter, events, speakers, venues, budgetItems, addEvent } = useStore()
+  const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
   const [createMonth, setCreateMonth] = useState(null)
-  const [newEvent, setNewEvent] = useState({ title: '', event_type: 'traditional', theme_connection: '', event_date: '', expected_attendance: '' })
+  const [newEvent, setNewEvent] = useState({ title: '', event_type: 'traditional', event_format: 'keynote', theme_connection: '', event_date: '', expected_attendance: '' })
 
   const eventsByMonth = {}
   events.forEach(e => {
@@ -43,7 +43,7 @@ export default function CalendarPage() {
       strategic_importance: STRATEGIC_MAP[createMonth]?.label.toLowerCase().replace(' ', '_'),
     })
     setCreateMonth(null)
-    setNewEvent({ title: '', event_type: 'traditional', theme_connection: '', event_date: '', expected_attendance: '' })
+    setNewEvent({ title: '', event_type: 'traditional', event_format: 'keynote', theme_connection: '', event_date: '', expected_attendance: '' })
   }
 
   return (
@@ -97,7 +97,9 @@ export default function CalendarPage() {
                   <div className="space-y-3">
                     {monthEvents.map(event => {
                       const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
+                      const eventFormat = EVENT_FORMATS.find(f => f.id === event.event_format)
                       const budget = getEventBudget(event.id)
+                      const eventSAPs = (event.sap_ids || []).map(sid => (saps || []).find(s => s.id === sid)).filter(Boolean)
                       const primarySpeaker = speakers.find(s => s.id === event.speaker_id)
                       const candidateSpeakers = (event.candidate_speaker_ids || [])
                         .map(sid => speakers.find(s => s.id === sid))
@@ -111,11 +113,18 @@ export default function CalendarPage() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <h4 className="text-sm font-semibold leading-tight">{event.title}</h4>
-                            {eventType && (
-                              <Badge variant="outline" className="text-[10px] shrink-0" style={{ borderColor: eventType.color, color: eventType.color }}>
-                                {eventType.label.split(' ')[0]}
-                              </Badge>
-                            )}
+                            <div className="flex flex-col gap-0.5 items-end shrink-0">
+                              {eventFormat && (
+                                <Badge variant="outline" className="text-[9px]" style={{ borderColor: eventFormat.color, color: eventFormat.color }}>
+                                  {eventFormat.label}
+                                </Badge>
+                              )}
+                              {eventType && (
+                                <Badge variant="outline" className="text-[9px]" style={{ borderColor: eventType.color, color: eventType.color }}>
+                                  {eventType.label.split(' ')[0]}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
 
                           {event.event_date && (
@@ -146,6 +155,13 @@ export default function CalendarPage() {
                             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                               <DollarSign className="h-3 w-3" />
                               {formatCurrency(budget)}
+                            </div>
+                          )}
+
+                          {eventSAPs.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-eo-coral">
+                              <Handshake className="h-3 w-3" />
+                              {eventSAPs.map(s => s.company).join(', ')}
                             </div>
                           )}
 
@@ -198,6 +214,17 @@ export default function CalendarPage() {
               >
                 {EVENT_TYPES.map(t => (
                   <option key={t.id} value={t.id}>{t.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Event Format</label>
+              <Select
+                value={newEvent.event_format}
+                onChange={e => setNewEvent(prev => ({ ...prev, event_format: e.target.value }))}
+              >
+                {EVENT_FORMATS.map(f => (
+                  <option key={f.id} value={f.id}>{f.label} ({f.duration})</option>
                 ))}
               </Select>
             </div>
