@@ -19,7 +19,7 @@ export const STRATEGIC_MAP = {
   1: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Build on kickoff energy.' },
   2: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Sustain engagement.' },
   3: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Keep the arc rising.' },
-  4: { label: 'HOLIDAY', color: 'bg-eo-pink', textColor: 'text-white', description: 'Social/celebratory event. Year-end energy.' },
+  4: { label: 'NO EVENT', color: 'bg-gray-400', textColor: 'text-white', description: 'December — Holiday party handled separately. No Learning Chair event.' },
   5: { label: 'RENEWAL', color: 'bg-eo-coral', textColor: 'text-white', description: 'Members decide on renewal. Must be strong.' },
   6: { label: 'RENEWAL', color: 'bg-eo-coral', textColor: 'text-white', description: 'Critical retention period. Deliver value.' },
   7: { label: 'SUSTAIN', color: 'bg-eo-blue', textColor: 'text-white', description: 'Maintain energy post-renewal.' },

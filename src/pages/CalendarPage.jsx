@@ -63,7 +63,7 @@ export default function CalendarPage() {
       <div className="flex gap-4 text-xs">
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-eo-coral" /> KICKOFF / RENEWAL / CLOSE</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-eo-blue" /> MOMENTUM / SUSTAIN</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-eo-pink" /> HOLIDAY</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-gray-400" /> NO EVENT (Holiday)</div>
       </div>
 
       {/* Calendar Grid */}
