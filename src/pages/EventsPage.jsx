@@ -4,11 +4,11 @@ import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES } from '@/lib
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CalendarDays, MapPin, Users, DollarSign, ArrowRight } from 'lucide-react'
+import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2 } from 'lucide-react'
 
 export default function EventsPage() {
   const navigate = useNavigate()
-  const { events, speakers, venues, budgetItems } = useStore()
+  const { events, speakers, venues, budgetItems, deleteEvent } = useStore()
 
   const sortedEvents = [...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99))
 
@@ -99,7 +99,21 @@ export default function EventsPage() {
                       {status.label}
                     </Badge>
                   )}
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (window.confirm(`Delete "${event.title}"? This removes budget items and contract data too.`)) {
+                          deleteEvent(event.id)
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-eo-pink transition-colors cursor-pointer p-1 rounded"
+                      title="Delete event"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
               </div>
             </div>

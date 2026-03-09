@@ -70,7 +70,7 @@ export default function EventDetailPage() {
               {status && <Badge variant="outline" style={{ borderColor: status.color, color: status.color }}>{status.label}</Badge>}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Select
               value={event.status}
               onChange={e => updateEvent(id, { status: e.target.value })}
@@ -78,6 +78,18 @@ export default function EventDetailPage() {
             >
               {EVENT_STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
             </Select>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (window.confirm(`Delete "${event.title}"? This will also remove its budget items and contract checklist. This cannot be undone.`)) {
+                  deleteEvent(id)
+                  navigate('/events')
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
           </div>
         </div>
       </div>
