@@ -1,19 +1,53 @@
-import { useState, useCallback, createContext, useContext, createElement } from 'react'
+import { useState, useCallback, useEffect, createContext, useContext, createElement } from 'react'
 import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists } from './mockData'
 
-// Simple in-memory store that mimics Supabase operations
-// Will be replaced with real Supabase calls when connected
+// Persisted store — saves to localStorage on every change, hydrates on load.
+// Will be replaced with real Supabase calls when connected.
+
+const STORAGE_KEY = 'eo-learning-chair-store'
+
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch { /* corrupted — fall through to defaults */ }
+  return null
+}
+
+function persistState(state) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch { /* storage full — silently skip */ }
+}
 
 const StoreContext = createContext(null)
 
 export function StoreProvider({ children }) {
-  const [chapter, setChapter] = useState(mockChapter)
-  const [speakers, setSpeakers] = useState(mockSpeakers)
-  const [venues, setVenues] = useState(mockVenues)
-  const [events, setEvents] = useState(mockEvents)
-  const [budgetItems, setBudgetItems] = useState(mockBudgetItems)
-  const [contractChecklists, setContractChecklists] = useState(mockContractChecklists)
+  const saved = loadPersistedState()
+
+  const [chapter, setChapter] = useState(saved?.chapter ?? mockChapter)
+  const [speakers, setSpeakers] = useState(saved?.speakers ?? mockSpeakers)
+  const [venues, setVenues] = useState(saved?.venues ?? mockVenues)
+  const [events, setEvents] = useState(saved?.events ?? mockEvents)
+  const [budgetItems, setBudgetItems] = useState(saved?.budgetItems ?? mockBudgetItems)
+  const [contractChecklists, setContractChecklists] = useState(saved?.contractChecklists ?? mockContractChecklists)
   const [userRole] = useState('learning_chair')
+
+  // Persist every state change to localStorage
+  useEffect(() => {
+    persistState({ chapter, speakers, venues, events, budgetItems, contractChecklists })
+  }, [chapter, speakers, venues, events, budgetItems, contractChecklists])
+
+  // Reset all data back to mock defaults (available via Settings)
+  const resetToDefaults = useCallback(() => {
+    setChapter(mockChapter)
+    setSpeakers(mockSpeakers)
+    setVenues(mockVenues)
+    setEvents(mockEvents)
+    setBudgetItems(mockBudgetItems)
+    setContractChecklists(mockContractChecklists)
+    localStorage.removeItem(STORAGE_KEY)
+  }, [])
 
   // Speaker operations
   const addSpeaker = useCallback((speaker) => {
@@ -148,6 +182,9 @@ export function StoreProvider({ children }) {
 
     // Chapter ops
     updateChapter,
+
+    // Utility
+    resetToDefaults,
 
     // Computed
     totalBudgetUsed,

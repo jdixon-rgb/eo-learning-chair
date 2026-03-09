@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
-import { Settings, Database, Download, Upload } from 'lucide-react'
+import { Settings, Database, Download, Upload, RotateCcw } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { chapter, updateChapter, events, speakers, venues, budgetItems, contractChecklists } = useStore()
+  const { chapter, updateChapter, events, speakers, venues, budgetItems, contractChecklists, resetToDefaults } = useStore()
 
   const handleExport = () => {
     const data = { chapter, events, speakers, venues, budgetItems, contractChecklists, exportedAt: new Date().toISOString() }
@@ -77,8 +77,8 @@ export default function SettingsPage() {
             </>
           ) : (
             <>
-              <Badge variant="outline">Local Mode</Badge>
-              <span className="text-sm text-muted-foreground">Using in-memory data. Configure Supabase in .env.local for persistence.</span>
+              <Badge className="bg-eo-blue/10 text-eo-blue border-eo-blue/30">Saved Locally</Badge>
+              <span className="text-sm text-muted-foreground">All changes auto-save to your browser. Configure Supabase in .env.local for cloud sync.</span>
             </>
           )}
         </div>
@@ -111,8 +111,19 @@ export default function SettingsPage() {
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4" /> Export All Data (JSON)
           </Button>
+          <Button
+            variant="outline"
+            className="text-eo-pink border-eo-pink/30 hover:bg-eo-pink/10"
+            onClick={() => {
+              if (window.confirm('Reset all data to the original sample data? Your current changes will be lost.')) {
+                resetToDefaults()
+              }
+            }}
+          >
+            <RotateCcw className="h-4 w-4" /> Reset to Defaults
+          </Button>
         </div>
-        <p className="text-xs text-muted-foreground">Export a complete backup of all your events, speakers, venues, and budget data.</p>
+        <p className="text-xs text-muted-foreground">Export a complete backup, or reset all data to the original sample data.</p>
       </div>
     </div>
   )
