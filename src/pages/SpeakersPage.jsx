@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User } from 'lucide-react'
+import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
@@ -18,13 +18,22 @@ const emptyForm = {
 }
 
 export default function SpeakersPage() {
-  const { speakers, addSpeaker, updateSpeaker, deleteSpeaker } = useStore()
+  const { speakers, events, updateEvent, addSpeaker, updateSpeaker, deleteSpeaker } = useStore()
   const [showForm, setShowForm] = useState(false)
   const [editSpeaker, setEditSpeaker] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState('kanban') // kanban or list
   const [dragSpeaker, setDragSpeaker] = useState(null)
+
+  // Map speaker → event assignment
+  const speakerEventMap = {}
+  events.forEach(evt => {
+    if (evt.speaker_id) {
+      if (!speakerEventMap[evt.speaker_id]) speakerEventMap[evt.speaker_id] = []
+      speakerEventMap[evt.speaker_id].push(evt)
+    }
+  })
 
   const filteredSpeakers = speakers.filter(s =>
     s.pipeline_stage !== 'passed' &&
@@ -36,17 +45,36 @@ export default function SpeakersPage() {
 
   const handleSubmit = () => {
     if (!form.name) return
+    const { assigned_event_id, ...speakerData } = form
     const data = {
-      ...form,
-      fee_range_low: form.fee_range_low ? parseFloat(form.fee_range_low) : null,
-      fee_range_high: form.fee_range_high ? parseFloat(form.fee_range_high) : null,
-      fit_score: parseInt(form.fit_score),
+      ...speakerData,
+      fee_range_low: speakerData.fee_range_low ? parseFloat(speakerData.fee_range_low) : null,
+      fee_range_high: speakerData.fee_range_high ? parseFloat(speakerData.fee_range_high) : null,
+      fit_score: parseInt(speakerData.fit_score),
     }
+    let speakerId
     if (editSpeaker) {
       updateSpeaker(editSpeaker.id, data)
+      speakerId = editSpeaker.id
     } else {
-      addSpeaker({ ...data, pipeline_stage: 'researching' })
+      const newSpeaker = addSpeaker({ ...data, pipeline_stage: 'researching' })
+      speakerId = newSpeaker.id
     }
+
+    // Handle event assignment changes
+    if (speakerId) {
+      // Remove speaker from any events they were previously assigned to
+      events.forEach(evt => {
+        if (evt.speaker_id === speakerId && evt.id !== assigned_event_id) {
+          updateEvent(evt.id, { speaker_id: null })
+        }
+      })
+      // Assign to the selected event
+      if (assigned_event_id) {
+        updateEvent(assigned_event_id, { speaker_id: speakerId })
+      }
+    }
+
     setShowForm(false)
     setEditSpeaker(null)
     setForm(emptyForm)
@@ -54,6 +82,7 @@ export default function SpeakersPage() {
 
   const openEdit = (speaker) => {
     setEditSpeaker(speaker)
+    const assignedEvt = events.find(e => e.speaker_id === speaker.id)
     setForm({
       name: speaker.name || '',
       topic: speaker.topic || '',
@@ -69,6 +98,7 @@ export default function SpeakersPage() {
       notes: speaker.notes || '',
       routing_flexibility: speaker.routing_flexibility || false,
       multi_chapter_interest: speaker.multi_chapter_interest || false,
+      assigned_event_id: assignedEvt?.id || '',
     })
     setShowForm(true)
   }
@@ -82,43 +112,52 @@ export default function SpeakersPage() {
     }
   }
 
-  const SpeakerCard = ({ speaker }) => (
-    <div
-      draggable
-      onDragStart={() => handleDragStart(speaker)}
-      className="rounded-lg border bg-white p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
-      onClick={() => openEdit(speaker)}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
-          <h4 className="text-sm font-semibold">{speaker.name}</h4>
+  const SpeakerCard = ({ speaker }) => {
+    const assignedEvents = speakerEventMap[speaker.id] || []
+    return (
+      <div
+        draggable
+        onDragStart={() => handleDragStart(speaker)}
+        className="rounded-lg border bg-white p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+        onClick={() => openEdit(speaker)}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
+            <h4 className="text-sm font-semibold">{speaker.name}</h4>
+          </div>
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-3 w-3 ${i < Math.ceil((speaker.fit_score || 0) / 2) ? 'text-eo-coral fill-eo-coral' : 'text-gray-200'}`}
+              />
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-0.5">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
-              className={`h-3 w-3 ${i < Math.ceil((speaker.fit_score || 0) / 2) ? 'text-eo-coral fill-eo-coral' : 'text-gray-200'}`}
-            />
-          ))}
+        {speaker.topic && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{speaker.topic}</p>
+        )}
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs font-medium">
+            {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : 'TBD'}
+          </span>
+          <Badge variant="outline" className="text-[10px]">
+            {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label || 'Direct'}
+          </Badge>
         </div>
+        {assignedEvents.length > 0 && (
+          <div className="flex items-center gap-1 mt-2 text-[11px] text-eo-blue font-medium">
+            <CalendarDays className="h-3 w-3" />
+            {assignedEvents.map(e => e.title.split(':')[0]).join(', ')}
+          </div>
+        )}
+        {speaker.notes && (
+          <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2 border-t pt-2">{speaker.notes}</p>
+        )}
       </div>
-      {speaker.topic && (
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{speaker.topic}</p>
-      )}
-      <div className="flex items-center justify-between mt-2">
-        <span className="text-xs font-medium">
-          {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : 'TBD'}
-        </span>
-        <Badge variant="outline" className="text-[10px]">
-          {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label || 'Direct'}
-        </Badge>
-      </div>
-      {speaker.notes && (
-        <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2 border-t pt-2">{speaker.notes}</p>
-      )}
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -303,6 +342,25 @@ export default function SpeakersPage() {
               <div className="col-span-2">
                 <label className="text-xs font-medium">Notes</label>
                 <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Negotiation strategy, referral source, etc." rows={3} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-medium">Event Assignment</label>
+                <Select value={form.assigned_event_id || ''} onChange={e => setForm(p => ({ ...p, assigned_event_id: e.target.value }))}>
+                  <option value="">Not assigned to an event</option>
+                  {[...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99)).map(evt => {
+                    const otherSpeaker = evt.speaker_id && evt.speaker_id !== editSpeaker?.id
+                      ? speakers.find(s => s.id === evt.speaker_id)
+                      : null
+                    return (
+                      <option key={evt.id} value={evt.id}>
+                        {evt.title}{otherSpeaker ? ` (current: ${otherSpeaker.name})` : ''}
+                      </option>
+                    )
+                  })}
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Assign this speaker to an event. Multiple speakers can be considered — only one is assigned at a time.
+                </p>
               </div>
               <div className="col-span-2 flex gap-4">
                 <label className="flex items-center gap-2 text-xs">
