@@ -106,8 +106,8 @@ export default function DashboardPage() {
             <Users className="h-4 w-4" />
             Speaker Pipeline
           </div>
-          <p className="text-2xl font-bold">{speakers.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">speakers tracked</p>
+          <p className="text-2xl font-bold">{speakers.filter(s => s.pipeline_stage !== 'passed').length}</p>
+          <p className="text-xs text-muted-foreground mt-1">active speakers</p>
           <div className="flex gap-1 mt-3">
             {pipelineCounts.map(stage => (
               <div key={stage.id} className="flex-1 text-center">
@@ -193,16 +193,20 @@ export default function DashboardPage() {
             <p className="text-sm text-muted-foreground">No speakers yet. Start building your pipeline.</p>
           ) : (
             <div className="space-y-2">
-              {speakers.slice(0, 4).map(speaker => (
+              {speakers.filter(s => s.pipeline_stage !== 'passed').slice(0, 4).map(speaker => (
                 <div key={speaker.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                   <div>
                     <p className="text-sm font-medium">{speaker.name}</p>
                     <p className="text-xs text-muted-foreground">{speaker.topic}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {formatCurrency(speaker.fee_range_low)}–{formatCurrency(speaker.fee_range_high)}
-                    </span>
+                    {speaker.fee_range_low ? (
+                      <span className="text-xs text-muted-foreground">
+                        {formatCurrency(speaker.fee_range_low)}–{formatCurrency(speaker.fee_range_high)}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">TBD</span>
+                    )}
                     <Badge variant="outline" className="text-[10px]">
                       {PIPELINE_STAGES.find(s => s.id === speaker.pipeline_stage)?.label}
                     </Badge>
