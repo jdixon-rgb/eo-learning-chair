@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   ArrowLeft, Calendar, MapPin, Users, DollarSign, FileText, Megaphone,
-  Star, Plus, Trash2, CheckCircle2, Circle, Clock,
+  Star, Plus, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
 } from 'lucide-react'
 
 export default function EventDetailPage() {
@@ -132,13 +132,122 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground">Speaker</label>
-                <Select value={event.speaker_id || ''} onChange={e => updateEvent(id, { speaker_id: e.target.value || null })}>
-                  <option value="">No speaker assigned</option>
-                  {speakers.map(s => <option key={s.id} value={s.id}>{s.name} ({formatCurrency(s.fee_range_low)}–{formatCurrency(s.fee_range_high)})</option>)}
-                </Select>
-              </div>
+              {/* Candidate Speakers */}
+              {(() => {
+                const candidates = (event.candidate_speaker_ids || []).map(sid => speakers.find(s => s.id === sid)).filter(Boolean)
+                const isSpeakerFinalized = checklist.contract_signed && event.speaker_id
+
+                const addCandidate = (speakerId) => {
+                  if (!speakerId) return
+                  const current = event.candidate_speaker_ids || []
+                  if (!current.includes(speakerId)) {
+                    updateEvent(id, { candidate_speaker_ids: [...current, speakerId] })
+                  }
+                  // Auto-set as primary if first candidate
+                  if (!event.speaker_id) {
+                    updateEvent(id, { speaker_id: speakerId, candidate_speaker_ids: [...current, speakerId] })
+                  }
+                }
+
+                const removeCandidate = (speakerId) => {
+                  const current = event.candidate_speaker_ids || []
+                  const updated = current.filter(sid => sid !== speakerId)
+                  const updates = { candidate_speaker_ids: updated }
+                  if (event.speaker_id === speakerId) {
+                    updates.speaker_id = updated[0] || null
+                  }
+                  updateEvent(id, updates)
+                }
+
+                const setPrimary = (speakerId) => {
+                  updateEvent(id, { speaker_id: speakerId })
+                }
+
+                const availableSpeakers = speakers.filter(s =>
+                  s.pipeline_stage !== 'passed' && !(event.candidate_speaker_ids || []).includes(s.id)
+                )
+
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs text-muted-foreground">
+                        {isSpeakerFinalized ? 'Confirmed Speaker' : 'Candidate Speakers'}
+                      </label>
+                      {isSpeakerFinalized && (
+                        <Badge className="bg-green-100 text-green-700 text-[10px]">
+                          <Shield className="h-3 w-3 mr-0.5" /> Finalized (Contract Signed)
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Current candidates */}
+                    {candidates.length > 0 ? (
+                      <div className="space-y-1.5 mb-2">
+                        {candidates.map(s => {
+                          const isPrimary = s.id === event.speaker_id
+                          return (
+                            <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border text-sm ${isPrimary ? 'border-eo-blue bg-eo-blue/5' : 'border-border'}`}>
+                              <div className="flex items-center gap-2">
+                                {isPrimary ? (
+                                  <UserCheck className="h-3.5 w-3.5 text-eo-blue" />
+                                ) : (
+                                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                )}
+                                <span className={isPrimary ? 'font-semibold text-eo-blue' : ''}>{s.name}</span>
+                                {s.fee_range_low && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {formatCurrency(s.fee_range_low)}–{formatCurrency(s.fee_range_high)}
+                                  </span>
+                                )}
+                                {isPrimary && <Badge variant="outline" className="text-[9px] border-eo-blue text-eo-blue">Primary</Badge>}
+                              </div>
+                              {!isSpeakerFinalized && (
+                                <div className="flex items-center gap-1">
+                                  {!isPrimary && (
+                                    <button
+                                      onClick={() => setPrimary(s.id)}
+                                      className="text-[10px] text-eo-blue hover:underline cursor-pointer px-1"
+                                    >
+                                      Set Primary
+                                    </button>
+                                  )}
+                                  <button onClick={() => removeCandidate(s.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mb-2 italic">No speakers added yet</p>
+                    )}
+
+                    {/* Add candidate dropdown */}
+                    {!isSpeakerFinalized && availableSpeakers.length > 0 && (
+                      <Select
+                        value=""
+                        onChange={e => { addCandidate(e.target.value); e.target.value = '' }}
+                        className="text-xs"
+                      >
+                        <option value="">+ Add candidate speaker...</option>
+                        {availableSpeakers.map(s => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}{s.fee_range_low ? ` (${formatCurrency(s.fee_range_low)}–${formatCurrency(s.fee_range_high)})` : ''}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
+
+                    {!isSpeakerFinalized && candidates.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground mt-1.5 italic">
+                        The primary speaker is finalized when "Contract signed" is checked on the Contract tab.
+                      </p>
+                    )}
+                  </div>
+                )
+              })()}
 
               <div>
                 <label className="text-xs text-muted-foreground">Venue</label>

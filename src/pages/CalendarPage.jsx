@@ -98,7 +98,10 @@ export default function CalendarPage() {
                     {monthEvents.map(event => {
                       const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
                       const budget = getEventBudget(event.id)
-                      const speaker = speakers.find(s => s.id === event.speaker_id)
+                      const primarySpeaker = speakers.find(s => s.id === event.speaker_id)
+                      const candidateSpeakers = (event.candidate_speaker_ids || [])
+                        .map(sid => speakers.find(s => s.id === sid))
+                        .filter(Boolean)
 
                       return (
                         <div
@@ -122,12 +125,22 @@ export default function CalendarPage() {
                             </div>
                           )}
 
-                          {speaker && (
+                          {/* Show candidates with primary highlighted */}
+                          {candidateSpeakers.length > 1 ? (
+                            <div className="mt-1 space-y-0.5">
+                              {candidateSpeakers.map(s => (
+                                <div key={s.id} className={`flex items-center gap-1 text-xs ${s.id === event.speaker_id ? 'text-eo-blue font-medium' : 'text-muted-foreground'}`}>
+                                  <MapPin className="h-3 w-3 shrink-0" />
+                                  {s.name}{s.id === event.speaker_id ? ' ★' : ''}
+                                </div>
+                              ))}
+                            </div>
+                          ) : primarySpeaker ? (
                             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                               <MapPin className="h-3 w-3" />
-                              {speaker.name}
+                              {primarySpeaker.name}
                             </div>
-                          )}
+                          ) : null}
 
                           {budget > 0 && (
                             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">

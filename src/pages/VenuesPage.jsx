@@ -33,7 +33,7 @@ const emptyForm = {
 }
 
 export default function VenuesPage() {
-  const { venues, events, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent } = useStore()
+  const { venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent } = useStore()
   const [showForm, setShowForm] = useState(false)
   const [editVenue, setEditVenue] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -216,12 +216,38 @@ export default function VenuesPage() {
                   {linkedEvents.length > 0 && (
                     <div className="mt-3 pt-3 border-t">
                       <p className="text-[11px] font-medium text-muted-foreground mb-1">LINKED EVENTS</p>
-                      <div className="flex flex-wrap gap-1">
-                        {linkedEvents.map(evt => (
-                          <Badge key={evt.id} variant="secondary" className="text-[10px]">
-                            {evt.title.split(':')[0]}
-                          </Badge>
-                        ))}
+                      <div className="space-y-2">
+                        {linkedEvents.map(evt => {
+                          const confirmedSpeaker = speakers.find(s => s.id === evt.speaker_id)
+                          const candidateSpeakers = (evt.candidate_speaker_ids || [])
+                            .map(sid => speakers.find(s => s.id === sid))
+                            .filter(Boolean)
+                          const checklist = evt.id // we'll check contract_signed via store if available
+                          const isFinalized = confirmedSpeaker && candidateSpeakers.length <= 1
+
+                          return (
+                            <div key={evt.id} className="text-xs">
+                              <p className="font-medium text-[11px]">{evt.title}</p>
+                              {candidateSpeakers.length > 0 ? (
+                                <div className="flex flex-wrap gap-1 mt-0.5">
+                                  {candidateSpeakers.map(s => (
+                                    <span
+                                      key={s.id}
+                                      className={`text-[10px] ${s.id === evt.speaker_id ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}`}
+                                    >
+                                      {s.name}{s.id === evt.speaker_id ? ' ★' : ''}
+                                      {s.id !== candidateSpeakers[candidateSpeakers.length - 1]?.id ? ', ' : ''}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : confirmedSpeaker ? (
+                                <p className="text-[10px] text-eo-blue font-medium mt-0.5">{confirmedSpeaker.name} ★</p>
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">No speaker</p>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -289,12 +315,24 @@ export default function VenuesPage() {
                     </td>
                     <td className="px-4 py-3">
                       {linkedEvents.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {linkedEvents.map(evt => (
-                            <Badge key={evt.id} variant="secondary" className="text-[9px]">
-                              {evt.title.split(':')[0]}
-                            </Badge>
-                          ))}
+                        <div className="space-y-1">
+                          {linkedEvents.map(evt => {
+                            const candidateNames = (evt.candidate_speaker_ids || [])
+                              .map(sid => speakers.find(s => s.id === sid))
+                              .filter(Boolean)
+                              .map(s => s.id === evt.speaker_id ? `${s.name} ★` : s.name)
+                            const confirmedName = !candidateNames.length && evt.speaker_id
+                              ? speakers.find(s => s.id === evt.speaker_id)?.name + ' ★'
+                              : null
+                            return (
+                              <div key={evt.id}>
+                                <p className="text-[11px] font-medium">{evt.title}</p>
+                                <p className="text-[9px] text-muted-foreground">
+                                  {candidateNames.length > 0 ? candidateNames.join(', ') : confirmedName || 'No speaker'}
+                                </p>
+                              </div>
+                            )
+                          })}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>

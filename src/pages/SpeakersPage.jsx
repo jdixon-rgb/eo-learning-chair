@@ -26,13 +26,18 @@ export default function SpeakersPage() {
   const [viewMode, setViewMode] = useState('kanban') // kanban or list
   const [dragSpeaker, setDragSpeaker] = useState(null)
 
-  // Map speaker → event assignment
+  // Map speaker → event assignment (includes candidate assignments)
   const speakerEventMap = {}
   events.forEach(evt => {
-    if (evt.speaker_id) {
-      if (!speakerEventMap[evt.speaker_id]) speakerEventMap[evt.speaker_id] = []
-      speakerEventMap[evt.speaker_id].push(evt)
-    }
+    // Track all candidate assignments
+    const allSpeakerIds = new Set([
+      ...(evt.candidate_speaker_ids || []),
+      ...(evt.speaker_id ? [evt.speaker_id] : []),
+    ])
+    allSpeakerIds.forEach(sid => {
+      if (!speakerEventMap[sid]) speakerEventMap[sid] = []
+      speakerEventMap[sid].push(evt)
+    })
   })
 
   const filteredSpeakers = speakers.filter(s =>
@@ -61,17 +66,28 @@ export default function SpeakersPage() {
       speakerId = newSpeaker.id
     }
 
-    // Handle event assignment changes
+    // Handle event assignment changes (adds speaker as candidate)
     if (speakerId) {
-      // Remove speaker from any events they were previously assigned to
+      // Remove speaker from events they were previously a candidate for (if different event)
       events.forEach(evt => {
-        if (evt.speaker_id === speakerId && evt.id !== assigned_event_id) {
-          updateEvent(evt.id, { speaker_id: null })
+        const candidates = evt.candidate_speaker_ids || []
+        if (candidates.includes(speakerId) && evt.id !== assigned_event_id) {
+          updateEvent(evt.id, {
+            candidate_speaker_ids: candidates.filter(sid => sid !== speakerId),
+            ...(evt.speaker_id === speakerId ? { speaker_id: candidates.filter(sid => sid !== speakerId)[0] || null } : {}),
+          })
         }
       })
-      // Assign to the selected event
+      // Add as candidate to the selected event
       if (assigned_event_id) {
-        updateEvent(assigned_event_id, { speaker_id: speakerId })
+        const evt = events.find(e => e.id === assigned_event_id)
+        const current = evt?.candidate_speaker_ids || []
+        if (!current.includes(speakerId)) {
+          updateEvent(assigned_event_id, {
+            candidate_speaker_ids: [...current, speakerId],
+            ...(!evt?.speaker_id ? { speaker_id: speakerId } : {}),
+          })
+        }
       }
     }
 
@@ -82,7 +98,7 @@ export default function SpeakersPage() {
 
   const openEdit = (speaker) => {
     setEditSpeaker(speaker)
-    const assignedEvt = events.find(e => e.speaker_id === speaker.id)
+    const assignedEvt = events.find(e => (e.candidate_speaker_ids || []).includes(speaker.id) || e.speaker_id === speaker.id)
     setForm({
       name: speaker.name || '',
       topic: speaker.topic || '',
@@ -147,9 +163,17 @@ export default function SpeakersPage() {
           </Badge>
         </div>
         {assignedEvents.length > 0 && (
-          <div className="flex items-center gap-1 mt-2 text-[11px] text-eo-blue font-medium">
-            <CalendarDays className="h-3 w-3" />
-            {assignedEvents.map(e => e.title.split(':')[0]).join(', ')}
+          <div className="mt-2 space-y-0.5">
+            {assignedEvents.map(e => {
+              const isPrimary = e.speaker_id === speaker.id
+              return (
+                <div key={e.id} className={`flex items-center gap-1 text-[11px] ${isPrimary ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}`}>
+                  <CalendarDays className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{e.title.split(':')[0]}</span>
+                  {isPrimary && <span className="text-[9px]">★</span>}
+                </div>
+              )
+            })}
           </div>
         )}
         {speaker.notes && (
@@ -348,18 +372,17 @@ export default function SpeakersPage() {
                 <Select value={form.assigned_event_id || ''} onChange={e => setForm(p => ({ ...p, assigned_event_id: e.target.value }))}>
                   <option value="">Not assigned to an event</option>
                   {[...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99)).map(evt => {
-                    const otherSpeaker = evt.speaker_id && evt.speaker_id !== editSpeaker?.id
-                      ? speakers.find(s => s.id === evt.speaker_id)
-                      : null
+                    const candidateCount = (evt.candidate_speaker_ids || []).length
+                    const primarySpeaker = evt.speaker_id ? speakers.find(s => s.id === evt.speaker_id) : null
                     return (
                       <option key={evt.id} value={evt.id}>
-                        {evt.title}{otherSpeaker ? ` (current: ${otherSpeaker.name})` : ''}
+                        {evt.title}{candidateCount > 0 ? ` (${candidateCount} candidates${primarySpeaker ? `, primary: ${primarySpeaker.name}` : ''})` : ''}
                       </option>
                     )
                   })}
                 </Select>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Assign this speaker to an event. Multiple speakers can be considered — only one is assigned at a time.
+                  Adds this speaker as a candidate for the event. Set the primary speaker and finalize via the Contract tab.
                 </p>
               </div>
               <div className="col-span-2 flex gap-4">

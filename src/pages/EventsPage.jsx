@@ -31,7 +31,10 @@ export default function EventsPage() {
         {sortedEvents.map(event => {
           const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
           const status = EVENT_STATUSES.find(s => s.id === event.status)
-          const speaker = speakers.find(s => s.id === event.speaker_id)
+          const primarySpeaker = speakers.find(s => s.id === event.speaker_id)
+          const candidateSpeakers = (event.candidate_speaker_ids || [])
+            .map(sid => speakers.find(s => s.id === sid))
+            .filter(Boolean)
           const venue = venues.find(v => v.id === event.venue_id)
           const budget = getEventBudget(event.id)
           const month = event.month_index != null ? FISCAL_MONTHS[event.month_index] : null
@@ -73,12 +76,21 @@ export default function EventsPage() {
                       {formatDate(event.event_date)}
                     </div>
                   )}
-                  {speaker && (
+                  {candidateSpeakers.length > 1 ? (
+                    <div className="space-y-0.5">
+                      {candidateSpeakers.map(s => (
+                        <div key={s.id} className={`flex items-center gap-2 text-xs ${s.id === event.speaker_id ? 'text-eo-blue font-medium' : 'text-muted-foreground'}`}>
+                          <Users className="h-3 w-3 shrink-0" />
+                          {s.name}{s.id === event.speaker_id ? ' ★' : ''}
+                        </div>
+                      ))}
+                    </div>
+                  ) : primarySpeaker ? (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Users className="h-3 w-3" />
-                      {speaker.name}
+                      {primarySpeaker.name}
                     </div>
-                  )}
+                  ) : null}
                   {venue && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
