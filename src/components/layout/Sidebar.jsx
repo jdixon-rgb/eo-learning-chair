@@ -1,4 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import {
   LayoutDashboard,
   Calendar,
@@ -10,20 +12,48 @@ import {
   Settings,
   Globe,
   X,
+  LogOut,
+  Shield,
+  ClipboardList,
+  Bell,
 } from 'lucide-react'
 
+// Base nav items with optional permission keys
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/calendar', icon: Calendar, label: 'Year Arc' },
   { to: '/speakers', icon: Users, label: 'Speakers' },
   { to: '/events', icon: CalendarDays, label: 'Events' },
-  { to: '/venues', icon: MapPin, label: 'Venues' },
-  { to: '/budget', icon: DollarSign, label: 'Budget' },
-  { to: '/scenarios', icon: Shuffle, label: 'Scenarios' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
+  { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
+  { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
+  { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
+]
+
+// Admin sub-pages
+const adminItems = [
+  { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
+  { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
+  { to: '/admin/notifications', icon: Bell, label: 'Notifications', permission: 'canSendNotifications' },
 ]
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
+  const { profile, role, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const visibleNav = navItems.filter(item =>
+    !item.permission || hasPermission(role, item.permission)
+  )
+
+  const visibleAdmin = adminItems.filter(item =>
+    !item.permission || hasPermission(role, item.permission)
+  )
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
+  }
+
   return (
     <>
       {/* Backdrop overlay — mobile only */}
@@ -58,8 +88,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map(({ to, icon: Icon, label }) => (
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {visibleNav.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -77,25 +107,64 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               {label}
             </NavLink>
           ))}
+
+          {/* Admin section divider */}
+          {visibleAdmin.length > 0 && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Admin</p>
+              </div>
+              {visibleAdmin.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-eo-blue text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
 
         {/* Member Calendar Link */}
         <div className="px-4 pb-2">
           <NavLink
-            to="/member-calendar"
+            to="/portal/calendar"
             onClick={onNavigate}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors"
           >
             <Globe className="h-3.5 w-3.5" />
-            Member Calendar Preview
+            Member Portal
           </NavLink>
         </div>
 
-        {/* Footer */}
+        {/* Footer: User info + Sign out */}
         <div className="p-4 border-t border-white/10">
-          <div className="text-xs text-white/40">
-            <p>EO Arizona</p>
-            <p className="mt-1">FY 2026–2027</p>
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium text-white/80 truncate">
+                {profile?.full_name || 'User'}
+              </p>
+              <p className="text-[10px] text-white/40 truncate">
+                {profile?.email || role || 'EO Arizona'}
+              </p>
+            </div>
+            <button
+              onClick={handleSignOut}
+              title="Sign out"
+              className="text-white/30 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>

@@ -33,7 +33,6 @@ export function StoreProvider({ children }) {
   const [contractChecklists, setContractChecklists] = useState(saved?.contractChecklists ?? mockContractChecklists)
   const [saps, setSaps] = useState(saved?.saps ?? mockSAPs)
   const [scenarios, setScenarios] = useState(saved?.scenarios ?? [])
-  const [userRole] = useState('learning_chair')
 
   // Persist every state change to localStorage
   useEffect(() => {
@@ -195,7 +194,6 @@ export function StoreProvider({ children }) {
     contractChecklists,
     saps,
     scenarios,
-    userRole,
 
     // Speaker ops
     addSpeaker,

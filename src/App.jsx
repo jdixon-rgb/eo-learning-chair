@@ -1,5 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from '@/lib/auth'
 import { StoreProvider } from '@/lib/store'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES } from '@/lib/permissions'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
 import CalendarPage from '@/pages/CalendarPage'
@@ -10,29 +13,81 @@ import VenuesPage from '@/pages/VenuesPage'
 import BudgetPage from '@/pages/BudgetPage'
 import ScenarioPage from '@/pages/ScenarioPage'
 import SettingsPage from '@/pages/SettingsPage'
+import LoginPage from '@/pages/LoginPage'
 import MemberCalendarPage from '@/pages/MemberCalendarPage'
+import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
+import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
+import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
+import SurveyPage from '@/pages/portal/SurveyPage'
+import MemberManagementPage from '@/pages/admin/MemberManagementPage'
+import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
+import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 
 function App() {
   return (
-    <StoreProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/speakers" element={<SpeakersPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/events/:id" element={<EventDetailPage />} />
-            <Route path="/venues" element={<VenuesPage />} />
-            <Route path="/budget" element={<BudgetPage />} />
-            <Route path="/scenarios" element={<ScenarioPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Route>
-          {/* Member-facing calendar (separate layout, no sidebar) */}
-          <Route path="/member-calendar" element={<MemberCalendarPage />} />
-        </Routes>
-      </BrowserRouter>
-    </StoreProvider>
+    <AuthProvider>
+      <StoreProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Legacy member calendar redirect */}
+            <Route path="/member-calendar" element={<Navigate to="/portal/calendar" replace />} />
+
+            {/* Admin routes (sidebar layout) */}
+            <Route element={
+              <ProtectedRoute allowedRoles={ADMIN_LAYOUT_ROLES}>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/speakers" element={<SpeakersPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/events/:id" element={<EventDetailPage />} />
+              <Route path="/venues" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><VenuesPage /></ProtectedRoute>
+              } />
+              <Route path="/budget" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><BudgetPage /></ProtectedRoute>
+              } />
+              <Route path="/scenarios" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><ScenarioPage /></ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><SettingsPage /></ProtectedRoute>
+              } />
+              {/* Admin sub-pages */}
+              <Route path="/admin/members" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><MemberManagementPage /></ProtectedRoute>
+              } />
+              <Route path="/admin/surveys" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><SurveyResultsPage /></ProtectedRoute>
+              } />
+              <Route path="/admin/notifications" element={
+                <ProtectedRoute allowedRoles={ADMIN_ROLES}><NotificationComposePage /></ProtectedRoute>
+              } />
+            </Route>
+
+            {/* Member Portal routes (dark-themed top nav layout) */}
+            <Route element={
+              <ProtectedRoute allowedRoles={PORTAL_ROLES}>
+                <MemberPortalLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/portal" element={<MemberPortalDashboard />} />
+              <Route path="/portal/calendar" element={<MemberCalendarPage embedded />} />
+              <Route path="/portal/survey" element={<SurveyPage />} />
+              <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
+            </Route>
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </StoreProvider>
+    </AuthProvider>
   )
 }
 

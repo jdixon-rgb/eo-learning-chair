@@ -39,7 +39,7 @@ function isEventPast(event) {
   return d < new Date()
 }
 
-export default function MemberCalendarPage() {
+export default function MemberCalendarPage({ embedded = false }) {
   const { chapter, events, speakers, venues } = useStore()
   const windowMonths = getMonthWindow()
 
@@ -52,30 +52,32 @@ export default function MemberCalendarPage() {
   const futureTeaser = sortedEvents.filter(e => !isEventInWindow(e, windowMonths))
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white">
-      {/* Header */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-eo-blue/20 via-transparent to-transparent" />
-        <div className="relative max-w-4xl mx-auto px-6 py-12 text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-8 h-[2px] bg-eo-coral" />
-            <span className="text-xs font-bold tracking-[0.3em] text-eo-coral uppercase">EO Arizona</span>
-            <div className="w-8 h-[2px] bg-eo-coral" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Learning Calendar
-          </h1>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Sparkles className="h-4 w-4 text-eo-coral" />
-            <p className="text-lg text-white/70">
-              FY 2026–2027 &middot; President's Theme: <span className="font-semibold text-white">"{chapter.president_theme}"</span>
+    <div className={embedded ? 'text-white' : 'min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white'}>
+      {/* Header — standalone only */}
+      {!embedded && (
+        <header className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-eo-blue/20 via-transparent to-transparent" />
+          <div className="relative max-w-4xl mx-auto px-6 py-12 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="w-8 h-[2px] bg-eo-coral" />
+              <span className="text-xs font-bold tracking-[0.3em] text-eo-coral uppercase">EO Arizona</span>
+              <div className="w-8 h-[2px] bg-eo-coral" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Learning Calendar
+            </h1>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Sparkles className="h-4 w-4 text-eo-coral" />
+              <p className="text-lg text-white/70">
+                FY 2026–2027 &middot; President's Theme: <span className="font-semibold text-white">"{chapter.president_theme}"</span>
+              </p>
+            </div>
+            <p className="mt-3 text-sm text-white/40">
+              All events are included with your membership — no additional fees.
             </p>
           </div>
-          <p className="mt-3 text-sm text-white/40">
-            All events are included with your membership — no additional fees.
-          </p>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Upcoming Events (Full Detail) */}
       <section className="max-w-4xl mx-auto px-6 pb-8">
@@ -225,13 +227,15 @@ export default function MemberCalendarPage() {
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-8">
-        <div className="max-w-4xl mx-auto px-6 text-center text-xs text-white/30">
-          <p>EO Arizona &middot; Learning Calendar &middot; FY 2026–2027</p>
-          <p className="mt-1">All learning events are included with your EO membership. No additional fees.</p>
-        </div>
-      </footer>
+      {/* Footer — standalone only */}
+      {!embedded && (
+        <footer className="border-t border-white/5 py-8">
+          <div className="max-w-4xl mx-auto px-6 text-center text-xs text-white/30">
+            <p>EO Arizona &middot; Learning Calendar &middot; FY 2026–2027</p>
+            <p className="mt-1">All learning events are included with your EO membership. No additional fees.</p>
+          </div>
+        </footer>
+      )}
     </div>
   )
 }

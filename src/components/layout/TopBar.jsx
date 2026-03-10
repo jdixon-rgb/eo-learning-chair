@@ -1,9 +1,11 @@
 import { useStore } from '@/lib/store'
+import { useAuth } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
-import { Sparkles, Menu } from 'lucide-react'
+import { Sparkles, Menu, User } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
   const { chapter, totalEstimated, budgetRemaining } = useStore()
+  const { profile } = useAuth()
   const budgetPercent = ((totalEstimated / chapter.total_budget) * 100).toFixed(0)
 
   return (

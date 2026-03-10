@@ -127,10 +127,9 @@ export const DEFAULT_MARKETING_MILESTONES = [
 // User roles
 export const USER_ROLES = [
   { id: 'learning_chair', label: 'Learning Chair', access: 'full' },
-  { id: 'president', label: 'President', access: 'executive' },
-  { id: 'board_member', label: 'Board Member', access: 'view' },
-  { id: 'committee_member', label: 'Committee Member', access: 'view' },
-  { id: 'day_chair', label: 'Day Chair', access: 'event_specific' },
-  { id: 'staff', label: 'EO AZ Chapter Staff', access: 'operations' },
-  { id: 'member', label: 'Member', access: 'calendar_only' },
+  { id: 'chapter_experience_coordinator', label: 'Chapter Experience Coordinator', access: 'full' },
+  { id: 'chapter_executive_director', label: 'Chapter Executive Director', access: 'full' },
+  { id: 'committee_member', label: 'Committee Member', access: 'edit_limited' },
+  { id: 'board_liaison', label: 'Board Liaison', access: 'view' },
+  { id: 'member', label: 'Member', access: 'portal_only' },
 ]

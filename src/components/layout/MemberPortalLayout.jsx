@@ -1,0 +1,116 @@
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/lib/auth'
+import { Calendar, ClipboardList, Bell, LogOut, Sparkles, Menu, X } from 'lucide-react'
+import { useState } from 'react'
+
+const portalNav = [
+  { to: '/portal', icon: Calendar, label: 'Home', end: true },
+  { to: '/portal/calendar', icon: Calendar, label: 'Calendar' },
+  { to: '/portal/survey', icon: ClipboardList, label: 'Survey' },
+  { to: '/portal/notifications', icon: Bell, label: 'Notifications' },
+]
+
+export default function MemberPortalLayout() {
+  const { profile, signOut } = useAuth()
+  const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white">
+      {/* Top Nav */}
+      <header className="border-b border-white/10 bg-eo-navy/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          {/* Left: Brand */}
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-4 w-4 text-eo-coral" />
+            <span className="text-sm font-bold tracking-tight">EO Arizona</span>
+            <span className="text-xs text-white/40 hidden sm:inline">Member Portal</span>
+          </div>
+
+          {/* Center: Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {portalNav.map(({ to, icon: Icon, label, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-eo-blue text-white'
+                      : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Right: User + Sign out */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-white/50 hidden sm:inline">
+              {profile?.full_name || profile?.email}
+            </span>
+            <button
+              onClick={handleSignOut}
+              className="text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer hidden md:block"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile nav dropdown */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-eo-navy/95 backdrop-blur-sm">
+            {portalNav.map(({ to, icon: Icon, label, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                onClick={() => setMobileOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-eo-blue text-white'
+                      : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </NavLink>
+            ))}
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/40 hover:bg-white/10 hover:text-white transition-colors w-full cursor-pointer"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
+          </div>
+        )}
+      </header>
+
+      {/* Content */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
