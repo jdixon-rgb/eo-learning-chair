@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
-import { Calendar, ClipboardList, Bell, LogOut, Sparkles, Menu, X } from 'lucide-react'
+import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
+import { Calendar, ClipboardList, Bell, LogOut, Sparkles, Menu, X, ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 
 const portalNav = [
@@ -55,6 +56,15 @@ export default function MemberPortalLayout() {
 
           {/* Right: User + Sign out */}
           <div className="flex items-center gap-3">
+            {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
+              <NavLink
+                to="/"
+                className="text-xs text-eo-coral hover:text-eo-coral/80 font-medium flex items-center gap-1 transition-colors"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Admin
+              </NavLink>
+            )}
             <span className="text-xs text-white/50 hidden sm:inline">
               {profile?.full_name || profile?.email}
             </span>
@@ -96,6 +106,16 @@ export default function MemberPortalLayout() {
                 {label}
               </NavLink>
             ))}
+            {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
+              <NavLink
+                to="/"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-eo-coral hover:bg-white/10 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Admin Dashboard
+              </NavLink>
+            )}
             <button
               onClick={handleSignOut}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/40 hover:bg-white/10 hover:text-white transition-colors w-full cursor-pointer"

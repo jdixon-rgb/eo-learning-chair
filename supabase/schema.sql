@@ -28,12 +28,54 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
--- Auto-create profile when a new user signs up
+-- 1b. Member Invites (whitelist — only pre-approved emails can sign in)
+create table if not exists public.member_invites (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  full_name text not null default '',
+  role text not null default 'member'
+    check (role in (
+      'learning_chair',
+      'chapter_experience_coordinator',
+      'chapter_executive_director',
+      'committee_member',
+      'board_liaison',
+      'member'
+    )),
+  invited_by uuid references public.profiles(id),
+  created_at timestamptz not null default now(),
+  claimed_at timestamptz
+);
+
+-- Check if an email is on the whitelist (callable by unauthenticated users)
+create or replace function public.is_invited_member(check_email text)
+returns boolean as $$
+  select exists (
+    select 1 from public.member_invites where lower(email) = lower(check_email)
+  );
+$$ language sql security definer;
+
+-- Auto-create profile when a new user signs up (pulls role from invite)
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  invite record;
 begin
-  insert into public.profiles (id, email, full_name)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', ''));
+  select * into invite from public.member_invites
+    where lower(email) = lower(new.email);
+
+  insert into public.profiles (id, email, full_name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(nullif(invite.full_name, ''), new.raw_user_meta_data->>'full_name', ''),
+    coalesce(invite.role, 'member')
+  );
+
+  if invite.id is not null then
+    update public.member_invites set claimed_at = now() where id = invite.id;
+  end if;
+
   return new;
 end;
 $$ language plpgsql security definer;
@@ -135,3 +177,12 @@ create policy "Admins can insert notifications" on public.notifications
   for insert with check (public.is_admin());
 create policy "Admins can view all notifications" on public.notifications
   for select using (public.is_admin());
+
+-- Member invite policies
+alter table public.member_invites enable row level security;
+create policy "Admins can view all invites" on public.member_invites
+  for select using (public.is_admin());
+create policy "Admins can insert invites" on public.member_invites
+  for insert with check (public.is_admin());
+create policy "Admins can delete invites" on public.member_invites
+  for delete using (public.is_admin());

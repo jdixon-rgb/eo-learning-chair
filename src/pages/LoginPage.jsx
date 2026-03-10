@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
@@ -23,6 +24,19 @@ export default function LoginPage() {
     if (!email.trim()) return
     setSending(true)
     setError('')
+
+    // Check whitelist before sending magic link
+    if (isSupabaseConfigured()) {
+      const { data: isInvited, error: rpcErr } = await supabase.rpc('is_invited_member', {
+        check_email: email.trim()
+      })
+      if (rpcErr || !isInvited) {
+        setSending(false)
+        setError("This email isn't registered. Contact your Learning Chair to request access.")
+        return
+      }
+    }
+
     const { error: err } = await signIn(email.trim())
     setSending(false)
     if (err) {
