@@ -40,9 +40,10 @@ export default function ScenarioPage() {
     [speakers]
   )
 
-  // Get speaker fee estimate (midpoint of range)
+  // Get speaker fee estimate — prefer fee_estimated, fall back to midpoint of range
   const getSpeakerFee = (speaker) => {
     if (!speaker) return 0
+    if (speaker.fee_estimated) return speaker.fee_estimated
     if (speaker.fee_range_low && speaker.fee_range_high) {
       return (speaker.fee_range_low + speaker.fee_range_high) / 2
     }

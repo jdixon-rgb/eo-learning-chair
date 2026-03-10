@@ -193,6 +193,26 @@ export default function EventDetailPage() {
                 const candidates = (event.candidate_speaker_ids || []).map(sid => speakers.find(s => s.id === sid)).filter(Boolean)
                 const isSpeakerFinalized = checklist.contract_signed && event.speaker_id
 
+                // Helper: get the best fee estimate for a speaker
+                const getSpeakerFee = (s) => {
+                  if (!s) return 0
+                  if (s.fee_estimated) return s.fee_estimated
+                  if (s.fee_range_low && s.fee_range_high) return (s.fee_range_low + s.fee_range_high) / 2
+                  return s.fee_range_low || s.fee_range_high || 0
+                }
+
+                // Sync speaker_fee budget line when primary speaker changes
+                const syncSpeakerFeeBudget = (speakerId) => {
+                  const speakerObj = speakerId ? speakers.find(s => s.id === speakerId) : null
+                  const fee = getSpeakerFee(speakerObj)
+                  const existingItem = eventBudget.find(b => b.category === 'speaker_fee')
+                  if (existingItem) {
+                    updateBudgetItem(existingItem.id, { estimated_amount: fee, description: speakerObj ? `${speakerObj.name}` : '' })
+                  } else if (fee > 0) {
+                    addBudgetItem({ event_id: id, category: 'speaker_fee', description: speakerObj?.name || '', estimated_amount: fee, actual_amount: null })
+                  }
+                }
+
                 const addCandidate = (speakerId) => {
                   if (!speakerId) return
                   const current = event.candidate_speaker_ids || []
@@ -202,6 +222,7 @@ export default function EventDetailPage() {
                   // Auto-set as primary if first candidate
                   if (!event.speaker_id) {
                     updateEvent(id, { speaker_id: speakerId, candidate_speaker_ids: [...current, speakerId] })
+                    syncSpeakerFeeBudget(speakerId)
                   }
                 }
 
@@ -211,12 +232,14 @@ export default function EventDetailPage() {
                   const updates = { candidate_speaker_ids: updated }
                   if (event.speaker_id === speakerId) {
                     updates.speaker_id = updated[0] || null
+                    syncSpeakerFeeBudget(updated[0] || null)
                   }
                   updateEvent(id, updates)
                 }
 
                 const setPrimary = (speakerId) => {
                   updateEvent(id, { speaker_id: speakerId })
+                  syncSpeakerFeeBudget(speakerId)
                 }
 
                 const availableSpeakers = speakers.filter(s =>
