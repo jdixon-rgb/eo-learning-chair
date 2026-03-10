@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '@/lib/store'
 import { PIPELINE_STAGES, CONTACT_METHODS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
@@ -169,34 +169,16 @@ export default function SpeakersPage() {
         </div>
         {/* Inline estimated / actual fee inputs */}
         <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t" onClick={e => e.stopPropagation()} onDragStart={e => e.stopPropagation()}>
-          <div>
-            <label className="text-[10px] text-muted-foreground font-medium">Estimated</label>
-            <Input
-              className="h-7 text-xs text-right"
-              type="number"
-              value={speaker.fee_estimated ?? ''}
-              placeholder="$"
-              onClick={e => e.stopPropagation()}
-              onChange={e => {
-                e.stopPropagation()
-                updateSpeaker(speaker.id, { fee_estimated: e.target.value ? parseFloat(e.target.value) : null })
-              }}
-            />
-          </div>
-          <div>
-            <label className="text-[10px] text-muted-foreground font-medium">Actual</label>
-            <Input
-              className="h-7 text-xs text-right"
-              type="number"
-              value={speaker.fee_actual ?? ''}
-              placeholder="$"
-              onClick={e => e.stopPropagation()}
-              onChange={e => {
-                e.stopPropagation()
-                updateSpeaker(speaker.id, { fee_actual: e.target.value ? parseFloat(e.target.value) : null })
-              }}
-            />
-          </div>
+          <InlineFeeInput
+            label="Estimated"
+            value={speaker.fee_estimated}
+            onSave={val => updateSpeaker(speaker.id, { fee_estimated: val })}
+          />
+          <InlineFeeInput
+            label="Actual"
+            value={speaker.fee_actual}
+            onSave={val => updateSpeaker(speaker.id, { fee_actual: val })}
+          />
         </div>
         {assignedEvents.length > 0 && (
           <div className="mt-2 space-y-0.5">
@@ -464,6 +446,34 @@ export default function SpeakersPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+// ── Stable helper: local state prevents unmount on every keystroke ──
+function InlineFeeInput({ label, value, onSave }) {
+  const [local, setLocal] = useState(value ?? '')
+
+  // Sync from parent when the speaker's stored value changes externally
+  useEffect(() => { setLocal(value ?? '') }, [value])
+
+  return (
+    <div>
+      <label className="text-[10px] text-muted-foreground font-medium">{label}</label>
+      <Input
+        className="h-7 text-xs text-right"
+        type="number"
+        value={local}
+        placeholder="$"
+        onClick={e => e.stopPropagation()}
+        onDragStart={e => e.stopPropagation()}
+        onChange={e => {
+          e.stopPropagation()
+          setLocal(e.target.value)
+        }}
+        onBlur={() => onSave(local ? parseFloat(local) : null)}
+        onKeyDown={e => { if (e.key === 'Enter') e.target.blur() }}
+      />
     </div>
   )
 }
