@@ -439,10 +439,10 @@ export default function EventDetailPage() {
               {eventBudget.length > 0 ? (
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b text-xs text-muted-foreground">
+                    <tr className="border-b text-xs font-semibold text-foreground">
                       <th className="pb-2 text-left">Category</th>
                       <th className="pb-2 text-left">Description</th>
-                      <th className="pb-2 text-right">Estimated</th>
+                      <th className="pb-2 text-right">Estimated (Goal)</th>
                       <th className="pb-2 text-right">Actual</th>
                       <th className="pb-2 w-10"></th>
                     </tr>
@@ -469,6 +469,7 @@ export default function EventDetailPage() {
                             type="number"
                             value={item.estimated_amount || ''}
                             onChange={e => updateBudgetItem(item.id, { estimated_amount: e.target.value ? parseFloat(e.target.value) : 0 })}
+                            placeholder="Estimated $"
                           />
                         </td>
                         <td className="py-2 px-2">
@@ -477,7 +478,7 @@ export default function EventDetailPage() {
                             type="number"
                             value={item.actual_amount ?? ''}
                             onChange={e => updateBudgetItem(item.id, { actual_amount: e.target.value ? parseFloat(e.target.value) : null })}
-                            placeholder="—"
+                            placeholder="Actual $"
                           />
                         </td>
                         <td className="py-2">

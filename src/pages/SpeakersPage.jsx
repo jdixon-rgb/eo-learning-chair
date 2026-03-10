@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays } from 'lucide-react'
+import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays, DollarSign } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
+  fee_estimated: '', fee_actual: '',
   contact_email: '', contact_phone: '', agency_name: '', agency_contact: '',
   contact_method: 'direct', fit_score: 7, notes: '',
   routing_flexibility: false, multi_chapter_interest: false,
@@ -55,6 +56,8 @@ export default function SpeakersPage() {
       ...speakerData,
       fee_range_low: speakerData.fee_range_low ? parseFloat(speakerData.fee_range_low) : null,
       fee_range_high: speakerData.fee_range_high ? parseFloat(speakerData.fee_range_high) : null,
+      fee_estimated: speakerData.fee_estimated ? parseFloat(speakerData.fee_estimated) : null,
+      fee_actual: speakerData.fee_actual ? parseFloat(speakerData.fee_actual) : null,
       fit_score: parseInt(speakerData.fit_score),
     }
     let speakerId
@@ -105,6 +108,8 @@ export default function SpeakersPage() {
       bio: speaker.bio || '',
       fee_range_low: speaker.fee_range_low || '',
       fee_range_high: speaker.fee_range_high || '',
+      fee_estimated: speaker.fee_estimated || '',
+      fee_actual: speaker.fee_actual || '',
       contact_email: speaker.contact_email || '',
       contact_phone: speaker.contact_phone || '',
       agency_name: speaker.agency_name || '',
@@ -161,6 +166,37 @@ export default function SpeakersPage() {
           <Badge variant="outline" className="text-[10px]">
             {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label || 'Direct'}
           </Badge>
+        </div>
+        {/* Inline estimated / actual fee inputs */}
+        <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t" onClick={e => e.stopPropagation()} onDragStart={e => e.stopPropagation()}>
+          <div>
+            <label className="text-[10px] text-muted-foreground font-medium">Estimated</label>
+            <Input
+              className="h-7 text-xs text-right"
+              type="number"
+              value={speaker.fee_estimated ?? ''}
+              placeholder="$"
+              onClick={e => e.stopPropagation()}
+              onChange={e => {
+                e.stopPropagation()
+                updateSpeaker(speaker.id, { fee_estimated: e.target.value ? parseFloat(e.target.value) : null })
+              }}
+            />
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground font-medium">Actual</label>
+            <Input
+              className="h-7 text-xs text-right"
+              type="number"
+              value={speaker.fee_actual ?? ''}
+              placeholder="$"
+              onClick={e => e.stopPropagation()}
+              onChange={e => {
+                e.stopPropagation()
+                updateSpeaker(speaker.id, { fee_actual: e.target.value ? parseFloat(e.target.value) : null })
+              }}
+            />
+          </div>
         </div>
         {assignedEvents.length > 0 && (
           <div className="mt-2 space-y-0.5">
@@ -250,6 +286,8 @@ export default function SpeakersPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Speaker</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Topic</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fee Range</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Estimated</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actual</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fit</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stage</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Contact</th>
@@ -269,6 +307,12 @@ export default function SpeakersPage() {
                   <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">{speaker.topic}</td>
                   <td className="px-4 py-3 text-sm">
                     {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-right">
+                    {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
@@ -328,6 +372,14 @@ export default function SpeakersPage() {
               <div>
                 <label className="text-xs font-medium">Fee High ($)</label>
                 <Input type="number" value={form.fee_range_high} onChange={e => setForm(p => ({ ...p, fee_range_high: e.target.value }))} placeholder="25000" />
+              </div>
+              <div>
+                <label className="text-xs font-medium">Estimated Fee ($)</label>
+                <Input type="number" value={form.fee_estimated} onChange={e => setForm(p => ({ ...p, fee_estimated: e.target.value }))} placeholder="Negotiated estimate" />
+              </div>
+              <div>
+                <label className="text-xs font-medium">Actual Fee ($)</label>
+                <Input type="number" value={form.fee_actual} onChange={e => setForm(p => ({ ...p, fee_actual: e.target.value }))} placeholder="Final amount paid" />
               </div>
               <div>
                 <label className="text-xs font-medium">Contact Method</label>
