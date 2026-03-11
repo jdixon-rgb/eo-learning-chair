@@ -1,8 +1,9 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
-import { Calendar, ClipboardList, Bell, LogOut, Sparkles, Menu, X, ArrowLeft } from 'lucide-react'
+import { Calendar, ClipboardList, Bell, LogOut, Menu, X, ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
+import eoLogo from '@/assets/eo-az-gray.png'
 
 const portalNav = [
   { to: '/portal', icon: Calendar, label: 'Home', end: true },
@@ -28,9 +29,11 @@ export default function MemberPortalLayout() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
-            <Sparkles className="h-4 w-4 text-eo-coral" />
-            <span className="text-sm font-bold tracking-tight">EO Arizona</span>
-            <span className="text-xs text-white/40 hidden sm:inline">Member Portal</span>
+            <img src={eoLogo} alt="EO" className="h-8 w-auto" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-xs font-bold tracking-tight">Learning Chair</span>
+              <span className="text-[10px] text-white/40">Member Portal</span>
+            </div>
           </div>
 
           {/* Center: Desktop nav */}

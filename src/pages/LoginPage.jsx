@@ -4,7 +4,8 @@ import { useAuth } from '@/lib/auth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Mail, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
+import { Mail, Loader2, CheckCircle2 } from 'lucide-react'
+import eoLogo from '@/assets/eo-az-gray.png'
 
 export default function LoginPage() {
   const { session, profile, loading, signIn } = useAuth()
@@ -51,10 +52,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="h-8 w-8 text-eo-coral" />
-            <h1 className="text-2xl font-bold text-white">EO Arizona</h1>
-          </div>
+          <img src={eoLogo} alt="EO Arizona" className="h-16 w-auto mx-auto mb-3" />
           <p className="text-white/60 text-sm">Learning Chair Command Center</p>
         </div>
 
