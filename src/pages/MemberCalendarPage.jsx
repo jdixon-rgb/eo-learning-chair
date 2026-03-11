@@ -2,7 +2,8 @@ import { useStore } from '@/lib/store'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES } from '@/lib/constants'
 import { formatDateWithDay } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Clock, Sparkles, Lock, ChevronRight } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, Lock, ChevronRight } from 'lucide-react'
+import eoCirclesWhite from '@/assets/eo-circles-white.png'
 
 // Rolling 2-month window:
 // - Events in the next 2 calendar months: full details (speaker, venue, description, date)
@@ -67,7 +68,7 @@ export default function MemberCalendarPage({ embedded = false }) {
               Learning Calendar
             </h1>
             <div className="flex items-center justify-center gap-2 mt-4">
-              <Sparkles className="h-4 w-4 text-eo-coral" />
+              <img src={eoCirclesWhite} alt="EO" className="h-4 w-4" />
               <p className="text-lg text-white/70">
                 FY 2026–2027 &middot; President's Theme: <span className="font-semibold text-white">"{chapter.president_theme}"</span>
               </p>

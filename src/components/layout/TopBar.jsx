@@ -1,7 +1,8 @@
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
-import { Sparkles, Menu, User } from 'lucide-react'
+import { Menu, User } from 'lucide-react'
+import eoCirclesBlue from '@/assets/eo-circles-blue.png'
 
 export default function TopBar({ onMenuToggle }) {
   const { chapter, totalEstimated, budgetRemaining } = useStore()
@@ -18,7 +19,7 @@ export default function TopBar({ onMenuToggle }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Sparkles className="h-5 w-5 text-eo-coral hidden sm:block" />
+        <img src={eoCirclesBlue} alt="EO" className="h-5 w-5 hidden sm:block" />
         <div>
           <p className="text-sm font-semibold text-foreground">
             <span className="hidden sm:inline">Theme: </span>
