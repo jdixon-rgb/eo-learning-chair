@@ -12,8 +12,8 @@ import {
   ArrowRight,
   TrendingUp,
   Clock,
+  Route,
 } from 'lucide-react'
-import eoCirclesBlue from '@/assets/eo-circles-blue.png'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -144,7 +144,7 @@ export default function DashboardPage() {
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <img src={eoCirclesBlue} alt="EO" className="h-4 w-4" />
+            <Route className="h-4 w-4 text-eo-coral" />
             <h2 className="text-sm font-semibold">Year Arc — "{chapter.president_theme}"</h2>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')}>

@@ -9,8 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Calendar, MapPin, DollarSign, Handshake } from 'lucide-react'
-import eoCirclesBlue from '@/assets/eo-circles-blue.png'
+import { Plus, Calendar, MapPin, DollarSign, Handshake, Route } from 'lucide-react'
 
 export default function CalendarPage() {
   const navigate = useNavigate()
@@ -53,7 +52,7 @@ export default function CalendarPage() {
       <div>
         <h1 className="text-2xl font-bold">Year Arc Calendar</h1>
         <div className="flex items-center gap-2 mt-2">
-          <img src={eoCirclesBlue} alt="EO" className="h-4 w-4" />
+          <Route className="h-4 w-4 text-eo-coral" />
           <p className="text-sm text-muted-foreground">
             FY 2026–2027 &middot; President's Theme: <span className="font-semibold text-eo-blue">"{chapter.president_theme}"</span>
           </p>

@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Bell,
 } from 'lucide-react'
+import eoLogo from '@/assets/eo-az-gray.png'
 
 // Base nav items with optional permission keys
 const navItems = [
@@ -74,17 +75,20 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
         `}
       >
         {/* Logo / Title + Close button */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold tracking-tight">EO Learning Chair</h1>
-            <p className="text-xs text-white/50 mt-1">Command Center</p>
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <img src={eoLogo} alt="EO Arizona" className="h-10 w-auto brightness-0 invert opacity-80" />
+            <button
+              onClick={onClose}
+              className="md:hidden text-white/50 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="md:hidden text-white/50 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="mt-3">
+            <h1 className="text-sm font-bold tracking-tight text-white/90">Learning Chair</h1>
+            <p className="text-[10px] text-white/40">Command Center</p>
+          </div>
         </div>
 
         {/* Navigation */}

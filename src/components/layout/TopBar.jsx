@@ -1,8 +1,7 @@
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
-import { Menu, User } from 'lucide-react'
-import eoCirclesBlue from '@/assets/eo-circles-blue.png'
+import { Menu, User, Palette } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
   const { chapter, totalEstimated, budgetRemaining } = useStore()
@@ -19,7 +18,7 @@ export default function TopBar({ onMenuToggle }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <img src={eoCirclesBlue} alt="EO" className="h-5 w-5 hidden sm:block" />
+        <Palette className="h-5 w-5 text-eo-blue hidden sm:block" />
         <div>
           <p className="text-sm font-semibold text-foreground">
             <span className="hidden sm:inline">Theme: </span>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { Calendar, ClipboardList, Bell, ChevronRight } from 'lucide-react'
-import eoCirclesWhite from '@/assets/eo-circles-white.png'
+import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
 
 export default function MemberPortalDashboard() {
@@ -23,11 +23,9 @@ export default function MemberPortalDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div className="text-center py-6">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <img src={eoCirclesWhite} alt="EO" className="h-5 w-5" />
-          <h1 className="text-2xl md:text-3xl font-bold">Welcome, {firstName}</h1>
-        </div>
-        <p className="text-white/50 text-sm">Your EO Arizona member hub</p>
+        <img src={eoLogo} alt="EO Arizona" className="h-10 w-auto mx-auto mb-4 brightness-0 invert opacity-60" />
+        <h1 className="text-2xl md:text-3xl font-bold">Welcome, {firstName}</h1>
+        <p className="text-white/50 text-sm mt-1">Your EO Arizona member hub</p>
       </div>
 
       {/* Quick action cards */}
