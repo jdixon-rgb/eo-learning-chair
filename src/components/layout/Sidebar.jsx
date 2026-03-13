@@ -18,6 +18,7 @@ import {
   Bell,
 } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
+import { APP_VERSION } from '@/lib/version'
 
 // Base nav items with optional permission keys
 const navItems = [
@@ -169,6 +170,9 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             >
               <LogOut className="h-4 w-4" />
             </button>
+          </div>
+          <div className="mt-3 border-t border-white/10 pt-2 text-center">
+            <span className="text-[10px] text-white/20">v{APP_VERSION}</span>
           </div>
         </div>
       </aside>
