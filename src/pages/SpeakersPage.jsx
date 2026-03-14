@@ -70,28 +70,36 @@ export default function SpeakersPage() {
     }
 
     // Handle event assignment changes (adds speaker as candidate)
+    // Build all mutations first, then apply, to avoid stale state issues
     if (speakerId) {
+      const mutations = []
+
       // Remove speaker from events they were previously a candidate for (if different event)
       events.forEach(evt => {
         const candidates = evt.candidate_speaker_ids || []
         if (candidates.includes(speakerId) && evt.id !== assigned_event_id) {
-          updateEvent(evt.id, {
-            candidate_speaker_ids: candidates.filter(sid => sid !== speakerId),
-            ...(evt.speaker_id === speakerId ? { speaker_id: candidates.filter(sid => sid !== speakerId)[0] || null } : {}),
-          })
+          const filtered = candidates.filter(sid => sid !== speakerId)
+          mutations.push([evt.id, {
+            candidate_speaker_ids: filtered,
+            ...(evt.speaker_id === speakerId ? { speaker_id: filtered[0] || null } : {}),
+          }])
         }
       })
+
       // Add as candidate to the selected event
       if (assigned_event_id) {
         const evt = events.find(e => e.id === assigned_event_id)
         const current = evt?.candidate_speaker_ids || []
         if (!current.includes(speakerId)) {
-          updateEvent(assigned_event_id, {
+          mutations.push([assigned_event_id, {
             candidate_speaker_ids: [...current, speakerId],
             ...(!evt?.speaker_id ? { speaker_id: speakerId } : {}),
-          })
+          }])
         }
       }
+
+      // Apply all mutations
+      mutations.forEach(([id, updates]) => updateEvent(id, updates))
     }
 
     setShowForm(false)
