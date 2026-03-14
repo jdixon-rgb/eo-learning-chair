@@ -16,6 +16,7 @@ import {
   Shield,
   ClipboardList,
   Bell,
+  MessageSquarePlus,
 } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
@@ -140,8 +141,22 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           )}
         </nav>
 
-        {/* Member Calendar Link */}
-        <div className="px-4 pb-2">
+        {/* Bottom links */}
+        <div className="px-4 pb-2 space-y-1">
+          <NavLink
+            to="/feedback"
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
+                isActive
+                  ? 'bg-eo-blue text-white'
+                  : 'text-white/50 hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <MessageSquarePlus className="h-3.5 w-3.5" />
+            Suggestion | Report Bug
+          </NavLink>
           <NavLink
             to="/portal/calendar"
             onClick={onNavigate}

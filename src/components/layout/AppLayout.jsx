@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
+import FloatingFeedback from '@/components/ui/FloatingFeedback'
 
 export default function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -19,6 +20,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <FloatingFeedback />
     </div>
   )
 }

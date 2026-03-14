@@ -22,6 +22,7 @@ import SurveyPage from '@/pages/portal/SurveyPage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
+import FeedbackPage from '@/pages/FeedbackPage'
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
               <Route path="/admin/notifications" element={
                 <ProtectedRoute allowedRoles={ADMIN_ROLES}><NotificationComposePage /></ProtectedRoute>
               } />
+              <Route path="/feedback" element={<FeedbackPage />} />
             </Route>
 
             {/* Member Portal routes (dark-themed top nav layout) */}
@@ -80,6 +82,7 @@ function App() {
               <Route path="/portal/calendar" element={<MemberCalendarPage embedded />} />
               <Route path="/portal/survey" element={<SurveyPage />} />
               <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
+              <Route path="/portal/feedback" element={<FeedbackPage />} />
             </Route>
 
             {/* Catch-all */}
