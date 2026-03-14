@@ -8,13 +8,13 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays, DollarSign } from 'lucide-react'
+import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays, DollarSign, Play } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
   fee_estimated: '', fee_actual: '',
   contact_email: '', contact_phone: '', agency_name: '', agency_contact: '',
-  contact_method: 'direct', fit_score: 7, notes: '',
+  contact_method: 'direct', fit_score: 7, notes: '', sizzle_reel_url: '',
   routing_flexibility: false, multi_chapter_interest: false,
 }
 
@@ -117,6 +117,7 @@ export default function SpeakersPage() {
       contact_method: speaker.contact_method || 'direct',
       fit_score: speaker.fit_score || 7,
       notes: speaker.notes || '',
+      sizzle_reel_url: speaker.sizzle_reel_url || '',
       routing_flexibility: speaker.routing_flexibility || false,
       multi_chapter_interest: speaker.multi_chapter_interest || false,
       assigned_event_id: assignedEvt?.id || '',
@@ -180,6 +181,18 @@ export default function SpeakersPage() {
             onSave={val => updateSpeaker(speaker.id, { fee_actual: val })}
           />
         </div>
+        {speaker.sizzle_reel_url && (
+          <a
+            href={speaker.sizzle_reel_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="flex items-center gap-1.5 mt-2 text-[11px] text-eo-blue hover:text-eo-blue/80 font-medium transition-colors"
+          >
+            <Play className="h-3 w-3 fill-current" />
+            Sizzle Reel
+          </a>
+        )}
         {assignedEvents.length > 0 && (
           <div className="mt-2 space-y-0.5">
             {assignedEvents.map(e => {
@@ -396,6 +409,10 @@ export default function SpeakersPage() {
               <div className="col-span-2">
                 <label className="text-xs font-medium">Bio</label>
                 <Textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} placeholder="Brief bio..." rows={2} />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-medium">Sizzle Reel URL</label>
+                <Input value={form.sizzle_reel_url} onChange={e => setForm(p => ({ ...p, sizzle_reel_url: e.target.value }))} placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
               </div>
               <div className="col-span-2">
                 <label className="text-xs font-medium">Notes</label>
