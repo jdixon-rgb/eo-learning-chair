@@ -147,6 +147,19 @@ export default function SpeakersPage() {
           <div className="flex items-center gap-2">
             <GripVertical className="h-3 w-3 text-muted-foreground shrink-0" />
             <h4 className="text-sm font-semibold">{speaker.name}</h4>
+            {speaker.sizzle_reel_url && (
+              <a
+                href={speaker.sizzle_reel_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                onDragStart={e => e.stopPropagation()}
+                title="Watch sizzle reel"
+                className="shrink-0 w-5 h-5 rounded-full bg-eo-blue/10 hover:bg-eo-blue/20 flex items-center justify-center transition-colors"
+              >
+                <Play className="h-2.5 w-2.5 text-eo-blue fill-eo-blue" />
+              </a>
+            )}
           </div>
           <div className="flex items-center gap-0.5">
             {[...Array(5)].map((_, i) => (
@@ -181,18 +194,6 @@ export default function SpeakersPage() {
             onSave={val => updateSpeaker(speaker.id, { fee_actual: val })}
           />
         </div>
-        {speaker.sizzle_reel_url && (
-          <a
-            href={speaker.sizzle_reel_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={e => e.stopPropagation()}
-            className="flex items-center gap-1.5 mt-2 text-[11px] text-eo-blue hover:text-eo-blue/80 font-medium transition-colors"
-          >
-            <Play className="h-3 w-3 fill-current" />
-            Sizzle Reel
-          </a>
-        )}
         {assignedEvents.length > 0 && (
           <div className="mt-2 space-y-0.5">
             {assignedEvents.map(e => {
