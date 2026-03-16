@@ -178,7 +178,7 @@ export default function SpeakersPage() {
             ))}
           </div>
         </div>
-        {assignedEvents.length > 0 ? (
+        {assignedEvents.length > 0 && (
           <div className="mt-1 space-y-0.5">
             {assignedEvents.map(e => {
               const isPrimary = e.speaker_id === speaker.id
@@ -191,9 +191,10 @@ export default function SpeakersPage() {
               )
             })}
           </div>
-        ) : speaker.topic ? (
+        )}
+        {speaker.topic && (
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{speaker.topic}</p>
-        ) : null}
+        )}
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs font-medium">
             {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : 'TBD'}
