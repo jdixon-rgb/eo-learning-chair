@@ -44,10 +44,18 @@ export function StoreProvider({ children }) {
     saveCache({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
   }, [chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios])
 
-  // Fetch from Supabase on mount
+  // Fetch from Supabase once auth session is ready
   useEffect(() => {
     if (!isSupabaseConfigured() || hasFetched.current) return
-    hasFetched.current = true
+
+    // Wait for auth session before fetching (RLS requires auth.uid())
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session || hasFetched.current) return
+      hasFetched.current = true
+      hydrate()
+    })
+
+    return () => subscription.unsubscribe()
 
     async function hydrate() {
       try {
