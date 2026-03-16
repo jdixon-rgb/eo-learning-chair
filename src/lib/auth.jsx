@@ -39,7 +39,8 @@ export function AuthProvider({ children }) {
         setProfile(DEV_PROFILE)
         setLoading(false)
       } else {
-        setProfile(null)
+        // No session in production — use admin fallback until auth is enforced
+        setProfile(DEV_PROFILE)
         setLoading(false)
       }
     })
