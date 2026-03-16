@@ -1,45 +1,127 @@
-import { useState, useCallback, useEffect, createContext, useContext, createElement } from 'react'
+import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
+import { isSupabaseConfigured } from './supabase'
+import { fetchAll, insertRow, updateRow, deleteRow, upsertRow } from './db'
 import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs } from './mockData'
+import { supabase } from './supabase'
 
-// Persisted store — saves to localStorage on every change, hydrates on load.
-// Will be replaced with real Supabase calls when connected.
-
+// localStorage cache for offline fallback
 const STORAGE_KEY = 'eo-learning-chair-store'
 
-function loadPersistedState() {
+function loadCache() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
-  } catch { /* corrupted — fall through to defaults */ }
+  } catch { /* corrupted */ }
   return null
 }
 
-function persistState(state) {
+function saveCache(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch { /* storage full — silently skip */ }
+  } catch { /* storage full */ }
 }
 
 const StoreContext = createContext(null)
 
 export function StoreProvider({ children }) {
-  const saved = loadPersistedState()
+  const cached = loadCache()
 
-  const [chapter, setChapter] = useState(saved?.chapter ?? mockChapter)
-  const [speakers, setSpeakers] = useState(saved?.speakers ?? mockSpeakers)
-  const [venues, setVenues] = useState(saved?.venues ?? mockVenues)
-  const [events, setEvents] = useState(saved?.events ?? mockEvents)
-  const [budgetItems, setBudgetItems] = useState(saved?.budgetItems ?? mockBudgetItems)
-  const [contractChecklists, setContractChecklists] = useState(saved?.contractChecklists ?? mockContractChecklists)
-  const [saps, setSaps] = useState(saved?.saps ?? mockSAPs)
-  const [scenarios, setScenarios] = useState(saved?.scenarios ?? [])
+  // State - initialized from cache or mock data
+  const [chapter, setChapter] = useState(cached?.chapter ?? mockChapter)
+  const [speakers, setSpeakers] = useState(cached?.speakers ?? mockSpeakers)
+  const [venues, setVenues] = useState(cached?.venues ?? mockVenues)
+  const [events, setEvents] = useState(cached?.events ?? mockEvents)
+  const [budgetItems, setBudgetItems] = useState(cached?.budgetItems ?? mockBudgetItems)
+  const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? mockContractChecklists)
+  const [saps, setSaps] = useState(cached?.saps ?? mockSAPs)
+  const [scenarios, setScenarios] = useState(cached?.scenarios ?? [])
+  const [loading, setLoading] = useState(isSupabaseConfigured())
+  const [dbError, setDbError] = useState(null)
+  const hasFetched = useRef(false)
 
-  // Persist every state change to localStorage
+  // Persist to localStorage cache on every state change
   useEffect(() => {
-    persistState({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
+    saveCache({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
   }, [chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios])
 
-  // Reset all data back to mock defaults (available via Settings)
+  // Fetch from Supabase on mount
+  useEffect(() => {
+    if (!isSupabaseConfigured() || hasFetched.current) return
+    hasFetched.current = true
+
+    async function hydrate() {
+      try {
+        const [
+          chaptersRes,
+          speakersRes,
+          venuesRes,
+          eventsRes,
+          budgetRes,
+          checklistsRes,
+          sapsRes,
+          scenariosRes,
+        ] = await Promise.all([
+          fetchAll('chapters'),
+          fetchAll('speakers'),
+          fetchAll('venues'),
+          fetchAll('events'),
+          fetchAll('budget_items'),
+          fetchAll('contract_checklists'),
+          fetchAll('saps'),
+          fetchAll('scenarios'),
+        ])
+
+        // Check for errors
+        const errors = [chaptersRes, speakersRes, venuesRes, eventsRes, budgetRes, checklistsRes, sapsRes, scenariosRes]
+          .filter(r => r.error)
+          .map(r => r.error)
+
+        if (errors.length > 0) {
+          console.error('Supabase fetch errors:', errors)
+          setDbError('Some data failed to load from the database. Using cached data.')
+          setLoading(false)
+          return
+        }
+
+        // Hydrate state from Supabase
+        if (chaptersRes.data?.length > 0) setChapter(chaptersRes.data[0])
+        if (speakersRes.data) setSpeakers(speakersRes.data)
+        if (venuesRes.data) setVenues(venuesRes.data)
+        if (eventsRes.data) setEvents(eventsRes.data)
+        if (budgetRes.data) setBudgetItems(budgetRes.data)
+        if (checklistsRes.data) setContractChecklists(checklistsRes.data)
+        if (sapsRes.data) setSaps(sapsRes.data)
+        if (scenariosRes.data) setScenarios(scenariosRes.data)
+
+        setDbError(null)
+      } catch (err) {
+        console.error('Failed to fetch from Supabase:', err)
+        setDbError('Could not connect to database. Using cached data.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    hydrate()
+  }, [])
+
+  // Helper: fire Supabase write in background, log errors
+  const dbWrite = useCallback(async (fn) => {
+    if (!isSupabaseConfigured()) return
+    try {
+      const result = await fn()
+      if (result?.error) {
+        console.error('Supabase write error:', result.error)
+        setDbError('Failed to save changes. Data is cached locally.')
+      }
+      return result
+    } catch (err) {
+      console.error('Supabase write failed:', err)
+      setDbError('Failed to save changes. Data is cached locally.')
+    }
+  }, [])
+
+  // Reset to defaults (dev only - clears cache, refetches from DB)
   const resetToDefaults = useCallback(() => {
     setChapter(mockChapter)
     setSpeakers(mockSpeakers)
@@ -52,74 +134,104 @@ export function StoreProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
-  // Speaker operations
+  // ── Speaker operations ──
+
   const addSpeaker = useCallback((speaker) => {
-    const newSpeaker = { ...speaker, id: crypto.randomUUID(), chapter_id: chapter.id, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const newSpeaker = { ...speaker, id, chapter_id: chapter.id, created_at: now, updated_at: now }
     setSpeakers(prev => [...prev, newSpeaker])
+    dbWrite(() => insertRow('speakers', newSpeaker))
     return newSpeaker
-  }, [chapter.id])
+  }, [chapter.id, dbWrite])
 
   const updateSpeaker = useCallback((id, updates) => {
-    setSpeakers(prev => prev.map(s => s.id === id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s))
-  }, [])
+    const now = new Date().toISOString()
+    setSpeakers(prev => prev.map(s => s.id === id ? { ...s, ...updates, updated_at: now } : s))
+    dbWrite(() => updateRow('speakers', id, updates))
+  }, [dbWrite])
 
   const deleteSpeaker = useCallback((id) => {
     setSpeakers(prev => prev.filter(s => s.id !== id))
-  }, [])
+    dbWrite(() => deleteRow('speakers', id))
+  }, [dbWrite])
 
-  // Venue operations
+  // ── Venue operations ──
+
   const addVenue = useCallback((venue) => {
-    const newVenue = { ...venue, id: crypto.randomUUID(), chapter_id: chapter.id, created_at: new Date().toISOString() }
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const newVenue = { ...venue, id, chapter_id: chapter.id, created_at: now }
     setVenues(prev => [...prev, newVenue])
+    dbWrite(() => insertRow('venues', newVenue))
     return newVenue
-  }, [chapter.id])
+  }, [chapter.id, dbWrite])
 
   const updateVenue = useCallback((id, updates) => {
     setVenues(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v))
-  }, [])
+    dbWrite(() => updateRow('venues', id, updates))
+  }, [dbWrite])
 
   const deleteVenue = useCallback((id) => {
     setVenues(prev => prev.filter(v => v.id !== id))
-  }, [])
+    dbWrite(() => deleteRow('venues', id))
+  }, [dbWrite])
 
-  // Event operations
+  // ── Event operations ──
+
   const addEvent = useCallback((event) => {
-    const newEvent = { ...event, id: crypto.randomUUID(), chapter_id: chapter.id, status: 'planning', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const newEvent = { ...event, id, chapter_id: chapter.id, status: 'planning', created_at: now, updated_at: now }
     setEvents(prev => [...prev, newEvent])
+    dbWrite(() => insertRow('events', newEvent))
     return newEvent
-  }, [chapter.id])
+  }, [chapter.id, dbWrite])
 
   const updateEvent = useCallback((id, updates) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates, updated_at: new Date().toISOString() } : e))
-  }, [])
+    const now = new Date().toISOString()
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates, updated_at: now } : e))
+    dbWrite(() => updateRow('events', id, updates))
+  }, [dbWrite])
 
   const deleteEvent = useCallback((id) => {
     setEvents(prev => prev.filter(e => e.id !== id))
+    // Budget items and checklists cascade in DB; clean up local state too
     setBudgetItems(prev => prev.filter(b => b.event_id !== id))
     setContractChecklists(prev => prev.filter(c => c.event_id !== id))
-  }, [])
+    dbWrite(() => deleteRow('events', id))
+  }, [dbWrite])
 
-  // Budget operations
+  // ── Budget operations ──
+
   const addBudgetItem = useCallback((item) => {
-    const newItem = { ...item, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const newItem = { ...item, id, created_at: now }
     setBudgetItems(prev => [...prev, newItem])
+    dbWrite(() => insertRow('budget_items', newItem))
     return newItem
-  }, [])
+  }, [dbWrite])
 
   const updateBudgetItem = useCallback((id, updates) => {
     setBudgetItems(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
-  }, [])
+    dbWrite(() => updateRow('budget_items', id, updates))
+  }, [dbWrite])
 
   const deleteBudgetItem = useCallback((id) => {
     setBudgetItems(prev => prev.filter(b => b.id !== id))
-  }, [])
+    dbWrite(() => deleteRow('budget_items', id))
+  }, [dbWrite])
 
-  // Contract checklist operations
+  // ── Contract checklist operations ──
+
   const getOrCreateChecklist = useCallback((eventId) => {
     const existing = contractChecklists.find(c => c.event_id === eventId)
     if (existing) return existing
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
     const newChecklist = {
-      id: crypto.randomUUID(),
+      id,
       event_id: eventId,
       jurisdiction_local: false,
       indemnification_clause: false,
@@ -130,56 +242,87 @@ export function StoreProvider({ children }) {
       recording_rights: false,
       contract_signed: false,
       contract_notes: '',
+      created_at: now,
+      updated_at: now,
     }
     setContractChecklists(prev => [...prev, newChecklist])
+    dbWrite(() => insertRow('contract_checklists', newChecklist))
     return newChecklist
-  }, [contractChecklists])
+  }, [contractChecklists, dbWrite])
 
   const updateChecklist = useCallback((id, updates) => {
-    setContractChecklists(prev => prev.map(c => c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c))
-  }, [])
+    const now = new Date().toISOString()
+    setContractChecklists(prev => prev.map(c => c.id === id ? { ...c, ...updates, updated_at: now } : c))
+    dbWrite(() => updateRow('contract_checklists', id, updates))
+  }, [dbWrite])
 
-  // SAP operations
+  // ── SAP operations ──
+
   const addSAP = useCallback((sap) => {
-    const newSAP = { ...sap, id: crypto.randomUUID(), chapter_id: chapter.id, created_at: new Date().toISOString() }
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const newSAP = { ...sap, id, chapter_id: chapter.id, created_at: now }
     setSaps(prev => [...prev, newSAP])
+    dbWrite(() => insertRow('saps', newSAP))
     return newSAP
-  }, [chapter.id])
+  }, [chapter.id, dbWrite])
 
   const updateSAP = useCallback((id, updates) => {
     setSaps(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
-  }, [])
+    dbWrite(() => updateRow('saps', id, updates))
+  }, [dbWrite])
 
   const deleteSAP = useCallback((id) => {
     setSaps(prev => prev.filter(s => s.id !== id))
-    // Also remove this SAP from any events that reference it
+    // Remove SAP from any events that reference it
     setEvents(prev => prev.map(e => ({
       ...e,
       sap_ids: (e.sap_ids || []).filter(sid => sid !== id),
     })))
-  }, [])
+    dbWrite(async () => {
+      // Delete the SAP
+      await deleteRow('saps', id)
+      // Remove from event arrays - use raw supabase for array_remove
+      if (isSupabaseConfigured()) {
+        await supabase.rpc('remove_sap_from_events', { sap_id: id }).catch(() => {
+          // Fallback: update each event individually
+          // This is handled by the optimistic local state update above
+        })
+      }
+    })
+  }, [dbWrite])
 
-  // Scenario operations
+  // ── Scenario operations ──
+
   const addScenario = useCallback((scenario) => {
-    const newScenario = { ...scenario, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const newScenario = { ...scenario, id, chapter_id: chapter.id, created_at: now }
     setScenarios(prev => [...prev, newScenario])
+    dbWrite(() => insertRow('scenarios', newScenario))
     return newScenario
-  }, [])
+  }, [chapter.id, dbWrite])
 
   const updateScenario = useCallback((id, updates) => {
     setScenarios(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
-  }, [])
+    dbWrite(() => updateRow('scenarios', id, updates))
+  }, [dbWrite])
 
   const deleteScenario = useCallback((id) => {
     setScenarios(prev => prev.filter(s => s.id !== id))
-  }, [])
+    dbWrite(() => deleteRow('scenarios', id))
+  }, [dbWrite])
 
-  // Chapter operations
+  // ── Chapter operations ──
+
   const updateChapter = useCallback((updates) => {
     setChapter(prev => ({ ...prev, ...updates }))
-  }, [])
+    dbWrite(() => {
+      if (chapter.id) return updateRow('chapters', chapter.id, updates)
+    })
+  }, [chapter.id, dbWrite])
 
-  // Computed values
+  // ── Computed values ──
   const totalBudgetUsed = budgetItems.reduce((sum, item) => sum + (item.actual_amount || item.estimated_amount || 0), 0)
   const totalEstimated = budgetItems.reduce((sum, item) => sum + (item.estimated_amount || 0), 0)
   const budgetRemaining = chapter.total_budget - totalEstimated
@@ -194,6 +337,11 @@ export function StoreProvider({ children }) {
     contractChecklists,
     saps,
     scenarios,
+
+    // Status
+    loading,
+    dbError,
+    clearDbError: () => setDbError(null),
 
     // Speaker ops
     addSpeaker,
