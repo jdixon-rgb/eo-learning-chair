@@ -178,9 +178,22 @@ export default function SpeakersPage() {
             ))}
           </div>
         </div>
-        {speaker.topic && (
+        {assignedEvents.length > 0 ? (
+          <div className="mt-1 space-y-0.5">
+            {assignedEvents.map(e => {
+              const isPrimary = e.speaker_id === speaker.id
+              return (
+                <div key={e.id} className={`flex items-center gap-1 text-xs ${isPrimary ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}`}>
+                  <CalendarDays className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{e.title}</span>
+                  {isPrimary && <span className="text-[9px]">★</span>}
+                </div>
+              )
+            })}
+          </div>
+        ) : speaker.topic ? (
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{speaker.topic}</p>
-        )}
+        ) : null}
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs font-medium">
             {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : 'TBD'}
@@ -202,20 +215,6 @@ export default function SpeakersPage() {
             onSave={val => updateSpeaker(speaker.id, { fee_actual: val })}
           />
         </div>
-        {assignedEvents.length > 0 && (
-          <div className="mt-2 space-y-0.5">
-            {assignedEvents.map(e => {
-              const isPrimary = e.speaker_id === speaker.id
-              return (
-                <div key={e.id} className={`flex items-center gap-1 text-[11px] ${isPrimary ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}`}>
-                  <CalendarDays className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{e.title.split(':')[0]}</span>
-                  {isPrimary && <span className="text-[9px]">★</span>}
-                </div>
-              )
-            })}
-          </div>
-        )}
         {speaker.notes && (
           <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2 border-t pt-2">{speaker.notes}</p>
         )}
