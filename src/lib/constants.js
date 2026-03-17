@@ -124,6 +124,39 @@ export const DEFAULT_MARKETING_MILESTONES = [
   { week: 1, name: 'Final reminder + logistics', description: 'Time, location, parking, dress code' },
 ]
 
+// Chair roles for board reports
+export const CHAIR_ROLES = [
+  { id: 'learning_chair', label: 'Learning Chair' },
+  { id: 'membership_chair', label: 'Membership Chair' },
+  { id: 'communications_chair', label: 'Communications Chair' },
+  { id: 'community_chair', label: 'Community Chair' },
+  { id: 'forum_chair', label: 'Forum Chair' },
+  { id: 'social_chair', label: 'Social Chair' },
+  { id: 'sponsorship_chair', label: 'Sponsorship Chair' },
+]
+
+// Chair report statuses
+export const REPORT_STATUSES = [
+  { id: 'draft', label: 'Draft', color: '#64648c' },
+  { id: 'submitted', label: 'Submitted', color: '#3d46f2' },
+  { id: 'reviewed', label: 'Reviewed', color: '#22c55e' },
+]
+
+// Communication audiences
+export const COMM_AUDIENCES = [
+  { id: 'all_members', label: 'All Members' },
+  { id: 'board_only', label: 'Board Only' },
+  { id: 'chairs_only', label: 'Chairs Only' },
+  { id: 'custom', label: 'Custom' },
+]
+
+// Forum health thresholds
+export const FORUM_HEALTH = [
+  { min: 8, max: 10, label: 'Thriving', color: '#22c55e' },
+  { min: 5, max: 7, label: 'Stable', color: '#f59e0b' },
+  { min: 1, max: 4, label: 'Needs Attention', color: '#ef4444' },
+]
+
 // User roles
 export const USER_ROLES = [
   { id: 'super_admin', label: 'Super Admin', access: 'full' },

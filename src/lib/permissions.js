@@ -4,6 +4,9 @@ export const ADMIN_ROLES = ['super_admin', 'learning_chair', 'chapter_experience
 // Super admin only
 export const SUPER_ADMIN_ROLES = ['super_admin']
 
+// Board roles that can access the board module
+export const BOARD_ROLES = ['super_admin', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director']
+
 // Feature-level permissions
 export const FEATURE_PERMISSIONS = {
   canEditEvents:         [...ADMIN_ROLES, 'committee_member'],
@@ -16,6 +19,12 @@ export const FEATURE_PERMISSIONS = {
   canManageMembers:      ADMIN_ROLES,
   canSendNotifications:  ADMIN_ROLES,
   canViewSurveyResults:  ADMIN_ROLES,
+  // Board module
+  canViewBoard:          [...BOARD_ROLES, 'learning_chair'],
+  canManageChairReports: BOARD_ROLES,
+  canManageComms:        BOARD_ROLES,
+  canManageForums:       BOARD_ROLES,
+  canViewScorecards:     BOARD_ROLES,
 }
 
 export function hasPermission(role, feature) {

@@ -19,6 +19,11 @@ import {
   ClipboardList,
   Bell,
   MessageSquarePlus,
+  Briefcase,
+  FileText,
+  Mail,
+  Users2,
+  BarChart3,
 } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
@@ -42,6 +47,15 @@ const adminItems = [
   { to: '/admin/notifications', icon: Bell, label: 'Notifications', permission: 'canSendNotifications' },
 ]
 
+// Board management pages
+const boardItems = [
+  { to: '/board', icon: Briefcase, label: 'Board Dashboard', permission: 'canViewBoard' },
+  { to: '/board/reports', icon: FileText, label: 'Chair Reports', permission: 'canManageChairReports' },
+  { to: '/board/communications', icon: Mail, label: 'Communications', permission: 'canManageComms' },
+  { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
+  { to: '/board/scorecards', icon: BarChart3, label: 'Scorecards', permission: 'canViewScorecards' },
+]
+
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, role, signOut, isSuperAdmin } = useAuth()
   const { activeChapter } = useChapter()
@@ -52,6 +66,10 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   )
 
   const visibleAdmin = adminItems.filter(item =>
+    !item.permission || hasPermission(role, item.permission)
+  )
+
+  const visibleBoard = boardItems.filter(item =>
     !item.permission || hasPermission(role, item.permission)
   )
 
@@ -134,6 +152,33 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 <NavLink
                   key={to}
                   to={to}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-eo-blue text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+            </>
+          )}
+
+          {/* Board section */}
+          {visibleBoard.length > 0 && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Board</p>
+              </div>
+              {visibleBoard.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/board'}
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${

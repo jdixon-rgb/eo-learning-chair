@@ -76,6 +76,7 @@ export function AuthProvider({ children }) {
     chapterId: profile?.chapter_id ?? null,
     isCommittee: role === 'committee_member',
     isBoardLiaison: role === 'board_liaison',
+    isBoardMember: !!role && ['super_admin', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role),
     isMember: role === 'member',
   }
 
