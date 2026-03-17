@@ -48,8 +48,9 @@ export function BoardStoreProvider({ children }) {
       hasFetched.current = false
       prevChapterId.current = activeChapterId
     }
-    if (!isSupabaseConfigured() || hasFetched.current) return
-    if (!isChapterReady || !activeChapterId) return
+    if (!isSupabaseConfigured() || hasFetched.current) { setLoading(false); return }
+    if (!isChapterReady) return
+    if (!activeChapterId) { setLoading(false); return }
     hasFetched.current = true
 
     const chapterCache = loadCache(activeChapterId)
