@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { useChapter } from '@/lib/chapter'
 import { USER_ROLES } from '@/lib/constants'
 import { Users, Search, ClipboardList, Mail, UserPlus, Trash2, Loader2, Upload, ChevronDown, ChevronUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ const MOCK_MEMBERS = [
 ]
 
 export default function MemberManagementPage() {
+  const { activeChapterId } = useChapter()
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -39,18 +41,26 @@ export default function MemberManagementPage() {
       return
     }
 
-    // Fetch active profiles
-    const { data: profiles } = await supabase
+    // Fetch active profiles filtered by chapter
+    let profilesQuery = supabase
       .from('profiles')
       .select('*')
       .order('full_name', { ascending: true })
+    if (activeChapterId) {
+      profilesQuery = profilesQuery.eq('chapter_id', activeChapterId)
+    }
+    const { data: profiles } = await profilesQuery
 
-    // Fetch pending (unclaimed) invites
-    const { data: invites } = await supabase
+    // Fetch pending (unclaimed) invites filtered by chapter
+    let invitesQuery = supabase
       .from('member_invites')
       .select('*')
       .is('claimed_at', null)
       .order('created_at', { ascending: false })
+    if (activeChapterId) {
+      invitesQuery = invitesQuery.eq('chapter_id', activeChapterId)
+    }
+    const { data: invites } = await invitesQuery
 
     const active = (profiles || []).map(p => ({ ...p, status: 'active' }))
     const claimedEmails = new Set(active.map(p => p.email.toLowerCase()))
@@ -71,7 +81,7 @@ export default function MemberManagementPage() {
 
     setMembers([...active, ...pending])
     setLoading(false)
-  }, [])
+  }, [activeChapterId])
 
   useEffect(() => { fetchMembers() }, [fetchMembers])
 
@@ -93,6 +103,7 @@ export default function MemberManagementPage() {
         email: inviteEmail.trim().toLowerCase(),
         full_name: inviteName.trim(),
         role: inviteRole,
+        chapter_id: activeChapterId,
       })
       if (error) {
         setInviteMsg(error.message.includes('duplicate') ? 'This email is already invited.' : error.message)

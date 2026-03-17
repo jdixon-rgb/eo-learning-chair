@@ -126,6 +126,7 @@ export const DEFAULT_MARKETING_MILESTONES = [
 
 // User roles
 export const USER_ROLES = [
+  { id: 'super_admin', label: 'Super Admin', access: 'full' },
   { id: 'learning_chair', label: 'Learning Chair', access: 'full' },
   { id: 'chapter_experience_coordinator', label: 'Chapter Experience Coordinator', access: 'full' },
   { id: 'chapter_executive_director', label: 'Chapter Executive Director', access: 'full' },

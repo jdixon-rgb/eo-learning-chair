@@ -23,6 +23,11 @@ export async function deleteRow(table, id) {
   return supabase.from(table).delete().eq('id', id)
 }
 
+export async function fetchByChapter(table, chapterId) {
+  if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
+  return supabase.from(table).select('*').eq('chapter_id', chapterId)
+}
+
 export async function upsertRow(table, data, conflictColumn) {
   if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
   return supabase.from(table).upsert(data, { onConflict: conflictColumn }).select().single()

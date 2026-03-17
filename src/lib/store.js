@@ -1,30 +1,35 @@
 import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
 import { isSupabaseConfigured } from './supabase'
-import { fetchAll, insertRow, updateRow, deleteRow, upsertRow } from './db'
+import { fetchAll, fetchByChapter, insertRow, updateRow, deleteRow, upsertRow } from './db'
 import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs } from './mockData'
 import { supabase } from './supabase'
+import { useChapter } from './chapter'
 
-// localStorage cache for offline fallback
-const STORAGE_KEY = 'eo-learning-chair-store'
+// localStorage cache for offline fallback (key is per-chapter)
+function storageKey(chapterId) {
+  return `eo-learning-chair-store-${chapterId}`
+}
 
-function loadCache() {
+function loadCache(chapterId) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey(chapterId))
     if (raw) return JSON.parse(raw)
   } catch { /* corrupted */ }
   return null
 }
 
-function saveCache(state) {
+function saveCache(chapterId, state) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    localStorage.setItem(storageKey(chapterId), JSON.stringify(state))
   } catch { /* storage full */ }
 }
 
 const StoreContext = createContext(null)
 
 export function StoreProvider({ children }) {
-  const cached = loadCache()
+  const { activeChapterId, isChapterReady } = useChapter()
+
+  const cached = loadCache(activeChapterId)
 
   // State - initialized from cache or mock data
   const [chapter, setChapter] = useState(cached?.chapter ?? mockChapter)
@@ -38,16 +43,40 @@ export function StoreProvider({ children }) {
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
+  const prevChapterId = useRef(activeChapterId)
 
-  // Persist to localStorage cache on every state change
+  // Persist to localStorage cache on every state change (per-chapter)
   useEffect(() => {
-    saveCache({ chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
-  }, [chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios])
+    if (!activeChapterId) return
+    saveCache(activeChapterId, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
+  }, [activeChapterId, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios])
 
-  // Fetch from Supabase on mount (anon reads allowed via RLS)
+  // Fetch from Supabase when chapter changes (anon reads allowed via RLS)
   useEffect(() => {
+    // Reset hasFetched when activeChapterId changes
+    if (prevChapterId.current !== activeChapterId) {
+      hasFetched.current = false
+      prevChapterId.current = activeChapterId
+    }
+
     if (!isSupabaseConfigured() || hasFetched.current) return
+    if (!isChapterReady || !activeChapterId) return
     hasFetched.current = true
+
+    // Load from chapter-specific cache while fetching
+    const chapterCache = loadCache(activeChapterId)
+    if (chapterCache) {
+      if (chapterCache.chapter) setChapter(chapterCache.chapter)
+      if (chapterCache.speakers) setSpeakers(chapterCache.speakers)
+      if (chapterCache.venues) setVenues(chapterCache.venues)
+      if (chapterCache.events) setEvents(chapterCache.events)
+      if (chapterCache.budgetItems) setBudgetItems(chapterCache.budgetItems)
+      if (chapterCache.contractChecklists) setContractChecklists(chapterCache.contractChecklists)
+      if (chapterCache.saps) setSaps(chapterCache.saps)
+      if (chapterCache.scenarios) setScenarios(chapterCache.scenarios)
+    }
+
+    setLoading(true)
     hydrate()
 
     async function hydrate() {
@@ -63,13 +92,13 @@ export function StoreProvider({ children }) {
           scenariosRes,
         ] = await Promise.all([
           fetchAll('chapters'),
-          fetchAll('speakers'),
-          fetchAll('venues'),
-          fetchAll('events'),
+          fetchByChapter('speakers', activeChapterId),
+          fetchByChapter('venues', activeChapterId),
+          fetchByChapter('events', activeChapterId),
           fetchAll('budget_items'),
           fetchAll('contract_checklists'),
-          fetchAll('saps'),
-          fetchAll('scenarios'),
+          fetchByChapter('saps', activeChapterId),
+          fetchByChapter('scenarios', activeChapterId),
         ])
 
         // Check for errors
@@ -85,7 +114,9 @@ export function StoreProvider({ children }) {
         }
 
         // Hydrate state from Supabase
-        if (chaptersRes.data?.length > 0) setChapter(chaptersRes.data[0])
+        const activeChapter = chaptersRes.data?.find(c => c.id === activeChapterId)
+        if (activeChapter) setChapter(activeChapter)
+        else if (chaptersRes.data?.length > 0) setChapter(chaptersRes.data[0])
         if (speakersRes.data) setSpeakers(speakersRes.data)
         if (venuesRes.data) setVenues(venuesRes.data)
         if (eventsRes.data) setEvents(eventsRes.data)
@@ -102,9 +133,7 @@ export function StoreProvider({ children }) {
         setLoading(false)
       }
     }
-
-    hydrate()
-  }, [])
+  }, [activeChapterId, isChapterReady])
 
   // Helper: fire Supabase write in background, log errors
   const dbWrite = useCallback(async (fn) => {
@@ -132,19 +161,19 @@ export function StoreProvider({ children }) {
     setContractChecklists(mockContractChecklists)
     setSaps(mockSAPs)
     setScenarios([])
-    localStorage.removeItem(STORAGE_KEY)
-  }, [])
+    if (activeChapterId) localStorage.removeItem(storageKey(activeChapterId))
+  }, [activeChapterId])
 
   // ── Speaker operations ──
 
   const addSpeaker = useCallback((speaker) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newSpeaker = { ...speaker, id, chapter_id: chapter.id, created_at: now, updated_at: now }
+    const newSpeaker = { ...speaker, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setSpeakers(prev => [...prev, newSpeaker])
     dbWrite(() => insertRow('speakers', newSpeaker))
     return newSpeaker
-  }, [chapter.id, dbWrite])
+  }, [activeChapterId, dbWrite])
 
   const updateSpeaker = useCallback((id, updates) => {
     const now = new Date().toISOString()
@@ -162,11 +191,11 @@ export function StoreProvider({ children }) {
   const addVenue = useCallback((venue) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newVenue = { ...venue, id, chapter_id: chapter.id, created_at: now }
+    const newVenue = { ...venue, id, chapter_id: activeChapterId, created_at: now }
     setVenues(prev => [...prev, newVenue])
     dbWrite(() => insertRow('venues', newVenue))
     return newVenue
-  }, [chapter.id, dbWrite])
+  }, [activeChapterId, dbWrite])
 
   const updateVenue = useCallback((id, updates) => {
     setVenues(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v))
@@ -183,11 +212,11 @@ export function StoreProvider({ children }) {
   const addEvent = useCallback((event) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newEvent = { ...event, id, chapter_id: chapter.id, status: 'planning', created_at: now, updated_at: now }
+    const newEvent = { ...event, id, chapter_id: activeChapterId, status: 'planning', created_at: now, updated_at: now }
     setEvents(prev => [...prev, newEvent])
     dbWrite(() => insertRow('events', newEvent))
     return newEvent
-  }, [chapter.id, dbWrite])
+  }, [activeChapterId, dbWrite])
 
   const updateEvent = useCallback((id, updates) => {
     const now = new Date().toISOString()
@@ -262,11 +291,11 @@ export function StoreProvider({ children }) {
   const addSAP = useCallback((sap) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newSAP = { ...sap, id, chapter_id: chapter.id, created_at: now }
+    const newSAP = { ...sap, id, chapter_id: activeChapterId, created_at: now }
     setSaps(prev => [...prev, newSAP])
     dbWrite(() => insertRow('saps', newSAP))
     return newSAP
-  }, [chapter.id, dbWrite])
+  }, [activeChapterId, dbWrite])
 
   const updateSAP = useCallback((id, updates) => {
     setSaps(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
@@ -298,11 +327,11 @@ export function StoreProvider({ children }) {
   const addScenario = useCallback((scenario) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newScenario = { ...scenario, id, chapter_id: chapter.id, created_at: now }
+    const newScenario = { ...scenario, id, chapter_id: activeChapterId, created_at: now }
     setScenarios(prev => [...prev, newScenario])
     dbWrite(() => insertRow('scenarios', newScenario))
     return newScenario
-  }, [chapter.id, dbWrite])
+  }, [activeChapterId, dbWrite])
 
   const updateScenario = useCallback((id, updates) => {
     setScenarios(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
@@ -319,9 +348,9 @@ export function StoreProvider({ children }) {
   const updateChapter = useCallback((updates) => {
     setChapter(prev => ({ ...prev, ...updates }))
     dbWrite(() => {
-      if (chapter.id) return updateRow('chapters', chapter.id, updates)
+      if (activeChapterId) return updateRow('chapters', activeChapterId, updates)
     })
-  }, [chapter.id, dbWrite])
+  }, [activeChapterId, dbWrite])
 
   // ── Computed values ──
   const totalBudgetUsed = budgetItems.reduce((sum, item) => sum + (item.actual_amount || item.estimated_amount || 0), 0)

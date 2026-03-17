@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from './supabase'
 
 const AuthContext = createContext(null)
 
-const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev@local' }
+const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev@local', chapter_id: '00000000-0000-4000-a000-000000000001' }
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
   }
 
   const role = profile?.role ?? null
-  const isAdmin = !!role && ['learning_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
+  const isAdmin = !!role && ['super_admin', 'learning_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
 
   const value = {
     session,
@@ -72,6 +72,8 @@ export function AuthProvider({ children }) {
     signIn,
     signOut,
     isAdmin,
+    isSuperAdmin: role === 'super_admin',
+    chapterId: profile?.chapter_id ?? null,
     isCommittee: role === 'committee_member',
     isBoardLiaison: role === 'board_liaison',
     isMember: role === 'member',

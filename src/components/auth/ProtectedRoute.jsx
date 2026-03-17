@@ -23,7 +23,8 @@ export default function ProtectedRoute({ allowedRoles, children }) {
   }
 
   // Authenticated but wrong role — redirect to appropriate home
-  if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
+  // Super admins can access everything
+  if (allowedRoles && profile && profile.role !== 'super_admin' && !allowedRoles.includes(profile.role)) {
     const home = profile.role === 'member' ? '/portal' : '/'
     return <Navigate to={home} replace />
   }

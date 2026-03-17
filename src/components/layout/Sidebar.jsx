@@ -1,6 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { useChapter } from '@/lib/chapter'
 import { hasPermission } from '@/lib/permissions'
+import ChapterSwitcher from '@/components/ChapterSwitcher'
 import {
   LayoutDashboard,
   Calendar,
@@ -41,7 +43,8 @@ const adminItems = [
 ]
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
-  const { profile, role, signOut } = useAuth()
+  const { profile, role, signOut, isSuperAdmin } = useAuth()
+  const { activeChapter } = useChapter()
   const navigate = useNavigate()
 
   const visibleNav = navItems.filter(item =>
@@ -89,8 +92,15 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           </div>
           <div className="mt-3">
             <h1 className="text-sm font-bold tracking-tight text-white/90">Learning Chair</h1>
-            <p className="text-[10px] text-white/40">Command Center</p>
+            <p className="text-[10px] text-white/40">
+              {activeChapter ? activeChapter.name : 'Command Center'}
+            </p>
           </div>
+        </div>
+
+        {/* Chapter Switcher (super admin only) */}
+        <div className="pt-3">
+          <ChapterSwitcher />
         </div>
 
         {/* Navigation */}
@@ -137,6 +147,29 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   {label}
                 </NavLink>
               ))}
+            </>
+          )}
+
+          {/* Super Admin section */}
+          {isSuperAdmin && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Platform</p>
+              </div>
+              <NavLink
+                to="/super-admin"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-eo-blue text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <Shield className="h-4 w-4" />
+                Platform Admin
+              </NavLink>
             </>
           )}
         </nav>

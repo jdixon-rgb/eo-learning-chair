@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/lib/auth'
+import { ChapterProvider } from '@/lib/chapter'
 import { StoreProvider } from '@/lib/store'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
@@ -23,13 +24,16 @@ import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
+import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
+import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
 
 function App() {
   return (
     <AuthProvider>
-      <StoreProvider>
-        <BrowserRouter>
-          <Routes>
+      <ChapterProvider>
+        <StoreProvider>
+          <BrowserRouter>
+            <Routes>
             {/* Public */}
             <Route path="/login" element={<LoginPage />} />
 
@@ -85,11 +89,22 @@ function App() {
               <Route path="/portal/feedback" element={<FeedbackPage />} />
             </Route>
 
+            {/* Super Admin routes (sidebar layout) */}
+            <Route element={
+              <ProtectedRoute allowedRoles={SUPER_ADMIN_ROLES}>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/super-admin" element={<SuperAdminDashboard />} />
+              <Route path="/super-admin/chapters/:id" element={<ChapterConfigPage />} />
+            </Route>
+
             {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </StoreProvider>
+            </Routes>
+          </BrowserRouter>
+        </StoreProvider>
+      </ChapterProvider>
     </AuthProvider>
   )
 }
