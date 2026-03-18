@@ -59,8 +59,9 @@ export function StoreProvider({ children }) {
       prevChapterId.current = activeChapterId
     }
 
-    if (!isSupabaseConfigured() || hasFetched.current) return
-    if (!isChapterReady || !activeChapterId) return
+    if (!isSupabaseConfigured() || hasFetched.current) { setLoading(false); return }
+    if (!isChapterReady) return
+    if (!activeChapterId) { setLoading(false); return }
     hasFetched.current = true
 
     // Load from chapter-specific cache while fetching
