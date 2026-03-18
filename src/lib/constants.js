@@ -157,6 +157,27 @@ export const FORUM_HEALTH = [
   { min: 1, max: 4, label: 'Needs Attention', color: '#ef4444' },
 ]
 
+// Document types for event uploads
+export const DOCUMENT_TYPES = [
+  { id: 'contract', label: 'Contract', color: '#3d46f2' },
+  { id: 'loi', label: 'Letter of Intent', color: '#8b5cf6' },
+  { id: 'rider', label: 'Rider', color: '#fa653c' },
+  { id: 'insurance', label: 'Insurance', color: '#22c55e' },
+  { id: 'invoice', label: 'Invoice', color: '#ff346e' },
+  { id: 'other', label: 'Other', color: '#64648c' },
+]
+
+// File upload constraints
+export const MAX_FILE_SIZE_MB = 10
+export const ALLOWED_FILE_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]
+
 // User roles
 export const USER_ROLES = [
   { id: 'super_admin', label: 'Super Admin', access: 'full' },

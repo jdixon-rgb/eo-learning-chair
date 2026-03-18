@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
 import { isSupabaseConfigured } from './supabase'
-import { fetchAll, fetchByChapter, insertRow, updateRow, deleteRow, upsertRow } from './db'
+import { fetchAll, fetchByChapter, insertRow, updateRow, deleteRow, upsertRow, uploadFile, deleteFile } from './db'
 import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs } from './mockData'
 import { supabase } from './supabase'
 import { useChapter } from './chapter'
@@ -40,6 +40,7 @@ export function StoreProvider({ children }) {
   const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? mockContractChecklists)
   const [saps, setSaps] = useState(cached?.saps ?? mockSAPs)
   const [scenarios, setScenarios] = useState(cached?.scenarios ?? [])
+  const [eventDocuments, setEventDocuments] = useState(cached?.eventDocuments ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -48,8 +49,8 @@ export function StoreProvider({ children }) {
   // Persist to localStorage cache on every state change (per-chapter)
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios })
-  }, [activeChapterId, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios])
+    saveCache(activeChapterId, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments })
+  }, [activeChapterId, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments])
 
   // Fetch from Supabase when chapter changes (anon reads allowed via RLS)
   useEffect(() => {
@@ -75,6 +76,7 @@ export function StoreProvider({ children }) {
       if (chapterCache.contractChecklists) setContractChecklists(chapterCache.contractChecklists)
       if (chapterCache.saps) setSaps(chapterCache.saps)
       if (chapterCache.scenarios) setScenarios(chapterCache.scenarios)
+      if (chapterCache.eventDocuments) setEventDocuments(chapterCache.eventDocuments)
     }
 
     setLoading(true)
@@ -91,6 +93,7 @@ export function StoreProvider({ children }) {
           checklistsRes,
           sapsRes,
           scenariosRes,
+          docsRes,
         ] = await Promise.all([
           fetchAll('chapters'),
           fetchByChapter('speakers', activeChapterId),
@@ -100,10 +103,11 @@ export function StoreProvider({ children }) {
           fetchAll('contract_checklists'),
           fetchByChapter('saps', activeChapterId),
           fetchByChapter('scenarios', activeChapterId),
+          fetchByChapter('event_documents', activeChapterId),
         ])
 
         // Check for errors
-        const errors = [chaptersRes, speakersRes, venuesRes, eventsRes, budgetRes, checklistsRes, sapsRes, scenariosRes]
+        const errors = [chaptersRes, speakersRes, venuesRes, eventsRes, budgetRes, checklistsRes, sapsRes, scenariosRes, docsRes]
           .filter(r => r.error)
           .map(r => r.error)
 
@@ -125,6 +129,7 @@ export function StoreProvider({ children }) {
         if (checklistsRes.data) setContractChecklists(checklistsRes.data)
         if (sapsRes.data) setSaps(sapsRes.data)
         if (scenariosRes.data) setScenarios(scenariosRes.data)
+        if (docsRes.data) setEventDocuments(docsRes.data)
 
         setDbError(null)
       } catch (err) {
@@ -226,12 +231,19 @@ export function StoreProvider({ children }) {
   }, [dbWrite])
 
   const deleteEvent = useCallback((id) => {
+    // Clean up storage files for documents belonging to this event
+    const docsToDelete = eventDocuments.filter(d => d.event_id === id)
+    if (docsToDelete.length > 0) {
+      const paths = docsToDelete.map(d => d.storage_path)
+      deleteFile('event-documents', paths).catch(() => {})
+    }
     setEvents(prev => prev.filter(e => e.id !== id))
-    // Budget items and checklists cascade in DB; clean up local state too
+    // Budget items, checklists, and documents cascade in DB; clean up local state too
     setBudgetItems(prev => prev.filter(b => b.event_id !== id))
     setContractChecklists(prev => prev.filter(c => c.event_id !== id))
+    setEventDocuments(prev => prev.filter(d => d.event_id !== id))
     dbWrite(() => deleteRow('events', id))
-  }, [dbWrite])
+  }, [dbWrite, eventDocuments])
 
   // ── Budget operations ──
 
@@ -323,6 +335,68 @@ export function StoreProvider({ children }) {
     })
   }, [dbWrite])
 
+  // ── Event Document operations ──
+
+  const addEventDocument = useCallback(async (doc, file) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const storagePath = `${activeChapterId}/${doc.event_id}/${id}_${file.name}`
+    const row = {
+      ...doc,
+      id,
+      chapter_id: activeChapterId,
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type,
+      storage_path: storagePath,
+      created_at: now,
+      updated_at: now,
+    }
+
+    // Optimistic add with uploading flag
+    setEventDocuments(prev => [...prev, { ...row, _uploading: true }])
+
+    try {
+      const uploadRes = await uploadFile('event-documents', storagePath, file)
+      if (uploadRes?.error) {
+        console.error('File upload error:', uploadRes.error)
+        setEventDocuments(prev => prev.filter(d => d.id !== id))
+        setDbError('Failed to upload file.')
+        return null
+      }
+
+      const insertRes = await insertRow('event_documents', row)
+      if (insertRes?.error) {
+        console.error('Document insert error:', insertRes.error)
+        setDbError('Failed to save document record.')
+      }
+
+      // Remove uploading flag
+      setEventDocuments(prev => prev.map(d => d.id === id ? { ...row } : d))
+      return row
+    } catch (err) {
+      console.error('Document upload failed:', err)
+      setEventDocuments(prev => prev.filter(d => d.id !== id))
+      setDbError('Failed to upload document.')
+      return null
+    }
+  }, [activeChapterId])
+
+  const updateEventDocument = useCallback((id, updates) => {
+    const now = new Date().toISOString()
+    setEventDocuments(prev => prev.map(d => d.id === id ? { ...d, ...updates, updated_at: now } : d))
+    dbWrite(() => updateRow('event_documents', id, updates))
+  }, [dbWrite])
+
+  const deleteEventDocument = useCallback((id) => {
+    const doc = eventDocuments.find(d => d.id === id)
+    setEventDocuments(prev => prev.filter(d => d.id !== id))
+    if (doc?.storage_path) {
+      deleteFile('event-documents', doc.storage_path).catch(() => {})
+    }
+    dbWrite(() => deleteRow('event_documents', id))
+  }, [dbWrite, eventDocuments])
+
   // ── Scenario operations ──
 
   const addScenario = useCallback((scenario) => {
@@ -366,6 +440,7 @@ export function StoreProvider({ children }) {
     events,
     budgetItems,
     contractChecklists,
+    eventDocuments,
     saps,
     scenarios,
 
@@ -397,6 +472,11 @@ export function StoreProvider({ children }) {
     // Contract ops
     getOrCreateChecklist,
     updateChecklist,
+
+    // Document ops
+    addEventDocument,
+    updateEventDocument,
+    deleteEventDocument,
 
     // SAP ops
     addSAP,

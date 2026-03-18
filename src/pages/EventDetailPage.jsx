@@ -18,6 +18,7 @@ import {
   Star, Plus, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
   Handshake, Building2, Lock, LockOpen, Pencil,
 } from 'lucide-react'
+import EventDocuments from '@/components/EventDocuments'
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -575,6 +576,9 @@ export default function EventDetailPage() {
                   </div>
                 )
               })()}
+
+              {/* Documents section */}
+              <EventDocuments eventId={id} />
             </div>
           </div>
         </TabsContent>

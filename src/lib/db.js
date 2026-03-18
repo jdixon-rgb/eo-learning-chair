@@ -32,3 +32,23 @@ export async function upsertRow(table, data, conflictColumn) {
   if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
   return supabase.from(table).upsert(data, { onConflict: conflictColumn }).select().single()
 }
+
+// ── Storage helpers ──
+
+export async function uploadFile(bucket, path, file) {
+  if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
+  return supabase.storage.from(bucket).upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  })
+}
+
+export async function deleteFile(bucket, paths) {
+  if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
+  return supabase.storage.from(bucket).remove(Array.isArray(paths) ? paths : [paths])
+}
+
+export async function getSignedUrl(bucket, path, expiresIn = 3600) {
+  if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
+  return supabase.storage.from(bucket).createSignedUrl(path, expiresIn)
+}
