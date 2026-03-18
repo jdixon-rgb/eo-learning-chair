@@ -124,15 +124,28 @@ export const DEFAULT_MARKETING_MILESTONES = [
   { week: 1, name: 'Final reminder + logistics', description: 'Time, location, parking, dress code' },
 ]
 
-// Chair roles for board reports
+// Board chairs and staff positions
 export const CHAIR_ROLES = [
-  { id: 'learning_chair', label: 'Learning Chair' },
-  { id: 'membership_chair', label: 'Membership Chair' },
-  { id: 'communications_chair', label: 'Communications Chair' },
-  { id: 'community_chair', label: 'Community Chair' },
-  { id: 'forum_chair', label: 'Forum Chair' },
-  { id: 'social_chair', label: 'Social Chair' },
-  { id: 'sponsorship_chair', label: 'Sponsorship Chair' },
+  { id: 'president', label: 'President' },
+  { id: 'president_elect', label: 'President Elect' },
+  { id: 'finance', label: 'Finance' },
+  { id: 'governance', label: 'Governance' },
+  { id: 'membership', label: 'Membership' },
+  { id: 'forum_health', label: 'Forum Health' },
+  { id: 'forum_placement', label: 'Forum Placement' },
+  { id: 'learning', label: 'Learning' },
+  { id: 'member_engagement', label: 'Member Engagement' },
+  { id: 'marketing_communications', label: 'Marketing and Communications' },
+  { id: 'strategic_alliances', label: 'Strategic Alliances' },
+  { id: 'mentorship', label: 'Mentorship' },
+  { id: 'social', label: 'Social' },
+  { id: 'gsea', label: 'GSEA' },
+  { id: 'myeo', label: 'MyEO' },
+  { id: 'slp_champion', label: 'SLP Champion' },
+  { id: 'accelerator', label: 'Accelerator' },
+  { id: 'executive_director', label: 'Executive Director', isStaff: true },
+  { id: 'experience_coordinator', label: 'Experience Coordinator', isStaff: true },
+  { id: 'executive_assistant', label: 'Executive Assistant', isStaff: true },
 ]
 
 // Chair report statuses
