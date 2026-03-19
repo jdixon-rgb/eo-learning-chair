@@ -10,8 +10,7 @@ import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp,
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
-  incoming: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
-  outgoing: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
+  elect: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
   past: 'bg-muted text-muted-foreground',
 }
 
@@ -37,7 +36,7 @@ export default function SettingsPage() {
   const [editingId, setEditingId] = useState(null)
   const [editLabel, setEditLabel] = useState('')
   const [assigningRoleId, setAssigningRoleId] = useState(null)
-  const [assignForm, setAssignForm] = useState({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active' })
+  const [assignForm, setAssignForm] = useState({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect' })
 
   const sortedRoles = [...chapterRoles].sort((a, b) => a.sort_order - b.sort_order)
 
@@ -45,7 +44,7 @@ export default function SettingsPage() {
     return roleAssignments
       .filter(a => a.chapter_role_id === roleId)
       .sort((a, b) => {
-        const order = { active: 0, incoming: 1, outgoing: 2, past: 3 }
+        const order = { active: 0, elect: 1, past: 2 }
         return (order[a.status] ?? 4) - (order[b.status] ?? 4)
       })
   }
@@ -278,8 +277,7 @@ export default function SettingsPage() {
                             className="text-[10px] bg-transparent border rounded px-1 py-0.5"
                           >
                             <option value="active">Active</option>
-                            <option value="incoming">Incoming</option>
-                            <option value="outgoing">Outgoing</option>
+                            <option value="elect">Elect</option>
                             <option value="past">Past</option>
                           </select>
                           <button
@@ -327,8 +325,7 @@ export default function SettingsPage() {
                           className="h-7 text-sm border rounded px-2 bg-background"
                         >
                           <option value="active">Active</option>
-                          <option value="incoming">Incoming</option>
-                          <option value="outgoing">Outgoing</option>
+                          <option value="elect">Elect</option>
                         </select>
                         <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_name.trim()}>
                           Assign
