@@ -147,18 +147,19 @@ export function StoreProvider({ children }) {
   }, [activeChapterId, isChapterReady])
 
   // Helper: fire Supabase write in background, log errors
-  const dbWrite = useCallback(async (fn) => {
+  const dbWrite = useCallback(async (fn, label = 'unknown') => {
     if (!isSupabaseConfigured()) return
     try {
       const result = await fn()
       if (result?.error) {
-        console.error('Supabase write error:', result.error)
-        setDbError('Failed to save changes. Data is cached locally.')
+        const msg = result.error?.message || result.error?.details || JSON.stringify(result.error)
+        console.error(`[dbWrite:${label}] Supabase error:`, msg, result.error)
+        setDbError(`Save failed (${label}): ${msg}`)
       }
       return result
     } catch (err) {
-      console.error('Supabase write failed:', err)
-      setDbError('Failed to save changes. Data is cached locally.')
+      console.error(`[dbWrite:${label}] Exception:`, err)
+      setDbError(`Save failed (${label}): ${err.message}`)
     }
   }, [])
 
@@ -182,19 +183,19 @@ export function StoreProvider({ children }) {
     const now = new Date().toISOString()
     const newSpeaker = { ...speaker, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setSpeakers(prev => [...prev, newSpeaker])
-    dbWrite(() => insertRow('speakers', newSpeaker))
+    dbWrite(() => insertRow('speakers', newSpeaker), 'insert:speakers')
     return newSpeaker
   }, [activeChapterId, dbWrite])
 
   const updateSpeaker = useCallback((id, updates) => {
     const now = new Date().toISOString()
     setSpeakers(prev => prev.map(s => s.id === id ? { ...s, ...updates, updated_at: now } : s))
-    dbWrite(() => updateRow('speakers', id, updates))
+    dbWrite(() => updateRow('speakers', id, updates), 'update:speakers')
   }, [dbWrite])
 
   const deleteSpeaker = useCallback((id) => {
     setSpeakers(prev => prev.filter(s => s.id !== id))
-    dbWrite(() => deleteRow('speakers', id))
+    dbWrite(() => deleteRow('speakers', id), 'delete:speakers')
   }, [dbWrite])
 
   // ── Venue operations ──
@@ -204,18 +205,18 @@ export function StoreProvider({ children }) {
     const now = new Date().toISOString()
     const newVenue = { ...venue, id, chapter_id: activeChapterId, created_at: now }
     setVenues(prev => [...prev, newVenue])
-    dbWrite(() => insertRow('venues', newVenue))
+    dbWrite(() => insertRow('venues', newVenue), 'insert:venues')
     return newVenue
   }, [activeChapterId, dbWrite])
 
   const updateVenue = useCallback((id, updates) => {
     setVenues(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v))
-    dbWrite(() => updateRow('venues', id, updates))
+    dbWrite(() => updateRow('venues', id, updates), 'update:venues')
   }, [dbWrite])
 
   const deleteVenue = useCallback((id) => {
     setVenues(prev => prev.filter(v => v.id !== id))
-    dbWrite(() => deleteRow('venues', id))
+    dbWrite(() => deleteRow('venues', id), 'delete:venues')
   }, [dbWrite])
 
   // ── Event operations ──
@@ -225,14 +226,14 @@ export function StoreProvider({ children }) {
     const now = new Date().toISOString()
     const newEvent = { ...event, id, chapter_id: activeChapterId, status: 'planning', created_at: now, updated_at: now }
     setEvents(prev => [...prev, newEvent])
-    dbWrite(() => insertRow('events', newEvent))
+    dbWrite(() => insertRow('events', newEvent), 'insert:events')
     return newEvent
   }, [activeChapterId, dbWrite])
 
   const updateEvent = useCallback((id, updates) => {
     const now = new Date().toISOString()
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates, updated_at: now } : e))
-    dbWrite(() => updateRow('events', id, updates))
+    dbWrite(() => updateRow('events', id, updates), 'update:events')
   }, [dbWrite])
 
   const deleteEvent = useCallback((id) => {
@@ -247,7 +248,7 @@ export function StoreProvider({ children }) {
     setBudgetItems(prev => prev.filter(b => b.event_id !== id))
     setContractChecklists(prev => prev.filter(c => c.event_id !== id))
     setEventDocuments(prev => prev.filter(d => d.event_id !== id))
-    dbWrite(() => deleteRow('events', id))
+    dbWrite(() => deleteRow('events', id), 'delete:events')
   }, [dbWrite, eventDocuments])
 
   // ── Budget operations ──
@@ -257,18 +258,18 @@ export function StoreProvider({ children }) {
     const now = new Date().toISOString()
     const newItem = { ...item, id, created_at: now }
     setBudgetItems(prev => [...prev, newItem])
-    dbWrite(() => insertRow('budget_items', newItem))
+    dbWrite(() => insertRow('budget_items', newItem), 'insert:budget_items')
     return newItem
   }, [dbWrite])
 
   const updateBudgetItem = useCallback((id, updates) => {
     setBudgetItems(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b))
-    dbWrite(() => updateRow('budget_items', id, updates))
+    dbWrite(() => updateRow('budget_items', id, updates), 'update:budget_items')
   }, [dbWrite])
 
   const deleteBudgetItem = useCallback((id) => {
     setBudgetItems(prev => prev.filter(b => b.id !== id))
-    dbWrite(() => deleteRow('budget_items', id))
+    dbWrite(() => deleteRow('budget_items', id), 'delete:budget_items')
   }, [dbWrite])
 
   // ── Contract checklist operations ──
@@ -281,6 +282,7 @@ export function StoreProvider({ children }) {
     const newChecklist = {
       id,
       event_id: eventId,
+      ...(activeChapterId ? { chapter_id: activeChapterId } : {}),
       jurisdiction_local: false,
       indemnification_clause: false,
       mfn_clause: false,
@@ -294,14 +296,14 @@ export function StoreProvider({ children }) {
       updated_at: now,
     }
     setContractChecklists(prev => [...prev, newChecklist])
-    dbWrite(() => insertRow('contract_checklists', newChecklist))
+    dbWrite(() => insertRow('contract_checklists', newChecklist), 'insert:contract_checklists')
     return newChecklist
-  }, [contractChecklists, dbWrite])
+  }, [activeChapterId, contractChecklists, dbWrite])
 
   const updateChecklist = useCallback((id, updates) => {
     const now = new Date().toISOString()
     setContractChecklists(prev => prev.map(c => c.id === id ? { ...c, ...updates, updated_at: now } : c))
-    dbWrite(() => updateRow('contract_checklists', id, updates))
+    dbWrite(() => updateRow('contract_checklists', id, updates), 'update:contract_checklists')
   }, [dbWrite])
 
   // ── SAP operations ──
@@ -311,13 +313,13 @@ export function StoreProvider({ children }) {
     const now = new Date().toISOString()
     const newSAP = { ...sap, id, chapter_id: activeChapterId, created_at: now }
     setSaps(prev => [...prev, newSAP])
-    dbWrite(() => insertRow('saps', newSAP))
+    dbWrite(() => insertRow('saps', newSAP), 'insert:saps')
     return newSAP
   }, [activeChapterId, dbWrite])
 
   const updateSAP = useCallback((id, updates) => {
     setSaps(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
-    dbWrite(() => updateRow('saps', id, updates))
+    dbWrite(() => updateRow('saps', id, updates), 'update:saps')
   }, [dbWrite])
 
   const deleteSAP = useCallback((id) => {
@@ -337,7 +339,7 @@ export function StoreProvider({ children }) {
           // This is handled by the optimistic local state update above
         })
       }
-    })
+    }, 'delete:saps')
   }, [dbWrite])
 
   // ── Event Document operations ──
@@ -390,7 +392,7 @@ export function StoreProvider({ children }) {
   const updateEventDocument = useCallback((id, updates) => {
     const now = new Date().toISOString()
     setEventDocuments(prev => prev.map(d => d.id === id ? { ...d, ...updates, updated_at: now } : d))
-    dbWrite(() => updateRow('event_documents', id, updates))
+    dbWrite(() => updateRow('event_documents', id, updates), 'update:event_documents')
   }, [dbWrite])
 
   const deleteEventDocument = useCallback((id) => {
@@ -399,7 +401,7 @@ export function StoreProvider({ children }) {
     if (doc?.storage_path) {
       deleteFile('event-documents', doc.storage_path).catch(() => {})
     }
-    dbWrite(() => deleteRow('event_documents', id))
+    dbWrite(() => deleteRow('event_documents', id), 'delete:event_documents')
   }, [dbWrite, eventDocuments])
 
   // ── Scenario operations ──
@@ -409,18 +411,18 @@ export function StoreProvider({ children }) {
     const now = new Date().toISOString()
     const newScenario = { ...scenario, id, chapter_id: activeChapterId, created_at: now }
     setScenarios(prev => [...prev, newScenario])
-    dbWrite(() => insertRow('scenarios', newScenario))
+    dbWrite(() => insertRow('scenarios', newScenario), 'insert:scenarios')
     return newScenario
   }, [activeChapterId, dbWrite])
 
   const updateScenario = useCallback((id, updates) => {
     setScenarios(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
-    dbWrite(() => updateRow('scenarios', id, updates))
+    dbWrite(() => updateRow('scenarios', id, updates), 'update:scenarios')
   }, [dbWrite])
 
   const deleteScenario = useCallback((id) => {
     setScenarios(prev => prev.filter(s => s.id !== id))
-    dbWrite(() => deleteRow('scenarios', id))
+    dbWrite(() => deleteRow('scenarios', id), 'delete:scenarios')
   }, [dbWrite])
 
   // ── Chapter operations ──
@@ -429,7 +431,7 @@ export function StoreProvider({ children }) {
     setChapter(prev => ({ ...prev, ...updates }))
     dbWrite(() => {
       if (activeChapterId) return updateRow('chapters', activeChapterId, updates)
-    })
+    }, 'update:chapters')
   }, [activeChapterId, dbWrite])
 
   // ── Computed values ──
