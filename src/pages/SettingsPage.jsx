@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check } from 'lucide-react'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, User, Building2 } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -30,6 +30,8 @@ export default function SettingsPage() {
   const {
     chapterRoles, addChapterRole, updateChapterRole, deleteChapterRole,
     roleAssignments, addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
+    chapterMembers, addChapterMember, updateChapterMember, deleteChapterMember,
+    getMemberName, getMemberEmail,
   } = useBoardStore()
 
   const [newLabel, setNewLabel] = useState('')
@@ -37,9 +39,16 @@ export default function SettingsPage() {
   const [editingId, setEditingId] = useState(null)
   const [editLabel, setEditLabel] = useState('')
   const [assigningRoleId, setAssigningRoleId] = useState(null)
-  const [assignForm, setAssignForm] = useState({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
+  const [assignForm, setAssignForm] = useState({ member_id: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
   const [editingAssignmentId, setEditingAssignmentId] = useState(null)
   const [editAssignment, setEditAssignment] = useState({})
+  // Member directory state
+  const [newMemberName, setNewMemberName] = useState('')
+  const [newMemberEmail, setNewMemberEmail] = useState('')
+  const [newMemberCompany, setNewMemberCompany] = useState('')
+  const [editingMemberId, setEditingMemberId] = useState(null)
+  const [editMember, setEditMember] = useState({})
+  const activeMembers = chapterMembers.filter(m => m.status !== 'alumni').sort((a, b) => a.name.localeCompare(b.name))
 
   const sortedRoles = [...chapterRoles].sort((a, b) => a.sort_order - b.sort_order)
 
@@ -117,17 +126,17 @@ export default function SettingsPage() {
   function startEditAssignment(a) {
     setEditingAssignmentId(a.id)
     setEditAssignment({
-      member_name: a.member_name || '',
-      member_email: a.member_email || '',
+      member_id: a.member_id || '',
       fiscal_year: a.fiscal_year || FISCAL_YEAR_OPTIONS[1],
     })
   }
 
   function saveEditAssignment(id) {
-    if (!editAssignment.member_name?.trim()) return
+    const member = chapterMembers.find(m => m.id === editAssignment.member_id)
     updateRoleAssignment(id, {
-      member_name: editAssignment.member_name.trim(),
-      member_email: editAssignment.member_email.trim(),
+      member_id: editAssignment.member_id || null,
+      member_name: member?.name || '',
+      member_email: member?.email || '',
       fiscal_year: editAssignment.fiscal_year,
     })
     setEditingAssignmentId(null)
@@ -135,20 +144,22 @@ export default function SettingsPage() {
   }
 
   function handleAddAssignment(roleId) {
-    if (!assignForm.member_name.trim()) return
+    if (!assignForm.member_id) return
     const role = chapterRoles.find(r => r.id === roleId)
     const isPresident = role?.role_key === 'president' || role?.role_key === 'president_elect'
+    const member = chapterMembers.find(m => m.id === assignForm.member_id)
     addRoleAssignment({
       chapter_role_id: roleId,
-      member_name: assignForm.member_name.trim(),
-      member_email: assignForm.member_email.trim(),
+      member_id: assignForm.member_id,
+      member_name: member?.name || '',
+      member_email: member?.email || '',
       fiscal_year: assignForm.fiscal_year,
       status: assignForm.status,
       budget: isPresident ? 0 : (parseInt(assignForm.budget) || 0),
       theme: isPresident ? (assignForm.theme || '') : '',
     })
     setAssigningRoleId(null)
-    setAssignForm({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active', budget: '', theme: '' })
+    setAssignForm({ member_id: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active', budget: '', theme: '' })
   }
 
   return (
@@ -287,21 +298,17 @@ export default function SettingsPage() {
                             {isEditing ? (
                               /* Inline edit mode */
                               <div className="flex items-center gap-2 text-sm">
-                                <Input
-                                  value={editAssignment.member_name}
-                                  onChange={e => setEditAssignment(prev => ({ ...prev, member_name: e.target.value }))}
-                                  placeholder="Name"
-                                  className="h-6 text-xs flex-1"
+                                <select
+                                  value={editAssignment.member_id}
+                                  onChange={e => setEditAssignment(prev => ({ ...prev, member_id: e.target.value }))}
+                                  className="h-6 text-xs flex-1 border rounded px-1 bg-background"
                                   autoFocus
-                                  onKeyDown={e => { if (e.key === 'Enter') saveEditAssignment(a.id); if (e.key === 'Escape') { setEditingAssignmentId(null); setEditAssignment({}) } }}
-                                />
-                                <Input
-                                  value={editAssignment.member_email}
-                                  onChange={e => setEditAssignment(prev => ({ ...prev, member_email: e.target.value }))}
-                                  placeholder="Email"
-                                  className="h-6 text-xs flex-1"
-                                  onKeyDown={e => { if (e.key === 'Enter') saveEditAssignment(a.id); if (e.key === 'Escape') { setEditingAssignmentId(null); setEditAssignment({}) } }}
-                                />
+                                >
+                                  <option value="">Select member...</option>
+                                  {activeMembers.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name}{m.company ? ` (${m.company})` : ''}</option>
+                                  ))}
+                                </select>
                                 <select
                                   value={editAssignment.fiscal_year}
                                   onChange={e => setEditAssignment(prev => ({ ...prev, fiscal_year: e.target.value }))}
@@ -337,9 +344,9 @@ export default function SettingsPage() {
                                   onClick={() => startEditAssignment(a)}
                                   title="Click to edit"
                                 >
-                                  {a.member_name}
+                                  {getMemberName(a)}
                                 </span>
-                                {a.member_email && <span className="text-muted-foreground text-xs">{a.member_email}</span>}
+                                {getMemberEmail(a) && <span className="text-muted-foreground text-xs">{getMemberEmail(a)}</span>}
                                 <button
                                   onClick={() => startEditAssignment(a)}
                                   className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/assignment:opacity-100 transition-opacity p-0.5"
@@ -402,22 +409,21 @@ export default function SettingsPage() {
                   {/* Add assignment form */}
                   {assigningRoleId === role.id && (
                     <div className="px-3 pb-3 pl-10 pt-1 border-t space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          placeholder="Name"
-                          value={assignForm.member_name}
-                          onChange={e => setAssignForm(prev => ({ ...prev, member_name: e.target.value }))}
-                          className="h-7 text-sm flex-1"
+                      {activeMembers.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-1">Add members to the Member Directory first, then assign them to positions.</p>
+                      ) : (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <select
+                          value={assignForm.member_id}
+                          onChange={e => setAssignForm(prev => ({ ...prev, member_id: e.target.value }))}
+                          className="h-7 text-sm border rounded px-2 bg-background flex-1 min-w-[140px]"
                           autoFocus
-                        />
-                        <Input
-                          placeholder="Email (optional)"
-                          value={assignForm.member_email}
-                          onChange={e => setAssignForm(prev => ({ ...prev, member_email: e.target.value }))}
-                          className="h-7 text-sm flex-1"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
+                        >
+                          <option value="">Select member...</option>
+                          {activeMembers.map(m => (
+                            <option key={m.id} value={m.id}>{m.name}{m.company ? ` (${m.company})` : ''}</option>
+                          ))}
+                        </select>
                         <select
                           value={assignForm.fiscal_year}
                           onChange={e => setAssignForm(prev => ({ ...prev, fiscal_year: e.target.value }))}
@@ -451,13 +457,14 @@ export default function SettingsPage() {
                             className="h-7 text-sm w-28"
                           />
                         )}
-                        <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_name.trim()}>
+                        <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_id}>
                           Assign
                         </Button>
                         <Button size="sm" variant="ghost" className="h-7" onClick={() => setAssigningRoleId(null)}>
                           Cancel
                         </Button>
                       </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -497,6 +504,191 @@ export default function SettingsPage() {
             Key: <span className="font-mono">{toRoleKey(newLabel)}</span>
           </p>
         )}
+      </div>
+
+      {/* Member Directory */}
+      <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <User className="h-4 w-4" /> Member Directory ({chapterMembers.length})
+          </h3>
+        </div>
+
+        {chapterMembers.length > 0 ? (
+          <div className="space-y-1">
+            {chapterMembers.map(member => {
+              const memberRoles = roleAssignments
+                .filter(a => a.member_id === member.id && a.status !== 'past')
+                .map(a => {
+                  const role = chapterRoles.find(r => r.id === a.chapter_role_id)
+                  return role ? `${role.label} (${a.status})` : null
+                })
+                .filter(Boolean)
+              const isEditing = editingMemberId === member.id
+              return (
+                <div key={member.id} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0 group/member">
+                  {isEditing ? (
+                    <>
+                      <Input
+                        value={editMember.name}
+                        onChange={e => setEditMember(prev => ({ ...prev, name: e.target.value }))}
+                        className="h-6 text-xs flex-1"
+                        placeholder="Name"
+                        autoFocus
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            updateChapterMember(member.id, editMember)
+                            setEditingMemberId(null)
+                          }
+                          if (e.key === 'Escape') setEditingMemberId(null)
+                        }}
+                      />
+                      <Input
+                        value={editMember.email}
+                        onChange={e => setEditMember(prev => ({ ...prev, email: e.target.value }))}
+                        className="h-6 text-xs w-40"
+                        placeholder="Email"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            updateChapterMember(member.id, editMember)
+                            setEditingMemberId(null)
+                          }
+                          if (e.key === 'Escape') setEditingMemberId(null)
+                        }}
+                      />
+                      <Input
+                        value={editMember.company}
+                        onChange={e => setEditMember(prev => ({ ...prev, company: e.target.value }))}
+                        className="h-6 text-xs w-32"
+                        placeholder="Company"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            updateChapterMember(member.id, editMember)
+                            setEditingMemberId(null)
+                          }
+                          if (e.key === 'Escape') setEditingMemberId(null)
+                        }}
+                      />
+                      <button
+                        onClick={() => { updateChapterMember(member.id, editMember); setEditingMemberId(null) }}
+                        className="text-green-600 hover:text-green-700 p-0.5"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => setEditingMemberId(null)} className="text-muted-foreground hover:text-foreground p-0.5">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        className="text-sm font-medium cursor-pointer hover:text-eo-blue"
+                        onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '' }) }}
+                      >
+                        {member.name}
+                      </span>
+                      {member.company && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                          <Building2 className="h-2.5 w-2.5" />{member.company}
+                        </span>
+                      )}
+                      {member.email && <span className="text-xs text-muted-foreground">{member.email}</span>}
+                      {memberRoles.length > 0 && (
+                        <div className="flex gap-1 ml-auto">
+                          {memberRoles.map((r, i) => (
+                            <Badge key={i} variant="outline" className="text-[9px]">{r}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '' }) }}
+                        className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5 ml-auto"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <select
+                        value={member.status}
+                        onChange={e => updateChapterMember(member.id, { status: e.target.value })}
+                        className="text-[10px] bg-transparent border rounded px-1 py-0.5"
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="alumni">Alumni</option>
+                      </select>
+                      <button
+                        onClick={() => {
+                          const hasAssignments = roleAssignments.some(a => a.member_id === member.id)
+                          const msg = hasAssignments
+                            ? `"${member.name}" has role assignments. Remove them from the directory? Their assignments will show the name as fallback text.`
+                            : `Remove "${member.name}" from the directory?`
+                          if (window.confirm(msg)) deleteChapterMember(member.id)
+                        }}
+                        className="text-muted-foreground hover:text-red-500 opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground py-2 text-center">
+            No members yet. Add your chapter's board members below.
+          </p>
+        )}
+
+        {/* Add member form */}
+        <div className="flex items-center gap-2 pt-2 border-t">
+          <Input
+            placeholder="Name"
+            value={newMemberName}
+            onChange={e => setNewMemberName(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newMemberName.trim()) {
+                addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
+                setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
+              }
+            }}
+            className="flex-1 h-8 text-sm"
+          />
+          <Input
+            placeholder="Email"
+            value={newMemberEmail}
+            onChange={e => setNewMemberEmail(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newMemberName.trim()) {
+                addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
+                setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
+              }
+            }}
+            className="w-40 h-8 text-sm"
+          />
+          <Input
+            placeholder="Company"
+            value={newMemberCompany}
+            onChange={e => setNewMemberCompany(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newMemberName.trim()) {
+                addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
+                setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
+              }
+            }}
+            className="w-32 h-8 text-sm"
+          />
+          <Button
+            size="sm"
+            onClick={() => {
+              if (!newMemberName.trim()) return
+              addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
+              setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
+            }}
+            disabled={!newMemberName.trim()}
+          >
+            <Plus className="h-3 w-3" /> Add
+          </Button>
+        </div>
       </div>
 
       {/* Connection Status */}

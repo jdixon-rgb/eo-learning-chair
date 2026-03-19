@@ -34,6 +34,7 @@ export function BoardStoreProvider({ children }) {
   const [memberScorecards, setMemberScorecards] = useState(cached?.memberScorecards ?? [])
   const [chapterRoles, setChapterRoles] = useState(cached?.chapterRoles ?? [])
   const [roleAssignments, setRoleAssignments] = useState(cached?.roleAssignments ?? [])
+  const [chapterMembers, setChapterMembers] = useState(cached?.chapterMembers ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -42,8 +43,8 @@ export function BoardStoreProvider({ children }) {
   // Persist to localStorage
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments })
-  }, [activeChapterId, chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments])
+    saveCache(activeChapterId, { chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers })
+  }, [activeChapterId, chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers])
 
   // Fetch from Supabase
   useEffect(() => {
@@ -64,6 +65,7 @@ export function BoardStoreProvider({ children }) {
       if (chapterCache.memberScorecards) setMemberScorecards(chapterCache.memberScorecards)
       if (chapterCache.chapterRoles) setChapterRoles(chapterCache.chapterRoles)
       if (chapterCache.roleAssignments) setRoleAssignments(chapterCache.roleAssignments)
+      if (chapterCache.chapterMembers) setChapterMembers(chapterCache.chapterMembers)
     }
 
     setLoading(true)
@@ -71,13 +73,14 @@ export function BoardStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [reportsRes, commsRes, forumsRes, scorecardsRes, rolesRes, assignmentsRes] = await Promise.all([
+        const [reportsRes, commsRes, forumsRes, scorecardsRes, rolesRes, assignmentsRes, membersRes] = await Promise.all([
           fetchByChapter('chair_reports', activeChapterId),
           fetchByChapter('chapter_communications', activeChapterId),
           fetchByChapter('forums', activeChapterId),
           fetchByChapter('member_scorecards', activeChapterId),
           fetchByChapter('chapter_roles', activeChapterId).catch(() => ({ data: null })),
           fetchByChapter('role_assignments', activeChapterId).catch(() => ({ data: null })),
+          fetchByChapter('chapter_members', activeChapterId).catch(() => ({ data: null })),
         ])
 
         const coreResults = [reportsRes, commsRes, forumsRes, scorecardsRes]
@@ -96,6 +99,7 @@ export function BoardStoreProvider({ children }) {
         if (scorecardsRes.data) setMemberScorecards(scorecardsRes.data)
         if (rolesRes?.data) setChapterRoles(rolesRes.data.sort((a, b) => a.sort_order - b.sort_order))
         if (assignmentsRes?.data) setRoleAssignments(assignmentsRes.data)
+        if (membersRes?.data) setChapterMembers(membersRes.data.sort((a, b) => a.name.localeCompare(b.name)))
         setDbError(null)
       } catch (err) {
         console.error('Board store hydrate failed:', err)
@@ -237,6 +241,43 @@ export function BoardStoreProvider({ children }) {
     dbWrite(() => deleteRow('role_assignments', id))
   }, [dbWrite])
 
+  // ── Chapter Member CRUD ──
+  const addChapterMember = useCallback((member) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = { ...member, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
+    setChapterMembers(prev => [...prev, row].sort((a, b) => a.name.localeCompare(b.name)))
+    dbWrite(() => insertRow('chapter_members', row))
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateChapterMember = useCallback((id, updates) => {
+    setChapterMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m))
+    dbWrite(() => updateRow('chapter_members', id, updates))
+  }, [dbWrite])
+
+  const deleteChapterMember = useCallback((id) => {
+    setChapterMembers(prev => prev.filter(m => m.id !== id))
+    dbWrite(() => deleteRow('chapter_members', id))
+  }, [dbWrite])
+
+  // Resolve member_id to name, falling back to member_name on the assignment
+  const getMemberName = useCallback((assignment) => {
+    if (assignment.member_id) {
+      const member = chapterMembers.find(m => m.id === assignment.member_id)
+      if (member) return member.name
+    }
+    return assignment.member_name || 'Unknown'
+  }, [chapterMembers])
+
+  const getMemberEmail = useCallback((assignment) => {
+    if (assignment.member_id) {
+      const member = chapterMembers.find(m => m.id === assignment.member_id)
+      if (member) return member.email || ''
+    }
+    return assignment.member_email || ''
+  }, [chapterMembers])
+
   // Fallback getter: returns DB roles mapped to { id, label, isStaff } or hardcoded CHAIR_ROLES
   const getChairRoles = useCallback(() => {
     if (chapterRoles.length > 0) {
@@ -269,7 +310,12 @@ export function BoardStoreProvider({ children }) {
           return role?.role_key === 'president' && ra.status === 'active'
         })
       : null
-    return a?.member_name || null
+    if (!a) return null
+    if (a.member_id) {
+      const member = chapterMembers.find(m => m.id === a.member_id)
+      if (member) return member.name
+    }
+    return a.member_name || null
   })()
 
   const getChairBudget = useCallback((roleKey) => {
@@ -283,7 +329,7 @@ export function BoardStoreProvider({ children }) {
   }, [chapterRoles, roleAssignments])
 
   const value = {
-    chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments,
+    chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers,
     loading, dbError, clearDbError: () => setDbError(null),
     addChairReport, updateChairReport, deleteChairReport,
     addCommunication, updateCommunication, deleteCommunication,
@@ -291,6 +337,8 @@ export function BoardStoreProvider({ children }) {
     addScorecard, updateScorecard, deleteScorecard,
     addChapterRole, updateChapterRole, deleteChapterRole,
     addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
+    addChapterMember, updateChapterMember, deleteChapterMember,
+    getMemberName, getMemberEmail,
     getChairRoles, getActiveAssignment, getChairBudget,
     activePresidentTheme, activePresidentName,
   }
