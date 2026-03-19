@@ -84,6 +84,7 @@ export function StoreProvider({ children }) {
 
     async function hydrate() {
       try {
+        // Core tables (required)
         const [
           chaptersRes,
           speakersRes,
@@ -93,7 +94,6 @@ export function StoreProvider({ children }) {
           checklistsRes,
           sapsRes,
           scenariosRes,
-          docsRes,
         ] = await Promise.all([
           fetchAll('chapters'),
           fetchByChapter('speakers', activeChapterId),
@@ -103,13 +103,11 @@ export function StoreProvider({ children }) {
           fetchAll('contract_checklists'),
           fetchByChapter('saps', activeChapterId),
           fetchByChapter('scenarios', activeChapterId),
-          fetchByChapter('event_documents', activeChapterId),
         ])
 
-        // Check for errors
-        const errors = [chaptersRes, speakersRes, venuesRes, eventsRes, budgetRes, checklistsRes, sapsRes, scenariosRes, docsRes]
-          .filter(r => r.error)
-          .map(r => r.error)
+        // Check core table errors
+        const coreResults = [chaptersRes, speakersRes, venuesRes, eventsRes, budgetRes, checklistsRes, sapsRes, scenariosRes]
+        const errors = coreResults.filter(r => r.error).map(r => r.error)
 
         if (errors.length > 0) {
           console.error('Supabase fetch errors:', errors)
@@ -118,7 +116,7 @@ export function StoreProvider({ children }) {
           return
         }
 
-        // Hydrate state from Supabase
+        // Hydrate core state from Supabase
         const activeChapter = chaptersRes.data?.find(c => c.id === activeChapterId)
         if (activeChapter) setChapter(activeChapter)
         else if (chaptersRes.data?.length > 0) setChapter(chaptersRes.data[0])
@@ -129,7 +127,10 @@ export function StoreProvider({ children }) {
         if (checklistsRes.data) setContractChecklists(checklistsRes.data)
         if (sapsRes.data) setSaps(sapsRes.data)
         if (scenariosRes.data) setScenarios(scenariosRes.data)
-        if (docsRes.data) setEventDocuments(docsRes.data)
+
+        // Optional tables (fail silently if not yet created)
+        const docsRes = await fetchByChapter('event_documents', activeChapterId).catch(() => ({ data: null }))
+        if (docsRes?.data) setEventDocuments(docsRes.data)
 
         setDbError(null)
       } catch (err) {
