@@ -245,6 +245,43 @@ export function BoardStoreProvider({ children }) {
     return CHAIR_ROLES
   }, [chapterRoles])
 
+  // ── Computed: active president theme + active chair budget ──
+  const getActiveAssignment = useCallback((roleKey) => {
+    const role = chapterRoles.find(r => r.role_key === roleKey)
+    if (!role) return null
+    return roleAssignments.find(a => a.chapter_role_id === role.id && a.status === 'active') ?? null
+  }, [chapterRoles, roleAssignments])
+
+  const activePresidentTheme = (() => {
+    const a = chapterRoles.length > 0
+      ? roleAssignments.find(ra => {
+          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
+          return role?.role_key === 'president' && ra.status === 'active'
+        })
+      : null
+    return a?.theme || null
+  })()
+
+  const activePresidentName = (() => {
+    const a = chapterRoles.length > 0
+      ? roleAssignments.find(ra => {
+          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
+          return role?.role_key === 'president' && ra.status === 'active'
+        })
+      : null
+    return a?.member_name || null
+  })()
+
+  const getChairBudget = useCallback((roleKey) => {
+    const a = chapterRoles.length > 0
+      ? roleAssignments.find(ra => {
+          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
+          return role?.role_key === roleKey && ra.status === 'active'
+        })
+      : null
+    return a?.budget ?? 0
+  }, [chapterRoles, roleAssignments])
+
   const value = {
     chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments,
     loading, dbError, clearDbError: () => setDbError(null),
@@ -254,7 +291,8 @@ export function BoardStoreProvider({ children }) {
     addScorecard, updateScorecard, deleteScorecard,
     addChapterRole, updateChapterRole, deleteChapterRole,
     addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
-    getChairRoles,
+    getChairRoles, getActiveAssignment, getChairBudget,
+    activePresidentTheme, activePresidentName,
   }
 
   return createElement(BoardStoreContext.Provider, { value }, children)

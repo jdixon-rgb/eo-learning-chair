@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
+import { useBoardStore } from '@/lib/boardStore'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
 import { FISCAL_MONTHS, STRATEGIC_MAP, PIPELINE_STAGES, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,11 @@ import {
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, budgetItems, totalEstimated, budgetRemaining } = useStore()
+  const { activePresidentTheme, getChairBudget } = useBoardStore()
+
+  const theme = activePresidentTheme || chapter.president_theme || ''
+  const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
+  const remaining = learningBudget - totalEstimated
 
   // Next upcoming event
   const upcomingEvents = events
@@ -33,7 +39,7 @@ export default function DashboardPage() {
   }))
 
   // Budget health
-  const budgetPercent = (totalEstimated / chapter.total_budget) * 100
+  const budgetPercent = learningBudget > 0 ? (totalEstimated / learningBudget) * 100 : 0
   const budgetHealth = budgetPercent > 90 ? 'critical' : budgetPercent > 75 ? 'warning' : 'healthy'
   const budgetColor = { critical: 'bg-eo-pink', warning: 'bg-eo-coral', healthy: 'bg-green-500' }[budgetHealth]
 
@@ -50,7 +56,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            FY 2026–2027 &middot; Theme: "{chapter.president_theme}"
+            FY 2026-2027 &middot; Theme: "{theme}"
           </p>
         </div>
         <div className="flex gap-2">
@@ -71,8 +77,8 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4" />
             Budget Health
           </div>
-          <p className="text-2xl font-bold">{formatCurrency(budgetRemaining)}</p>
-          <p className="text-xs text-muted-foreground mt-1">remaining of {formatCurrency(chapter.total_budget)}</p>
+          <p className="text-2xl font-bold">{formatCurrency(remaining)}</p>
+          <p className="text-xs text-muted-foreground mt-1">remaining of {formatCurrency(learningBudget)}</p>
           <div className="mt-3 h-2 bg-secondary rounded-full overflow-hidden">
             <div className={`h-full rounded-full ${budgetColor} transition-all`} style={{ width: `${Math.min(budgetPercent, 100)}%` }} />
           </div>
@@ -145,7 +151,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Route className="h-4 w-4 text-eo-coral" />
-            <h2 className="text-sm font-semibold">Year Arc — "{chapter.president_theme}"</h2>
+            <h2 className="text-sm font-semibold">Year Arc — "{theme}"</h2>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')}>
             View Full Calendar <ArrowRight className="h-3 w-3 ml-1" />

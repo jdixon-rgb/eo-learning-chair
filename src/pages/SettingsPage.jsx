@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -36,7 +37,7 @@ export default function SettingsPage() {
   const [editingId, setEditingId] = useState(null)
   const [editLabel, setEditLabel] = useState('')
   const [assigningRoleId, setAssigningRoleId] = useState(null)
-  const [assignForm, setAssignForm] = useState({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect' })
+  const [assignForm, setAssignForm] = useState({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
 
   const sortedRoles = [...chapterRoles].sort((a, b) => a.sort_order - b.sort_order)
 
@@ -113,15 +114,19 @@ export default function SettingsPage() {
 
   function handleAddAssignment(roleId) {
     if (!assignForm.member_name.trim()) return
+    const role = chapterRoles.find(r => r.id === roleId)
+    const isPresident = role?.role_key === 'president'
     addRoleAssignment({
       chapter_role_id: roleId,
       member_name: assignForm.member_name.trim(),
       member_email: assignForm.member_email.trim(),
       fiscal_year: assignForm.fiscal_year,
       status: assignForm.status,
+      budget: isPresident ? 0 : (parseInt(assignForm.budget) || 0),
+      theme: isPresident ? (assignForm.theme || '') : '',
     })
     setAssigningRoleId(null)
-    setAssignForm({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active' })
+    setAssignForm({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active', budget: '', theme: '' })
   }
 
   return (
@@ -145,26 +150,13 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium">Total Budget ($)</label>
+            <label className="text-xs font-medium">Default Budget ($)</label>
             <Input
               type="number"
               value={chapter.total_budget}
               onChange={e => updateChapter({ total_budget: parseFloat(e.target.value) || 0 })}
             />
-          </div>
-          <div>
-            <label className="text-xs font-medium">President's Theme</label>
-            <Input
-              value={chapter.president_theme || ''}
-              onChange={e => updateChapter({ president_theme: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium">President's Name</label>
-            <Input
-              value={chapter.president_name || ''}
-              onChange={e => updateChapter({ president_name: e.target.value })}
-            />
+            <p className="text-[10px] text-muted-foreground mt-1">Fallback if no chair budget is set in role assignments</p>
           </div>
         </div>
       </div>
@@ -262,32 +254,67 @@ export default function SettingsPage() {
 
                   {/* Assignments for this position */}
                   {assignments.length > 0 && (
-                    <div className="px-3 pb-2 pl-10 space-y-1">
-                      {assignments.map(a => (
-                        <div key={a.id} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[a.status]}`}>
-                            {a.status}
-                          </Badge>
-                          <span className="font-medium">{a.member_name}</span>
-                          {a.member_email && <span className="text-muted-foreground text-xs">{a.member_email}</span>}
-                          <span className="text-muted-foreground text-xs ml-auto">FY {a.fiscal_year}</span>
-                          <select
-                            value={a.status}
-                            onChange={e => updateRoleAssignment(a.id, { status: e.target.value })}
-                            className="text-[10px] bg-transparent border rounded px-1 py-0.5"
-                          >
-                            <option value="active">Active</option>
-                            <option value="elect">Elect</option>
-                            <option value="past">Past</option>
-                          </select>
-                          <button
-                            onClick={() => deleteRoleAssignment(a.id)}
-                            className="text-muted-foreground hover:text-red-500 p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="px-3 pb-2 pl-10 space-y-2">
+                      {assignments.map(a => {
+                        const isPresident = role.role_key === 'president'
+                        const showBudget = !isPresident && (a.status === 'active' || a.status === 'elect')
+                        const showTheme = isPresident && (a.status === 'active' || a.status === 'elect')
+                        return (
+                          <div key={a.id} className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[a.status]}`}>
+                                {a.status}
+                              </Badge>
+                              <span className="font-medium">{a.member_name}</span>
+                              {a.member_email && <span className="text-muted-foreground text-xs">{a.member_email}</span>}
+                              <span className="text-muted-foreground text-xs ml-auto">FY {a.fiscal_year}</span>
+                              <select
+                                value={a.status}
+                                onChange={e => updateRoleAssignment(a.id, { status: e.target.value })}
+                                className="text-[10px] bg-transparent border rounded px-1 py-0.5"
+                              >
+                                <option value="active">Active</option>
+                                <option value="elect">Elect</option>
+                                <option value="past">Past</option>
+                              </select>
+                              <button
+                                onClick={() => deleteRoleAssignment(a.id)}
+                                className="text-muted-foreground hover:text-red-500 p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                            {/* Budget field for non-president chairs */}
+                            {showBudget && (
+                              <div className="flex items-center gap-2 pl-6">
+                                <DollarSign className="h-3 w-3 text-muted-foreground" />
+                                <Input
+                                  type="number"
+                                  placeholder="Chair budget"
+                                  value={a.budget || ''}
+                                  onChange={e => updateRoleAssignment(a.id, { budget: parseInt(e.target.value) || 0 })}
+                                  className="h-6 text-xs w-32"
+                                />
+                                {a.budget > 0 && (
+                                  <span className="text-[10px] text-muted-foreground">{formatCurrency(a.budget)}</span>
+                                )}
+                              </div>
+                            )}
+                            {/* Theme field for president */}
+                            {showTheme && (
+                              <div className="flex items-center gap-2 pl-6">
+                                <Palette className="h-3 w-3 text-muted-foreground" />
+                                <Input
+                                  placeholder="President's theme"
+                                  value={a.theme || ''}
+                                  onChange={e => updateRoleAssignment(a.id, { theme: e.target.value })}
+                                  className="h-6 text-xs flex-1"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
 
@@ -327,6 +354,22 @@ export default function SettingsPage() {
                           <option value="active">Active</option>
                           <option value="elect">Elect</option>
                         </select>
+                        {role.role_key === 'president' ? (
+                          <Input
+                            placeholder="Theme"
+                            value={assignForm.theme}
+                            onChange={e => setAssignForm(prev => ({ ...prev, theme: e.target.value }))}
+                            className="h-7 text-sm w-40"
+                          />
+                        ) : (
+                          <Input
+                            type="number"
+                            placeholder="Budget ($)"
+                            value={assignForm.budget}
+                            onChange={e => setAssignForm(prev => ({ ...prev, budget: e.target.value }))}
+                            className="h-7 text-sm w-28"
+                          />
+                        )}
                         <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_name.trim()}>
                           Assign
                         </Button>

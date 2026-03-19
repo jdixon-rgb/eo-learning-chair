@@ -1,12 +1,20 @@
 import { useStore } from '@/lib/store'
+import { useBoardStore } from '@/lib/boardStore'
 import { useAuth } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
-import { Menu, User, Palette } from 'lucide-react'
+import { Menu, Palette } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
   const { chapter, totalEstimated, budgetRemaining } = useStore()
+  const { activePresidentTheme, activePresidentName, getChairBudget } = useBoardStore()
   const { profile } = useAuth()
-  const budgetPercent = ((totalEstimated / chapter.total_budget) * 100).toFixed(0)
+
+  // Use role assignment data if available, fall back to chapter fields
+  const theme = activePresidentTheme || chapter.president_theme || ''
+  const presidentName = activePresidentName || chapter.president_name || ''
+  const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
+  const budgetPercent = learningBudget > 0 ? ((totalEstimated / learningBudget) * 100).toFixed(0) : 0
+  const remaining = learningBudget - totalEstimated
 
   return (
     <header className="h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
@@ -22,10 +30,10 @@ export default function TopBar({ onMenuToggle }) {
         <div>
           <p className="text-sm font-semibold text-foreground">
             <span className="hidden sm:inline">Theme: </span>
-            <span className="text-eo-blue">{chapter.president_theme}</span>
+            <span className="text-eo-blue">{theme}</span>
           </p>
-          {chapter.president_name && (
-            <p className="text-xs text-muted-foreground hidden sm:block">President: {chapter.president_name}</p>
+          {presidentName && (
+            <p className="text-xs text-muted-foreground hidden sm:block">President: {presidentName}</p>
           )}
         </div>
       </div>
@@ -36,9 +44,9 @@ export default function TopBar({ onMenuToggle }) {
           <p className="text-xs text-muted-foreground hidden sm:block">Budget Used</p>
           <p className="text-xs sm:text-sm font-semibold">
             <span className="hidden sm:inline">{formatCurrency(totalEstimated)} / </span>
-            <span className="sm:hidden">{formatCurrency(budgetRemaining)} left</span>
-            <span className="hidden sm:inline">{formatCurrency(chapter.total_budget)}</span>
-            <span className={`ml-1 sm:ml-2 text-xs ${budgetRemaining < 50000 ? 'text-eo-pink' : 'text-green-600'}`}>
+            <span className="sm:hidden">{formatCurrency(remaining)} left</span>
+            <span className="hidden sm:inline">{formatCurrency(learningBudget)}</span>
+            <span className={`ml-1 sm:ml-2 text-xs ${remaining < 50000 ? 'text-eo-pink' : 'text-green-600'}`}>
               ({budgetPercent}%)
             </span>
           </p>
@@ -46,7 +54,7 @@ export default function TopBar({ onMenuToggle }) {
         <div className="w-16 sm:w-24 h-2 bg-secondary rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${
-              budgetRemaining < 50000 ? 'bg-eo-pink' : budgetRemaining < 100000 ? 'bg-eo-coral' : 'bg-green-500'
+              remaining < 50000 ? 'bg-eo-pink' : remaining < 100000 ? 'bg-eo-coral' : 'bg-green-500'
             }`}
             style={{ width: `${Math.min(Number(budgetPercent), 100)}%` }}
           />
