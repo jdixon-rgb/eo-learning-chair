@@ -83,56 +83,60 @@ export function StoreProvider({ children }) {
     hydrate()
 
     async function hydrate() {
-      try {
-        // Core tables (required)
-        const [
-          chaptersRes,
-          speakersRes,
-          venuesRes,
-          eventsRes,
-          budgetRes,
-          checklistsRes,
-          sapsRes,
-          scenariosRes,
-        ] = await Promise.all([
-          fetchAll('chapters'),
-          fetchByChapter('speakers', activeChapterId),
-          fetchByChapter('venues', activeChapterId),
-          fetchByChapter('events', activeChapterId),
-          fetchAll('budget_items'),
-          fetchAll('contract_checklists'),
-          fetchByChapter('saps', activeChapterId),
-          fetchByChapter('scenarios', activeChapterId),
-        ])
+      const failedTables = []
 
-        // Check core table errors
-        const coreResults = [chaptersRes, speakersRes, venuesRes, eventsRes, budgetRes, checklistsRes, sapsRes, scenariosRes]
-        const errors = coreResults.filter(r => r.error).map(r => r.error)
-
-        if (errors.length > 0) {
-          console.error('Supabase fetch errors:', errors)
-          setDbError('Some data failed to load from the database. Using cached data.')
-          setLoading(false)
-          return
+      // Helper: fetch a table, return data or null on failure
+      async function safeFetch(name, fetchFn) {
+        try {
+          const res = await fetchFn()
+          if (res.error) {
+            console.warn(`Failed to fetch ${name}:`, res.error)
+            failedTables.push(name)
+            return null
+          }
+          return res.data
+        } catch (err) {
+          console.warn(`Failed to fetch ${name}:`, err)
+          failedTables.push(name)
+          return null
         }
+      }
 
-        // Hydrate core state from Supabase
-        const activeChapter = chaptersRes.data?.find(c => c.id === activeChapterId)
-        if (activeChapter) setChapter(activeChapter)
-        else if (chaptersRes.data?.length > 0) setChapter(chaptersRes.data[0])
-        if (speakersRes.data) setSpeakers(speakersRes.data)
-        if (venuesRes.data) setVenues(venuesRes.data)
-        if (eventsRes.data) setEvents(eventsRes.data)
-        if (budgetRes.data) setBudgetItems(budgetRes.data)
-        if (checklistsRes.data) setContractChecklists(checklistsRes.data)
-        if (sapsRes.data) setSaps(sapsRes.data)
-        if (scenariosRes.data) setScenarios(scenariosRes.data)
+      try {
+        const [chaptersData, speakersData, venuesData, eventsData, budgetData, checklistsData, sapsData, scenariosData, docsData] =
+          await Promise.all([
+            safeFetch('chapters', () => fetchAll('chapters')),
+            safeFetch('speakers', () => fetchByChapter('speakers', activeChapterId)),
+            safeFetch('venues', () => fetchByChapter('venues', activeChapterId)),
+            safeFetch('events', () => fetchByChapter('events', activeChapterId)),
+            safeFetch('budget_items', () => fetchAll('budget_items')),
+            safeFetch('contract_checklists', () => fetchAll('contract_checklists')),
+            safeFetch('saps', () => fetchByChapter('saps', activeChapterId)),
+            safeFetch('scenarios', () => fetchByChapter('scenarios', activeChapterId)),
+            safeFetch('event_documents', () => fetchByChapter('event_documents', activeChapterId)),
+          ])
 
-        // Optional tables (fail silently if not yet created)
-        const docsRes = await fetchByChapter('event_documents', activeChapterId).catch(() => ({ data: null }))
-        if (docsRes?.data) setEventDocuments(docsRes.data)
+        // Hydrate whichever tables succeeded
+        if (chaptersData) {
+          const activeChapter = chaptersData.find(c => c.id === activeChapterId)
+          if (activeChapter) setChapter(activeChapter)
+          else if (chaptersData.length > 0) setChapter(chaptersData[0])
+        }
+        if (speakersData) setSpeakers(speakersData)
+        if (venuesData) setVenues(venuesData)
+        if (eventsData) setEvents(eventsData)
+        if (budgetData) setBudgetItems(budgetData)
+        if (checklistsData) setContractChecklists(checklistsData)
+        if (sapsData) setSaps(sapsData)
+        if (scenariosData) setScenarios(scenariosData)
+        if (docsData) setEventDocuments(docsData)
 
-        setDbError(null)
+        if (failedTables.length > 0) {
+          console.error('Tables that failed to load:', failedTables)
+          setDbError(`Failed to load: ${failedTables.join(', ')}. Other data loaded OK.`)
+        } else {
+          setDbError(null)
+        }
       } catch (err) {
         console.error('Failed to fetch from Supabase:', err)
         setDbError('Could not connect to database. Using cached data.')
