@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette } from 'lucide-react'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -38,6 +38,8 @@ export default function SettingsPage() {
   const [editLabel, setEditLabel] = useState('')
   const [assigningRoleId, setAssigningRoleId] = useState(null)
   const [assignForm, setAssignForm] = useState({ member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
+  const [editingAssignmentId, setEditingAssignmentId] = useState(null)
+  const [editAssignment, setEditAssignment] = useState({})
 
   const sortedRoles = [...chapterRoles].sort((a, b) => a.sort_order - b.sort_order)
 
@@ -112,10 +114,30 @@ export default function SettingsPage() {
     setEditLabel('')
   }
 
+  function startEditAssignment(a) {
+    setEditingAssignmentId(a.id)
+    setEditAssignment({
+      member_name: a.member_name || '',
+      member_email: a.member_email || '',
+      fiscal_year: a.fiscal_year || FISCAL_YEAR_OPTIONS[1],
+    })
+  }
+
+  function saveEditAssignment(id) {
+    if (!editAssignment.member_name?.trim()) return
+    updateRoleAssignment(id, {
+      member_name: editAssignment.member_name.trim(),
+      member_email: editAssignment.member_email.trim(),
+      fiscal_year: editAssignment.fiscal_year,
+    })
+    setEditingAssignmentId(null)
+    setEditAssignment({})
+  }
+
   function handleAddAssignment(roleId) {
     if (!assignForm.member_name.trim()) return
     const role = chapterRoles.find(r => r.id === roleId)
-    const isPresident = role?.role_key === 'president'
+    const isPresident = role?.role_key === 'president' || role?.role_key === 'president_elect'
     addRoleAssignment({
       chapter_role_id: roleId,
       member_name: assignForm.member_name.trim(),
@@ -256,34 +278,93 @@ export default function SettingsPage() {
                   {assignments.length > 0 && (
                     <div className="px-3 pb-2 pl-10 space-y-2">
                       {assignments.map(a => {
-                        const isPresident = role.role_key === 'president'
+                        const isPresident = role.role_key === 'president' || role.role_key === 'president_elect'
                         const showBudget = !isPresident && (a.status === 'active' || a.status === 'elect')
                         const showTheme = isPresident && (a.status === 'active' || a.status === 'elect')
+                        const isEditing = editingAssignmentId === a.id
                         return (
                           <div key={a.id} className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[a.status]}`}>
-                                {a.status}
-                              </Badge>
-                              <span className="font-medium">{a.member_name}</span>
-                              {a.member_email && <span className="text-muted-foreground text-xs">{a.member_email}</span>}
-                              <span className="text-muted-foreground text-xs ml-auto">FY {a.fiscal_year}</span>
-                              <select
-                                value={a.status}
-                                onChange={e => updateRoleAssignment(a.id, { status: e.target.value })}
-                                className="text-[10px] bg-transparent border rounded px-1 py-0.5"
-                              >
-                                <option value="active">Active</option>
-                                <option value="elect">Elect</option>
-                                <option value="past">Past</option>
-                              </select>
-                              <button
-                                onClick={() => deleteRoleAssignment(a.id)}
-                                className="text-muted-foreground hover:text-red-500 p-0.5"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
+                            {isEditing ? (
+                              /* Inline edit mode */
+                              <div className="flex items-center gap-2 text-sm">
+                                <Input
+                                  value={editAssignment.member_name}
+                                  onChange={e => setEditAssignment(prev => ({ ...prev, member_name: e.target.value }))}
+                                  placeholder="Name"
+                                  className="h-6 text-xs flex-1"
+                                  autoFocus
+                                  onKeyDown={e => { if (e.key === 'Enter') saveEditAssignment(a.id); if (e.key === 'Escape') { setEditingAssignmentId(null); setEditAssignment({}) } }}
+                                />
+                                <Input
+                                  value={editAssignment.member_email}
+                                  onChange={e => setEditAssignment(prev => ({ ...prev, member_email: e.target.value }))}
+                                  placeholder="Email"
+                                  className="h-6 text-xs flex-1"
+                                  onKeyDown={e => { if (e.key === 'Enter') saveEditAssignment(a.id); if (e.key === 'Escape') { setEditingAssignmentId(null); setEditAssignment({}) } }}
+                                />
+                                <select
+                                  value={editAssignment.fiscal_year}
+                                  onChange={e => setEditAssignment(prev => ({ ...prev, fiscal_year: e.target.value }))}
+                                  className="h-6 text-[10px] border rounded px-1 bg-background"
+                                >
+                                  {FISCAL_YEAR_OPTIONS.map(fy => (
+                                    <option key={fy} value={fy}>{fy}</option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => saveEditAssignment(a.id)}
+                                  className="text-green-600 hover:text-green-700 p-0.5"
+                                  title="Save"
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => { setEditingAssignmentId(null); setEditAssignment({}) }}
+                                  className="text-muted-foreground hover:text-foreground p-0.5"
+                                  title="Cancel"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              /* Display mode */
+                              <div className="flex items-center gap-2 text-sm group/assignment">
+                                <Badge variant="outline" className={`text-[10px] ${STATUS_COLORS[a.status]}`}>
+                                  {a.status}
+                                </Badge>
+                                <span
+                                  className="font-medium cursor-pointer hover:text-eo-blue"
+                                  onClick={() => startEditAssignment(a)}
+                                  title="Click to edit"
+                                >
+                                  {a.member_name}
+                                </span>
+                                {a.member_email && <span className="text-muted-foreground text-xs">{a.member_email}</span>}
+                                <button
+                                  onClick={() => startEditAssignment(a)}
+                                  className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/assignment:opacity-100 transition-opacity p-0.5"
+                                  title="Edit"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </button>
+                                <span className="text-muted-foreground text-xs ml-auto">FY {a.fiscal_year}</span>
+                                <select
+                                  value={a.status}
+                                  onChange={e => updateRoleAssignment(a.id, { status: e.target.value })}
+                                  className="text-[10px] bg-transparent border rounded px-1 py-0.5"
+                                >
+                                  <option value="active">Active</option>
+                                  <option value="elect">Elect</option>
+                                  <option value="past">Past</option>
+                                </select>
+                                <button
+                                  onClick={() => deleteRoleAssignment(a.id)}
+                                  className="text-muted-foreground hover:text-red-500 p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            )}
                             {/* Budget field for non-president chairs */}
                             {showBudget && (
                               <div className="flex items-center gap-2 pl-6">
@@ -354,7 +435,7 @@ export default function SettingsPage() {
                           <option value="active">Active</option>
                           <option value="elect">Elect</option>
                         </select>
-                        {role.role_key === 'president' ? (
+                        {(role.role_key === 'president' || role.role_key === 'president_elect') ? (
                           <Input
                             placeholder="Theme"
                             value={assignForm.theme}
