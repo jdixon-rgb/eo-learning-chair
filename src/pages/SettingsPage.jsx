@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { CHAIR_ROLES } from '@/lib/constants'
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, User, Building2 } from 'lucide-react'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, User, Building2, Upload } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -49,6 +49,8 @@ export default function SettingsPage() {
   const [editingMemberId, setEditingMemberId] = useState(null)
   const [editMember, setEditMember] = useState({})
   const activeMembers = chapterMembers.filter(m => m.status !== 'alumni').sort((a, b) => a.name.localeCompare(b.name))
+  const csvInputRef = useRef(null)
+  const [csvImportCount, setCsvImportCount] = useState(null)
 
   const sortedRoles = [...chapterRoles].sort((a, b) => a.sort_order - b.sort_order)
 
@@ -141,6 +143,71 @@ export default function SettingsPage() {
     })
     setEditingAssignmentId(null)
     setEditAssignment({})
+  }
+
+  function handleCsvImport(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      const text = evt.target.result
+      const lines = text.split(/\r?\n/).filter(l => l.trim())
+      if (lines.length < 2) { alert('CSV must have a header row and at least one data row.'); return }
+
+      // Parse header to find columns
+      const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''))
+      const nameIdx = header.findIndex(h => h === 'name' || h === 'full name' || h === 'member name' || h === 'member')
+      const emailIdx = header.findIndex(h => h === 'email' || h === 'email address' || h === 'e-mail')
+      const companyIdx = header.findIndex(h => h === 'company' || h === 'company name' || h === 'organization' || h === 'business')
+      const phoneIdx = header.findIndex(h => h === 'phone' || h === 'phone number' || h === 'mobile')
+
+      if (nameIdx === -1) {
+        alert('Could not find a "Name" column in the CSV header. Expected columns: Name, Email, Company, Phone')
+        return
+      }
+
+      // Parse CSV values (handles quoted fields with commas)
+      function parseCsvLine(line) {
+        const values = []
+        let current = ''
+        let inQuotes = false
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i]
+          if (ch === '"') { inQuotes = !inQuotes; continue }
+          if (ch === ',' && !inQuotes) { values.push(current.trim()); current = ''; continue }
+          current += ch
+        }
+        values.push(current.trim())
+        return values
+      }
+
+      let imported = 0
+      const existingNames = chapterMembers.map(m => m.name.toLowerCase())
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCsvLine(lines[i])
+        const name = values[nameIdx]?.trim()
+        if (!name) continue
+        // Skip duplicates by name
+        if (existingNames.includes(name.toLowerCase())) continue
+
+        addChapterMember({
+          name,
+          email: emailIdx >= 0 ? (values[emailIdx]?.trim() || '') : '',
+          company: companyIdx >= 0 ? (values[companyIdx]?.trim() || '') : '',
+          phone: phoneIdx >= 0 ? (values[phoneIdx]?.trim() || '') : '',
+          status: 'active',
+        })
+        existingNames.push(name.toLowerCase())
+        imported++
+      }
+
+      setCsvImportCount(imported)
+      setTimeout(() => setCsvImportCount(null), 4000)
+    }
+    reader.readAsText(file)
+    // Reset input so same file can be re-imported
+    e.target.value = ''
   }
 
   function handleAddAssignment(roleId) {
@@ -512,6 +579,17 @@ export default function SettingsPage() {
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <User className="h-4 w-4" /> Member Directory ({chapterMembers.length})
           </h3>
+          <div className="flex items-center gap-2">
+            {csvImportCount !== null && (
+              <span className="text-xs text-green-600 font-medium">
+                {csvImportCount === 0 ? 'No new members found (all duplicates)' : `Imported ${csvImportCount} member${csvImportCount !== 1 ? 's' : ''}`}
+              </span>
+            )}
+            <input ref={csvInputRef} type="file" accept=".csv" onChange={handleCsvImport} className="hidden" />
+            <Button size="sm" variant="outline" onClick={() => csvInputRef.current?.click()}>
+              <Upload className="h-3 w-3" /> Import CSV
+            </Button>
+          </div>
         </div>
 
         {chapterMembers.length > 0 ? (
