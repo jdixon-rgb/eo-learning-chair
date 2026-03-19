@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { useStore } from '@/lib/store'
-import { FISCAL_MONTHS, STRATEGIC_MAP } from '@/lib/constants'
+import { FISCAL_MONTHS, STRATEGIC_MAP, BUDGET_CATEGORIES } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
 import {
   Shuffle, Plus, Trash2, DollarSign, Target, TrendingUp,
-  Star, Check, X, Copy,
+  Star, Check, X, Copy, ChevronDown,
 } from 'lucide-react'
 
 const STRATEGIC_WEIGHT = {
@@ -27,6 +27,7 @@ export default function ScenarioPage() {
   const [activeTab, setActiveTab] = useState('baseline')
   const [editingName, setEditingName] = useState(null)
   const [nameDraft, setNameDraft] = useState('')
+  const [expandedEventId, setExpandedEventId] = useState(null)
 
   // Events sorted by month
   const sortedEvents = useMemo(() =>
@@ -69,6 +70,11 @@ export default function ScenarioPage() {
       const value = fitScore * weight
       const isOverridden = override && override.speaker_id !== event.speaker_id
 
+      // Per-event line items (non-speaker costs)
+      const eventLineItems = budgetItems.filter(b => b.event_id === event.id && b.category !== 'speaker_fee')
+      const eventNonSpeakerCost = eventLineItems.reduce((sum, b) => sum + (b.estimated_amount || 0), 0)
+      const eventTotalCost = fee + eventNonSpeakerCost
+
       totalSpeakerFee += fee
       totalValue += value
       if (speaker && fitScore > 0) {
@@ -76,7 +82,7 @@ export default function ScenarioPage() {
         fitScoreCount++
       }
 
-      perEvent.push({ event, speaker, speakerId, fee, fitScore, weight, value, isOverridden })
+      perEvent.push({ event, speaker, speakerId, fee, fitScore, weight, value, isOverridden, eventLineItems, eventNonSpeakerCost, eventTotalCost })
     })
 
     const nonSpeakerCosts = budgetItems
@@ -242,11 +248,11 @@ export default function ScenarioPage() {
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
-          label="Speaker Fees"
-          value={formatCurrency(currentMetrics.totalSpeakerFee)}
-          subtitle={`${((currentMetrics.totalSpeakerFee / chapter.total_budget) * 100).toFixed(0)}% of total budget`}
+          label="Total Costs"
+          value={formatCurrency(currentMetrics.totalCost)}
+          subtitle={`${formatCurrency(currentMetrics.totalSpeakerFee)} speakers + ${formatCurrency(currentMetrics.nonSpeakerCosts)} other`}
           icon={<DollarSign className="h-4 w-4" />}
-          diff={activeMetrics ? currentMetrics.totalSpeakerFee - baselineMetrics.totalSpeakerFee : null}
+          diff={activeMetrics ? currentMetrics.totalCost - baselineMetrics.totalCost : null}
           diffFormat="currency"
           diffInverted
         />
@@ -286,20 +292,22 @@ export default function ScenarioPage() {
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground">Month</th>
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground">Event</th>
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[220px]">Speaker</th>
-                <th className="p-3 text-right text-xs font-medium text-muted-foreground">Est. Fee</th>
+                <th className="p-3 text-right text-xs font-medium text-muted-foreground">Est. Cost</th>
                 <th className="p-3 text-center text-xs font-medium text-muted-foreground">Fit</th>
                 <th className="p-3 text-center text-xs font-medium text-muted-foreground">Wt</th>
                 <th className="p-3 text-right text-xs font-medium text-muted-foreground">Value</th>
               </tr>
             </thead>
             <tbody>
-              {currentMetrics.perEvent.map(({ event, speaker, speakerId, fee, fitScore, weight, value, isOverridden }) => {
+              {currentMetrics.perEvent.map(({ event, speaker, speakerId, fee, fitScore, weight, value, isOverridden, eventLineItems, eventTotalCost }) => {
                 const month = event.month_index != null ? FISCAL_MONTHS[event.month_index] : null
                 const strategic = event.month_index != null ? STRATEGIC_MAP[event.month_index] : null
+                const isExpanded = expandedEventId === event.id
+                const hasLineItems = eventLineItems.length > 0
 
                 return (
+                  <Fragment key={event.id}>
                   <tr
-                    key={event.id}
                     className={`border-b last:border-0 transition-colors ${isOverridden ? 'bg-eo-blue/5' : ''}`}
                   >
                     <td className="p-3">
@@ -336,9 +344,15 @@ export default function ScenarioPage() {
                       )}
                     </td>
                     <td className="p-3 text-right">
-                      <span className={`text-sm font-medium ${isOverridden ? 'text-eo-blue' : ''}`}>
-                        {fee > 0 ? formatCurrency(fee) : '—'}
-                      </span>
+                      <button
+                        onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
+                        className={`inline-flex items-center gap-1 text-sm font-medium cursor-pointer hover:text-eo-blue transition-colors ${isOverridden ? 'text-eo-blue' : ''}`}
+                      >
+                        {eventTotalCost > 0 ? formatCurrency(eventTotalCost) : '—'}
+                        {(hasLineItems || fee > 0) && eventTotalCost > 0 && (
+                          <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        )}
+                      </button>
                     </td>
                     <td className="p-3 text-center">
                       {fitScore > 0 ? (
@@ -356,6 +370,40 @@ export default function ScenarioPage() {
                       <span className="text-sm font-medium">{value > 0 ? value : '—'}</span>
                     </td>
                   </tr>
+                  {isExpanded && eventTotalCost > 0 && (
+                    <tr key={`${event.id}-details`} className="border-b bg-muted/20">
+                      <td colSpan={7} className="px-6 py-3">
+                        <div className="space-y-1.5">
+                          {fee > 0 && (
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3d46f2' }} />
+                                <span>Speaker Fee</span>
+                              </div>
+                              <span className="font-medium">{formatCurrency(fee)}</span>
+                            </div>
+                          )}
+                          {eventLineItems.map(item => {
+                            const cat = BUDGET_CATEGORIES.find(c => c.id === item.category)
+                            return (
+                              <div key={item.id} className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat?.color || '#a3a3c2' }} />
+                                  <span>{item.description || cat?.label || item.category}</span>
+                                </div>
+                                <span className="font-medium">{formatCurrency(item.estimated_amount || 0)}</span>
+                              </div>
+                            )
+                          })}
+                          <div className="flex items-center justify-between text-xs font-semibold pt-1.5 border-t border-border/50">
+                            <span>Event Total</span>
+                            <span>{formatCurrency(eventTotalCost)}</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 )
               })}
             </tbody>
@@ -367,7 +415,7 @@ export default function ScenarioPage() {
                     ({currentMetrics.perEvent.filter(e => e.speaker).length} speakers across {sortedEvents.length} events)
                   </span>
                 </td>
-                <td className="p-3 text-right text-sm">{formatCurrency(currentMetrics.totalSpeakerFee)}</td>
+                <td className="p-3 text-right text-sm">{formatCurrency(currentMetrics.totalCost)}</td>
                 <td className="p-3 text-center text-sm">{currentMetrics.avgFitScore.toFixed(1)}</td>
                 <td className="p-3"></td>
                 <td className="p-3 text-right text-sm">{currentMetrics.totalValue}</td>
@@ -398,9 +446,9 @@ export default function ScenarioPage() {
           <h3 className="text-sm font-semibold mb-4">Comparison vs Current Plan</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <ComparisonItem
-              label="Speaker Fees"
-              baseline={baselineMetrics.totalSpeakerFee}
-              scenario={activeMetrics.totalSpeakerFee}
+              label="Total Costs"
+              baseline={baselineMetrics.totalCost}
+              scenario={activeMetrics.totalCost}
               format="currency"
               inverted
             />
@@ -455,7 +503,7 @@ export default function ScenarioPage() {
           </div>
           <div className="mt-4 p-3 rounded-lg bg-muted text-xs text-muted-foreground">
             <strong className="text-foreground">Value scoring:</strong> Each event has a strategic weight (Kickoff/Renewal &times;3, Momentum/Sustain &times;2).
-            Value = Fit Score &times; Weight. The <strong className="text-foreground">Value Index</strong> measures value points per $10K of speaker spend &mdash; higher is better.
+            Value = Fit Score &times; Weight. The <strong className="text-foreground">Value Index</strong> measures value points per $10K of speaker spend - higher is better.
           </div>
         </div>
       )}
