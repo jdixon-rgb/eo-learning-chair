@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useBoardStore } from '@/lib/boardStore'
 import { useStore } from '@/lib/store'
-import { FISCAL_MONTHS, CHAIR_ROLES, REPORT_STATUSES, FORUM_HEALTH } from '@/lib/constants'
+import { FISCAL_MONTHS, REPORT_STATUSES, FORUM_HEALTH } from '@/lib/constants'
 import {
   Briefcase,
   FileText,
@@ -25,7 +25,8 @@ function getHealthLabel(score) {
 }
 
 export default function BoardDashboardPage() {
-  const { chairReports, communications, forums, memberScorecards, loading } = useBoardStore()
+  const { chairReports, communications, forums, memberScorecards, loading, getChairRoles } = useBoardStore()
+  const chairRoles = getChairRoles()
   const { events, speakers } = useStore()
 
   // Computed stats
@@ -142,7 +143,7 @@ export default function BoardDashboardPage() {
             <Link to="/board/reports" className="text-xs text-eo-blue hover:underline">View All</Link>
           </div>
           <div className="space-y-2">
-            {CHAIR_ROLES.map(cr => {
+            {chairRoles.map(cr => {
               const latest = chairReports
                 .filter(r => r.chair_role === cr.id)
                 .sort((a, b) => b.fiscal_month_index - a.fiscal_month_index)[0]

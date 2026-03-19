@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useBoardStore } from '@/lib/boardStore'
-import { FISCAL_MONTHS, CHAIR_ROLES, REPORT_STATUSES } from '@/lib/constants'
+import { FISCAL_MONTHS, REPORT_STATUSES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Plus, FileText, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
@@ -17,7 +17,8 @@ const emptyReport = {
 }
 
 export default function ChairReportsPage() {
-  const { chairReports, addChairReport, updateChairReport, deleteChairReport } = useBoardStore()
+  const { chairReports, addChairReport, updateChairReport, deleteChairReport, getChairRoles } = useBoardStore()
+  const chairRoles = getChairRoles()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ ...emptyReport })
   const [expandedId, setExpandedId] = useState(null)
@@ -81,7 +82,7 @@ export default function ChairReportsPage() {
                 onChange={e => setForm({ ...form, chair_role: e.target.value })}
               >
                 <option value="">Select chair...</option>
-                {CHAIR_ROLES.map(cr => (
+                {chairRoles.map(cr => (
                   <option key={cr.id} value={cr.id}>{cr.label}</option>
                 ))}
               </select>
@@ -156,7 +157,7 @@ export default function ChairReportsPage() {
         )}
 
         {sorted.map(report => {
-          const chairLabel = CHAIR_ROLES.find(cr => cr.id === report.chair_role)?.label ?? report.chair_role
+          const chairLabel = chairRoles.find(cr => cr.id === report.chair_role)?.label ?? report.chair_role
           const monthLabel = FISCAL_MONTHS[report.fiscal_month_index]?.name ?? ''
           const statusDef = REPORT_STATUSES.find(s => s.id === report.status)
           const isExpanded = expandedId === report.id
@@ -246,7 +247,7 @@ export default function ChairReportsPage() {
                         value={editForm.chair_role}
                         onChange={e => setEditForm({ ...editForm, chair_role: e.target.value })}
                       >
-                        {CHAIR_ROLES.map(cr => (
+                        {chairRoles.map(cr => (
                           <option key={cr.id} value={cr.id}>{cr.label}</option>
                         ))}
                       </select>

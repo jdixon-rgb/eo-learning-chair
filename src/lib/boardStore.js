@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, createContext, useContext, createElem
 import { isSupabaseConfigured } from './supabase'
 import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
 import { useChapter } from './chapter'
+import { CHAIR_ROLES } from './constants'
 
 const BoardStoreContext = createContext(null)
 
@@ -31,6 +32,7 @@ export function BoardStoreProvider({ children }) {
   const [communications, setCommunications] = useState(cached?.communications ?? [])
   const [forums, setForums] = useState(cached?.forums ?? [])
   const [memberScorecards, setMemberScorecards] = useState(cached?.memberScorecards ?? [])
+  const [chapterRoles, setChapterRoles] = useState(cached?.chapterRoles ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -39,8 +41,8 @@ export function BoardStoreProvider({ children }) {
   // Persist to localStorage
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { chairReports, communications, forums, memberScorecards })
-  }, [activeChapterId, chairReports, communications, forums, memberScorecards])
+    saveCache(activeChapterId, { chairReports, communications, forums, memberScorecards, chapterRoles })
+  }, [activeChapterId, chairReports, communications, forums, memberScorecards, chapterRoles])
 
   // Fetch from Supabase
   useEffect(() => {
@@ -59,6 +61,7 @@ export function BoardStoreProvider({ children }) {
       if (chapterCache.communications) setCommunications(chapterCache.communications)
       if (chapterCache.forums) setForums(chapterCache.forums)
       if (chapterCache.memberScorecards) setMemberScorecards(chapterCache.memberScorecards)
+      if (chapterCache.chapterRoles) setChapterRoles(chapterCache.chapterRoles)
     }
 
     setLoading(true)
@@ -66,16 +69,16 @@ export function BoardStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [reportsRes, commsRes, forumsRes, scorecardsRes] = await Promise.all([
+        const [reportsRes, commsRes, forumsRes, scorecardsRes, rolesRes] = await Promise.all([
           fetchByChapter('chair_reports', activeChapterId),
           fetchByChapter('chapter_communications', activeChapterId),
           fetchByChapter('forums', activeChapterId),
           fetchByChapter('member_scorecards', activeChapterId),
+          fetchByChapter('chapter_roles', activeChapterId).catch(() => ({ data: null })),
         ])
 
-        const errors = [reportsRes, commsRes, forumsRes, scorecardsRes]
-          .filter(r => r.error)
-          .map(r => r.error)
+        const coreResults = [reportsRes, commsRes, forumsRes, scorecardsRes]
+        const errors = coreResults.filter(r => r.error).map(r => r.error)
 
         if (errors.length > 0) {
           console.error('Board store fetch errors:', errors)
@@ -88,6 +91,7 @@ export function BoardStoreProvider({ children }) {
         if (commsRes.data) setCommunications(commsRes.data)
         if (forumsRes.data) setForums(forumsRes.data)
         if (scorecardsRes.data) setMemberScorecards(scorecardsRes.data)
+        if (rolesRes?.data) setChapterRoles(rolesRes.data.sort((a, b) => a.sort_order - b.sort_order))
         setDbError(null)
       } catch (err) {
         console.error('Board store hydrate failed:', err)
@@ -189,13 +193,43 @@ export function BoardStoreProvider({ children }) {
     dbWrite(() => deleteRow('member_scorecards', id))
   }, [dbWrite])
 
+  // ── Chapter Role CRUD ──
+  const addChapterRole = useCallback((role) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = { ...role, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
+    setChapterRoles(prev => [...prev, row].sort((a, b) => a.sort_order - b.sort_order))
+    dbWrite(() => insertRow('chapter_roles', row))
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateChapterRole = useCallback((id, updates) => {
+    setChapterRoles(prev => prev.map(r => r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r))
+    dbWrite(() => updateRow('chapter_roles', id, updates))
+  }, [dbWrite])
+
+  const deleteChapterRole = useCallback((id) => {
+    setChapterRoles(prev => prev.filter(r => r.id !== id))
+    dbWrite(() => deleteRow('chapter_roles', id))
+  }, [dbWrite])
+
+  // Fallback getter: returns DB roles mapped to { id, label, isStaff } or hardcoded CHAIR_ROLES
+  const getChairRoles = useCallback(() => {
+    if (chapterRoles.length > 0) {
+      return chapterRoles.map(r => ({ id: r.role_key, label: r.label, isStaff: r.is_staff }))
+    }
+    return CHAIR_ROLES
+  }, [chapterRoles])
+
   const value = {
-    chairReports, communications, forums, memberScorecards,
+    chairReports, communications, forums, memberScorecards, chapterRoles,
     loading, dbError, clearDbError: () => setDbError(null),
     addChairReport, updateChairReport, deleteChairReport,
     addCommunication, updateCommunication, deleteCommunication,
     addForum, updateForum, deleteForum,
     addScorecard, updateScorecard, deleteScorecard,
+    addChapterRole, updateChapterRole, deleteChapterRole,
+    getChairRoles,
   }
 
   return createElement(BoardStoreContext.Provider, { value }, children)
