@@ -19,9 +19,9 @@ import {
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, budgetItems, totalEstimated, budgetRemaining } = useStore()
-  const { activePresidentTheme, getChairBudget } = useBoardStore()
+  const { presidentElectTheme, activePresidentTheme, getChairBudget } = useBoardStore()
 
-  const theme = activePresidentTheme || chapter.president_theme || ''
+  const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
   const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
   const remaining = learningBudget - totalEstimated
 

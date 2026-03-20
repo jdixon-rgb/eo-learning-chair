@@ -318,6 +318,32 @@ export function BoardStoreProvider({ children }) {
     return a.member_name || null
   })()
 
+  // President Elect - the person whose theme drives the upcoming FY plan
+  const presidentElectTheme = (() => {
+    const a = chapterRoles.length > 0
+      ? roleAssignments.find(ra => {
+          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
+          return role?.role_key === 'president_elect' && (ra.status === 'active' || ra.status === 'elect')
+        })
+      : null
+    return a?.theme || null
+  })()
+
+  const presidentElectName = (() => {
+    const a = chapterRoles.length > 0
+      ? roleAssignments.find(ra => {
+          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
+          return role?.role_key === 'president_elect' && (ra.status === 'active' || ra.status === 'elect')
+        })
+      : null
+    if (!a) return null
+    if (a.member_id) {
+      const member = chapterMembers.find(m => m.id === a.member_id)
+      if (member) return member.name
+    }
+    return a.member_name || null
+  })()
+
   const getChairBudget = useCallback((roleKey) => {
     const a = chapterRoles.length > 0
       ? roleAssignments.find(ra => {
@@ -341,6 +367,7 @@ export function BoardStoreProvider({ children }) {
     getMemberName, getMemberEmail,
     getChairRoles, getActiveAssignment, getChairBudget,
     activePresidentTheme, activePresidentName,
+    presidentElectTheme, presidentElectName,
   }
 
   return createElement(BoardStoreContext.Provider, { value }, children)

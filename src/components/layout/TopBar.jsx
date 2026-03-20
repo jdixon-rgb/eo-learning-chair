@@ -6,12 +6,12 @@ import { Menu, Palette } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
   const { chapter, totalEstimated, budgetRemaining } = useStore()
-  const { activePresidentTheme, activePresidentName, getChairBudget } = useBoardStore()
+  const { activePresidentTheme, activePresidentName, presidentElectTheme, presidentElectName, getChairBudget } = useBoardStore()
   const { profile } = useAuth()
 
-  // Use role assignment data if available, fall back to chapter fields
-  const theme = activePresidentTheme || chapter.president_theme || ''
-  const presidentName = activePresidentName || chapter.president_name || ''
+  // Prefer President Elect (incoming) since this tool plans the next FY
+  const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
+  const presidentName = presidentElectName || activePresidentName || chapter.president_name || ''
   const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
   const budgetPercent = learningBudget > 0 ? ((totalEstimated / learningBudget) * 100).toFixed(0) : 0
   const remaining = learningBudget - totalEstimated

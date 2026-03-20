@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
+import { useBoardStore } from '@/lib/boardStore'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDateWithDay } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,9 @@ import { Plus, Calendar, MapPin, DollarSign, Handshake, Route } from 'lucide-rea
 export default function CalendarPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
+  const { presidentElectTheme, presidentElectName } = useBoardStore()
+  const incomingTheme = presidentElectTheme || chapter.president_theme || ''
+  const incomingPresident = presidentElectName || chapter.president_name || ''
   const [createMonth, setCreateMonth] = useState(null)
   const [newEvent, setNewEvent] = useState({ title: '', event_type: 'traditional', event_format: 'keynote', theme_connection: '', event_date: '', expected_attendance: '' })
 
@@ -54,7 +58,7 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2 mt-2">
           <Route className="h-4 w-4 text-eo-coral" />
           <p className="text-sm text-muted-foreground">
-            FY 2026–2027 &middot; President's Theme: <span className="font-semibold text-eo-blue">"{chapter.president_theme}"</span>
+            FY 2026–2027{incomingPresident ? ` \u00b7 Incoming President: ${incomingPresident}` : ''} &middot; Theme: <span className="font-semibold text-eo-blue">"{incomingTheme}"</span>
           </p>
         </div>
       </div>
@@ -247,7 +251,7 @@ export default function CalendarPage() {
             <div>
               <label className="text-sm font-medium">Theme Connection</label>
               <Textarea
-                placeholder={`How does this event tie to "${chapter.president_theme}"?`}
+                placeholder={`How does this event tie to "${incomingTheme}"?`}
                 value={newEvent.theme_connection}
                 onChange={e => setNewEvent(prev => ({ ...prev, theme_connection: e.target.value }))}
               />
