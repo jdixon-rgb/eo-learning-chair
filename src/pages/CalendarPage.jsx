@@ -93,7 +93,7 @@ export default function CalendarPage() {
 
               {/* Events in this month */}
               <div className="p-4 min-h-[120px]">
-                {monthEvents.length > 0 ? (
+                {monthEvents.length > 0 && (
                   <div className="space-y-3">
                     {monthEvents.map(event => {
                       const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
@@ -174,15 +174,14 @@ export default function CalendarPage() {
                       )
                     })}
                   </div>
-                ) : (
-                  <button
-                    className="w-full h-full min-h-[80px] flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border hover:border-eo-blue hover:bg-blue-50/50 transition-colors cursor-pointer"
-                    onClick={() => setCreateMonth(i)}
-                  >
-                    <Plus className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground mt-1">Add Event</span>
-                  </button>
                 )}
+                <button
+                  className={`w-full flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border hover:border-eo-blue hover:bg-blue-50/50 transition-colors cursor-pointer ${monthEvents.length > 0 ? 'mt-3 py-2' : 'h-full min-h-[80px] flex-col'}`}
+                  onClick={() => setCreateMonth(i)}
+                >
+                  <Plus className={`text-muted-foreground ${monthEvents.length > 0 ? 'h-3.5 w-3.5' : 'h-5 w-5'}`} />
+                  <span className={`text-muted-foreground ${monthEvents.length > 0 ? 'text-[11px]' : 'text-xs mt-1'}`}>Add Event</span>
+                </button>
               </div>
             </div>
           )

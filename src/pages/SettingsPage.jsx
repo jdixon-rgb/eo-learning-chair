@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, User, Building2, Upload } from 'lucide-react'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, User, Building2, Upload, Percent } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -258,6 +258,34 @@ export default function SettingsPage() {
             />
             <p className="text-[10px] text-muted-foreground mt-1">Fallback if no chair budget is set in role assignments</p>
           </div>
+        </div>
+        <div>
+          <label className="text-xs font-medium flex items-center gap-1.5">
+            <Percent className="h-3 w-3" /> Speaker Fee Target
+          </label>
+          <div className="flex items-center gap-3 mt-1">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={chapter.speaker_fee_target_pct ?? 50}
+              onChange={e => {
+                const val = Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
+                updateChapter({ speaker_fee_target_pct: val })
+              }}
+              className="w-24"
+            />
+            <span className="text-sm text-muted-foreground">%</span>
+            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-eo-blue rounded-full transition-all"
+                style={{ width: `${chapter.speaker_fee_target_pct ?? 50}%` }}
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Target percentage of total budget allocated to speaker fees. The Scenario Planner will show how your plan compares.
+          </p>
         </div>
       </div>
 

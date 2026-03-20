@@ -283,6 +283,60 @@ export default function ScenarioPage() {
         />
       </div>
 
+      {/* Speaker Fee Ratio vs Target */}
+      {chapter.total_budget > 0 && (() => {
+        const targetPct = chapter.speaker_fee_target_pct ?? 50
+        const actualPct = Math.round((currentMetrics.totalSpeakerFee / chapter.total_budget) * 100)
+        const diff = actualPct - targetPct
+        const isOver = diff > 0
+        const isClose = Math.abs(diff) <= 5
+        const barColor = isClose ? 'bg-green-500' : isOver ? 'bg-eo-pink' : 'bg-eo-blue'
+        const targetLeft = `${Math.min(targetPct, 100)}%`
+
+        return (
+          <div className="rounded-xl border bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">Speaker Fee Ratio</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <span className={`font-bold ${isClose ? 'text-green-600' : isOver ? 'text-eo-pink' : 'text-eo-blue'}`}>
+                  {actualPct}%
+                </span>
+                <span className="text-muted-foreground">
+                  of {formatCurrency(chapter.total_budget)} budget
+                </span>
+              </div>
+            </div>
+            <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full ${barColor} rounded-full transition-all`}
+                style={{ width: `${Math.min(actualPct, 100)}%` }}
+              />
+              {/* Target marker */}
+              <div
+                className="absolute top-0 h-full w-0.5 bg-foreground/70"
+                style={{ left: targetLeft }}
+                title={`Target: ${targetPct}%`}
+              />
+              <div
+                className="absolute -top-5 text-[10px] font-medium text-foreground/70 -translate-x-1/2"
+                style={{ left: targetLeft }}
+              >
+                {targetPct}%
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+              <span>{formatCurrency(currentMetrics.totalSpeakerFee)} in speaker fees</span>
+              <span className={isClose ? 'text-green-600' : isOver ? 'text-eo-pink' : 'text-eo-blue'}>
+                {isClose ? 'On target' : isOver ? `${diff}pp over target` : `${Math.abs(diff)}pp under target`}
+              </span>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Event Table */}
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -444,7 +498,7 @@ export default function ScenarioPage() {
       {activeMetrics && (
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <h3 className="text-sm font-semibold mb-4">Comparison vs Current Plan</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <ComparisonItem
               label="Total Costs"
               baseline={baselineMetrics.totalCost}
@@ -470,6 +524,16 @@ export default function ScenarioPage() {
               scenario={activeMetrics.valueIndex}
               format="number"
             />
+            {chapter.total_budget > 0 && (
+              <ComparisonItem
+                label="Speaker Fee %"
+                baseline={Math.round((baselineMetrics.totalSpeakerFee / chapter.total_budget) * 100)}
+                scenario={Math.round((activeMetrics.totalSpeakerFee / chapter.total_budget) * 100)}
+                format="pct"
+                target={chapter.speaker_fee_target_pct ?? 50}
+                inverted
+              />
+            )}
           </div>
         </div>
       )}
@@ -549,12 +613,13 @@ function MetricCard({ label, value, subtitle, icon, color, diff, diffFormat, dif
   )
 }
 
-function ComparisonItem({ label, baseline, scenario, format, inverted }) {
+function ComparisonItem({ label, baseline, scenario, format, inverted, target }) {
   const diff = scenario - baseline
 
   const formatVal = (v) => {
     if (format === 'currency') return formatCurrency(v)
     if (format === 'decimal') return v.toFixed(1)
+    if (format === 'pct') return `${v}%`
     return v.toLocaleString()
   }
 
@@ -574,6 +639,11 @@ function ComparisonItem({ label, baseline, scenario, format, inverted }) {
       {Math.abs(diff) > 0.01 && (
         <p className={`text-[10px] mt-0.5 ${isGood ? 'text-green-600' : isBad ? 'text-eo-pink' : 'text-muted-foreground'}`}>
           {diff > 0 ? '+' : ''}{formatVal(diff)}
+        </p>
+      )}
+      {target != null && (
+        <p className="text-[10px] mt-0.5 text-muted-foreground">
+          target: {target}%
         </p>
       )}
     </div>
