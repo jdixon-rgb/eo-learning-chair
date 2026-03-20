@@ -154,15 +154,21 @@ export default function SettingsPage() {
       const lines = text.split(/\r?\n/).filter(l => l.trim())
       if (lines.length < 2) { alert('CSV must have a header row and at least one data row.'); return }
 
-      // Parse header to find columns
+      // Parse header to find columns (case-insensitive)
       const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''))
-      const nameIdx = header.findIndex(h => h === 'name' || h === 'full name' || h === 'member name' || h === 'member')
-      const emailIdx = header.findIndex(h => h === 'email' || h === 'email address' || h === 'e-mail')
-      const companyIdx = header.findIndex(h => h === 'company' || h === 'company name' || h === 'organization' || h === 'business')
-      const phoneIdx = header.findIndex(h => h === 'phone' || h === 'phone number' || h === 'mobile')
+      const find = (...candidates) => header.findIndex(h => candidates.includes(h))
+      const nameIdx = find('name', 'full name', 'member name', 'member')
+      const firstNameIdx = find('first name', 'firstname', 'first')
+      const lastNameIdx = find('last name', 'lastname', 'last')
+      const emailIdx = find('email', 'email address', 'e-mail')
+      const companyIdx = find('company', 'company name', 'organization', 'business')
+      const phoneIdx = find('phone', 'phone number', 'mobile')
+      const forumIdx = find('forum', 'forum name')
+      const industryIdx = find('industry', 'sector')
+      const joinDateIdx = find('eo join date', 'join date', 'joindate', 'joined')
 
-      if (nameIdx === -1) {
-        alert('Could not find a "Name" column in the CSV header. Expected columns: Name, Email, Company, Phone')
+      if (nameIdx === -1 && firstNameIdx === -1) {
+        alert('Could not find a "Name" or "First Name" column in the CSV header.')
         return
       }
 
@@ -181,21 +187,32 @@ export default function SettingsPage() {
         return values
       }
 
+      const col = (values, idx) => idx >= 0 ? (values[idx]?.trim() || '') : ''
+
       let imported = 0
       const existingNames = chapterMembers.map(m => m.name.toLowerCase())
 
       for (let i = 1; i < lines.length; i++) {
         const values = parseCsvLine(lines[i])
-        const name = values[nameIdx]?.trim()
+        const firstName = col(values, firstNameIdx)
+        const lastName = col(values, lastNameIdx)
+        const name = col(values, nameIdx) || `${firstName} ${lastName}`.trim()
         if (!name) continue
         // Skip duplicates by name
         if (existingNames.includes(name.toLowerCase())) continue
 
+        const forum = col(values, forumIdx)
+
         addChapterMember({
           name,
-          email: emailIdx >= 0 ? (values[emailIdx]?.trim() || '') : '',
-          company: companyIdx >= 0 ? (values[companyIdx]?.trim() || '') : '',
-          phone: phoneIdx >= 0 ? (values[phoneIdx]?.trim() || '') : '',
+          first_name: firstName || name.split(' ')[0] || '',
+          last_name: lastName || name.split(' ').slice(1).join(' ') || '',
+          email: col(values, emailIdx),
+          company: col(values, companyIdx),
+          phone: col(values, phoneIdx),
+          forum: forum && forum.toLowerCase() !== 'none' ? forum : '',
+          industry: col(values, industryIdx),
+          eo_join_date: col(values, joinDateIdx) || null,
           status: 'active',
         })
         existingNames.push(name.toLowerCase())
@@ -631,108 +648,81 @@ export default function SettingsPage() {
                 })
                 .filter(Boolean)
               const isEditing = editingMemberId === member.id
+              const yearsInEo = member.eo_join_date
+                ? Math.floor((Date.now() - new Date(member.eo_join_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                : null
               return (
-                <div key={member.id} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0 group/member">
+                <div key={member.id} className="flex items-start gap-2 py-2 border-b border-border last:border-0 group/member">
                   {isEditing ? (
-                    <>
-                      <Input
-                        value={editMember.name}
-                        onChange={e => setEditMember(prev => ({ ...prev, name: e.target.value }))}
-                        className="h-6 text-xs flex-1"
-                        placeholder="Name"
-                        autoFocus
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            updateChapterMember(member.id, editMember)
-                            setEditingMemberId(null)
-                          }
-                          if (e.key === 'Escape') setEditingMemberId(null)
-                        }}
-                      />
-                      <Input
-                        value={editMember.email}
-                        onChange={e => setEditMember(prev => ({ ...prev, email: e.target.value }))}
-                        className="h-6 text-xs w-40"
-                        placeholder="Email"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            updateChapterMember(member.id, editMember)
-                            setEditingMemberId(null)
-                          }
-                          if (e.key === 'Escape') setEditingMemberId(null)
-                        }}
-                      />
-                      <Input
-                        value={editMember.company}
-                        onChange={e => setEditMember(prev => ({ ...prev, company: e.target.value }))}
-                        className="h-6 text-xs w-32"
-                        placeholder="Company"
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            updateChapterMember(member.id, editMember)
-                            setEditingMemberId(null)
-                          }
-                          if (e.key === 'Escape') setEditingMemberId(null)
-                        }}
-                      />
-                      <button
-                        onClick={() => { updateChapterMember(member.id, editMember); setEditingMemberId(null) }}
-                        className="text-green-600 hover:text-green-700 p-0.5"
-                      >
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => setEditingMemberId(null)} className="text-muted-foreground hover:text-foreground p-0.5">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </>
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                      <Input value={editMember.name} onChange={e => setEditMember(prev => ({ ...prev, name: e.target.value }))} className="h-7 text-xs" placeholder="Name" autoFocus onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
+                      <Input value={editMember.email} onChange={e => setEditMember(prev => ({ ...prev, email: e.target.value }))} className="h-7 text-xs" placeholder="Email" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
+                      <Input value={editMember.company} onChange={e => setEditMember(prev => ({ ...prev, company: e.target.value }))} className="h-7 text-xs" placeholder="Company" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
+                      <Input value={editMember.forum || ''} onChange={e => setEditMember(prev => ({ ...prev, forum: e.target.value }))} className="h-7 text-xs" placeholder="Forum" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
+                      <Input value={editMember.industry || ''} onChange={e => setEditMember(prev => ({ ...prev, industry: e.target.value }))} className="h-7 text-xs" placeholder="Industry" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
+                      <Input value={editMember.phone || ''} onChange={e => setEditMember(prev => ({ ...prev, phone: e.target.value }))} className="h-7 text-xs" placeholder="Phone" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
+                      <div className="col-span-2 md:col-span-3 flex items-center gap-1">
+                        <button onClick={() => { updateChapterMember(member.id, editMember); setEditingMemberId(null) }} className="text-green-600 hover:text-green-700 p-0.5"><Check className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setEditingMemberId(null)} className="text-muted-foreground hover:text-foreground p-0.5"><X className="h-3 w-3" /></button>
+                      </div>
+                    </div>
                   ) : (
                     <>
-                      <span
-                        className="text-sm font-medium cursor-pointer hover:text-eo-blue"
-                        onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '' }) }}
-                      >
-                        {member.name}
-                      </span>
-                      {member.company && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                          <Building2 className="h-2.5 w-2.5" />{member.company}
-                        </span>
-                      )}
-                      {member.email && <span className="text-xs text-muted-foreground">{member.email}</span>}
-                      {memberRoles.length > 0 && (
-                        <div className="flex gap-1 ml-auto">
-                          {memberRoles.map((r, i) => (
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className="text-sm font-medium cursor-pointer hover:text-eo-blue"
+                            onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '', forum: member.forum || '', industry: member.industry || '', phone: member.phone || '' }) }}
+                          >
+                            {member.name}
+                          </span>
+                          {member.company && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                              <Building2 className="h-2.5 w-2.5" />{member.company}
+                            </span>
+                          )}
+                          {member.forum && (
+                            <Badge variant="outline" className="text-[9px] bg-eo-blue/5 border-eo-blue/30">{member.forum}</Badge>
+                          )}
+                          {memberRoles.length > 0 && memberRoles.map((r, i) => (
                             <Badge key={i} variant="outline" className="text-[9px]">{r}</Badge>
                           ))}
                         </div>
-                      )}
-                      <button
-                        onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '' }) }}
-                        className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5 ml-auto"
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                      <select
-                        value={member.status}
-                        onChange={e => updateChapterMember(member.id, { status: e.target.value })}
-                        className="text-[10px] bg-transparent border rounded px-1 py-0.5"
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="alumni">Alumni</option>
-                      </select>
-                      <button
-                        onClick={() => {
-                          const hasAssignments = roleAssignments.some(a => a.member_id === member.id)
-                          const msg = hasAssignments
-                            ? `"${member.name}" has role assignments. Remove them from the directory? Their assignments will show the name as fallback text.`
-                            : `Remove "${member.name}" from the directory?`
-                          if (window.confirm(msg)) deleteChapterMember(member.id)
-                        }}
-                        className="text-muted-foreground hover:text-red-500 opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
+                        <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground flex-wrap">
+                          {member.email && <span>{member.email}</span>}
+                          {member.industry && <span>{member.industry}</span>}
+                          {yearsInEo !== null && <span>{yearsInEo}yr{yearsInEo !== 1 ? 's' : ''} in EO</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '', forum: member.forum || '', industry: member.industry || '', phone: member.phone || '' }) }}
+                          className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                        <select
+                          value={member.status}
+                          onChange={e => updateChapterMember(member.id, { status: e.target.value })}
+                          className="text-[10px] bg-transparent border rounded px-1 py-0.5"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="alumni">Alumni</option>
+                        </select>
+                        <button
+                          onClick={() => {
+                            const hasAssignments = roleAssignments.some(a => a.member_id === member.id)
+                            const msg = hasAssignments
+                              ? `"${member.name}" has role assignments. Remove them from the directory? Their assignments will show the name as fallback text.`
+                              : `Remove "${member.name}" from the directory?`
+                            if (window.confirm(msg)) deleteChapterMember(member.id)
+                          }}
+                          className="text-muted-foreground hover:text-red-500 opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
                     </>
                   )}
                 </div>
