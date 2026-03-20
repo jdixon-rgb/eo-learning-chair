@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useChapter } from '@/lib/chapter'
 import { USER_ROLES } from '@/lib/constants'
-import { Users, Search, ClipboardList, Mail, UserPlus, Trash2, Loader2, Upload, ChevronDown, ChevronUp } from 'lucide-react'
+import { Users, Search, ClipboardList, Mail, UserPlus, Trash2, Loader2, Upload, ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+// Lazy-load xlsx to avoid bloating the main bundle
+const loadXLSX = () => import('xlsx')
 
 // Mock data for dev mode
 const MOCK_MEMBERS = [
@@ -33,6 +35,7 @@ export default function MemberManagementPage() {
   const [bulkCsv, setBulkCsv] = useState('')
   const [bulkImporting, setBulkImporting] = useState(false)
   const [bulkMsg, setBulkMsg] = useState('')
+  const fileInputRef = useRef(null)
 
   const fetchMembers = useCallback(async () => {
     if (!isSupabaseConfigured()) {
@@ -188,6 +191,58 @@ export default function MemberManagementPage() {
     fetchMembers()
   }
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = '' // reset so same file can be re-uploaded
+
+    const XLSX = await loadXLSX()
+
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result)
+        const workbook = XLSX.read(data, { type: 'array' })
+        const sheet = workbook.Sheets[workbook.SheetNames[0]]
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+
+        if (json.length === 0) {
+          setBulkMsg('File appears empty or has no data rows.')
+          return
+        }
+
+        // Auto-detect column names (case-insensitive)
+        const headerMap = (target) => {
+          const keys = Object.keys(json[0])
+          return keys.find(k => k.toLowerCase().replace(/[_\s-]/g, '') === target) || null
+        }
+        const emailCol = headerMap('email') || headerMap('emailaddress') || headerMap('e-mail')
+        const nameCol = headerMap('fullname') || headerMap('name') || headerMap('full_name') || headerMap('membername')
+        const roleCol = headerMap('role') || headerMap('userrole')
+
+        if (!emailCol) {
+          setBulkMsg('Could not find an "Email" column. Please ensure your spreadsheet has an Email header.')
+          return
+        }
+
+        // Convert to CSV text for the existing import flow
+        const lines = json.map(row => {
+          const email = (row[emailCol] || '').toString().trim()
+          const name = nameCol ? (row[nameCol] || '').toString().trim() : ''
+          const role = roleCol ? (row[roleCol] || '').toString().trim() : ''
+          return `${email}, ${name}, ${role}`
+        }).filter(l => l.trim() && !l.startsWith(','))
+
+        setBulkCsv(lines.join('\n'))
+        setShowBulk(true)
+        setBulkMsg(`Loaded ${lines.length} rows from ${file.name}. Review below and click Import.`)
+      } catch (err) {
+        setBulkMsg(`Failed to parse file: ${err.message}`)
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
   const filtered = members.filter(m => {
     if (!search) return true
     const q = search.toLowerCase()
@@ -289,9 +344,22 @@ export default function MemberManagementPage() {
         {showBulk && (
           <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
             <p className="text-xs text-muted-foreground">
-              Paste rows from your spreadsheet. Each row: <strong>email, full name, role</strong> (comma or tab separated).
-              Role is optional — defaults to "member". Valid roles: member, committee_member, board_liaison, learning_chair, chapter_experience_coordinator, chapter_executive_director.
+              Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file, or paste rows below. Each row: <strong>email, full name, role</strong> (comma or tab separated).
+              Role is optional - defaults to "member". Valid roles: member, committee_member, board_liaison, learning_chair, chapter_experience_coordinator, chapter_executive_director.
             </p>
+            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} className="hidden" />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 py-6 border-2 border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-eo-blue hover:text-eo-blue transition-colors cursor-pointer"
+            >
+              <FileSpreadsheet className="h-5 w-5" />
+              <span>Click to upload .csv or .xlsx file</span>
+            </button>
+            <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex-1 h-px bg-border" />
+              <span>or paste rows</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
             <textarea
               value={bulkCsv}
               onChange={e => setBulkCsv(e.target.value)}
@@ -311,7 +379,7 @@ export default function MemberManagementPage() {
                 )}
               </Button>
               {bulkMsg && (
-                <p className={`text-xs ${bulkMsg.includes('Error') ? 'text-eo-pink' : 'text-green-600'}`}>
+                <p className={`text-xs ${bulkMsg.includes('Error') || bulkMsg.includes('Failed') ? 'text-eo-pink' : 'text-green-600'}`}>
                   {bulkMsg}
                 </p>
               )}
