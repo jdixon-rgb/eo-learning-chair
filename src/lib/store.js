@@ -282,7 +282,6 @@ export function StoreProvider({ children }) {
     const newChecklist = {
       id,
       event_id: eventId,
-      ...(activeChapterId ? { chapter_id: activeChapterId } : {}),
       jurisdiction_local: false,
       indemnification_clause: false,
       mfn_clause: false,
