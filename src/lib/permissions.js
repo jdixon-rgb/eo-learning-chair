@@ -15,6 +15,7 @@ export const FEATURE_PERMISSIONS = {
   canEditBudget:         ADMIN_ROLES,
   canViewVenues:         ADMIN_ROLES,
   canViewScenarios:      ADMIN_ROLES,
+  canEditChapterConfig:  ['super_admin', 'chapter_executive_director'],
   canManageSettings:     ADMIN_ROLES,
   canManageMembers:      ADMIN_ROLES,
   canSendNotifications:  ADMIN_ROLES,

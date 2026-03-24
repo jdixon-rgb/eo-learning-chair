@@ -1,203 +1,164 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useChapter } from '@/lib/chapter'
+import { useBoardStore } from '@/lib/boardStore'
 import { USER_ROLES } from '@/lib/constants'
-import { Users, Search, ClipboardList, Mail, UserPlus, Trash2, Loader2, Upload, ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react'
+import {
+  Users, Search, Mail, UserPlus, Trash2, Loader2, Upload,
+  ChevronDown, ChevronUp, FileSpreadsheet, Pencil, Check, X,
+  Star, Building2, Phone,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+
 // Lazy-load xlsx to avoid bloating the main bundle
 const loadXLSX = () => import('xlsx')
 
-// Mock data for dev mode
-const MOCK_MEMBERS = [
-  { id: '1', email: 'john@eoarizona.com', full_name: 'John Dixon', role: 'learning_chair', company: 'Acme Corp', is_active: true, survey_completed_at: null, status: 'active' },
-  { id: '2', email: 'sarah@eoarizona.com', full_name: 'Sarah Martinez', role: 'committee_member', company: 'Martinez Group', is_active: true, survey_completed_at: '2025-12-15T00:00:00Z', status: 'active' },
-  { id: '3', email: 'mike@eoarizona.com', full_name: 'Mike Johnson', role: 'member', company: 'JTech Solutions', is_active: true, survey_completed_at: null, status: 'active' },
-  { id: '4', email: 'newbie@eoarizona.com', full_name: 'Pending Person', role: 'member', company: '', is_active: false, survey_completed_at: null, status: 'invited' },
-]
-
 export default function MemberManagementPage() {
   const { activeChapterId } = useChapter()
-  const [members, setMembers] = useState([])
-  const [loading, setLoading] = useState(true)
+  const {
+    chapterMembers, addChapterMember, updateChapterMember, deleteChapterMember,
+    syncMemberInvites,
+  } = useBoardStore()
+
+  // Profile / invite status (for showing who has signed up)
+  const [profiles, setProfiles] = useState([])
+  const [invites, setInvites] = useState([])
+  const [statusLoading, setStatusLoading] = useState(true)
+
+  // Search
   const [search, setSearch] = useState('')
 
-  // Invite form state
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteName, setInviteName] = useState('')
-  const [inviteRole, setInviteRole] = useState('member')
-  const [inviting, setInviting] = useState(false)
-  const [inviteMsg, setInviteMsg] = useState('')
+  // Add member form
+  const [addForm, setAddForm] = useState({ name: '', email: '', company: '', phone: '', forum: '', industry: '' })
+  const [addMsg, setAddMsg] = useState('')
 
-  // Bulk import state
+  // Inline edit
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({})
+
+  // Bulk import
   const [showBulk, setShowBulk] = useState(false)
-  const [bulkCsv, setBulkCsv] = useState('')
-  const [bulkImporting, setBulkImporting] = useState(false)
+  const [bulkPreview, setBulkPreview] = useState([])
   const [bulkMsg, setBulkMsg] = useState('')
+  const [bulkImporting, setBulkImporting] = useState(false)
   const fileInputRef = useRef(null)
 
-  const fetchMembers = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setMembers(MOCK_MEMBERS)
-      setLoading(false)
-      return
-    }
+  // Fetch profiles + invites for status overlay
+  const fetchStatus = useCallback(async () => {
+    if (!isSupabaseConfigured()) { setStatusLoading(false); return }
+    const [{ data: p }, { data: inv }] = await Promise.all([
+      supabase.from('profiles').select('id,email,full_name,role,survey_completed_at').order('full_name'),
+      supabase.from('member_invites').select('id,email,full_name,role,claimed_at').is('claimed_at', null),
+    ])
+    setProfiles(p || [])
+    setInvites(inv || [])
+    setStatusLoading(false)
+  }, [])
 
-    // Fetch active profiles filtered by chapter
-    let profilesQuery = supabase
-      .from('profiles')
-      .select('*')
-      .order('full_name', { ascending: true })
-    if (activeChapterId) {
-      profilesQuery = profilesQuery.eq('chapter_id', activeChapterId)
-    }
-    const { data: profiles } = await profilesQuery
+  useEffect(() => { fetchStatus() }, [fetchStatus])
 
-    // Fetch pending (unclaimed) invites filtered by chapter
-    let invitesQuery = supabase
-      .from('member_invites')
-      .select('*')
-      .is('claimed_at', null)
-      .order('created_at', { ascending: false })
-    if (activeChapterId) {
-      invitesQuery = invitesQuery.eq('chapter_id', activeChapterId)
-    }
-    const { data: invites } = await invitesQuery
-
-    const active = (profiles || []).map(p => ({ ...p, status: 'active' }))
-    const claimedEmails = new Set(active.map(p => p.email.toLowerCase()))
-
-    const pending = (invites || [])
-      .filter(inv => !claimedEmails.has(inv.email.toLowerCase()))
-      .map(inv => ({
-        id: inv.id,
-        email: inv.email,
-        full_name: inv.full_name,
-        role: inv.role,
-        company: '',
-        is_active: false,
-        survey_completed_at: null,
-        status: 'invited',
-        invite_id: inv.id,
-      }))
-
-    setMembers([...active, ...pending])
-    setLoading(false)
-  }, [activeChapterId])
-
-  useEffect(() => { fetchMembers() }, [fetchMembers])
-
-  const updateRole = async (memberId, newRole) => {
-    setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m))
-    if (isSupabaseConfigured()) {
-      await supabase.from('profiles').update({ role: newRole }).eq('id', memberId)
-    }
+  // Build a lookup for app status per email
+  const statusByEmail = {}
+  for (const p of profiles) {
+    if (p.email) statusByEmail[p.email.toLowerCase()] = { type: 'active', role: p.role, surveyDone: !!p.survey_completed_at }
+  }
+  for (const inv of invites) {
+    const key = inv.email?.toLowerCase()
+    if (key && !statusByEmail[key]) statusByEmail[key] = { type: 'invited', role: inv.role }
   }
 
-  const handleInvite = async (e) => {
-    e.preventDefault()
-    if (!inviteEmail.trim()) return
-    setInviting(true)
-    setInviteMsg('')
+  // ── CSV / XLSX Parsing ──
 
-    if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('member_invites').insert({
-        email: inviteEmail.trim().toLowerCase(),
-        full_name: inviteName.trim(),
-        role: inviteRole,
-        chapter_id: activeChapterId,
-      })
-      if (error) {
-        setInviteMsg(error.message.includes('duplicate') ? 'This email is already invited.' : error.message)
-        setInviting(false)
-        return
-      }
+  function parseCsvLine(line) {
+    const values = []
+    let current = ''
+    let inQuotes = false
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (ch === '"') { inQuotes = !inQuotes; continue }
+      if (ch === ',' && !inQuotes) { values.push(current.trim()); current = ''; continue }
+      current += ch
     }
-
-    setInviteMsg('Invite added!')
-    setInviteEmail('')
-    setInviteName('')
-    setInviteRole('member')
-    setInviting(false)
-    fetchMembers()
-    setTimeout(() => setInviteMsg(''), 3000)
+    values.push(current.trim())
+    return values
   }
 
-  const removeInvite = async (inviteId) => {
-    setMembers(prev => prev.filter(m => m.id !== inviteId))
-    if (isSupabaseConfigured()) {
-      await supabase.from('member_invites').delete().eq('id', inviteId)
+  function parseRoster(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim())
+    if (lines.length < 2) return { rows: [], error: 'File must have a header row and at least one data row.' }
+
+    const header = parseCsvLine(lines[0]).map(h => h.toLowerCase().replace(/['"]/g, ''))
+    const find = (...candidates) => header.findIndex(h => candidates.includes(h))
+
+    const nameIdx = find('name', 'full name', 'member name', 'member')
+    const firstNameIdx = find('first name', 'firstname', 'first')
+    const lastNameIdx = find('last name', 'lastname', 'last')
+    const emailIdx = find('email', 'email address', 'e-mail')
+    const companyIdx = find('company', 'company name', 'organization', 'business')
+    const phoneIdx = find('phone', 'phone number', 'mobile')
+    const forumIdx = find('forum', 'forum name')
+    const industryIdx = find('industry', 'sector')
+    const joinDateIdx = find('eo join date', 'join date', 'joindate', 'joined')
+    const yearsIdx = find('years in eo', 'years', 'eo years')
+
+    if (nameIdx === -1 && firstNameIdx === -1 && emailIdx === -1) {
+      return { rows: [], error: 'Could not find a Name, First Name, or Email column in the header.' }
     }
-  }
 
-  const VALID_ROLES = new Set(USER_ROLES.map(r => r.id))
-
-  const handleBulkImport = async () => {
-    if (!bulkCsv.trim()) return
-    setBulkImporting(true)
-    setBulkMsg('')
-
-    const lines = bulkCsv.trim().split('\n').filter(l => l.trim())
+    const col = (values, idx) => idx >= 0 ? (values[idx]?.trim() || '') : ''
     const rows = []
-    const errors = []
 
-    for (let i = 0; i < lines.length; i++) {
-      // Support CSV (comma) or TSV (tab) — auto-detect
-      const sep = lines[i].includes('\t') ? '\t' : ','
-      const parts = lines[i].split(sep).map(s => s.trim().replace(/^["']|["']$/g, ''))
-      const [email, full_name, role] = parts
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCsvLine(lines[i])
+      const firstName = col(values, firstNameIdx)
+      const lastName = col(values, lastNameIdx)
+      const name = col(values, nameIdx) || `${firstName} ${lastName}`.trim()
+      const email = col(values, emailIdx)
+      if (!name && !email) continue
 
-      if (!email || !email.includes('@')) {
-        // Skip header rows or blank lines
-        if (i === 0 && (email?.toLowerCase() === 'email' || !email)) continue
-        errors.push(`Line ${i + 1}: invalid email "${email || ''}"`)
-        continue
-      }
+      const forum = col(values, forumIdx)
+      const eoJoinDate = col(values, joinDateIdx) || null
 
-      const resolvedRole = role && VALID_ROLES.has(role) ? role : 'member'
-      rows.push({ email: email.toLowerCase(), full_name: full_name || '', role: resolvedRole })
+      rows.push({
+        name,
+        first_name: firstName || name.split(' ')[0] || '',
+        last_name: lastName || name.split(' ').slice(1).join(' ') || '',
+        email,
+        company: col(values, companyIdx),
+        phone: col(values, phoneIdx),
+        forum: forum && forum.toLowerCase() !== 'none' ? forum : '',
+        industry: col(values, industryIdx),
+        eo_join_date: eoJoinDate,
+        status: 'active',
+        is_forum_moderator: false,
+      })
     }
 
-    if (rows.length === 0) {
-      setBulkMsg(errors.length ? errors.join('; ') : 'No valid rows found.')
-      setBulkImporting(false)
-      return
-    }
-
-    if (isSupabaseConfigured()) {
-      // Insert in batches of 50 to avoid payload limits
-      let inserted = 0
-      let dupes = 0
-      for (let i = 0; i < rows.length; i += 50) {
-        const batch = rows.slice(i, i + 50)
-        const { error, count } = await supabase
-          .from('member_invites')
-          .upsert(batch, { onConflict: 'email', ignoreDuplicates: true })
-        if (error) {
-          errors.push(error.message)
-        } else {
-          inserted += batch.length
-        }
-      }
-      dupes = rows.length - inserted + dupes
-      setBulkMsg(`Imported ${inserted} members.${dupes > 0 ? ` ${dupes} duplicates skipped.` : ''}${errors.length ? ` Errors: ${errors.join('; ')}` : ''}`)
-    } else {
-      setBulkMsg(`Parsed ${rows.length} members (dev mode — not saved).`)
-    }
-
-    setBulkCsv('')
-    setBulkImporting(false)
-    fetchMembers()
+    return { rows, error: null }
   }
 
-  const handleFileUpload = async (e) => {
+  async function handleFileUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    e.target.value = '' // reset so same file can be re-uploaded
+    e.target.value = ''
 
+    if (file.name.endsWith('.csv')) {
+      const reader = new FileReader()
+      reader.onload = (evt) => {
+        const { rows, error } = parseRoster(evt.target.result)
+        if (error) { setBulkMsg(error); return }
+        setBulkPreview(rows)
+        setShowBulk(true)
+        setBulkMsg(`Loaded ${rows.length} members from ${file.name}. Review and click Import.`)
+      }
+      reader.readAsText(file)
+      return
+    }
+
+    // XLSX / XLS
     const XLSX = await loadXLSX()
-
     const reader = new FileReader()
     reader.onload = (evt) => {
       try {
@@ -205,37 +166,22 @@ export default function MemberManagementPage() {
         const workbook = XLSX.read(data, { type: 'array' })
         const sheet = workbook.Sheets[workbook.SheetNames[0]]
         const json = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+        if (json.length === 0) { setBulkMsg('File appears empty.'); return }
 
-        if (json.length === 0) {
-          setBulkMsg('File appears empty or has no data rows.')
-          return
-        }
+        // Convert to CSV text and reuse the parser
+        const keys = Object.keys(json[0])
+        const headerLine = keys.join(',')
+        const dataLines = json.map(row => keys.map(k => {
+          const v = (row[k] ?? '').toString()
+          return v.includes(',') ? `"${v}"` : v
+        }).join(','))
+        const csvText = [headerLine, ...dataLines].join('\n')
 
-        // Auto-detect column names (case-insensitive)
-        const headerMap = (target) => {
-          const keys = Object.keys(json[0])
-          return keys.find(k => k.toLowerCase().replace(/[_\s-]/g, '') === target) || null
-        }
-        const emailCol = headerMap('email') || headerMap('emailaddress') || headerMap('e-mail')
-        const nameCol = headerMap('fullname') || headerMap('name') || headerMap('full_name') || headerMap('membername')
-        const roleCol = headerMap('role') || headerMap('userrole')
-
-        if (!emailCol) {
-          setBulkMsg('Could not find an "Email" column. Please ensure your spreadsheet has an Email header.')
-          return
-        }
-
-        // Convert to CSV text for the existing import flow
-        const lines = json.map(row => {
-          const email = (row[emailCol] || '').toString().trim()
-          const name = nameCol ? (row[nameCol] || '').toString().trim() : ''
-          const role = roleCol ? (row[roleCol] || '').toString().trim() : ''
-          return `${email}, ${name}, ${role}`
-        }).filter(l => l.trim() && !l.startsWith(','))
-
-        setBulkCsv(lines.join('\n'))
+        const { rows, error } = parseRoster(csvText)
+        if (error) { setBulkMsg(error); return }
+        setBulkPreview(rows)
         setShowBulk(true)
-        setBulkMsg(`Loaded ${lines.length} rows from ${file.name}. Review below and click Import.`)
+        setBulkMsg(`Loaded ${rows.length} members from ${file.name}. Review and click Import.`)
       } catch (err) {
         setBulkMsg(`Failed to parse file: ${err.message}`)
       }
@@ -243,24 +189,147 @@ export default function MemberManagementPage() {
     reader.readAsArrayBuffer(file)
   }
 
-  const filtered = members.filter(m => {
+  async function handleBulkImport() {
+    if (bulkPreview.length === 0) return
+    setBulkImporting(true)
+    setBulkMsg('')
+
+    const existingEmails = new Set(chapterMembers.map(m => m.email?.toLowerCase()).filter(Boolean))
+    let imported = 0
+    let skipped = 0
+    const newMembers = []
+
+    for (const row of bulkPreview) {
+      const key = row.email?.toLowerCase()
+      if (key && existingEmails.has(key)) {
+        // Update existing member with new data
+        const existing = chapterMembers.find(m => m.email?.toLowerCase() === key)
+        if (existing) {
+          const updates = {}
+          if (row.company && row.company !== existing.company) updates.company = row.company
+          if (row.phone && row.phone !== existing.phone) updates.phone = row.phone
+          if (row.forum && row.forum !== existing.forum) updates.forum = row.forum
+          if (row.industry && row.industry !== existing.industry) updates.industry = row.industry
+          if (row.eo_join_date && row.eo_join_date !== existing.eo_join_date) updates.eo_join_date = row.eo_join_date
+          if (row.first_name && row.first_name !== existing.first_name) updates.first_name = row.first_name
+          if (row.last_name && row.last_name !== existing.last_name) updates.last_name = row.last_name
+          if (Object.keys(updates).length > 0) {
+            updateChapterMember(existing.id, updates)
+            imported++
+          } else {
+            skipped++
+          }
+        }
+        continue
+      }
+
+      const member = addChapterMember(row)
+      newMembers.push(row)
+      existingEmails.add(key)
+      imported++
+    }
+
+    // Sync all imported members to member_invites for Magic Link auth
+    const allForInvites = bulkPreview.filter(r => r.email)
+    await syncMemberInvites(allForInvites)
+
+    setBulkPreview([])
+    setBulkImporting(false)
+    setBulkMsg(`Imported ${imported} member${imported !== 1 ? 's' : ''}.${skipped > 0 ? ` ${skipped} unchanged.` : ''}`)
+    fetchStatus()
+    setTimeout(() => setBulkMsg(''), 5000)
+  }
+
+  function handleAddMember(e) {
+    e.preventDefault()
+    if (!addForm.name.trim() && !addForm.email.trim()) return
+
+    const name = addForm.name.trim() || addForm.email.trim()
+    const member = {
+      name,
+      first_name: name.split(' ')[0] || '',
+      last_name: name.split(' ').slice(1).join(' ') || '',
+      email: addForm.email.trim(),
+      company: addForm.company.trim(),
+      phone: addForm.phone.trim(),
+      forum: addForm.forum.trim(),
+      industry: addForm.industry.trim(),
+      status: 'active',
+      is_forum_moderator: false,
+    }
+
+    addChapterMember(member)
+
+    // Also create invite for Magic Link
+    if (member.email) {
+      syncMemberInvites([member])
+    }
+
+    setAddForm({ name: '', email: '', company: '', phone: '', forum: '', industry: '' })
+    setAddMsg('Member added!')
+    fetchStatus()
+    setTimeout(() => setAddMsg(''), 3000)
+  }
+
+  function startEdit(member) {
+    setEditingId(member.id)
+    setEditForm({
+      name: member.name || '',
+      email: member.email || '',
+      company: member.company || '',
+      phone: member.phone || '',
+      forum: member.forum || '',
+      industry: member.industry || '',
+      eo_join_date: member.eo_join_date || '',
+    })
+  }
+
+  function saveEdit(id) {
+    updateChapterMember(id, {
+      ...editForm,
+      first_name: editForm.name.split(' ')[0] || '',
+      last_name: editForm.name.split(' ').slice(1).join(' ') || '',
+    })
+    setEditingId(null)
+  }
+
+  function handleDelete(member) {
+    if (!window.confirm(`Remove "${member.name}" from the chapter directory?`)) return
+    deleteChapterMember(member.id)
+  }
+
+  // ── Filtering & counts ──
+
+  const filtered = chapterMembers.filter(m => {
     if (!search) return true
     const q = search.toLowerCase()
-    return (m.full_name || '').toLowerCase().includes(q)
+    return (m.name || '').toLowerCase().includes(q)
       || (m.email || '').toLowerCase().includes(q)
       || (m.company || '').toLowerCase().includes(q)
+      || (m.forum || '').toLowerCase().includes(q)
+      || (m.industry || '').toLowerCase().includes(q)
   })
 
-  const activeCount = members.filter(m => m.status === 'active').length
-  const invitedCount = members.filter(m => m.status === 'invited').length
+  const totalMembers = chapterMembers.length
+  const signedUpCount = chapterMembers.filter(m => statusByEmail[m.email?.toLowerCase()]?.type === 'active').length
+  const forumCount = new Set(chapterMembers.map(m => m.forum).filter(Boolean)).size
   const roleLabel = (roleId) => USER_ROLES.find(r => r.id === roleId)?.label || roleId
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-6 w-6 border-2 border-eo-blue border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
+  function getMemberStatus(member) {
+    const s = statusByEmail[member.email?.toLowerCase()]
+    if (!s) return { label: 'Directory', color: 'text-muted-foreground', bg: '' }
+    if (s.type === 'active') return { label: 'Signed Up', color: 'text-green-600', bg: 'bg-green-500/10' }
+    return { label: 'Invited', color: 'text-amber-500', bg: 'bg-amber-500/10' }
+  }
+
+  function getMemberRole(member) {
+    const s = statusByEmail[member.email?.toLowerCase()]
+    return s?.role || null
+  }
+
+  function getYearsInEo(member) {
+    if (!member.eo_join_date) return null
+    return Math.floor((Date.now() - new Date(member.eo_join_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
   }
 
   return (
@@ -273,7 +342,7 @@ export default function MemberManagementPage() {
             Members
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {activeCount} active · {invitedCount} invited · {members.filter(m => m.survey_completed_at).length} surveys completed
+            {totalMembers} members &middot; {signedUpCount} signed up &middot; {forumCount} forums
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -287,46 +356,24 @@ export default function MemberManagementPage() {
         </div>
       </div>
 
-      {/* Add Member form */}
+      {/* Add Member */}
       <div className="rounded-xl border border-border p-4 bg-muted/30">
         <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
           <UserPlus className="h-4 w-4 text-eo-blue" />
           Add Member
         </h2>
-        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2">
-          <Input
-            type="email"
-            placeholder="Email address"
-            value={inviteEmail}
-            onChange={e => setInviteEmail(e.target.value)}
-            required
-            className="flex-1"
-          />
-          <Input
-            type="text"
-            placeholder="Full name"
-            value={inviteName}
-            onChange={e => setInviteName(e.target.value)}
-            className="flex-1"
-          />
-          <select
-            value={inviteRole}
-            onChange={e => setInviteRole(e.target.value)}
-            className="text-sm rounded-lg px-3 py-2 border border-border bg-background cursor-pointer"
-          >
-            {USER_ROLES.map(r => (
-              <option key={r.id} value={r.id}>{r.label}</option>
-            ))}
-          </select>
-          <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="shrink-0">
-            {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
+        <form onSubmit={handleAddMember} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Input placeholder="Full name" value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} required className="col-span-2 sm:col-span-1" />
+          <Input type="email" placeholder="Email" value={addForm.email} onChange={e => setAddForm(p => ({ ...p, email: e.target.value }))} />
+          <Input placeholder="Company" value={addForm.company} onChange={e => setAddForm(p => ({ ...p, company: e.target.value }))} />
+          <Input placeholder="Phone" value={addForm.phone} onChange={e => setAddForm(p => ({ ...p, phone: e.target.value }))} />
+          <Input placeholder="Forum" value={addForm.forum} onChange={e => setAddForm(p => ({ ...p, forum: e.target.value }))} />
+          <Input placeholder="Industry" value={addForm.industry} onChange={e => setAddForm(p => ({ ...p, industry: e.target.value }))} />
+          <Button type="submit" disabled={!addForm.name.trim() && !addForm.email.trim()} className="shrink-0">
+            Add
           </Button>
         </form>
-        {inviteMsg && (
-          <p className={`text-xs mt-2 ${inviteMsg.includes('added') ? 'text-green-600' : 'text-eo-pink'}`}>
-            {inviteMsg}
-          </p>
-        )}
+        {addMsg && <p className="text-xs text-green-600 mt-2">{addMsg}</p>}
       </div>
 
       {/* Bulk Import */}
@@ -344,8 +391,9 @@ export default function MemberManagementPage() {
         {showBulk && (
           <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
             <p className="text-xs text-muted-foreground">
-              Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file, or paste rows below. Each row: <strong>email, full name, role</strong> (comma or tab separated).
-              Role is optional - defaults to "member". Valid roles: member, committee_member, board_liaison, learning_chair, chapter_experience_coordinator, chapter_executive_director.
+              Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file with your chapter roster.
+              Columns detected automatically: Name, First Name, Last Name, Email, Company, Phone/Mobile, Forum, Industry, EO Join Date, Years in EO.
+              Members with email addresses will be pre-authorized for Magic Link login.
             </p>
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} className="hidden" />
             <button
@@ -355,31 +403,56 @@ export default function MemberManagementPage() {
               <FileSpreadsheet className="h-5 w-5" />
               <span>Click to upload .csv or .xlsx file</span>
             </button>
-            <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="flex-1 h-px bg-border" />
-              <span>or paste rows</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <textarea
-              value={bulkCsv}
-              onChange={e => setBulkCsv(e.target.value)}
-              placeholder={"jane@example.com, Jane Smith, member\ntom@example.com, Tom Lee, committee_member\nkim@example.com, Kim Park"}
-              rows={6}
-              className="w-full text-sm rounded-lg px-3 py-2 border border-border bg-background font-mono resize-y"
-            />
+
+            {bulkPreview.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium">{bulkPreview.length} members ready to import:</p>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border text-xs">
+                  <table className="w-full">
+                    <thead className="bg-muted/50 sticky top-0">
+                      <tr>
+                        <th className="text-left px-2 py-1">Name</th>
+                        <th className="text-left px-2 py-1">Email</th>
+                        <th className="text-left px-2 py-1 hidden sm:table-cell">Forum</th>
+                        <th className="text-left px-2 py-1 hidden md:table-cell">Company</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {bulkPreview.slice(0, 20).map((row, i) => (
+                        <tr key={i}>
+                          <td className="px-2 py-1">{row.name}</td>
+                          <td className="px-2 py-1 text-muted-foreground">{row.email}</td>
+                          <td className="px-2 py-1 hidden sm:table-cell">{row.forum || '-'}</td>
+                          <td className="px-2 py-1 hidden md:table-cell">{row.company || '-'}</td>
+                        </tr>
+                      ))}
+                      {bulkPreview.length > 20 && (
+                        <tr><td colSpan={4} className="px-2 py-1 text-muted-foreground text-center">...and {bulkPreview.length - 20} more</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
-              <Button onClick={handleBulkImport} disabled={bulkImporting || !bulkCsv.trim()}>
+              <Button onClick={handleBulkImport} disabled={bulkImporting || bulkPreview.length === 0}>
                 {bulkImporting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Importing...
                   </>
                 ) : (
-                  `Import ${bulkCsv.trim() ? bulkCsv.trim().split('\n').filter(l => l.trim()).length : 0} rows`
+                  `Import ${bulkPreview.length} members`
                 )}
               </Button>
+              {bulkPreview.length > 0 && (
+                <Button variant="outline" size="sm" onClick={() => { setBulkPreview([]); setBulkMsg('') }}>
+                  Clear
+                </Button>
+              )}
               {bulkMsg && (
-                <p className={`text-xs ${bulkMsg.includes('Error') || bulkMsg.includes('Failed') ? 'text-eo-pink' : 'text-green-600'}`}>
+                <p className={`text-xs ${bulkMsg.includes('Error') || bulkMsg.includes('Failed') || bulkMsg.includes('Could not') ? 'text-eo-pink' : 'text-green-600'}`}>
                   {bulkMsg}
                 </p>
               )}
@@ -388,81 +461,121 @@ export default function MemberManagementPage() {
         )}
       </div>
 
-      {/* Member table */}
+      {/* Member Table */}
       <div className="rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Member</th>
-                <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Company</th>
-                <th className="text-left px-4 py-3 font-medium">Role</th>
+                <th className="text-left px-4 py-3 font-medium hidden sm:table-cell">Forum</th>
+                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Company</th>
+                <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Industry</th>
                 <th className="text-center px-4 py-3 font-medium">Status</th>
-                <th className="text-center px-4 py-3 font-medium hidden md:table-cell">
-                  <ClipboardList className="h-4 w-4 mx-auto" />
-                </th>
-                <th className="text-center px-4 py-3 font-medium w-10"></th>
+                <th className="text-center px-4 py-3 font-medium w-20">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map(member => (
-                <tr key={member.id} className={`hover:bg-muted/30 transition-colors ${member.status === 'invited' ? 'opacity-60' : ''}`}>
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium">{member.full_name || '—'}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {member.email}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
-                    {member.company || '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    {member.status === 'active' ? (
-                      <select
-                        value={member.role}
-                        onChange={(e) => updateRole(member.id, e.target.value)}
-                        className="text-xs rounded-lg px-2 py-1 border border-border bg-background cursor-pointer"
-                      >
-                        {USER_ROLES.map(r => (
-                          <option key={r.id} value={r.id}>{r.label}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">{roleLabel(member.role)}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {member.status === 'active' ? (
-                      <Badge className="bg-green-500/10 text-green-600 text-[10px]">Active</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">Invited</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center hidden md:table-cell">
-                    {member.status === 'active' && (
-                      member.survey_completed_at ? (
-                        <Badge className="bg-green-500/10 text-green-600 text-[10px]">Done</Badge>
+              {filtered.map(member => {
+                const status = getMemberStatus(member)
+                const appRole = getMemberRole(member)
+                const years = getYearsInEo(member)
+                const isEditing = editingId === member.id
+
+                if (isEditing) {
+                  return (
+                    <tr key={member.id} className="bg-muted/20">
+                      <td colSpan={6} className="px-4 py-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          <Input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} placeholder="Name" autoFocus className="h-8 text-xs" />
+                          <Input value={editForm.email} onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))} placeholder="Email" className="h-8 text-xs" />
+                          <Input value={editForm.company} onChange={e => setEditForm(p => ({ ...p, company: e.target.value }))} placeholder="Company" className="h-8 text-xs" />
+                          <Input value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} placeholder="Phone" className="h-8 text-xs" />
+                          <Input value={editForm.forum} onChange={e => setEditForm(p => ({ ...p, forum: e.target.value }))} placeholder="Forum" className="h-8 text-xs" />
+                          <Input value={editForm.industry} onChange={e => setEditForm(p => ({ ...p, industry: e.target.value }))} placeholder="Industry" className="h-8 text-xs" />
+                          <Input type="date" value={editForm.eo_join_date} onChange={e => setEditForm(p => ({ ...p, eo_join_date: e.target.value }))} className="h-8 text-xs" />
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => saveEdit(member.id)} className="h-8">
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)} className="h-8">
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                }
+
+                return (
+                  <tr key={member.id} className="hover:bg-muted/30 transition-colors group">
+                    <td className="px-4 py-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{member.name}</span>
+                          {member.is_forum_moderator && (
+                            <Star className="h-3 w-3 text-amber-500 fill-amber-500" title="Forum Moderator" />
+                          )}
+                          {appRole && appRole !== 'member' && (
+                            <Badge variant="outline" className="text-[9px]">{roleLabel(appRole)}</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground">
+                          {member.email && <span className="flex items-center gap-0.5"><Mail className="h-2.5 w-2.5" />{member.email}</span>}
+                          {member.phone && <span className="flex items-center gap-0.5"><Phone className="h-2.5 w-2.5" />{member.phone}</span>}
+                          {years !== null && <span>{years}yr{years !== 1 ? 's' : ''} in EO</span>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell">
+                      {member.forum ? (
+                        <Badge variant="outline" className="text-[10px] bg-eo-blue/5 border-eo-blue/30">{member.forum}</Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] text-muted-foreground">Pending</Badge>
-                      )
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {member.status === 'invited' && (
-                      <button
-                        onClick={() => removeInvite(member.id)}
-                        className="text-muted-foreground hover:text-eo-pink transition-colors"
-                        title="Remove invite"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                      {member.company ? (
+                        <span className="flex items-center gap-1 text-xs"><Building2 className="h-3 w-3" />{member.company}</span>
+                      ) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
+                      {member.industry || '-'}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Badge className={`${status.bg} ${status.color} text-[10px]`} variant={status.bg ? undefined : 'outline'}>
+                        {status.label}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => updateChapterMember(member.id, { is_forum_moderator: !member.is_forum_moderator })}
+                          className={`p-0.5 transition-colors ${member.is_forum_moderator ? 'text-amber-500' : 'text-muted-foreground/30 hover:text-amber-400 opacity-0 group-hover:opacity-100'}`}
+                          title={member.is_forum_moderator ? 'Remove moderator' : 'Set as forum moderator'}
+                        >
+                          <Star className={`h-3.5 w-3.5 ${member.is_forum_moderator ? 'fill-amber-500' : ''}`} />
+                        </button>
+                        <button
+                          onClick={() => startEdit(member)}
+                          className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                          title="Edit"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(member)}
+                          className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                          title="Remove"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -470,7 +583,7 @@ export default function MemberManagementPage() {
         {filtered.length === 0 && (
           <div className="p-8 text-center text-muted-foreground">
             <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            <p>No members found</p>
+            <p>{chapterMembers.length === 0 ? 'No members yet. Add members above or import a roster.' : 'No members match your search.'}</p>
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { CHAIR_ROLES } from '@/lib/constants'
@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import { formatCurrency } from '@/lib/utils'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, User, Building2, Upload, Percent } from 'lucide-react'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, Percent } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -30,9 +32,11 @@ export default function SettingsPage() {
   const {
     chapterRoles, addChapterRole, updateChapterRole, deleteChapterRole,
     roleAssignments, addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
-    chapterMembers, addChapterMember, updateChapterMember, deleteChapterMember,
+    chapterMembers,
     getMemberName, getMemberEmail,
   } = useBoardStore()
+  const { role } = useAuth()
+  const canEditChapterName = hasPermission(role, 'canEditChapterConfig')
 
   const [newLabel, setNewLabel] = useState('')
   const [newIsStaff, setNewIsStaff] = useState(false)
@@ -42,17 +46,9 @@ export default function SettingsPage() {
   const [assignForm, setAssignForm] = useState({ member_id: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
   const [editingAssignmentId, setEditingAssignmentId] = useState(null)
   const [editAssignment, setEditAssignment] = useState({})
-  // Member directory state
-  const [newMemberName, setNewMemberName] = useState('')
-  const [newMemberEmail, setNewMemberEmail] = useState('')
-  const [newMemberCompany, setNewMemberCompany] = useState('')
-  const [editingMemberId, setEditingMemberId] = useState(null)
-  const [editMember, setEditMember] = useState({})
-  const activeMembers = chapterMembers.filter(m => m.status !== 'alumni').sort((a, b) => a.name.localeCompare(b.name))
-  const csvInputRef = useRef(null)
-  const [csvImportCount, setCsvImportCount] = useState(null)
 
   const sortedRoles = [...chapterRoles].sort((a, b) => a.sort_order - b.sort_order)
+  const activeMembers = [...chapterMembers].sort((a, b) => (a.name || '').localeCompare(b.name || ''))
 
   function getAssignmentsForRole(roleId) {
     return roleAssignments
@@ -145,88 +141,6 @@ export default function SettingsPage() {
     setEditAssignment({})
   }
 
-  function handleCsvImport(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (evt) => {
-      const text = evt.target.result
-      const lines = text.split(/\r?\n/).filter(l => l.trim())
-      if (lines.length < 2) { alert('CSV must have a header row and at least one data row.'); return }
-
-      // Parse header to find columns (case-insensitive)
-      const header = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''))
-      const find = (...candidates) => header.findIndex(h => candidates.includes(h))
-      const nameIdx = find('name', 'full name', 'member name', 'member')
-      const firstNameIdx = find('first name', 'firstname', 'first')
-      const lastNameIdx = find('last name', 'lastname', 'last')
-      const emailIdx = find('email', 'email address', 'e-mail')
-      const companyIdx = find('company', 'company name', 'organization', 'business')
-      const phoneIdx = find('phone', 'phone number', 'mobile')
-      const forumIdx = find('forum', 'forum name')
-      const industryIdx = find('industry', 'sector')
-      const joinDateIdx = find('eo join date', 'join date', 'joindate', 'joined')
-
-      if (nameIdx === -1 && firstNameIdx === -1) {
-        alert('Could not find a "Name" or "First Name" column in the CSV header.')
-        return
-      }
-
-      // Parse CSV values (handles quoted fields with commas)
-      function parseCsvLine(line) {
-        const values = []
-        let current = ''
-        let inQuotes = false
-        for (let i = 0; i < line.length; i++) {
-          const ch = line[i]
-          if (ch === '"') { inQuotes = !inQuotes; continue }
-          if (ch === ',' && !inQuotes) { values.push(current.trim()); current = ''; continue }
-          current += ch
-        }
-        values.push(current.trim())
-        return values
-      }
-
-      const col = (values, idx) => idx >= 0 ? (values[idx]?.trim() || '') : ''
-
-      let imported = 0
-      const existingNames = chapterMembers.map(m => m.name.toLowerCase())
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = parseCsvLine(lines[i])
-        const firstName = col(values, firstNameIdx)
-        const lastName = col(values, lastNameIdx)
-        const name = col(values, nameIdx) || `${firstName} ${lastName}`.trim()
-        if (!name) continue
-        // Skip duplicates by name
-        if (existingNames.includes(name.toLowerCase())) continue
-
-        const forum = col(values, forumIdx)
-
-        addChapterMember({
-          name,
-          first_name: firstName || name.split(' ')[0] || '',
-          last_name: lastName || name.split(' ').slice(1).join(' ') || '',
-          email: col(values, emailIdx),
-          company: col(values, companyIdx),
-          phone: col(values, phoneIdx),
-          forum: forum && forum.toLowerCase() !== 'none' ? forum : '',
-          industry: col(values, industryIdx),
-          eo_join_date: col(values, joinDateIdx) || null,
-          status: 'active',
-        })
-        existingNames.push(name.toLowerCase())
-        imported++
-      }
-
-      setCsvImportCount(imported)
-      setTimeout(() => setCsvImportCount(null), 4000)
-    }
-    reader.readAsText(file)
-    // Reset input so same file can be re-imported
-    e.target.value = ''
-  }
-
   function handleAddAssignment(roleId) {
     if (!assignForm.member_id) return
     const role = chapterRoles.find(r => r.id === roleId)
@@ -261,10 +175,14 @@ export default function SettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-medium">Chapter Name</label>
-            <Input
-              value={chapter.name}
-              onChange={e => updateChapter({ name: e.target.value })}
-            />
+            {canEditChapterName ? (
+              <Input
+                value={chapter.name}
+                onChange={e => updateChapter({ name: e.target.value })}
+              />
+            ) : (
+              <p className="text-sm font-medium mt-1">{chapter.name}</p>
+            )}
           </div>
           <div>
             <label className="text-xs font-medium">Default Budget ($)</label>
@@ -616,175 +534,6 @@ export default function SettingsPage() {
             Key: <span className="font-mono">{toRoleKey(newLabel)}</span>
           </p>
         )}
-      </div>
-
-      {/* Member Directory */}
-      <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <User className="h-4 w-4" /> Member Directory ({chapterMembers.length})
-          </h3>
-          <div className="flex items-center gap-2">
-            {csvImportCount !== null && (
-              <span className="text-xs text-green-600 font-medium">
-                {csvImportCount === 0 ? 'No new members found (all duplicates)' : `Imported ${csvImportCount} member${csvImportCount !== 1 ? 's' : ''}`}
-              </span>
-            )}
-            <input ref={csvInputRef} type="file" accept=".csv" onChange={handleCsvImport} className="hidden" />
-            <Button size="sm" variant="outline" onClick={() => csvInputRef.current?.click()}>
-              <Upload className="h-3 w-3" /> Import CSV
-            </Button>
-          </div>
-        </div>
-
-        {chapterMembers.length > 0 ? (
-          <div className="space-y-1">
-            {chapterMembers.map(member => {
-              const memberRoles = roleAssignments
-                .filter(a => a.member_id === member.id && a.status !== 'past')
-                .map(a => {
-                  const role = chapterRoles.find(r => r.id === a.chapter_role_id)
-                  return role ? `${role.label} (${a.status})` : null
-                })
-                .filter(Boolean)
-              const isEditing = editingMemberId === member.id
-              const yearsInEo = member.eo_join_date
-                ? Math.floor((Date.now() - new Date(member.eo_join_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-                : null
-              return (
-                <div key={member.id} className="flex items-start gap-2 py-2 border-b border-border last:border-0 group/member">
-                  {isEditing ? (
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-1.5">
-                      <Input value={editMember.name} onChange={e => setEditMember(prev => ({ ...prev, name: e.target.value }))} className="h-7 text-xs" placeholder="Name" autoFocus onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
-                      <Input value={editMember.email} onChange={e => setEditMember(prev => ({ ...prev, email: e.target.value }))} className="h-7 text-xs" placeholder="Email" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
-                      <Input value={editMember.company} onChange={e => setEditMember(prev => ({ ...prev, company: e.target.value }))} className="h-7 text-xs" placeholder="Company" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
-                      <Input value={editMember.forum || ''} onChange={e => setEditMember(prev => ({ ...prev, forum: e.target.value }))} className="h-7 text-xs" placeholder="Forum" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
-                      <Input value={editMember.industry || ''} onChange={e => setEditMember(prev => ({ ...prev, industry: e.target.value }))} className="h-7 text-xs" placeholder="Industry" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
-                      <Input value={editMember.phone || ''} onChange={e => setEditMember(prev => ({ ...prev, phone: e.target.value }))} className="h-7 text-xs" placeholder="Phone" onKeyDown={e => { if (e.key === 'Enter') { updateChapterMember(member.id, editMember); setEditingMemberId(null) }; if (e.key === 'Escape') setEditingMemberId(null) }} />
-                      <div className="col-span-2 md:col-span-3 flex items-center gap-1">
-                        <button onClick={() => { updateChapterMember(member.id, editMember); setEditingMemberId(null) }} className="text-green-600 hover:text-green-700 p-0.5"><Check className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => setEditingMemberId(null)} className="text-muted-foreground hover:text-foreground p-0.5"><X className="h-3 w-3" /></button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className="text-sm font-medium cursor-pointer hover:text-eo-blue"
-                            onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '', forum: member.forum || '', industry: member.industry || '', phone: member.phone || '' }) }}
-                          >
-                            {member.name}
-                          </span>
-                          {member.company && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                              <Building2 className="h-2.5 w-2.5" />{member.company}
-                            </span>
-                          )}
-                          {member.forum && (
-                            <Badge variant="outline" className="text-[9px] bg-eo-blue/5 border-eo-blue/30">{member.forum}</Badge>
-                          )}
-                          {memberRoles.length > 0 && memberRoles.map((r, i) => (
-                            <Badge key={i} variant="outline" className="text-[9px]">{r}</Badge>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-3 mt-0.5 text-[10px] text-muted-foreground flex-wrap">
-                          {member.email && <span>{member.email}</span>}
-                          {member.industry && <span>{member.industry}</span>}
-                          {yearsInEo !== null && <span>{yearsInEo}yr{yearsInEo !== 1 ? 's' : ''} in EO</span>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={() => { setEditingMemberId(member.id); setEditMember({ name: member.name, email: member.email || '', company: member.company || '', forum: member.forum || '', industry: member.industry || '', phone: member.phone || '' }) }}
-                          className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        <select
-                          value={member.status}
-                          onChange={e => updateChapterMember(member.id, { status: e.target.value })}
-                          className="text-[10px] bg-transparent border rounded px-1 py-0.5"
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                          <option value="alumni">Alumni</option>
-                        </select>
-                        <button
-                          onClick={() => {
-                            const hasAssignments = roleAssignments.some(a => a.member_id === member.id)
-                            const msg = hasAssignments
-                              ? `"${member.name}" has role assignments. Remove them from the directory? Their assignments will show the name as fallback text.`
-                              : `Remove "${member.name}" from the directory?`
-                            if (window.confirm(msg)) deleteChapterMember(member.id)
-                          }}
-                          className="text-muted-foreground hover:text-red-500 opacity-0 group-hover/member:opacity-100 transition-opacity p-0.5"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground py-2 text-center">
-            No members yet. Add your chapter's board members below.
-          </p>
-        )}
-
-        {/* Add member form */}
-        <div className="flex items-center gap-2 pt-2 border-t">
-          <Input
-            placeholder="Name"
-            value={newMemberName}
-            onChange={e => setNewMemberName(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && newMemberName.trim()) {
-                addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
-                setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
-              }
-            }}
-            className="flex-1 h-8 text-sm"
-          />
-          <Input
-            placeholder="Email"
-            value={newMemberEmail}
-            onChange={e => setNewMemberEmail(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && newMemberName.trim()) {
-                addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
-                setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
-              }
-            }}
-            className="w-40 h-8 text-sm"
-          />
-          <Input
-            placeholder="Company"
-            value={newMemberCompany}
-            onChange={e => setNewMemberCompany(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && newMemberName.trim()) {
-                addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
-                setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
-              }
-            }}
-            className="w-32 h-8 text-sm"
-          />
-          <Button
-            size="sm"
-            onClick={() => {
-              if (!newMemberName.trim()) return
-              addChapterMember({ name: newMemberName.trim(), email: newMemberEmail.trim(), company: newMemberCompany.trim(), status: 'active' })
-              setNewMemberName(''); setNewMemberEmail(''); setNewMemberCompany('')
-            }}
-            disabled={!newMemberName.trim()}
-          >
-            <Plus className="h-3 w-3" /> Add
-          </Button>
-        </div>
       </div>
 
       {/* Connection Status */}

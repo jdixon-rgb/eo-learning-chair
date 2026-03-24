@@ -3,7 +3,8 @@ import { useBoardStore } from '@/lib/boardStore'
 import { FORUM_HEALTH } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Plus, Users2, Edit2, Trash2, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Users2, Edit2, Trash2, X, ChevronDown, ChevronUp, Star } from 'lucide-react'
 
 function getHealthColor(score) {
   const level = FORUM_HEALTH.find(h => score >= h.min && score <= h.max)
@@ -27,15 +28,29 @@ const emptyForum = {
 }
 
 export default function ForumsPage() {
-  const { forums, addForum, updateForum, deleteForum } = useBoardStore()
+  const { forums, addForum, updateForum, deleteForum, chapterMembers } = useBoardStore()
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ ...emptyForum })
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
+  const [expandedForum, setExpandedForum] = useState(null)
 
   const active = forums.filter(f => f.is_active)
   const inactive = forums.filter(f => !f.is_active)
-  const totalMembers = active.reduce((sum, f) => sum + (f.member_count || 0), 0)
+
+  // Derive forum membership from chapter_members
+  function getForumMembers(forumName) {
+    return chapterMembers.filter(m => m.forum && m.forum.toLowerCase() === forumName.toLowerCase())
+  }
+
+  function getForumModerators(forumName) {
+    return chapterMembers.filter(m => m.forum && m.forum.toLowerCase() === forumName.toLowerCase() && m.is_forum_moderator)
+  }
+
+  const totalMembers = active.reduce((sum, f) => {
+    const derived = getForumMembers(f.name).length
+    return sum + (derived || f.member_count || 0)
+  }, 0)
 
   function handleAdd() {
     if (!form.name.trim()) return
@@ -62,7 +77,7 @@ export default function ForumsPage() {
         <div>
           <h1 className="text-2xl font-bold">Forums</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {active.length} active forum{active.length !== 1 ? 's' : ''} - {totalMembers} total members
+            {active.length} active forum{active.length !== 1 ? 's' : ''} &middot; {totalMembers} total members
           </p>
         </div>
         <Button onClick={() => setShowForm(!showForm)}>
@@ -97,10 +112,6 @@ export default function ForumsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Member Count</label>
-              <Input className="mt-1" type="number" min="0" value={form.member_count} onChange={e => setForm({ ...form, member_count: parseInt(e.target.value) || 0 })} />
-            </div>
-            <div>
               <label className="text-xs font-medium text-muted-foreground">Health Score (1-10)</label>
               <Input className="mt-1" type="number" min="1" max="10" value={form.health_score} onChange={e => setForm({ ...form, health_score: parseInt(e.target.value) || 7 })} />
             </div>
@@ -127,6 +138,10 @@ export default function ForumsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {active.map(forum => {
           const isEditing = editingId === forum.id
+          const members = getForumMembers(forum.name)
+          const moderators = getForumModerators(forum.name)
+          const memberCount = members.length || forum.member_count || 0
+          const isExpanded = expandedForum === forum.id
 
           if (isEditing) {
             return (
@@ -141,14 +156,19 @@ export default function ForumsPage() {
                 <Input value={editForm.moderator_name} onChange={e => setEditForm({ ...editForm, moderator_name: e.target.value })} placeholder="Moderator" />
                 <Input type="email" value={editForm.moderator_email} onChange={e => setEditForm({ ...editForm, moderator_email: e.target.value })} placeholder="Email" />
                 <div className="grid grid-cols-2 gap-2">
-                  <Input type="number" min="0" value={editForm.member_count} onChange={e => setEditForm({ ...editForm, member_count: parseInt(e.target.value) || 0 })} />
-                  <Input type="number" min="1" max="10" value={editForm.health_score} onChange={e => setEditForm({ ...editForm, health_score: parseInt(e.target.value) || 7 })} />
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Health Score</label>
+                    <Input type="number" min="1" max="10" value={editForm.health_score} onChange={e => setEditForm({ ...editForm, health_score: parseInt(e.target.value) || 7 })} />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Cadence</label>
+                    <select className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={editForm.meeting_cadence} onChange={e => setEditForm({ ...editForm, meeting_cadence: e.target.value })}>
+                      <option value="weekly">Weekly</option>
+                      <option value="biweekly">Biweekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
                 </div>
-                <select className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={editForm.meeting_cadence} onChange={e => setEditForm({ ...editForm, meeting_cadence: e.target.value })}>
-                  <option value="weekly">Weekly</option>
-                  <option value="biweekly">Biweekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
                 <textarea className="w-full rounded-md border bg-background px-3 py-2 text-sm min-h-[60px]" value={editForm.health_notes} onChange={e => setEditForm({ ...editForm, health_notes: e.target.value })} />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={saveEdit}>Save</Button>
@@ -188,7 +208,7 @@ export default function ForumsPage() {
 
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="text-center p-2 rounded-lg bg-muted">
-                  <p className="text-sm font-bold">{forum.member_count || 0}</p>
+                  <p className="text-sm font-bold">{memberCount}</p>
                   <p className="text-[10px] text-muted-foreground">Members</p>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-muted">
@@ -197,14 +217,44 @@ export default function ForumsPage() {
                 </div>
               </div>
 
-              {forum.moderator_name && (
+              {/* Moderator(s) - derived from chapter_members */}
+              {moderators.length > 0 ? (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                  <span>{moderators.map(m => m.name).join(', ')}</span>
+                </div>
+              ) : forum.moderator_name ? (
                 <p className="mt-3 text-xs text-muted-foreground">
                   Moderator: {forum.moderator_name}
                 </p>
-              )}
+              ) : null}
 
               {forum.health_notes && (
                 <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{forum.health_notes}</p>
+              )}
+
+              {/* Expandable member list */}
+              {members.length > 0 && (
+                <div className="mt-3 border-t border-border pt-2">
+                  <button
+                    onClick={() => setExpandedForum(isExpanded ? null : forum.id)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-full"
+                  >
+                    {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    {members.length} member{members.length !== 1 ? 's' : ''}
+                  </button>
+                  {isExpanded && (
+                    <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+                      {members.map(m => (
+                        <div key={m.id} className="flex items-center gap-2 text-xs py-0.5">
+                          {m.is_forum_moderator && <Star className="h-2.5 w-2.5 text-amber-500 fill-amber-500 shrink-0" />}
+                          <span className={m.is_forum_moderator ? 'font-medium' : ''}>{m.name}</span>
+                          {m.company && <span className="text-muted-foreground truncate">{m.company}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )
@@ -218,7 +268,7 @@ export default function ForumsPage() {
           <div className="space-y-2">
             {inactive.map(f => (
               <div key={f.id} className="rounded-xl border bg-card px-5 py-3 shadow-sm flex items-center justify-between opacity-60">
-                <span className="text-sm">{f.name} - {f.member_count} members</span>
+                <span className="text-sm">{f.name} - {getForumMembers(f.name).length || f.member_count} members</span>
                 <Button size="sm" variant="outline" onClick={() => updateForum(f.id, { is_active: true })}>
                   Reactivate
                 </Button>
