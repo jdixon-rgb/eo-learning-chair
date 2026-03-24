@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
-import { isSupabaseConfigured } from './supabase'
+import { isSupabaseConfigured, supabase } from './supabase'
 import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
 import { useChapter } from './chapter'
 import { CHAIR_ROLES } from './constants'
@@ -110,14 +110,19 @@ export function BoardStoreProvider({ children }) {
     }
   }, [activeChapterId, isChapterReady])
 
-  const dbWrite = useCallback(async (fn) => {
+  const dbWrite = useCallback(async (fn, label = 'unknown') => {
     if (!isSupabaseConfigured()) return
     try {
       const result = await fn()
-      if (result?.error) console.error('Board write error:', result.error)
+      if (result?.error) {
+        const msg = result.error?.message || result.error?.details || JSON.stringify(result.error)
+        console.error(`[boardWrite:${label}] Supabase error:`, msg, result.error)
+        setDbError(`Save failed (${label}): ${msg}`)
+      }
       return result
     } catch (err) {
-      console.error('Board write failed:', err)
+      console.error(`[boardWrite:${label}] Exception:`, err)
+      setDbError(`Save failed (${label}): ${err.message}`)
     }
   }, [])
 
@@ -127,18 +132,18 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...report, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setChairReports(prev => [...prev, row])
-    dbWrite(() => insertRow('chair_reports', row))
+    dbWrite(() => insertRow('chair_reports', row), 'insert:chair_reports')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateChairReport = useCallback((id, updates) => {
     setChairReports(prev => prev.map(r => r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r))
-    dbWrite(() => updateRow('chair_reports', id, updates))
+    dbWrite(() => updateRow('chair_reports', id, updates), 'update:chair_reports')
   }, [dbWrite])
 
   const deleteChairReport = useCallback((id) => {
     setChairReports(prev => prev.filter(r => r.id !== id))
-    dbWrite(() => deleteRow('chair_reports', id))
+    dbWrite(() => deleteRow('chair_reports', id), 'delete:chair_reports')
   }, [dbWrite])
 
   // ── Communications CRUD ──
@@ -147,18 +152,18 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...comm, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setCommunications(prev => [...prev, row])
-    dbWrite(() => insertRow('chapter_communications', row))
+    dbWrite(() => insertRow('chapter_communications', row), 'insert:chapter_communications')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateCommunication = useCallback((id, updates) => {
     setCommunications(prev => prev.map(c => c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c))
-    dbWrite(() => updateRow('chapter_communications', id, updates))
+    dbWrite(() => updateRow('chapter_communications', id, updates), 'update:chapter_communications')
   }, [dbWrite])
 
   const deleteCommunication = useCallback((id) => {
     setCommunications(prev => prev.filter(c => c.id !== id))
-    dbWrite(() => deleteRow('chapter_communications', id))
+    dbWrite(() => deleteRow('chapter_communications', id), 'delete:chapter_communications')
   }, [dbWrite])
 
   // ── Forum CRUD ──
@@ -167,18 +172,18 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...forum, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setForums(prev => [...prev, row])
-    dbWrite(() => insertRow('forums', row))
+    dbWrite(() => insertRow('forums', row), 'insert:forums')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateForum = useCallback((id, updates) => {
     setForums(prev => prev.map(f => f.id === id ? { ...f, ...updates, updated_at: new Date().toISOString() } : f))
-    dbWrite(() => updateRow('forums', id, updates))
+    dbWrite(() => updateRow('forums', id, updates), 'update:forums')
   }, [dbWrite])
 
   const deleteForum = useCallback((id) => {
     setForums(prev => prev.filter(f => f.id !== id))
-    dbWrite(() => deleteRow('forums', id))
+    dbWrite(() => deleteRow('forums', id), 'delete:forums')
   }, [dbWrite])
 
   // ── Member Scorecard CRUD ──
@@ -187,18 +192,18 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...scorecard, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setMemberScorecards(prev => [...prev, row])
-    dbWrite(() => insertRow('member_scorecards', row))
+    dbWrite(() => insertRow('member_scorecards', row), 'insert:member_scorecards')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateScorecard = useCallback((id, updates) => {
     setMemberScorecards(prev => prev.map(s => s.id === id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s))
-    dbWrite(() => updateRow('member_scorecards', id, updates))
+    dbWrite(() => updateRow('member_scorecards', id, updates), 'update:member_scorecards')
   }, [dbWrite])
 
   const deleteScorecard = useCallback((id) => {
     setMemberScorecards(prev => prev.filter(s => s.id !== id))
-    dbWrite(() => deleteRow('member_scorecards', id))
+    dbWrite(() => deleteRow('member_scorecards', id), 'delete:member_scorecards')
   }, [dbWrite])
 
   // ── Chapter Role CRUD ──
@@ -207,18 +212,18 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...role, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setChapterRoles(prev => [...prev, row].sort((a, b) => a.sort_order - b.sort_order))
-    dbWrite(() => insertRow('chapter_roles', row))
+    dbWrite(() => insertRow('chapter_roles', row), 'insert:chapter_roles')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateChapterRole = useCallback((id, updates) => {
     setChapterRoles(prev => prev.map(r => r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r))
-    dbWrite(() => updateRow('chapter_roles', id, updates))
+    dbWrite(() => updateRow('chapter_roles', id, updates), 'update:chapter_roles')
   }, [dbWrite])
 
   const deleteChapterRole = useCallback((id) => {
     setChapterRoles(prev => prev.filter(r => r.id !== id))
-    dbWrite(() => deleteRow('chapter_roles', id))
+    dbWrite(() => deleteRow('chapter_roles', id), 'delete:chapter_roles')
   }, [dbWrite])
 
   // ── Role Assignment CRUD ──
@@ -227,18 +232,18 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...assignment, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setRoleAssignments(prev => [...prev, row])
-    dbWrite(() => insertRow('role_assignments', row))
+    dbWrite(() => insertRow('role_assignments', row), 'insert:role_assignments')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateRoleAssignment = useCallback((id, updates) => {
     setRoleAssignments(prev => prev.map(a => a.id === id ? { ...a, ...updates, updated_at: new Date().toISOString() } : a))
-    dbWrite(() => updateRow('role_assignments', id, updates))
+    dbWrite(() => updateRow('role_assignments', id, updates), 'update:role_assignments')
   }, [dbWrite])
 
   const deleteRoleAssignment = useCallback((id) => {
     setRoleAssignments(prev => prev.filter(a => a.id !== id))
-    dbWrite(() => deleteRow('role_assignments', id))
+    dbWrite(() => deleteRow('role_assignments', id), 'delete:role_assignments')
   }, [dbWrite])
 
   // ── Chapter Member CRUD ──
@@ -247,19 +252,40 @@ export function BoardStoreProvider({ children }) {
     const now = new Date().toISOString()
     const row = { ...member, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setChapterMembers(prev => [...prev, row].sort((a, b) => a.name.localeCompare(b.name)))
-    dbWrite(() => insertRow('chapter_members', row))
+    dbWrite(() => insertRow('chapter_members', row), 'insert:chapter_members')
     return row
   }, [activeChapterId, dbWrite])
 
   const updateChapterMember = useCallback((id, updates) => {
     setChapterMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m))
-    dbWrite(() => updateRow('chapter_members', id, updates))
+    dbWrite(() => updateRow('chapter_members', id, updates), 'update:chapter_members')
   }, [dbWrite])
 
   const deleteChapterMember = useCallback((id) => {
     setChapterMembers(prev => prev.filter(m => m.id !== id))
-    dbWrite(() => deleteRow('chapter_members', id))
+    dbWrite(() => deleteRow('chapter_members', id), 'delete:chapter_members')
   }, [dbWrite])
+
+  // ── Sync member_invites (auth whitelist) ──
+  const syncMemberInvites = useCallback(async (members) => {
+    if (!isSupabaseConfigured() || !activeChapterId) return
+    const rows = members
+      .filter(m => m.email)
+      .map(m => ({
+        email: m.email.trim().toLowerCase(),
+        full_name: m.name || `${m.first_name || ''} ${m.last_name || ''}`.trim(),
+        role: 'member',
+        chapter_id: activeChapterId,
+      }))
+    if (rows.length === 0) return
+    for (let i = 0; i < rows.length; i += 50) {
+      const batch = rows.slice(i, i + 50)
+      const { error } = await supabase
+        .from('member_invites')
+        .upsert(batch, { onConflict: 'email', ignoreDuplicates: true })
+      if (error) console.error('syncMemberInvites batch error:', error)
+    }
+  }, [activeChapterId])
 
   // Resolve member_id to name, falling back to member_name on the assignment
   const getMemberName = useCallback((assignment) => {
@@ -363,7 +389,7 @@ export function BoardStoreProvider({ children }) {
     addScorecard, updateScorecard, deleteScorecard,
     addChapterRole, updateChapterRole, deleteChapterRole,
     addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
-    addChapterMember, updateChapterMember, deleteChapterMember,
+    addChapterMember, updateChapterMember, deleteChapterMember, syncMemberInvites,
     getMemberName, getMemberEmail,
     getChairRoles, getActiveAssignment, getChairBudget,
     activePresidentTheme, activePresidentName,
