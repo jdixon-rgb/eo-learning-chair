@@ -43,7 +43,7 @@ export default function SettingsPage() {
   const [editingId, setEditingId] = useState(null)
   const [editLabel, setEditLabel] = useState('')
   const [assigningRoleId, setAssigningRoleId] = useState(null)
-  const [assignForm, setAssignForm] = useState({ member_id: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
+  const [assignForm, setAssignForm] = useState({ member_id: '', member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
   const [editingAssignmentId, setEditingAssignmentId] = useState(null)
   const [editAssignment, setEditAssignment] = useState({})
 
@@ -125,39 +125,66 @@ export default function SettingsPage() {
     setEditingAssignmentId(a.id)
     setEditAssignment({
       member_id: a.member_id || '',
+      member_name: a.member_name || '',
+      member_email: a.member_email || '',
       fiscal_year: a.fiscal_year || FISCAL_YEAR_OPTIONS[1],
     })
   }
 
-  function saveEditAssignment(id) {
-    const member = chapterMembers.find(m => m.id === editAssignment.member_id)
-    updateRoleAssignment(id, {
-      member_id: editAssignment.member_id || null,
-      member_name: member?.name || '',
-      member_email: member?.email || '',
-      fiscal_year: editAssignment.fiscal_year,
-    })
+  function saveEditAssignment(id, isStaffRole) {
+    if (isStaffRole) {
+      updateRoleAssignment(id, {
+        member_id: null,
+        member_name: editAssignment.member_name || '',
+        member_email: editAssignment.member_email || '',
+        fiscal_year: editAssignment.fiscal_year,
+      })
+    } else {
+      const member = chapterMembers.find(m => m.id === editAssignment.member_id)
+      updateRoleAssignment(id, {
+        member_id: editAssignment.member_id || null,
+        member_name: member?.name || '',
+        member_email: member?.email || '',
+        fiscal_year: editAssignment.fiscal_year,
+      })
+    }
     setEditingAssignmentId(null)
     setEditAssignment({})
   }
 
   function handleAddAssignment(roleId) {
-    if (!assignForm.member_id) return
-    const role = chapterRoles.find(r => r.id === roleId)
-    const isPresident = role?.role_key === 'president' || role?.role_key === 'president_elect'
-    const member = chapterMembers.find(m => m.id === assignForm.member_id)
-    addRoleAssignment({
-      chapter_role_id: roleId,
-      member_id: assignForm.member_id,
-      member_name: member?.name || '',
-      member_email: member?.email || '',
-      fiscal_year: assignForm.fiscal_year,
-      status: assignForm.status,
-      budget: isPresident ? 0 : (parseInt(assignForm.budget) || 0),
-      theme: isPresident ? (assignForm.theme || '') : '',
-    })
+    const roleObj = chapterRoles.find(r => r.id === roleId)
+    const isPresident = roleObj?.role_key === 'president' || roleObj?.role_key === 'president_elect'
+    const isStaff = roleObj?.is_staff
+
+    if (isStaff) {
+      if (!assignForm.member_name.trim()) return
+      addRoleAssignment({
+        chapter_role_id: roleId,
+        member_id: null,
+        member_name: assignForm.member_name.trim(),
+        member_email: assignForm.member_email.trim(),
+        fiscal_year: assignForm.fiscal_year,
+        status: assignForm.status,
+        budget: 0,
+        theme: '',
+      })
+    } else {
+      if (!assignForm.member_id) return
+      const member = chapterMembers.find(m => m.id === assignForm.member_id)
+      addRoleAssignment({
+        chapter_role_id: roleId,
+        member_id: assignForm.member_id,
+        member_name: member?.name || '',
+        member_email: member?.email || '',
+        fiscal_year: assignForm.fiscal_year,
+        status: assignForm.status,
+        budget: isPresident ? 0 : (parseInt(assignForm.budget) || 0),
+        theme: isPresident ? (assignForm.theme || '') : '',
+      })
+    }
     setAssigningRoleId(null)
-    setAssignForm({ member_id: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active', budget: '', theme: '' })
+    setAssignForm({ member_id: '', member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active', budget: '', theme: '' })
   }
 
   return (
@@ -320,25 +347,43 @@ export default function SettingsPage() {
                     <div className="px-3 pb-2 pl-10 space-y-2">
                       {assignments.map(a => {
                         const isPresident = role.role_key === 'president' || role.role_key === 'president_elect'
-                        const showBudget = !isPresident && (a.status === 'active' || a.status === 'elect')
+                        const showBudget = !isPresident && !role.is_staff && (a.status === 'active' || a.status === 'elect')
                         const showTheme = isPresident && (a.status === 'active' || a.status === 'elect')
                         const isEditing = editingAssignmentId === a.id
                         return (
                           <div key={a.id} className="space-y-1">
                             {isEditing ? (
                               /* Inline edit mode */
-                              <div className="flex items-center gap-2 text-sm">
-                                <select
-                                  value={editAssignment.member_id}
-                                  onChange={e => setEditAssignment(prev => ({ ...prev, member_id: e.target.value }))}
-                                  className="h-6 text-xs flex-1 border rounded px-1 bg-background"
-                                  autoFocus
-                                >
-                                  <option value="">Select member...</option>
-                                  {activeMembers.map(m => (
-                                    <option key={m.id} value={m.id}>{m.name}{m.company ? ` (${m.company})` : ''}</option>
-                                  ))}
-                                </select>
+                              <div className="flex items-center gap-2 text-sm flex-wrap">
+                                {role.is_staff ? (
+                                  <>
+                                    <Input
+                                      value={editAssignment.member_name || ''}
+                                      onChange={e => setEditAssignment(prev => ({ ...prev, member_name: e.target.value }))}
+                                      placeholder="Staff name"
+                                      className="h-6 text-xs flex-1 min-w-[120px]"
+                                      autoFocus
+                                    />
+                                    <Input
+                                      value={editAssignment.member_email || ''}
+                                      onChange={e => setEditAssignment(prev => ({ ...prev, member_email: e.target.value }))}
+                                      placeholder="Email"
+                                      className="h-6 text-xs flex-1 min-w-[120px]"
+                                    />
+                                  </>
+                                ) : (
+                                  <select
+                                    value={editAssignment.member_id}
+                                    onChange={e => setEditAssignment(prev => ({ ...prev, member_id: e.target.value }))}
+                                    className="h-6 text-xs flex-1 border rounded px-1 bg-background"
+                                    autoFocus
+                                  >
+                                    <option value="">Select member...</option>
+                                    {activeMembers.map(m => (
+                                      <option key={m.id} value={m.id}>{m.name}{m.company ? ` (${m.company})` : ''}</option>
+                                    ))}
+                                  </select>
+                                )}
                                 <select
                                   value={editAssignment.fiscal_year}
                                   onChange={e => setEditAssignment(prev => ({ ...prev, fiscal_year: e.target.value }))}
@@ -349,7 +394,7 @@ export default function SettingsPage() {
                                   ))}
                                 </select>
                                 <button
-                                  onClick={() => saveEditAssignment(a.id)}
+                                  onClick={() => saveEditAssignment(a.id, role.is_staff)}
                                   className="text-green-600 hover:text-green-700 p-0.5"
                                   title="Save"
                                 >
@@ -439,61 +484,100 @@ export default function SettingsPage() {
                   {/* Add assignment form */}
                   {assigningRoleId === role.id && (
                     <div className="px-3 pb-3 pl-10 pt-1 border-t space-y-2">
-                      {activeMembers.length === 0 ? (
+                      {role.is_staff ? (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Input
+                            placeholder="Staff name"
+                            value={assignForm.member_name}
+                            onChange={e => setAssignForm(prev => ({ ...prev, member_name: e.target.value }))}
+                            className="h-7 text-sm flex-1 min-w-[140px]"
+                            autoFocus
+                          />
+                          <Input
+                            placeholder="Email (optional)"
+                            value={assignForm.member_email}
+                            onChange={e => setAssignForm(prev => ({ ...prev, member_email: e.target.value }))}
+                            className="h-7 text-sm flex-1 min-w-[140px]"
+                          />
+                          <select
+                            value={assignForm.fiscal_year}
+                            onChange={e => setAssignForm(prev => ({ ...prev, fiscal_year: e.target.value }))}
+                            className="h-7 text-sm border rounded px-2 bg-background"
+                          >
+                            {FISCAL_YEAR_OPTIONS.map(fy => (
+                              <option key={fy} value={fy}>{fy}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={assignForm.status}
+                            onChange={e => setAssignForm(prev => ({ ...prev, status: e.target.value }))}
+                            className="h-7 text-sm border rounded px-2 bg-background"
+                          >
+                            <option value="active">Active</option>
+                            <option value="past">Past</option>
+                          </select>
+                          <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_name.trim()}>
+                            Assign
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7" onClick={() => setAssigningRoleId(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : activeMembers.length === 0 ? (
                         <p className="text-xs text-muted-foreground py-1">Add members to the Member Directory first, then assign them to positions.</p>
                       ) : (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <select
-                          value={assignForm.member_id}
-                          onChange={e => setAssignForm(prev => ({ ...prev, member_id: e.target.value }))}
-                          className="h-7 text-sm border rounded px-2 bg-background flex-1 min-w-[140px]"
-                          autoFocus
-                        >
-                          <option value="">Select member...</option>
-                          {activeMembers.map(m => (
-                            <option key={m.id} value={m.id}>{m.name}{m.company ? ` (${m.company})` : ''}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={assignForm.fiscal_year}
-                          onChange={e => setAssignForm(prev => ({ ...prev, fiscal_year: e.target.value }))}
-                          className="h-7 text-sm border rounded px-2 bg-background"
-                        >
-                          {FISCAL_YEAR_OPTIONS.map(fy => (
-                            <option key={fy} value={fy}>{fy}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={assignForm.status}
-                          onChange={e => setAssignForm(prev => ({ ...prev, status: e.target.value }))}
-                          className="h-7 text-sm border rounded px-2 bg-background"
-                        >
-                          <option value="active">Active</option>
-                          <option value="elect">Elect</option>
-                        </select>
-                        {(role.role_key === 'president' || role.role_key === 'president_elect') ? (
-                          <Input
-                            placeholder="Theme"
-                            value={assignForm.theme}
-                            onChange={e => setAssignForm(prev => ({ ...prev, theme: e.target.value }))}
-                            className="h-7 text-sm w-40"
-                          />
-                        ) : (
-                          <Input
-                            type="number"
-                            placeholder="Budget ($)"
-                            value={assignForm.budget}
-                            onChange={e => setAssignForm(prev => ({ ...prev, budget: e.target.value }))}
-                            className="h-7 text-sm w-28"
-                          />
-                        )}
-                        <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_id}>
-                          Assign
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-7" onClick={() => setAssigningRoleId(null)}>
-                          Cancel
-                        </Button>
-                      </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <select
+                            value={assignForm.member_id}
+                            onChange={e => setAssignForm(prev => ({ ...prev, member_id: e.target.value }))}
+                            className="h-7 text-sm border rounded px-2 bg-background flex-1 min-w-[140px]"
+                            autoFocus
+                          >
+                            <option value="">Select member...</option>
+                            {activeMembers.map(m => (
+                              <option key={m.id} value={m.id}>{m.name}{m.company ? ` (${m.company})` : ''}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={assignForm.fiscal_year}
+                            onChange={e => setAssignForm(prev => ({ ...prev, fiscal_year: e.target.value }))}
+                            className="h-7 text-sm border rounded px-2 bg-background"
+                          >
+                            {FISCAL_YEAR_OPTIONS.map(fy => (
+                              <option key={fy} value={fy}>{fy}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={assignForm.status}
+                            onChange={e => setAssignForm(prev => ({ ...prev, status: e.target.value }))}
+                            className="h-7 text-sm border rounded px-2 bg-background"
+                          >
+                            <option value="active">Active</option>
+                            <option value="elect">Elect</option>
+                          </select>
+                          {(role.role_key === 'president' || role.role_key === 'president_elect') ? (
+                            <Input
+                              placeholder="Theme"
+                              value={assignForm.theme}
+                              onChange={e => setAssignForm(prev => ({ ...prev, theme: e.target.value }))}
+                              className="h-7 text-sm w-40"
+                            />
+                          ) : (
+                            <Input
+                              type="number"
+                              placeholder="Budget ($)"
+                              value={assignForm.budget}
+                              onChange={e => setAssignForm(prev => ({ ...prev, budget: e.target.value }))}
+                              className="h-7 text-sm w-28"
+                            />
+                          )}
+                          <Button size="sm" className="h-7" onClick={() => handleAddAssignment(role.id)} disabled={!assignForm.member_id}>
+                            Assign
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7" onClick={() => setAssigningRoleId(null)}>
+                            Cancel
+                          </Button>
+                        </div>
                       )}
                     </div>
                   )}
