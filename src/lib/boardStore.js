@@ -267,6 +267,7 @@ export function BoardStoreProvider({ children }) {
   }, [dbWrite])
 
   // ── Upsert a single staff member into member_invites with correct app role ──
+  // Uses a security-definer RPC to bypass RLS on member_invites.
   const STAFF_ROLE_MAP = {
     experience_coordinator: 'chapter_experience_coordinator',
     executive_director: 'chapter_executive_director',
@@ -274,12 +275,12 @@ export function BoardStoreProvider({ children }) {
   const upsertStaffInvite = useCallback(async ({ name, email, roleKey }) => {
     if (!isSupabaseConfigured() || !activeChapterId || !email?.trim()) return
     const appRole = STAFF_ROLE_MAP[roleKey] ?? 'committee_member'
-    const { error } = await supabase
-      .from('member_invites')
-      .upsert(
-        { email: email.trim().toLowerCase(), full_name: name || '', role: appRole, chapter_id: activeChapterId },
-        { onConflict: 'email' }
-      )
+    const { error } = await supabase.rpc('upsert_staff_invite', {
+      p_email: email.trim().toLowerCase(),
+      p_full_name: name || '',
+      p_role: appRole,
+      p_chapter_id: activeChapterId,
+    })
     if (error) console.error('upsertStaffInvite error:', error)
   }, [activeChapterId]) // eslint-disable-line react-hooks/exhaustive-deps
 
