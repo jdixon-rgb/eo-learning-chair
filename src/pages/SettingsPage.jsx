@@ -33,7 +33,7 @@ export default function SettingsPage() {
     chapterRoles, addChapterRole, updateChapterRole, deleteChapterRole,
     roleAssignments, addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
     chapterMembers,
-    getMemberName, getMemberEmail,
+    getMemberName, getMemberEmail, upsertStaffInvite,
   } = useBoardStore()
   const { role } = useAuth()
   const canEditChapterName = hasPermission(role, 'canEditChapterConfig')
@@ -133,12 +133,15 @@ export default function SettingsPage() {
 
   function saveEditAssignment(id, isStaffRole) {
     if (isStaffRole) {
+      const assignment = roleAssignments.find(a => a.id === id)
+      const roleObj = chapterRoles.find(r => r.id === assignment?.chapter_role_id)
       updateRoleAssignment(id, {
         member_id: null,
         member_name: editAssignment.member_name || '',
         member_email: editAssignment.member_email || '',
         fiscal_year: editAssignment.fiscal_year,
       })
+      upsertStaffInvite({ name: editAssignment.member_name, email: editAssignment.member_email, roleKey: roleObj?.role_key })
     } else {
       const member = chapterMembers.find(m => m.id === editAssignment.member_id)
       updateRoleAssignment(id, {
@@ -169,6 +172,7 @@ export default function SettingsPage() {
         budget: 0,
         theme: '',
       })
+      upsertStaffInvite({ name: assignForm.member_name.trim(), email: assignForm.member_email.trim(), roleKey: roleObj?.role_key })
     } else {
       if (!assignForm.member_id) return
       const member = chapterMembers.find(m => m.id === assignForm.member_id)

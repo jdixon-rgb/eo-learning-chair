@@ -266,6 +266,23 @@ export function BoardStoreProvider({ children }) {
     dbWrite(() => deleteRow('chapter_members', id), 'delete:chapter_members')
   }, [dbWrite])
 
+  // ── Upsert a single staff member into member_invites with correct app role ──
+  const STAFF_ROLE_MAP = {
+    experience_coordinator: 'chapter_experience_coordinator',
+    executive_director: 'chapter_executive_director',
+  }
+  const upsertStaffInvite = useCallback(async ({ name, email, roleKey }) => {
+    if (!isSupabaseConfigured() || !activeChapterId || !email?.trim()) return
+    const appRole = STAFF_ROLE_MAP[roleKey] ?? 'committee_member'
+    const { error } = await supabase
+      .from('member_invites')
+      .upsert(
+        { email: email.trim().toLowerCase(), full_name: name || '', role: appRole, chapter_id: activeChapterId },
+        { onConflict: 'email' }
+      )
+    if (error) console.error('upsertStaffInvite error:', error)
+  }, [activeChapterId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Sync member_invites (auth whitelist) ──
   const syncMemberInvites = useCallback(async (members) => {
     if (!isSupabaseConfigured() || !activeChapterId) return
@@ -389,7 +406,7 @@ export function BoardStoreProvider({ children }) {
     addScorecard, updateScorecard, deleteScorecard,
     addChapterRole, updateChapterRole, deleteChapterRole,
     addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
-    addChapterMember, updateChapterMember, deleteChapterMember, syncMemberInvites,
+    addChapterMember, updateChapterMember, deleteChapterMember, syncMemberInvites, upsertStaffInvite,
     getMemberName, getMemberEmail,
     getChairRoles, getActiveAssignment, getChairBudget,
     activePresidentTheme, activePresidentName,
