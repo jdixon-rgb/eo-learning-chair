@@ -20,7 +20,7 @@ const STRATEGIC_WEIGHT = {
 
 export default function ScenarioPage() {
   const {
-    chapter, events, speakers, budgetItems,
+    chapter, events, speakers, venues, budgetItems,
     scenarios, addScenario, updateScenario, deleteScenario, updateEvent,
   } = useStore()
 
@@ -39,6 +39,12 @@ export default function ScenarioPage() {
   const activeSpeakers = useMemo(() =>
     speakers.filter(s => s.pipeline_stage !== 'passed'),
     [speakers]
+  )
+
+  // Venues sorted by name
+  const sortedVenues = useMemo(() =>
+    [...venues].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [venues]
   )
 
   // Get speaker fee estimate — prefer fee_estimated, fall back to midpoint of range
@@ -61,14 +67,18 @@ export default function ScenarioPage() {
 
     sortedEvents.forEach(event => {
       const override = overrides.find(o => o.event_id === event.id)
-      const speakerId = override ? override.speaker_id : event.speaker_id
+      const speakerId = override ? (override.speaker_id !== undefined ? override.speaker_id : event.speaker_id) : event.speaker_id
+      const venueId = override ? (override.venue_id !== undefined ? override.venue_id : event.venue_id) : event.venue_id
       const speaker = speakerId ? speakers.find(s => s.id === speakerId) : null
+      const venue = venueId ? venues.find(v => v.id === venueId) : null
 
       const fee = speaker ? getSpeakerFee(speaker) : 0
       const fitScore = speaker ? (speaker.fit_score || 0) : 0
       const weight = STRATEGIC_WEIGHT[event.strategic_importance] || 2
       const value = fitScore * weight
-      const isOverridden = override && override.speaker_id !== event.speaker_id
+      const isSpeakerOverridden = override && override.speaker_id !== undefined && override.speaker_id !== event.speaker_id
+      const isVenueOverridden = override && override.venue_id !== undefined && override.venue_id !== event.venue_id
+      const isOverridden = isSpeakerOverridden || isVenueOverridden
 
       // Per-event line items (non-speaker costs)
       const eventLineItems = budgetItems.filter(b => b.event_id === event.id && b.category !== 'speaker_fee')
@@ -82,7 +92,7 @@ export default function ScenarioPage() {
         fitScoreCount++
       }
 
-      perEvent.push({ event, speaker, speakerId, fee, fitScore, weight, value, isOverridden, eventLineItems, eventNonSpeakerCost, eventTotalCost })
+      perEvent.push({ event, speaker, speakerId, venue, venueId, fee, fitScore, weight, value, isOverridden, isSpeakerOverridden, isVenueOverridden, eventLineItems, eventNonSpeakerCost, eventTotalCost })
     })
 
     const nonSpeakerCosts = budgetItems
@@ -118,21 +128,26 @@ export default function ScenarioPage() {
     setActiveTab(newScenario.id)
   }
 
-  const handleOverride = (eventId, speakerId) => {
+  const handleOverride = (eventId, field, value) => {
     if (!activeScenario) return
     const overrides = [...(activeScenario.overrides || [])]
     const existing = overrides.findIndex(o => o.event_id === eventId)
     const baseEvent = events.find(e => e.id === eventId)
 
-    // If setting back to baseline speaker, remove override
-    if (baseEvent && baseEvent.speaker_id === (speakerId || null)) {
+    const current = existing >= 0 ? { ...overrides[existing] } : { event_id: eventId }
+    current[field] = value || null
+
+    // If both fields are back to baseline, remove the override entirely
+    const speakerBack = (current.speaker_id ?? null) === (baseEvent?.speaker_id ?? null)
+    const venueBack = (current.venue_id ?? null) === (baseEvent?.venue_id ?? null)
+    const speakerUntouched = current.speaker_id === undefined
+    const venueUntouched = current.venue_id === undefined
+
+    if ((speakerBack || speakerUntouched) && (venueBack || venueUntouched)) {
       if (existing >= 0) overrides.splice(existing, 1)
     } else {
-      if (existing >= 0) {
-        overrides[existing] = { event_id: eventId, speaker_id: speakerId || null }
-      } else {
-        overrides.push({ event_id: eventId, speaker_id: speakerId || null })
-      }
+      if (existing >= 0) overrides[existing] = current
+      else overrides.push(current)
     }
 
     updateScenario(activeScenario.id, { overrides })
@@ -142,8 +157,11 @@ export default function ScenarioPage() {
     if (!activeScenario || !activeScenario.overrides?.length) return
     if (!window.confirm(`Apply "${activeScenario.name}" to your live plan? This will update speaker assignments for ${activeScenario.overrides.length} event(s).`)) return
 
-    activeScenario.overrides.forEach(({ event_id, speaker_id }) => {
-      updateEvent(event_id, { speaker_id: speaker_id || null })
+    activeScenario.overrides.forEach(({ event_id, speaker_id, venue_id }) => {
+      const updates = {}
+      if (speaker_id !== undefined) updates.speaker_id = speaker_id || null
+      if (venue_id !== undefined) updates.venue_id = venue_id || null
+      if (Object.keys(updates).length > 0) updateEvent(event_id, updates)
     })
   }
 
@@ -345,7 +363,8 @@ export default function ScenarioPage() {
               <tr className="border-b bg-muted/30">
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground">Month</th>
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground">Event</th>
-                <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[220px]">Speaker</th>
+                <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[200px]">Speaker</th>
+                <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[180px]">Venue</th>
                 <th className="p-3 text-right text-xs font-medium text-muted-foreground">Est. Cost</th>
                 <th className="p-3 text-center text-xs font-medium text-muted-foreground">Fit</th>
                 <th className="p-3 text-center text-xs font-medium text-muted-foreground">Wt</th>
@@ -353,7 +372,7 @@ export default function ScenarioPage() {
               </tr>
             </thead>
             <tbody>
-              {currentMetrics.perEvent.map(({ event, speaker, speakerId, fee, fitScore, weight, value, isOverridden, eventLineItems, eventTotalCost }) => {
+              {currentMetrics.perEvent.map(({ event, speaker, speakerId, venue, venueId, fee, fitScore, weight, value, isOverridden, isSpeakerOverridden, isVenueOverridden, eventLineItems, eventTotalCost }) => {
                 const month = event.month_index != null ? FISCAL_MONTHS[event.month_index] : null
                 const strategic = event.month_index != null ? STRATEGIC_MAP[event.month_index] : null
                 const isExpanded = expandedEventId === event.id
@@ -381,8 +400,8 @@ export default function ScenarioPage() {
                       {activeScenario ? (
                         <Select
                           value={speakerId || ''}
-                          onChange={e => handleOverride(event.id, e.target.value || null)}
-                          className={`text-xs h-8 ${isOverridden ? 'border-eo-blue bg-eo-blue/10 font-medium' : ''}`}
+                          onChange={e => handleOverride(event.id, 'speaker_id', e.target.value || null)}
+                          className={`text-xs h-8 ${isSpeakerOverridden ? 'border-eo-blue bg-eo-blue/10 font-medium' : ''}`}
                         >
                           <option value="">No speaker</option>
                           {activeSpeakers.map(s => (
@@ -394,6 +413,26 @@ export default function ScenarioPage() {
                       ) : (
                         <span className={`text-sm ${speaker ? '' : 'text-muted-foreground italic'}`}>
                           {speaker ? speaker.name : 'No speaker'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {activeScenario ? (
+                        <Select
+                          value={venueId || ''}
+                          onChange={e => handleOverride(event.id, 'venue_id', e.target.value || null)}
+                          className={`text-xs h-8 ${isVenueOverridden ? 'border-eo-blue bg-eo-blue/10 font-medium' : ''}`}
+                        >
+                          <option value="">No venue</option>
+                          {sortedVenues.map(v => (
+                            <option key={v.id} value={v.id}>
+                              {v.name}{v.capacity ? ` (cap. ${v.capacity})` : ''}
+                            </option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <span className={`text-sm ${venue ? '' : 'text-muted-foreground italic'}`}>
+                          {venue ? venue.name : 'No venue'}
                         </span>
                       )}
                     </td>
@@ -426,7 +465,7 @@ export default function ScenarioPage() {
                   </tr>
                   {isExpanded && eventTotalCost > 0 && (
                     <tr key={`${event.id}-details`} className="border-b bg-muted/20">
-                      <td colSpan={7} className="px-6 py-3">
+                      <td colSpan={8} className="px-6 py-3">
                         <div className="space-y-1.5">
                           {fee > 0 && (
                             <div className="flex items-center justify-between text-xs">
@@ -463,7 +502,7 @@ export default function ScenarioPage() {
             </tbody>
             <tfoot>
               <tr className="border-t bg-muted/30 font-semibold">
-                <td colSpan={3} className="p-3 text-sm">
+                <td colSpan={4} className="p-3 text-sm">
                   Totals
                   <span className="font-normal text-xs text-muted-foreground ml-2">
                     ({currentMetrics.perEvent.filter(e => e.speaker).length} speakers across {sortedEvents.length} events)
