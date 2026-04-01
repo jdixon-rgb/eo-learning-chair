@@ -52,3 +52,10 @@ export async function getSignedUrl(bucket, path, expiresIn = 3600) {
   if (!isSupabaseConfigured()) return { data: null, error: 'Supabase not configured' }
   return supabase.storage.from(bucket).createSignedUrl(path, expiresIn)
 }
+
+export async function getSignedDownloadUrl(bucket, path, expiresIn = 3600) {
+  if (!isSupabaseConfigured()) return null
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn)
+  if (error || !data?.signedUrl) return null
+  return data.signedUrl
+}
