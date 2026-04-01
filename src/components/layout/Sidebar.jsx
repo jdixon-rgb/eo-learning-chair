@@ -267,7 +267,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </button>
           </div>
           <div className="mt-3 border-t border-white/10 pt-2 text-center">
-            <span className="text-[10px] text-white/20">v{APP_VERSION}</span>
+            <span className="text-[10px] text-white/50">v{APP_VERSION}</span>
           </div>
         </div>
       </aside>
