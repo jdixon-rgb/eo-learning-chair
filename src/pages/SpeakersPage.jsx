@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useStore } from '@/lib/store'
-import { PIPELINE_STAGES, CONTACT_METHODS } from '@/lib/constants'
+import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
+import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
+import { useChapter } from '@/lib/chapter'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays, DollarSign, Play } from 'lucide-react'
+import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays, DollarSign, Play, Upload, FileText, Trash2, Download, Loader2 } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
@@ -20,12 +22,57 @@ const emptyForm = {
 
 export default function SpeakersPage() {
   const { speakers, events, updateEvent, addSpeaker, updateSpeaker, deleteSpeaker } = useStore()
+  const { activeChapterId } = useChapter()
   const [showForm, setShowForm] = useState(false)
   const [editSpeaker, setEditSpeaker] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState('kanban') // kanban or list
   const [dragSpeaker, setDragSpeaker] = useState(null)
+  const [uploadingDoc, setUploadingDoc] = useState(null) // 'contract' or 'w9'
+  const contractInputRef = useRef(null)
+  const w9InputRef = useRef(null)
+
+  const handleDocUpload = useCallback(async (file, docType) => {
+    if (!editSpeaker) return
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) return
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) return
+
+    setUploadingDoc(docType)
+    const storagePath = `${activeChapterId}/speakers/${editSpeaker.id}/${docType}_${file.name}`
+    try {
+      const res = await uploadFile('event-documents', storagePath, file)
+      if (res?.error) {
+        console.error(`${docType} upload error:`, res.error)
+        return
+      }
+      const pathKey = docType === 'contract' ? 'contract_storage_path' : 'w9_storage_path'
+      const nameKey = docType === 'contract' ? 'contract_file_name' : 'w9_file_name'
+      updateSpeaker(editSpeaker.id, { [pathKey]: storagePath, [nameKey]: file.name })
+      setEditSpeaker(prev => ({ ...prev, [pathKey]: storagePath, [nameKey]: file.name }))
+    } catch (err) {
+      console.error(`${docType} upload failed:`, err)
+    } finally {
+      setUploadingDoc(null)
+    }
+  }, [editSpeaker, activeChapterId, updateSpeaker])
+
+  const handleDocDelete = useCallback(async (docType) => {
+    if (!editSpeaker) return
+    const pathKey = docType === 'contract' ? 'contract_storage_path' : 'w9_storage_path'
+    const nameKey = docType === 'contract' ? 'contract_file_name' : 'w9_file_name'
+    const path = editSpeaker[pathKey]
+    if (path) {
+      deleteFile('event-documents', path).catch(() => {})
+    }
+    updateSpeaker(editSpeaker.id, { [pathKey]: null, [nameKey]: null })
+    setEditSpeaker(prev => ({ ...prev, [pathKey]: null, [nameKey]: null }))
+  }, [editSpeaker, updateSpeaker])
+
+  const handleDocDownload = useCallback(async (storagePath) => {
+    const url = await getSignedDownloadUrl('event-documents', storagePath)
+    if (url) window.open(url, '_blank')
+  }, [])
 
   // Map speaker → event assignment (includes candidate assignments)
   const speakerEventMap = {}
@@ -423,6 +470,53 @@ export default function SpeakersPage() {
                 <label className="text-xs font-medium">Sizzle Reel URL</label>
                 <Input value={form.sizzle_reel_url} onChange={e => setForm(p => ({ ...p, sizzle_reel_url: e.target.value }))} placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
               </div>
+              {/* Speaker Documents */}
+              {editSpeaker && (
+                <div className="col-span-2 space-y-3 pt-2 border-t">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Speaker Documents</label>
+
+                  {/* Contract */}
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
+                    <span className="text-xs font-medium w-16 shrink-0">Contract</span>
+                    {editSpeaker.contract_storage_path ? (
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-xs text-muted-foreground truncate flex-1">{editSpeaker.contract_file_name}</span>
+                        <button type="button" onClick={() => handleDocDownload(editSpeaker.contract_storage_path)} className="text-indigo-500 hover:text-indigo-700 p-1 cursor-pointer"><Download className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => handleDocDelete('contract')} className="text-muted-foreground hover:text-eo-pink p-1 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ) : uploadingDoc === 'contract' ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+                    ) : (
+                      <button type="button" onClick={() => contractInputRef.current?.click()} className="text-xs text-indigo-500 hover:text-indigo-700 flex items-center gap-1 cursor-pointer">
+                        <Upload className="h-3.5 w-3.5" /> Upload
+                      </button>
+                    )}
+                    <input ref={contractInputRef} type="file" accept={ALLOWED_FILE_TYPES.join(',')} className="hidden" onChange={e => { if (e.target.files[0]) handleDocUpload(e.target.files[0], 'contract'); e.target.value = '' }} />
+                  </div>
+
+                  {/* W-9 */}
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-green-500 shrink-0" />
+                    <span className="text-xs font-medium w-16 shrink-0">W-9</span>
+                    {editSpeaker.w9_storage_path ? (
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-xs text-muted-foreground truncate flex-1">{editSpeaker.w9_file_name}</span>
+                        <button type="button" onClick={() => handleDocDownload(editSpeaker.w9_storage_path)} className="text-green-500 hover:text-green-700 p-1 cursor-pointer"><Download className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => handleDocDelete('w9')} className="text-muted-foreground hover:text-eo-pink p-1 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ) : uploadingDoc === 'w9' ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-green-500" />
+                    ) : (
+                      <button type="button" onClick={() => w9InputRef.current?.click()} className="text-xs text-green-500 hover:text-green-700 flex items-center gap-1 cursor-pointer">
+                        <Upload className="h-3.5 w-3.5" /> Upload
+                      </button>
+                    )}
+                    <input ref={w9InputRef} type="file" accept={ALLOWED_FILE_TYPES.join(',')} className="hidden" onChange={e => { if (e.target.files[0]) handleDocUpload(e.target.files[0], 'w9'); e.target.value = '' }} />
+                  </div>
+                </div>
+              )}
+
               <div className="col-span-2">
                 <label className="text-xs font-medium">Notes</label>
                 <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Negotiation strategy, referral source, etc." rows={3} />
