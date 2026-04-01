@@ -32,6 +32,7 @@ import ChairReportsPage from '@/pages/board/ChairReportsPage'
 import CommunicationsPage from '@/pages/board/CommunicationsPage'
 import ForumsPage from '@/pages/board/ForumsPage'
 import MemberScorecardsPage from '@/pages/board/MemberScorecardsPage'
+import CoordinatorPage from '@/pages/CoordinatorPage'
 
 function App() {
   return (
@@ -81,6 +82,9 @@ function App() {
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><NotificationComposePage /></ProtectedRoute>
                 } />
                 <Route path="/feedback" element={<FeedbackPage />} />
+                <Route path="/coordinator" element={
+                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><CoordinatorPage /></ProtectedRoute>
+                } />
 
                 {/* Board routes */}
                 <Route path="/board" element={

@@ -24,6 +24,7 @@ import {
   Mail,
   Users2,
   BarChart3,
+  ClipboardCheck,
 } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
@@ -45,6 +46,7 @@ const adminItems = [
   { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
   { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
   { to: '/admin/notifications', icon: Bell, label: 'Notifications', permission: 'canSendNotifications' },
+  { to: '/coordinator', icon: ClipboardCheck, label: 'Coordinator', permission: 'canViewCoordinator' },
 ]
 
 // Board management pages

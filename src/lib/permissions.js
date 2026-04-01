@@ -25,6 +25,7 @@ export const FEATURE_PERMISSIONS = {
   canManageComms:        BOARD_ROLES,
   canManageForums:       BOARD_ROLES,
   canViewScorecards:     BOARD_ROLES,
+  canViewCoordinator:    ADMIN_ROLES,
 }
 
 export function hasPermission(role, feature) {
