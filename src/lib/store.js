@@ -272,6 +272,15 @@ export function StoreProvider({ children }) {
     dbWrite(() => deleteRow('budget_items', id), 'delete:budget_items')
   }, [dbWrite])
 
+  const upsertBudgetItem = useCallback((eventId, category, field, value) => {
+    const existing = budgetItems.find(b => b.event_id === eventId && b.category === category)
+    if (existing) {
+      updateBudgetItem(existing.id, { [field]: value })
+    } else {
+      addBudgetItem({ event_id: eventId, category, description: '', budget_amount: 0, contracted_amount: 0, actual_amount: null, [field]: value })
+    }
+  }, [budgetItems, updateBudgetItem, addBudgetItem])
+
   // ── Contract checklist operations ──
 
   const getOrCreateChecklist = useCallback((eventId) => {
@@ -434,9 +443,10 @@ export function StoreProvider({ children }) {
   }, [activeChapterId, dbWrite])
 
   // ── Computed values ──
-  const totalBudgetUsed = budgetItems.reduce((sum, item) => sum + (item.actual_amount || item.estimated_amount || 0), 0)
-  const totalEstimated = budgetItems.reduce((sum, item) => sum + (item.estimated_amount || 0), 0)
-  const budgetRemaining = chapter.total_budget - totalEstimated
+  const totalBudgeted = budgetItems.reduce((sum, item) => sum + (item.budget_amount || 0), 0)
+  const totalContracted = budgetItems.reduce((sum, item) => sum + (item.contracted_amount || 0), 0)
+  const totalActualSpent = budgetItems.reduce((sum, item) => sum + (item.actual_amount || 0), 0)
+  const budgetRemaining = chapter.total_budget - totalBudgeted
 
   const value = {
     // Data
@@ -474,6 +484,7 @@ export function StoreProvider({ children }) {
     addBudgetItem,
     updateBudgetItem,
     deleteBudgetItem,
+    upsertBudgetItem,
 
     // Contract ops
     getOrCreateChecklist,
@@ -501,8 +512,9 @@ export function StoreProvider({ children }) {
     resetToDefaults,
 
     // Computed
-    totalBudgetUsed,
-    totalEstimated,
+    totalBudgeted,
+    totalContracted,
+    totalActualSpent,
     budgetRemaining,
   }
 

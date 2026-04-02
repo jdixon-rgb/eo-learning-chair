@@ -82,7 +82,7 @@ export const BUDGET_CATEGORIES = [
   { id: 'venue_rental', label: 'Venue Rental', color: '#fa653c' },
   { id: 'av_production', label: 'AV Production', color: '#8b5cf6' },
   { id: 'travel', label: 'Travel', color: '#22c55e' },
-  { id: 'marketing', label: 'Marketing', color: '#64648c' },
+  { id: 'dinner', label: 'Dinner', color: '#f59e0b' },
   { id: 'other', label: 'Other', color: '#a3a3c2' },
 ]
 
