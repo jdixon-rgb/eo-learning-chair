@@ -46,6 +46,16 @@ export const VENUE_PIPELINE_STAGES = [
   { id: 'confirmed', label: 'Confirmed', color: '#22c55e' },
 ]
 
+// Venue archive reasons
+export const ARCHIVE_REASONS = [
+  { id: 'not_this_year', label: 'Not this year' },
+  { id: 'too_expensive', label: 'Too expensive' },
+  { id: 'bad_fit', label: 'Bad fit for our chapter' },
+  { id: 'used_complete', label: 'Used - event complete' },
+  { id: 'closed_unavailable', label: 'Closed or unavailable' },
+  { id: 'other', label: 'Other' },
+]
+
 // Event formats (duration / structure)
 export const EVENT_FORMATS = [
   { id: 'keynote', label: 'Keynote', duration: '~2 hrs', color: '#3d46f2' },

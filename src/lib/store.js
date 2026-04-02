@@ -219,6 +219,30 @@ export function StoreProvider({ children }) {
     dbWrite(() => deleteRow('venues', id), 'delete:venues')
   }, [dbWrite])
 
+  const archiveVenue = useCallback((id, reason, programYear) => {
+    const now = new Date().toISOString()
+    const updates = {
+      pipeline_stage: 'archived',
+      archive_reason: reason || '',
+      program_year: programYear || '',
+      archived_at: now,
+      updated_at: now,
+    }
+    setVenues(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v))
+    dbWrite(() => updateRow('venues', id, updates), 'archive:venues')
+  }, [dbWrite])
+
+  const restoreVenue = useCallback((id) => {
+    const updates = {
+      pipeline_stage: 'researching',
+      archived_at: null,
+      archive_reason: '',
+      updated_at: new Date().toISOString(),
+    }
+    setVenues(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v))
+    dbWrite(() => updateRow('venues', id, updates), 'restore:venues')
+  }, [dbWrite])
+
   // ── Event operations ──
 
   const addEvent = useCallback((event) => {
@@ -474,6 +498,8 @@ export function StoreProvider({ children }) {
     addVenue,
     updateVenue,
     deleteVenue,
+    archiveVenue,
+    restoreVenue,
 
     // Event ops
     addEvent,
