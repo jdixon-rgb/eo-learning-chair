@@ -37,7 +37,7 @@ function EditableCell({ value, onChange, warn, contracted }) {
     return (
       <input
         type="number"
-        className="w-full h-full px-2 py-1 text-right text-sm bg-white border border-eo-blue rounded focus:outline-none focus:ring-1 focus:ring-eo-blue"
+        className="block w-full min-h-[2.25rem] px-2 py-1 text-right text-sm bg-white border border-eo-blue rounded focus:outline-none focus:ring-1 focus:ring-eo-blue"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
@@ -50,7 +50,7 @@ function EditableCell({ value, onChange, warn, contracted }) {
   return (
     <button
       type="button"
-      className={`w-full h-full px-2 py-1 text-right text-sm cursor-pointer hover:bg-accent/40 rounded transition-colors ${
+      className={`block w-full min-h-[2.25rem] px-2 py-1 text-right text-sm cursor-pointer hover:bg-accent/40 rounded transition-colors ${
         warn ? 'bg-red-50 text-eo-pink font-semibold' : contracted ? 'text-green-600 font-semibold' : ''
       }`}
       onClick={startEditing}
