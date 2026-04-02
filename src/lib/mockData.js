@@ -633,57 +633,57 @@ export const mockEvents = [
 
 export const mockBudgetItems = [
   // August — Salim Ismail (AI Kickoff)
-  { id: uuid(), event_id: 'evt-aug', category: 'speaker_fee', description: 'Salim Ismail keynote', estimated_amount: 40000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-aug', category: 'food_beverage', description: 'Kickoff dinner', estimated_amount: 15000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-aug', category: 'venue_rental', description: 'Ballroom rental', estimated_amount: 5000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-aug', category: 'av_production', description: 'AV + screens', estimated_amount: 5000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-aug', category: 'speaker_fee', description: 'Salim Ismail keynote', budget_amount: 40000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-aug', category: 'food_beverage', description: 'Kickoff dinner', budget_amount: 15000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-aug', category: 'venue_rental', description: 'Ballroom rental', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-aug', category: 'av_production', description: 'AV + screens', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
 
   // September — Brad Montague
-  { id: uuid(), event_id: 'evt-sep', category: 'speaker_fee', description: 'Brad Montague keynote', estimated_amount: 15000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-sep', category: 'food_beverage', description: 'Dinner', estimated_amount: 10000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-sep', category: 'venue_rental', description: 'Heard Museum', estimated_amount: 4000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-sep', category: 'av_production', description: 'AV', estimated_amount: 3000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-sep', category: 'speaker_fee', description: 'Brad Montague keynote', budget_amount: 15000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-sep', category: 'food_beverage', description: 'Dinner', budget_amount: 10000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-sep', category: 'venue_rental', description: 'Heard Museum', budget_amount: 4000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-sep', category: 'av_production', description: 'AV', budget_amount: 3000, contracted_amount: 0, actual_amount: null },
 
   // October — Jim Abbott
-  { id: uuid(), event_id: 'evt-oct', category: 'speaker_fee', description: 'Jim Abbott keynote', estimated_amount: 25000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-oct', category: 'food_beverage', description: 'Catering at field', estimated_amount: 12000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-oct', category: 'venue_rental', description: 'Spring Training Field', estimated_amount: 3000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-oct', category: 'av_production', description: 'Outdoor AV setup', estimated_amount: 5000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-oct', category: 'speaker_fee', description: 'Jim Abbott keynote', budget_amount: 25000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-oct', category: 'food_beverage', description: 'Catering at field', budget_amount: 12000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-oct', category: 'venue_rental', description: 'Spring Training Field', budget_amount: 3000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-oct', category: 'av_production', description: 'Outdoor AV setup', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
 
   // November — Priya Parker
-  { id: uuid(), event_id: 'evt-nov', category: 'speaker_fee', description: 'Priya Parker keynote', estimated_amount: 32000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-nov', category: 'food_beverage', description: 'Dinner at DBG', estimated_amount: 12000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-nov', category: 'venue_rental', description: 'Ullman Terrace', estimated_amount: 6000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-nov', category: 'av_production', description: 'AV', estimated_amount: 4000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-nov', category: 'speaker_fee', description: 'Priya Parker keynote', budget_amount: 32000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-nov', category: 'food_beverage', description: 'Dinner at DBG', budget_amount: 12000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-nov', category: 'venue_rental', description: 'Ullman Terrace', budget_amount: 6000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-nov', category: 'av_production', description: 'AV', budget_amount: 4000, contracted_amount: 0, actual_amount: null },
 
   // January 7 — Jeffersonian Dinner (moved from December)
-  { id: uuid(), event_id: 'evt-jeff', category: 'food_beverage', description: 'Jeffersonian dinner for 64', estimated_amount: 8000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-jeff', category: 'venue_rental', description: 'Next Level', estimated_amount: 3000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jeff', category: 'food_beverage', description: 'Jeffersonian dinner for 64', budget_amount: 8000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jeff', category: 'venue_rental', description: 'Next Level', budget_amount: 3000, contracted_amount: 0, actual_amount: null },
 
   // January — Dr. Paul Davies + Wesley Huff
-  { id: uuid(), event_id: 'evt-jan', category: 'speaker_fee', description: 'Dr. Paul Davies', estimated_amount: 15000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-jan', category: 'speaker_fee', description: 'Wesley Huff', estimated_amount: 10000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-jan', category: 'food_beverage', description: 'Dinner', estimated_amount: 12000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-jan', category: 'venue_rental', description: 'The Dorrance DOME', estimated_amount: 5000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-jan', category: 'av_production', description: 'AV', estimated_amount: 3000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jan', category: 'speaker_fee', description: 'Dr. Paul Davies', budget_amount: 15000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jan', category: 'speaker_fee', description: 'Wesley Huff', budget_amount: 10000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jan', category: 'food_beverage', description: 'Dinner', budget_amount: 12000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jan', category: 'venue_rental', description: 'The Dorrance DOME', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-jan', category: 'av_production', description: 'AV', budget_amount: 3000, contracted_amount: 0, actual_amount: null },
 
   // February — Dr. Gary Chapman
-  { id: uuid(), event_id: 'evt-feb', category: 'speaker_fee', description: 'Dr. Gary Chapman keynote', estimated_amount: 15000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-feb', category: 'food_beverage', description: 'Rose Ceremony dinner', estimated_amount: 12000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-feb', category: 'venue_rental', description: 'The Wrigley Mansion', estimated_amount: 7000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-feb', category: 'av_production', description: 'AV', estimated_amount: 3500, actual_amount: null },
+  { id: uuid(), event_id: 'evt-feb', category: 'speaker_fee', description: 'Dr. Gary Chapman keynote', budget_amount: 15000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-feb', category: 'food_beverage', description: 'Rose Ceremony dinner', budget_amount: 12000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-feb', category: 'venue_rental', description: 'The Wrigley Mansion', budget_amount: 7000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-feb', category: 'av_production', description: 'AV', budget_amount: 3500, contracted_amount: 0, actual_amount: null },
 
   // April — Indre Viskontas
-  { id: uuid(), event_id: 'evt-apr', category: 'speaker_fee', description: 'Indre Viskontas lecture-performance', estimated_amount: 15000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-apr', category: 'food_beverage', description: 'Dinner', estimated_amount: 10000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-apr', category: 'venue_rental', description: 'Music venue', estimated_amount: 5000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-apr', category: 'av_production', description: 'AV (venue has built-in)', estimated_amount: 2000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-apr', category: 'speaker_fee', description: 'Indre Viskontas lecture-performance', budget_amount: 15000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-apr', category: 'food_beverage', description: 'Dinner', budget_amount: 10000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-apr', category: 'venue_rental', description: 'Music venue', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-apr', category: 'av_production', description: 'AV (venue has built-in)', budget_amount: 2000, contracted_amount: 0, actual_amount: null },
 
   // May — Gratitude Gala
-  { id: uuid(), event_id: 'evt-may', category: 'food_beverage', description: 'Gala dinner', estimated_amount: 20000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-may', category: 'venue_rental', description: 'Gala venue TBD', estimated_amount: 8000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-may', category: 'av_production', description: 'AV + lighting', estimated_amount: 5000, actual_amount: null },
-  { id: uuid(), event_id: 'evt-may', category: 'other', description: 'Awards, recognition, decor', estimated_amount: 5000, actual_amount: null },
+  { id: uuid(), event_id: 'evt-may', category: 'food_beverage', description: 'Gala dinner', budget_amount: 20000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-may', category: 'venue_rental', description: 'Gala venue TBD', budget_amount: 8000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-may', category: 'av_production', description: 'AV + lighting', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
+  { id: uuid(), event_id: 'evt-may', category: 'other', description: 'Awards, recognition, decor', budget_amount: 5000, contracted_amount: 0, actual_amount: null },
 ]
 
 // ── CONTRACT CHECKLISTS ─────────────────────────────────

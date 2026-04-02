@@ -18,12 +18,12 @@ import {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { chapter, events, speakers, budgetItems, totalEstimated, budgetRemaining } = useStore()
+  const { chapter, events, speakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
   const { presidentElectTheme, activePresidentTheme, getChairBudget } = useBoardStore()
 
   const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
   const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
-  const remaining = learningBudget - totalEstimated
+  const remaining = learningBudget - totalBudgeted
 
   // Next upcoming event
   const upcomingEvents = events
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   }))
 
   // Budget health
-  const budgetPercent = learningBudget > 0 ? (totalEstimated / learningBudget) * 100 : 0
+  const budgetPercent = learningBudget > 0 ? (totalBudgeted / learningBudget) * 100 : 0
   const budgetHealth = budgetPercent > 90 ? 'critical' : budgetPercent > 75 ? 'warning' : 'healthy'
   const budgetColor = { critical: 'bg-eo-pink', warning: 'bg-eo-coral', healthy: 'bg-green-500' }[budgetHealth]
 
@@ -237,8 +237,8 @@ export default function DashboardPage() {
             <div className="space-y-2">
               {['speaker_fee', 'food_beverage', 'venue_rental', 'av_production'].map(cat => {
                 const catItems = budgetItems.filter(b => b.category === cat)
-                const total = catItems.reduce((s, b) => s + (b.estimated_amount || 0), 0)
-                const pct = totalEstimated > 0 ? (total / totalEstimated) * 100 : 0
+                const total = catItems.reduce((s, b) => s + (b.budget_amount || 0), 0)
+                const pct = totalBudgeted > 0 ? (total / totalBudgeted) * 100 : 0
                 const labels = { speaker_fee: 'Speaker Fees', food_beverage: 'F&B', venue_rental: 'Venue', av_production: 'AV Production' }
                 const colors = { speaker_fee: 'bg-eo-blue', food_beverage: 'bg-eo-pink', venue_rental: 'bg-eo-coral', av_production: 'bg-purple-500' }
                 return (
