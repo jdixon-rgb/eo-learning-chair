@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
-import { VENUE_PIPELINE_STAGES, AV_QUALITY } from '@/lib/constants'
+import { VENUE_PIPELINE_STAGES, AV_QUALITY, ARCHIVE_REASONS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,7 @@ import {
   Plus, Search, MapPin, Users, DollarSign, Volume2, Utensils,
   Phone, Mail, Trash2, Building2, GripVertical, Star,
   Sparkles, Loader2, CalendarDays, Image as ImageIcon,
+  Archive, RotateCcw, Library,
 } from 'lucide-react'
 
 const VENUE_TYPES = [
@@ -64,15 +65,20 @@ function StarRating({ value, onChange, size = 'sm', readonly = false }) {
 }
 
 export default function VenuesPage() {
-  const { venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent } = useStore()
+  const { venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent, archiveVenue, restoreVenue } = useStore()
   const [showForm, setShowForm] = useState(false)
   const [editVenue, setEditVenue] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [search, setSearch] = useState('')
-  const [viewMode, setViewMode] = useState('pipeline') // pipeline or table
+  const [viewMode, setViewMode] = useState('pipeline') // pipeline, table, or library
   const [dragVenue, setDragVenue] = useState(null)
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupError, setLookupError] = useState(null)
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false)
+  const [archiveTarget, setArchiveTarget] = useState(null)
+  const [archiveReason, setArchiveReason] = useState('not_this_year')
+  const [archiveProgramYear, setArchiveProgramYear] = useState('FY 2026-2027')
+  const [libraryFilter, setLibraryFilter] = useState('all')
 
   // Map venue → events
   const venueEventMap = {}
@@ -91,13 +97,13 @@ export default function VenuesPage() {
   }))
 
   const filteredVenues = normalizedVenues.filter(v =>
-    v.pipeline_stage !== 'passed' &&
+    v.pipeline_stage !== 'archived' &&
     (v.name.toLowerCase().includes(search.toLowerCase()) ||
      v.address?.toLowerCase().includes(search.toLowerCase()) ||
      v.venue_type?.toLowerCase().includes(search.toLowerCase()))
   )
 
-  const passedVenues = normalizedVenues.filter(v => v.pipeline_stage === 'passed')
+  const archivedVenues = normalizedVenues.filter(v => v.pipeline_stage === 'archived')
 
   const handleSubmit = () => {
     if (!form.name) return
@@ -331,7 +337,7 @@ export default function VenuesPage() {
         <div>
           <h1 className="text-2xl font-bold">Venue Pipeline</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {venues.length} venues &middot; Manage locations, logistics, and staff ratings
+            {filteredVenues.length} active &middot; {archivedVenues.length} archived &middot; {venues.length} total
           </p>
         </div>
         <div className="flex gap-2">
@@ -344,9 +350,26 @@ export default function VenuesPage() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="sm" onClick={() => setViewMode(viewMode === 'pipeline' ? 'table' : 'pipeline')}>
-            {viewMode === 'pipeline' ? 'Table View' : 'Pipeline View'}
-          </Button>
+          <div className="flex rounded-lg border overflow-hidden">
+            <button
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === 'pipeline' ? 'bg-eo-navy text-white' : 'hover:bg-muted'}`}
+              onClick={() => setViewMode('pipeline')}
+            >
+              Pipeline
+            </button>
+            <button
+              className={`px-3 py-1.5 text-xs font-medium transition-colors border-x ${viewMode === 'table' ? 'bg-eo-navy text-white' : 'hover:bg-muted'}`}
+              onClick={() => setViewMode('table')}
+            >
+              Table
+            </button>
+            <button
+              className={`px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1 ${viewMode === 'library' ? 'bg-eo-navy text-white' : 'hover:bg-muted'}`}
+              onClick={() => setViewMode('library')}
+            >
+              <Library className="h-3 w-3" /> Library
+            </button>
+          </div>
           <Button size="sm" onClick={() => { setEditVenue(null); setForm(emptyForm); setLookupError(null); setShowForm(true) }}>
             <Plus className="h-4 w-4" /> Add Venue
           </Button>
@@ -384,7 +407,7 @@ export default function VenuesPage() {
             )
           })}
         </div>
-      ) : (
+      ) : viewMode === 'table' ? (
         /* Table View */
         <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
           <table className="w-full">
@@ -476,16 +499,196 @@ export default function VenuesPage() {
             </tbody>
           </table>
         </div>
+      ) : (
+        /* Library View */
+        <div className="space-y-4">
+          {/* Library Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { id: 'all', label: 'All Venues' },
+              { id: 'active', label: 'Active Pipeline' },
+              { id: 'archived', label: 'Archived' },
+              { id: 'rated', label: 'Rated' },
+              { id: 'has_quote', label: 'Has Quote' },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setLibraryFilter(f.id)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                  libraryFilter === f.id
+                    ? 'bg-eo-navy text-white'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Library Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {normalizedVenues
+              .filter(v => {
+                const matchesSearch = !search ||
+                  v.name.toLowerCase().includes(search.toLowerCase()) ||
+                  v.address?.toLowerCase().includes(search.toLowerCase()) ||
+                  v.venue_type?.toLowerCase().includes(search.toLowerCase())
+                if (!matchesSearch) return false
+                switch (libraryFilter) {
+                  case 'active': return v.pipeline_stage !== 'archived'
+                  case 'archived': return v.pipeline_stage === 'archived'
+                  case 'rated': return v.staff_rating > 0
+                  case 'has_quote': return v.base_rental_cost > 0
+                  default: return true
+                }
+              })
+              .sort((a, b) => {
+                if (a.staff_rating && !b.staff_rating) return -1
+                if (!a.staff_rating && b.staff_rating) return 1
+                return a.name.localeCompare(b.name)
+              })
+              .map(venue => {
+                const linkedEvents = venueEventMap[venue.id] || []
+                const isArchived = venue.pipeline_stage === 'archived'
+                const stage = VENUE_PIPELINE_STAGES.find(s => s.id === venue.pipeline_stage)
+                const archiveReasonLabel = ARCHIVE_REASONS.find(r => r.id === venue.archive_reason)?.label
+                const totalEstimatedCost = (venue.base_rental_cost || 0) + (venue.av_cost_estimate || 0) + (venue.fb_estimated_cost || 0)
+
+                return (
+                  <div
+                    key={venue.id}
+                    className={`rounded-xl border bg-card shadow-sm overflow-hidden transition-all hover:shadow-md ${isArchived ? 'opacity-80' : ''}`}
+                  >
+                    {venue.image_url ? (
+                      <div className="h-28 bg-gray-100 relative overflow-hidden">
+                        <img src={venue.image_url} alt={venue.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      </div>
+                    ) : (
+                      <div className="h-12 bg-eo-navy/5 flex items-center px-4 gap-2">
+                        <Building2 className="h-4 w-4 text-eo-navy/40" />
+                        <span className="text-xs text-eo-navy/50 font-medium">{getVenueTypeLabel(venue.venue_type)}</span>
+                      </div>
+                    )}
+
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-sm leading-tight">{venue.name}</h3>
+                        {isArchived ? (
+                          <Badge variant="secondary" className="text-[10px] shrink-0">Archived</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] shrink-0" style={{ borderColor: stage?.color, color: stage?.color }}>
+                            {stage?.label}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {venue.address && (
+                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                          <span className="line-clamp-1">{venue.address}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-3">
+                        {venue.staff_rating > 0 && (
+                          <StarRating value={venue.staff_rating} readonly size="sm" />
+                        )}
+                        {venue.capacity && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Users className="h-3 w-3" /> {venue.capacity}
+                          </span>
+                        )}
+                      </div>
+
+                      {totalEstimatedCost > 0 && (
+                        <div className="bg-muted/50 rounded-lg px-3 py-2">
+                          <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1">Estimated Total Cost</div>
+                          <div className="text-sm font-semibold">{formatCurrency(totalEstimatedCost)}</div>
+                          <div className="flex gap-3 mt-1 text-[10px] text-muted-foreground">
+                            {venue.base_rental_cost > 0 && <span>Rental: {formatCurrency(venue.base_rental_cost)}</span>}
+                            {venue.av_cost_estimate > 0 && <span>AV: {formatCurrency(venue.av_cost_estimate)}</span>}
+                            {venue.fb_estimated_cost > 0 && <span>F&B: {formatCurrency(venue.fb_estimated_cost)}</span>}
+                          </div>
+                        </div>
+                      )}
+
+                      {isArchived && (archiveReasonLabel || venue.program_year) && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs">
+                          {venue.program_year && <p className="font-medium text-amber-800">{venue.program_year}</p>}
+                          {archiveReasonLabel && <p className="text-amber-600">{archiveReasonLabel}</p>}
+                        </div>
+                      )}
+
+                      {linkedEvents.length > 0 && (
+                        <div className="border-t pt-2">
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Event History</p>
+                          {linkedEvents.map(evt => (
+                            <div key={evt.id} className="flex items-center gap-1 text-xs">
+                              <CalendarDays className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              <span className="truncate">{evt.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2 pt-1">
+                        <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => openEdit(venue)}>
+                          View Details
+                        </Button>
+                        {isArchived ? (
+                          <Button variant="outline" size="sm" className="h-7 text-xs text-eo-blue border-eo-blue/30 hover:bg-eo-blue/10" onClick={() => restoreVenue(venue.id)}>
+                            <RotateCcw className="h-3 w-3 mr-1" /> Restore
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => { setArchiveTarget(venue); setArchiveReason('not_this_year'); setShowArchiveDialog(true) }}>
+                            <Archive className="h-3 w-3 mr-1" /> Archive
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+          </div>
+
+          {normalizedVenues.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <Library className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No venues in the library yet.</p>
+              <p className="text-xs mt-1">Add venues from the Pipeline view to build your library.</p>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Passed Venues Archive */}
-      {passedVenues.length > 0 && (
+      {/* Archived Venues Summary (pipeline + table views only) */}
+      {viewMode !== 'library' && archivedVenues.length > 0 && (
         <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">Passed ({passedVenues.length})</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+              <Archive className="h-4 w-4" />
+              Archived ({archivedVenues.length})
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-eo-blue"
+              onClick={() => setViewMode('library')}
+            >
+              View in Library
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {passedVenues.map(v => (
-              <Badge key={v.id} variant="secondary" className="cursor-pointer" onClick={() => openEdit(v)}>
+            {archivedVenues.map(v => (
+              <Badge
+                key={v.id}
+                variant="secondary"
+                className="cursor-pointer hover:bg-muted"
+                onClick={() => openEdit(v)}
+              >
                 {v.name}
+                {v.staff_rating > 0 && <span className="ml-1 text-amber-500">{'★'.repeat(v.staff_rating)}</span>}
               </Badge>
             ))}
           </div>
@@ -603,6 +806,9 @@ export default function VenuesPage() {
                     <label className="text-xs font-medium">Pipeline Stage</label>
                     <Select value={form.pipeline_stage} onChange={e => setForm(p => ({ ...p, pipeline_stage: e.target.value }))}>
                       {VENUE_PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                      {form.pipeline_stage === 'archived' && (
+                        <option value="archived" disabled>Archived</option>
+                      )}
                     </Select>
                   </div>
                 </div>
@@ -721,13 +927,13 @@ export default function VenuesPage() {
                   variant="outline"
                   className="text-muted-foreground"
                   onClick={() => {
-                    if (confirm('Move this venue to Passed?')) {
-                      updateVenue(editVenue.id, { pipeline_stage: 'passed' })
-                      setShowForm(false)
-                    }
+                    setArchiveTarget(editVenue)
+                    setArchiveReason('not_this_year')
+                    setShowForm(false)
+                    setShowArchiveDialog(true)
                   }}
                 >
-                  Mark Passed
+                  <Archive className="h-4 w-4 mr-1" /> Archive
                 </Button>
                 <Button
                   variant="outline"
@@ -738,6 +944,51 @@ export default function VenuesPage() {
                 </Button>
               </>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Archive Venue Dialog ──────────────────────────────── */}
+      <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Archive "{archiveTarget?.name}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm text-muted-foreground">
+              This venue will be moved out of the active pipeline and into the Venue Library for future reference.
+            </p>
+            <div>
+              <label className="text-xs font-medium">Reason</label>
+              <Select value={archiveReason} onChange={e => setArchiveReason(e.target.value)}>
+                {ARCHIVE_REASONS.map(r => (
+                  <option key={r.id} value={r.id}>{r.label}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium">Program Year</label>
+              <Input
+                value={archiveProgramYear}
+                onChange={e => setArchiveProgramYear(e.target.value)}
+                placeholder="FY 2026-2027"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-4 border-t mt-4">
+            <Button
+              onClick={() => {
+                archiveVenue(archiveTarget.id, archiveReason, archiveProgramYear)
+                setShowArchiveDialog(false)
+                setArchiveTarget(null)
+              }}
+              className="flex-1"
+            >
+              <Archive className="h-4 w-4 mr-1" /> Archive Venue
+            </Button>
+            <Button variant="outline" onClick={() => setShowArchiveDialog(false)}>
+              Cancel
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
