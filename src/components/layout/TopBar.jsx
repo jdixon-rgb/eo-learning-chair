@@ -5,7 +5,7 @@ import { formatCurrency } from '@/lib/utils'
 import { Menu, Palette } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
-  const { chapter, totalEstimated, budgetRemaining } = useStore()
+  const { chapter, totalBudgeted, budgetRemaining } = useStore()
   const { activePresidentTheme, activePresidentName, presidentElectTheme, presidentElectName, getChairBudget } = useBoardStore()
   const { profile } = useAuth()
 
@@ -13,8 +13,8 @@ export default function TopBar({ onMenuToggle }) {
   const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
   const presidentName = presidentElectName || activePresidentName || chapter.president_name || ''
   const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
-  const budgetPercent = learningBudget > 0 ? ((totalEstimated / learningBudget) * 100).toFixed(0) : 0
-  const remaining = learningBudget - totalEstimated
+  const budgetPercent = learningBudget > 0 ? ((totalBudgeted / learningBudget) * 100).toFixed(0) : 0
+  const remaining = learningBudget - totalBudgeted
 
   return (
     <header className="h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
@@ -43,7 +43,7 @@ export default function TopBar({ onMenuToggle }) {
         <div className="text-right">
           <p className="text-xs text-muted-foreground hidden sm:block">Budget Used</p>
           <p className="text-xs sm:text-sm font-semibold">
-            <span className="hidden sm:inline">{formatCurrency(totalEstimated)} / </span>
+            <span className="hidden sm:inline">{formatCurrency(totalBudgeted)} / </span>
             <span className="sm:hidden">{formatCurrency(remaining)} left</span>
             <span className="hidden sm:inline">{formatCurrency(learningBudget)}</span>
             <span className={`ml-1 sm:ml-2 text-xs ${remaining < 50000 ? 'text-eo-pink' : 'text-green-600'}`}>
