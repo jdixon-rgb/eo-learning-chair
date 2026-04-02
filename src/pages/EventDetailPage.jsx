@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   ArrowLeft, Calendar, MapPin, Users, DollarSign, FileText, Megaphone,
-  Star, Plus, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
+  Star, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
   Handshake, Building2, Lock, LockOpen, Pencil,
 } from 'lucide-react'
 import EventDocuments from '@/components/EventDocuments'
@@ -26,7 +26,7 @@ export default function EventDetailPage() {
   const {
     events, speakers, venues, budgetItems, contractChecklists, saps,
     updateEvent, deleteEvent,
-    addBudgetItem, updateBudgetItem, deleteBudgetItem,
+    addBudgetItem, updateBudgetItem,
     getOrCreateChecklist, updateChecklist,
   } = useStore()
 
@@ -51,8 +51,11 @@ export default function EventDetailPage() {
   const speaker = speakers.find(s => s.id === event.speaker_id)
   const venue = venues.find(v => v.id === event.venue_id)
   const eventBudget = budgetItems.filter(b => b.event_id === id)
-  const totalBudget = eventBudget.reduce((s, b) => s + (b.estimated_amount || 0), 0)
+  const totalBudget = eventBudget.reduce((s, b) => s + (b.budget_amount || 0), 0)
+  const totalContracted = eventBudget.reduce((s, b) => s + (b.contracted_amount || 0), 0)
   const totalActual = eventBudget.reduce((s, b) => s + (b.actual_amount || 0), 0)
+  const budgetDelta = totalBudget - totalContracted
+  const budgetHealthPct = totalBudget > 0 ? (totalContracted / totalBudget) * 100 : 0
   const checklist = getOrCreateChecklist(id)
 
   return (
@@ -449,82 +452,132 @@ export default function EventDetailPage() {
         {/* BUDGET TAB */}
         <TabsContent value="budget">
           <div className="mt-4 space-y-4">
+            {/* Budget Summary Bar */}
             <div className="rounded-xl border bg-card p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
+              <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                  <h3 className="text-sm font-semibold">Event Budget</h3>
-                  <p className="text-xs text-muted-foreground">Estimated: {formatCurrency(totalBudget)} | Actual: {formatCurrency(totalActual)}</p>
+                  <p className="text-xs text-muted-foreground">Budget</p>
+                  <p className="text-lg font-bold">{formatCurrency(totalBudget)}</p>
                 </div>
-                <Button size="sm" onClick={() => addBudgetItem({ event_id: id, category: 'speaker_fee', description: '', estimated_amount: 0, actual_amount: null })}>
-                  <Plus className="h-4 w-4" /> Add Line Item
-                </Button>
+                <div>
+                  <p className="text-xs text-muted-foreground">Contracted</p>
+                  <p className={`text-lg font-bold ${totalContracted > totalBudget && totalBudget > 0 ? 'text-eo-pink' : ''}`}>
+                    {formatCurrency(totalContracted)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Actual</p>
+                  <p className="text-lg font-bold">{formatCurrency(totalActual)}</p>
+                </div>
               </div>
+              {totalBudget > 0 && (
+                <>
+                  <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        budgetHealthPct > 100 ? 'bg-eo-pink' : budgetHealthPct > 75 ? 'bg-eo-coral' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(budgetHealthPct, 100)}%` }}
+                    />
+                  </div>
+                  <p className={`text-xs mt-1 ${budgetDelta < 0 ? 'text-eo-pink font-medium' : 'text-muted-foreground'}`}>
+                    {budgetDelta >= 0 ? `${formatCurrency(budgetDelta)} remaining` : `${formatCurrency(Math.abs(budgetDelta))} over budget`}
+                  </p>
+                </>
+              )}
+            </div>
 
-              {eventBudget.length > 0 ? (
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b text-xs font-semibold text-foreground">
-                      <th className="pb-2 text-left">Category</th>
-                      <th className="pb-2 text-left">Description</th>
-                      <th className="pb-2 text-right">Estimated (Goal)</th>
-                      <th className="pb-2 text-right">Actual</th>
-                      <th className="pb-2 w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {eventBudget.map(item => (
-                      <tr key={item.id} className="border-b last:border-0">
+            {/* Category Rows */}
+            <div className="rounded-xl border bg-card p-5 shadow-sm">
+              <h3 className="text-sm font-semibold mb-4">Budget by Category</h3>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b text-xs font-semibold text-foreground">
+                    <th className="pb-2 text-left">Category</th>
+                    <th className="pb-2 text-right">Budget</th>
+                    <th className="pb-2 text-right">Contracted</th>
+                    <th className="pb-2 text-right">Actual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {BUDGET_CATEGORIES.map(cat => {
+                    const item = eventBudget.find(b => b.category === cat.id)
+                    const budgetAmt = item?.budget_amount || 0
+                    const contractedAmt = item?.contracted_amount || 0
+                    const actualAmt = item?.actual_amount || 0
+                    const isOverBudget = contractedAmt > budgetAmt && budgetAmt > 0
+
+                    return (
+                      <tr key={cat.id} className="border-b last:border-0">
                         <td className="py-2">
-                          <Select value={item.category} onChange={e => updateBudgetItem(item.id, { category: e.target.value })} className="text-xs h-8">
-                            {BUDGET_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                          </Select>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                            <span className="text-sm">{cat.label}</span>
+                          </div>
                         </td>
                         <td className="py-2 px-2">
                           <Input
-                            className="h-8 text-xs"
-                            value={item.description || ''}
-                            onChange={e => updateBudgetItem(item.id, { description: e.target.value })}
-                            placeholder="Description"
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          <Input
-                            className="h-8 text-xs text-right w-28"
+                            className="h-8 text-xs text-right w-28 ml-auto"
                             type="number"
-                            value={item.estimated_amount || ''}
-                            onChange={e => updateBudgetItem(item.id, { estimated_amount: e.target.value ? parseFloat(e.target.value) : 0 })}
-                            placeholder="Estimated $"
+                            value={budgetAmt || ''}
+                            onChange={e => {
+                              const val = e.target.value ? parseInt(e.target.value, 10) : 0
+                              if (item) {
+                                updateBudgetItem(item.id, { budget_amount: val })
+                              } else {
+                                addBudgetItem({ event_id: id, category: cat.id, description: '', budget_amount: val, contracted_amount: 0, actual_amount: null })
+                              }
+                            }}
+                            placeholder="—"
                           />
                         </td>
                         <td className="py-2 px-2">
                           <Input
-                            className="h-8 text-xs text-right w-28"
+                            className={`h-8 text-xs text-right w-28 ml-auto ${isOverBudget ? 'border-eo-pink text-eo-pink' : ''}`}
                             type="number"
-                            value={item.actual_amount ?? ''}
-                            onChange={e => updateBudgetItem(item.id, { actual_amount: e.target.value ? parseFloat(e.target.value) : null })}
-                            placeholder="Actual $"
+                            value={contractedAmt || ''}
+                            onChange={e => {
+                              const val = e.target.value ? parseInt(e.target.value, 10) : 0
+                              if (item) {
+                                updateBudgetItem(item.id, { contracted_amount: val })
+                              } else {
+                                addBudgetItem({ event_id: id, category: cat.id, description: '', budget_amount: 0, contracted_amount: val, actual_amount: null })
+                              }
+                            }}
+                            placeholder="—"
                           />
                         </td>
-                        <td className="py-2">
-                          <button onClick={() => deleteBudgetItem(item.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                        <td className="py-2 px-2">
+                          <Input
+                            className="h-8 text-xs text-right w-28 ml-auto"
+                            type="number"
+                            value={actualAmt || ''}
+                            onChange={e => {
+                              const val = e.target.value ? parseInt(e.target.value, 10) : null
+                              if (item) {
+                                updateBudgetItem(item.id, { actual_amount: val })
+                              } else {
+                                addBudgetItem({ event_id: id, category: cat.id, description: '', budget_amount: 0, contracted_amount: 0, actual_amount: val })
+                              }
+                            }}
+                            placeholder="—"
+                          />
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t font-semibold text-sm">
-                      <td colSpan={2} className="py-2">Total</td>
-                      <td className="py-2 text-right">{formatCurrency(totalBudget)}</td>
-                      <td className="py-2 text-right">{formatCurrency(totalActual)}</td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No budget items yet. Click "Add Line Item" to start.</p>
-              )}
+                    )
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t font-semibold text-sm">
+                    <td className="py-2">Total</td>
+                    <td className="py-2 text-right">{formatCurrency(totalBudget)}</td>
+                    <td className={`py-2 text-right ${totalContracted > totalBudget && totalBudget > 0 ? 'text-eo-pink' : ''}`}>
+                      {formatCurrency(totalContracted)}
+                    </td>
+                    <td className="py-2 text-right">{formatCurrency(totalActual)}</td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
         </TabsContent>
