@@ -72,7 +72,7 @@ export default function ScenarioPage() {
 
       // Per-event line items (non-speaker costs)
       const eventLineItems = budgetItems.filter(b => b.event_id === event.id && b.category !== 'speaker_fee')
-      const eventNonSpeakerCost = eventLineItems.reduce((sum, b) => sum + (b.estimated_amount || 0), 0)
+      const eventNonSpeakerCost = eventLineItems.reduce((sum, b) => sum + (b.budget_amount || 0), 0)
       const eventTotalCost = fee + eventNonSpeakerCost
 
       totalSpeakerFee += fee
@@ -87,7 +87,7 @@ export default function ScenarioPage() {
 
     const nonSpeakerCosts = budgetItems
       .filter(b => b.category !== 'speaker_fee')
-      .reduce((sum, b) => sum + (b.estimated_amount || 0), 0)
+      .reduce((sum, b) => sum + (b.budget_amount || 0), 0)
 
     const totalCost = totalSpeakerFee + nonSpeakerCosts
     const budgetRemaining = chapter.total_budget - totalCost
@@ -445,7 +445,7 @@ export default function ScenarioPage() {
                                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat?.color || '#a3a3c2' }} />
                                   <span>{item.description || cat?.label || item.category}</span>
                                 </div>
-                                <span className="font-medium">{formatCurrency(item.estimated_amount || 0)}</span>
+                                <span className="font-medium">{formatCurrency(item.budget_amount || 0)}</span>
                               </div>
                             )
                           })}
