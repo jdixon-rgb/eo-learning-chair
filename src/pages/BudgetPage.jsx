@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { DollarSign, AlertTriangle } from 'lucide-react'
 
 // ── Inline editable cell ──────────────────────────────────────────────
-function EditableCell({ value, onChange, warn }) {
+function EditableCell({ value, onChange, warn, contracted }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
 
@@ -51,7 +51,7 @@ function EditableCell({ value, onChange, warn }) {
     <button
       type="button"
       className={`w-full h-full px-2 py-1 text-right text-sm cursor-pointer hover:bg-accent/40 rounded transition-colors ${
-        warn ? 'bg-red-50 text-eo-pink font-semibold' : ''
+        warn ? 'bg-red-50 text-eo-pink font-semibold' : contracted ? 'text-green-600 font-semibold' : ''
       }`}
       onClick={startEditing}
     >
@@ -97,6 +97,12 @@ export default function BudgetPage() {
   const getBudgetValue = useCallback((eventId, categoryId) => {
     const item = budgetItems.find(b => b.event_id === eventId && b.category === categoryId)
     return item ? (item.budget_amount || 0) : 0
+  }, [budgetItems])
+
+  // Helper: check if item has a contracted amount (for green styling)
+  const hasContracted = useCallback((eventId, categoryId) => {
+    const item = budgetItems.find(b => b.event_id === eventId && b.category === categoryId)
+    return item ? (item.contracted_amount || 0) > 0 : false
   }, [budgetItems])
 
   // Row total for an event
@@ -275,6 +281,7 @@ export default function BudgetPage() {
                           value={cellValue}
                           onChange={(val) => upsertBudgetItem(event.id, cat.id, activeField, val)}
                           warn={warn}
+                          contracted={activeField !== 'contracted_amount' && hasContracted(event.id, cat.id)}
                         />
                       </td>
                     )
