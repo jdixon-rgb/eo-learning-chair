@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.27.1 — 2026-04-07
+
+### Member Portal
+- Added EO Core Values display to Member Portal Dashboard footer (Trust and Respect, Thirst for Learning, Think Big Be Bold, Together We Grow)
+
+---
+
 ## v1.08.0 — 2026-03-13
 
 ### Core Platform

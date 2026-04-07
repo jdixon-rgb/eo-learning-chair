@@ -112,6 +112,28 @@ export default function MemberPortalDashboard() {
           </Link>
         </div>
       )}
+
+      {/* EO Core Values */}
+      <div className="pt-8 mt-4 border-t border-white/5">
+        <p className="text-center text-[10px] uppercase tracking-[0.2em] text-white/30 mb-4">
+          EO Core Values
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            'Trust and Respect',
+            'Thirst for Learning',
+            'Think Big, Be Bold',
+            'Together We Grow',
+          ].map(value => (
+            <div
+              key={value}
+              className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-center"
+            >
+              <p className="text-xs font-medium text-white/70">{value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
