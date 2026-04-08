@@ -21,6 +21,7 @@ import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
 import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
 import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
 import SurveyPage from '@/pages/portal/SurveyPage'
+import ReflectionsPage from '@/pages/portal/ReflectionsPage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
@@ -113,6 +114,7 @@ function App() {
                 <Route path="/portal" element={<MemberPortalDashboard />} />
                 <Route path="/portal/calendar" element={<MemberCalendarPage embedded />} />
                 <Route path="/portal/survey" element={<SurveyPage />} />
+                <Route path="/portal/reflections" element={<ReflectionsPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />
               </Route>
