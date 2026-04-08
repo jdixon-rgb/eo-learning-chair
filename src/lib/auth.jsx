@@ -5,10 +5,15 @@ const AuthContext = createContext(null)
 
 const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev@local', chapter_id: '00000000-0000-4000-a000-000000000001' }
 
+const VIEW_AS_STORAGE_KEY = 'eo-view-as-role'
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [viewAsRole, setViewAsRoleState] = useState(() => {
+    try { return localStorage.getItem(VIEW_AS_STORAGE_KEY) || null } catch { return null }
+  })
 
   const fetchProfile = useCallback(async (userId) => {
     if (!supabase) return
@@ -61,18 +66,36 @@ export function AuthProvider({ children }) {
   }
 
   const role = profile?.role ?? null
-  const isAdmin = !!role && ['super_admin', 'learning_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
+  const isAdmin = !!role && ['super_admin', 'learning_chair', 'engagement_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
+  const isSuperAdmin = role === 'super_admin'
+
+  // Effective role: super admins can impersonate via viewAsRole.
+  // Non-super-admins always see their actual role.
+  const effectiveRole = isSuperAdmin && viewAsRole ? viewAsRole : role
+  const isImpersonating = isSuperAdmin && !!viewAsRole
+
+  const setViewAsRole = useCallback((nextRole) => {
+    try {
+      if (nextRole) localStorage.setItem(VIEW_AS_STORAGE_KEY, nextRole)
+      else localStorage.removeItem(VIEW_AS_STORAGE_KEY)
+    } catch { /* ignore */ }
+    setViewAsRoleState(nextRole || null)
+  }, [])
 
   const value = {
     session,
     user: session?.user ?? null,
     profile,
     role,
+    effectiveRole,
+    viewAsRole,
+    setViewAsRole,
+    isImpersonating,
     loading,
     signIn,
     signOut,
     isAdmin,
-    isSuperAdmin: role === 'super_admin',
+    isSuperAdmin,
     chapterId: profile?.chapter_id ?? null,
     isCommittee: role === 'committee_member',
     isBoardLiaison: role === 'board_liaison',
