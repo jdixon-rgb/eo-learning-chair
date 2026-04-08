@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.28.1 — 2026-04-08
+
+### Reflections
+- Wired `/portal/reflections` route so the dashboard tile actually opens the module
+
 ## v1.28.0 — 2026-04-08
 
 ### Reflections (new module)
