@@ -48,6 +48,7 @@ export default function ReflectionsPage() {
   const [activeReflection, setActiveReflection] = useState(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [declareFor, setDeclareFor] = useState(null) // reflection being declared
+  const [showAddParkingLot, setShowAddParkingLot] = useState(false) // standalone add (no reflection)
 
   // Initial load
   useEffect(() => {
@@ -235,6 +236,7 @@ export default function ReflectionsPage() {
         <ParkingLotView
           entries={parkingLot}
           currentMemberId={member.id}
+          onAddNew={() => setShowAddParkingLot(true)}
           onUpdate={async (id, patch) => { await updateParkingLotEntry(id, patch); refreshParkingLot() }}
           onDelete={async (id) => { await deleteParkingLotEntry(id); refreshParkingLot() }}
         />
@@ -259,6 +261,17 @@ export default function ReflectionsPage() {
           reflection={declareFor}
           onClose={() => setDeclareFor(null)}
           onConfirm={handleDeclareToParkingLot}
+        />
+      )}
+
+      {showAddParkingLot && (
+        <DeclareDialog
+          reflection={null}
+          onClose={() => setShowAddParkingLot(false)}
+          onConfirm={async (payload) => {
+            await handleDeclareToParkingLot(payload)
+            setShowAddParkingLot(false)
+          }}
         />
       )}
     </div>
@@ -719,19 +732,38 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
 }
 
 // ── Parking lot view ───────────────────────────────────────
-function ParkingLotView({ entries, currentMemberId, onUpdate, onDelete }) {
+function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(null)
 
   if (entries.length === 0) {
     return (
-      <div className="text-center py-16 text-white/40 text-sm">
-        Nothing on the parking lot yet. Declare something from a reflection to get it here.
+      <div className="text-center py-16">
+        <p className="text-white/40 text-sm mb-4">
+          Nothing on the parking lot yet. Add an item directly, or declare one from a reflection.
+        </p>
+        <button
+          onClick={onAddNew}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white"
+        >
+          <Pin className="h-4 w-4" />
+          Add to parking lot
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-white/10 overflow-hidden">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button
+          onClick={onAddNew}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
+        >
+          <Pin className="h-3.5 w-3.5" />
+          Add item
+        </button>
+      </div>
+      <div className="rounded-xl border border-white/10 overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
           <tr>
@@ -782,24 +814,28 @@ function ParkingLotView({ entries, currentMemberId, onUpdate, onDelete }) {
           />
         </Modal>
       )}
+      </div>
     </div>
   )
 }
 
 // ── Declare dialog ─────────────────────────────────────────
 function DeclareDialog({ reflection, onClose, onConfirm }) {
-  const suggestedName = reflection.content?.headline || ''
+  const suggestedName = reflection?.content?.headline || ''
+  const fromReflection = !!reflection
   return (
     <Modal onClose={onClose}>
-      <h3 className="text-lg font-bold mb-1">Declare to parking lot</h3>
+      <h3 className="text-lg font-bold mb-1">{fromReflection ? 'Declare to parking lot' : 'Add to parking lot'}</h3>
       <p className="text-xs text-white/50 mb-5">
-        Your forum will see the name and scores. The rest of your reflection stays private.
+        {fromReflection
+          ? 'Your forum will see the name and scores. The rest of your reflection stays private.'
+          : 'Your forum will see the name and scores. Nothing else.'}
       </p>
       <ScoreForm
         initial={{ name: suggestedName, importance: 5, urgency: 5 }}
         onCancel={onClose}
         onConfirm={onConfirm}
-        confirmLabel="Declare"
+        confirmLabel={fromReflection ? 'Declare' : 'Add'}
       />
     </Modal>
   )

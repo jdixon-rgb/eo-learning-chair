@@ -17,6 +17,12 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.29.2 — 2026-04-08
+
+### Reflections
+- Parking lot items can now be added directly without first creating a reflection — "Add item" button on the parking lot view (in both empty state and list header)
+- Dialog copy adapts: "Declare to parking lot" when coming from a reflection, "Add to parking lot" when standalone
+
 ## v1.29.1 — 2026-04-08
 
 ### Member Portal
