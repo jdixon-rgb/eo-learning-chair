@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.28.0 — 2026-04-08
+
+### Reflections (new module)
+- New **Reflections** module in the Member Portal — private, per-forum journaling with three templates:
+  - **Modern** — single deep dive with feelings pills, headline, context, significance, three "why is that important?" prompts, and a closing self-insight
+  - **Hesse Classic** — MEPS one-word check-in, life-area grid (Professional / Personal-Family × Headline / Emotions / Significance), EQ challenge, IQ topics, and an update field
+  - **EO Standard** — the classic 5% worksheet (Work / Family / Personal / Next 30–60 days × Feelings / Headline / Significance) with a group-exploration footer
+- **Feelings library** seeded from the NVC inventory and the Hesse 5 Core Emotions (with intensity metadata). Members can add new feelings, which grow the global library.
+- **Parking lot** — per-forum shared list of items declared from reflections. Author-named, scored 1–10 on importance and urgency, sorted by combined score. Author-only edit/delete. Parking lot entries are visible to forum-mates only; reflections themselves remain strictly private.
+- **Clear all** wipes a member's reflections in their current forum; parking lot entries survive.
+- Dashboard tile added to the Member Portal home.
+- Empty states for members without a forum assignment — polite invitation to reach out to the Forum Chair.
+
 ## v1.27.1 — 2026-04-07
 
 ### Member Portal
