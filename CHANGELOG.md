@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.29.3 — 2026-04-08
+
+### Reflections
+- Parking lot Importance and Urgency scores are now inline-editable for the author of each entry — change the dropdown and it saves immediately. Combined score updates to match.
+
 ## v1.29.2 — 2026-04-08
 
 ### Reflections

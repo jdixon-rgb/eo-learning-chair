@@ -780,13 +780,31 @@ function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete
             return (
               <tr key={e.id} className="border-t border-white/5">
                 <td className="px-4 py-3 text-white/90">{e.name}</td>
-                <td className="text-center px-3 py-3 text-white/70">{e.importance}</td>
-                <td className="text-center px-3 py-3 text-white/70">{e.urgency}</td>
+                <td className="text-center px-3 py-3 text-white/70">
+                  {isAuthor ? (
+                    <ScoreSelect
+                      value={e.importance}
+                      onChange={(v) => onUpdate(e.id, { importance: v })}
+                    />
+                  ) : (
+                    e.importance
+                  )}
+                </td>
+                <td className="text-center px-3 py-3 text-white/70">
+                  {isAuthor ? (
+                    <ScoreSelect
+                      value={e.urgency}
+                      onChange={(v) => onUpdate(e.id, { urgency: v })}
+                    />
+                  ) : (
+                    e.urgency
+                  )}
+                </td>
                 <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
                 <td className="px-3 py-3">
                   {isAuthor && (
                     <div className="flex gap-1">
-                      <button onClick={() => setEditing(e)} className="text-white/30 hover:text-white" title="Edit">
+                      <button onClick={() => setEditing(e)} className="text-white/30 hover:text-white" title="Edit name">
                         <Save className="h-3.5 w-3.5" />
                       </button>
                       <button onClick={() => onDelete(e.id)} className="text-white/30 hover:text-red-400" title="Delete">
@@ -816,6 +834,21 @@ function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete
       )}
       </div>
     </div>
+  )
+}
+
+// ── Inline score select (1–10) ─────────────────────────────
+function ScoreSelect({ value, onChange }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 hover:border-white/30 focus:border-eo-blue focus:outline-none cursor-pointer"
+    >
+      {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
+        <option key={n} value={n} className="bg-eo-navy">{n}</option>
+      ))}
+    </select>
   )
 }
 
