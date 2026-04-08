@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.29.1 — 2026-04-08
+
+### Member Portal
+- Sidebar "Member Portal" link now goes to the portal home (`/portal`) instead of the calendar
+
 ## v1.29.0 — 2026-04-08
 
 ### Member Engagement Chair (new role + module)

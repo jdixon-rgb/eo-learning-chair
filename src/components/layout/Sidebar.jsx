@@ -252,7 +252,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             Suggestion | Report Bug
           </NavLink>
           <NavLink
-            to="/portal/calendar"
+            to="/portal"
             onClick={onNavigate}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors"
           >
