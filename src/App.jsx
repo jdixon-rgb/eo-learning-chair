@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from '@/lib/auth'
+import { AuthProvider, useAuth } from '@/lib/auth'
+import { getChairConfig } from '@/lib/chairRoles'
 import { ChapterProvider } from '@/lib/chapter'
 import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES } from '@/lib/permissions'
+import { EngagementStoreProvider } from '@/lib/engagementStore'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
@@ -21,6 +23,7 @@ import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
 import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
 import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
 import SurveyPage from '@/pages/portal/SurveyPage'
+import ReflectionsPage from '@/pages/portal/ReflectionsPage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
@@ -33,6 +36,21 @@ import CommunicationsPage from '@/pages/board/CommunicationsPage'
 import ForumsPage from '@/pages/board/ForumsPage'
 import MemberScorecardsPage from '@/pages/board/MemberScorecardsPage'
 import CoordinatorPage from '@/pages/CoordinatorPage'
+import EngagementDashboard from '@/pages/engagement/EngagementDashboard'
+import NavigatorsPage from '@/pages/engagement/NavigatorsPage'
+import PairingsPage from '@/pages/engagement/PairingsPage'
+import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
+
+// Sends each user to their chair role's home page when they hit "/".
+// Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
+function ChairHome() {
+  const { effectiveRole } = useAuth()
+  const config = getChairConfig(effectiveRole)
+  if (config.homePath && config.homePath !== '/') {
+    return <Navigate to={config.homePath} replace />
+  }
+  return <DashboardPage />
+}
 
 function App() {
   return (
@@ -40,6 +58,7 @@ function App() {
       <ChapterProvider>
         <StoreProvider>
           <BoardStoreProvider>
+            <EngagementStoreProvider>
             <BrowserRouter>
               <Routes>
               {/* Public */}
@@ -54,7 +73,7 @@ function App() {
                   <AppLayout />
                 </ProtectedRoute>
               }>
-                <Route path="/" element={<DashboardPage />} />
+                <Route path="/" element={<ChairHome />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/speakers" element={<SpeakersPage />} />
                 <Route path="/events" element={<EventsPage />} />
@@ -86,6 +105,20 @@ function App() {
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><CoordinatorPage /></ProtectedRoute>
                 } />
 
+                {/* Engagement Chair routes */}
+                <Route path="/engagement" element={
+                  <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><EngagementDashboard /></ProtectedRoute>
+                } />
+                <Route path="/engagement/navigators" element={
+                  <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><NavigatorsPage /></ProtectedRoute>
+                } />
+                <Route path="/engagement/pairings" element={
+                  <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><PairingsPage /></ProtectedRoute>
+                } />
+                <Route path="/engagement/library" element={
+                  <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><ConversationLibraryPage /></ProtectedRoute>
+                } />
+
                 {/* Board routes */}
                 <Route path="/board" element={
                   <ProtectedRoute allowedRoles={BOARD_ROLES}><BoardDashboardPage /></ProtectedRoute>
@@ -113,6 +146,7 @@ function App() {
                 <Route path="/portal" element={<MemberPortalDashboard />} />
                 <Route path="/portal/calendar" element={<MemberCalendarPage embedded />} />
                 <Route path="/portal/survey" element={<SurveyPage />} />
+                <Route path="/portal/reflections" element={<ReflectionsPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />
               </Route>
@@ -131,6 +165,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
+            </EngagementStoreProvider>
           </BoardStoreProvider>
         </StoreProvider>
       </ChapterProvider>

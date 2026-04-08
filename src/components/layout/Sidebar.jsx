@@ -2,16 +2,9 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
 import { hasPermission } from '@/lib/permissions'
+import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
 import {
-  LayoutDashboard,
-  Calendar,
-  Users,
-  CalendarDays,
-  MapPin,
-  DollarSign,
-  Shuffle,
-  Settings,
   Globe,
   X,
   LogOut,
@@ -25,21 +18,10 @@ import {
   Users2,
   BarChart3,
   ClipboardCheck,
+  Eye,
 } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
-
-// Base nav items with optional permission keys
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/calendar', icon: Calendar, label: 'Year Arc' },
-  { to: '/speakers', icon: Users, label: 'Speakers' },
-  { to: '/events', icon: CalendarDays, label: 'Events' },
-  { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
-  { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
-  { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
-  { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
-]
 
 // Admin sub-pages
 const adminItems = [
@@ -59,20 +41,24 @@ const boardItems = [
 ]
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
-  const { profile, role, signOut, isSuperAdmin } = useAuth()
+  const { profile, effectiveRole, signOut, isSuperAdmin, isImpersonating, viewAsRole, setViewAsRole } = useAuth()
   const { activeChapter } = useChapter()
   const navigate = useNavigate()
 
-  const visibleNav = navItems.filter(item =>
-    !item.permission || hasPermission(role, item.permission)
+  // Look up the chair-role config for the *effective* role.
+  // For super admins not impersonating, default to Learning Chair surface.
+  const chairConfig = getChairConfig(effectiveRole)
+
+  const visibleNav = chairConfig.navItems.filter(item =>
+    !item.permission || hasPermission(effectiveRole, item.permission)
   )
 
   const visibleAdmin = adminItems.filter(item =>
-    !item.permission || hasPermission(role, item.permission)
+    !item.permission || hasPermission(effectiveRole, item.permission)
   )
 
   const visibleBoard = boardItems.filter(item =>
-    !item.permission || hasPermission(role, item.permission)
+    !item.permission || hasPermission(effectiveRole, item.permission)
   )
 
   const handleSignOut = async () => {
@@ -111,7 +97,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </button>
           </div>
           <div className="mt-3">
-            <h1 className="text-sm font-bold tracking-tight text-white/90">Learning Chair</h1>
+            <h1 className="text-sm font-bold tracking-tight text-white/90">{chairConfig.title}</h1>
             <p className="text-[10px] text-white/40">
               {activeChapter ? activeChapter.name : 'Command Center'}
             </p>
@@ -123,13 +109,41 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           <ChapterSwitcher />
         </div>
 
+        {/* Chair "View as" switcher — super admin only */}
+        {isSuperAdmin && (
+          <div className="px-4 pt-2">
+            <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/30 uppercase mb-1">
+              <Eye className="h-3 w-3" />
+              View as
+            </label>
+            <select
+              value={viewAsRole || ''}
+              onChange={e => setViewAsRole(e.target.value || null)}
+              className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-eo-blue/50"
+            >
+              <option value="">Super Admin (me)</option>
+              {SWITCHABLE_CHAIR_ROLES.map(r => (
+                <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
+              ))}
+            </select>
+            {isImpersonating && (
+              <button
+                onClick={() => setViewAsRole(null)}
+                className="mt-1.5 w-full text-[10px] text-amber-300/80 hover:text-amber-200 underline"
+              >
+                Exit view-as mode
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {visibleNav.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
-              end={to === '/'}
+              end={to === '/' || to === chairConfig.homePath}
               onClick={onNavigate}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
