@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
-import { Calendar, ClipboardList, Bell, ChevronRight } from 'lucide-react'
+import { Calendar, ClipboardList, Bell, ChevronRight, BookOpen } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
 
@@ -29,7 +29,7 @@ export default function MemberPortalDashboard() {
       </div>
 
       {/* Quick action cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Next Event */}
         <Link
           to="/portal/calendar"
@@ -71,6 +71,19 @@ export default function MemberPortalDashboard() {
               <p className="text-xs text-eo-coral mt-1">Takes ~5 minutes</p>
             </>
           )}
+        </Link>
+
+        {/* Reflections */}
+        <Link
+          to="/portal/reflections"
+          className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-emerald-400/50 hover:bg-white/[0.07] transition-all group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <BookOpen className="h-5 w-5 text-emerald-400" />
+            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
+          </div>
+          <h3 className="text-sm font-semibold mb-1">Reflections</h3>
+          <p className="text-xs text-white/40">Private journaling + forum parking lot</p>
         </Link>
 
         {/* Notifications */}
