@@ -4,6 +4,7 @@ import { useChapter } from '@/lib/chapter'
 import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
+import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import {
   Globe,
   X,
@@ -121,6 +122,11 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
         {/* Chapter Switcher (super admin only) */}
         <div className="pt-3">
           <ChapterSwitcher />
+        </div>
+
+        {/* Fiscal Year Switcher */}
+        <div className="pt-2">
+          <FiscalYearSwitcher />
         </div>
 
         {/* Role switcher — super admin only */}

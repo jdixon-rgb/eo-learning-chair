@@ -4,23 +4,26 @@ import { fetchAll, fetchByChapter, insertRow, updateRow, deleteRow, upsertRow, u
 import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs } from './mockData'
 import { supabase } from './supabase'
 import { useChapter } from './chapter'
+import { useFiscalYear } from './fiscalYearContext'
 
-// localStorage cache for offline fallback (key is per-chapter)
-function storageKey(chapterId) {
-  return `eo-learning-chair-store-${chapterId}`
+// localStorage cache for offline fallback (key is per-chapter, per-fiscal-year)
+function storageKey(chapterId, fiscalYear) {
+  return fiscalYear
+    ? `eo-learning-chair-store-${chapterId}-${fiscalYear}`
+    : `eo-learning-chair-store-${chapterId}`
 }
 
-function loadCache(chapterId) {
+function loadCache(chapterId, fiscalYear) {
   try {
-    const raw = localStorage.getItem(storageKey(chapterId))
+    const raw = localStorage.getItem(storageKey(chapterId, fiscalYear))
     if (raw) return JSON.parse(raw)
   } catch { /* corrupted */ }
   return null
 }
 
-function saveCache(chapterId, state) {
+function saveCache(chapterId, fiscalYear, state) {
   try {
-    localStorage.setItem(storageKey(chapterId), JSON.stringify(state))
+    localStorage.setItem(storageKey(chapterId, fiscalYear), JSON.stringify(state))
   } catch { /* storage full */ }
 }
 
@@ -28,8 +31,9 @@ const StoreContext = createContext(null)
 
 export function StoreProvider({ children }) {
   const { activeChapterId, isChapterReady } = useChapter()
+  const { activeFiscalYear, isFiscalYearReady } = useFiscalYear()
 
-  const cached = loadCache(activeChapterId)
+  const cached = loadCache(activeChapterId, activeFiscalYear)
 
   // State - initialized from cache or mock data
   const [chapter, setChapter] = useState(cached?.chapter ?? mockChapter)
@@ -44,29 +48,29 @@ export function StoreProvider({ children }) {
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
-  const prevChapterId = useRef(activeChapterId)
+  const prevFetchKey = useRef(`${activeChapterId}:${activeFiscalYear}`)
 
-  // Persist to localStorage cache on every state change (per-chapter)
+  // Persist to localStorage cache on every state change (per-chapter, per-fiscal-year)
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments })
-  }, [activeChapterId, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments])
+    saveCache(activeChapterId, activeFiscalYear, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments })
+  }, [activeChapterId, activeFiscalYear, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments])
 
-  // Fetch from Supabase when chapter changes (anon reads allowed via RLS)
+  // Fetch from Supabase when chapter or fiscal year changes
   useEffect(() => {
-    // Reset hasFetched when activeChapterId changes
-    if (prevChapterId.current !== activeChapterId) {
+    const fetchKey = `${activeChapterId}:${activeFiscalYear}`
+    if (prevFetchKey.current !== fetchKey) {
       hasFetched.current = false
-      prevChapterId.current = activeChapterId
+      prevFetchKey.current = fetchKey
     }
 
     if (!isSupabaseConfigured() || hasFetched.current) { setLoading(false); return }
-    if (!isChapterReady) return
+    if (!isChapterReady || !isFiscalYearReady) return
     if (!activeChapterId) { setLoading(false); return }
     hasFetched.current = true
 
     // Load from chapter-specific cache while fetching
-    const chapterCache = loadCache(activeChapterId)
+    const chapterCache = loadCache(activeChapterId, activeFiscalYear)
     if (chapterCache) {
       if (chapterCache.chapter) setChapter(chapterCache.chapter)
       if (chapterCache.speakers) setSpeakers(chapterCache.speakers)
@@ -108,7 +112,7 @@ export function StoreProvider({ children }) {
             safeFetch('chapters', () => fetchAll('chapters')),
             safeFetch('speakers', () => fetchByChapter('speakers', activeChapterId)),
             safeFetch('venues', () => fetchByChapter('venues', activeChapterId)),
-            safeFetch('events', () => fetchByChapter('events', activeChapterId)),
+            safeFetch('events', () => supabase.from('events').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
             safeFetch('budget_items', () => fetchAll('budget_items')),
             safeFetch('contract_checklists', () => fetchAll('contract_checklists')),
             safeFetch('saps', () => fetchByChapter('saps', activeChapterId)),
@@ -144,7 +148,7 @@ export function StoreProvider({ children }) {
         setLoading(false)
       }
     }
-  }, [activeChapterId, isChapterReady])
+  }, [activeChapterId, isChapterReady, activeFiscalYear, isFiscalYearReady])
 
   // Helper: fire Supabase write in background, log errors
   const dbWrite = useCallback(async (fn, label = 'unknown') => {
@@ -173,8 +177,8 @@ export function StoreProvider({ children }) {
     setContractChecklists(mockContractChecklists)
     setSaps(mockSAPs)
     setScenarios([])
-    if (activeChapterId) localStorage.removeItem(storageKey(activeChapterId))
-  }, [activeChapterId])
+    if (activeChapterId) localStorage.removeItem(storageKey(activeChapterId, activeFiscalYear))
+  }, [activeChapterId, activeFiscalYear])
 
   // ── Speaker operations ──
 
@@ -248,11 +252,11 @@ export function StoreProvider({ children }) {
   const addEvent = useCallback((event) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newEvent = { ...event, id, chapter_id: activeChapterId, status: 'planning', created_at: now, updated_at: now }
+    const newEvent = { ...event, id, chapter_id: activeChapterId, fiscal_year: activeFiscalYear, status: 'planning', created_at: now, updated_at: now }
     setEvents(prev => [...prev, newEvent])
     dbWrite(() => insertRow('events', newEvent), 'insert:events')
     return newEvent
-  }, [activeChapterId, dbWrite])
+  }, [activeChapterId, activeFiscalYear, dbWrite])
 
   const updateEvent = useCallback((id, updates) => {
     const now = new Date().toISOString()

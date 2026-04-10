@@ -9,6 +9,9 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import { formatCurrency } from '@/lib/utils'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { getFiscalYearOptions } from '@/lib/fiscalYear'
+import { useChapter } from '@/lib/chapter'
 import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, Percent } from 'lucide-react'
 
 const STATUS_COLORS = {
@@ -17,11 +20,7 @@ const STATUS_COLORS = {
   past: 'bg-muted text-muted-foreground',
 }
 
-const FISCAL_YEAR_OPTIONS = (() => {
-  const now = new Date()
-  const year = now.getFullYear()
-  return [`${year - 1}-${year}`, `${year}-${year + 1}`, `${year + 1}-${year + 2}`]
-})()
+// FISCAL_YEAR_OPTIONS is now derived from centralized utilities inside the component
 
 function toRoleKey(label) {
   return label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
@@ -36,14 +35,18 @@ export default function SettingsPage() {
     getMemberName, getMemberEmail, upsertStaffInvite,
   } = useBoardStore()
   const { role } = useAuth()
+  const { activeChapter } = useChapter()
+  const { activeFiscalYear } = useFiscalYear()
   const canEditChapterName = hasPermission(role, 'canEditChapterConfig')
+
+  const FISCAL_YEAR_OPTIONS = getFiscalYearOptions(activeChapter?.fiscal_year_start ?? 8, 3)
 
   const [newLabel, setNewLabel] = useState('')
   const [newIsStaff, setNewIsStaff] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [editLabel, setEditLabel] = useState('')
   const [assigningRoleId, setAssigningRoleId] = useState(null)
-  const [assignForm, setAssignForm] = useState({ member_id: '', member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'elect', budget: '', theme: '' })
+  const [assignForm, setAssignForm] = useState({ member_id: '', member_name: '', member_email: '', fiscal_year: activeFiscalYear, status: 'elect', budget: '', theme: '' })
   const [editingAssignmentId, setEditingAssignmentId] = useState(null)
   const [editAssignment, setEditAssignment] = useState({})
 
@@ -127,7 +130,7 @@ export default function SettingsPage() {
       member_id: a.member_id || '',
       member_name: a.member_name || '',
       member_email: a.member_email || '',
-      fiscal_year: a.fiscal_year || FISCAL_YEAR_OPTIONS[1],
+      fiscal_year: a.fiscal_year || activeFiscalYear,
     })
   }
 
@@ -188,7 +191,7 @@ export default function SettingsPage() {
       })
     }
     setAssigningRoleId(null)
-    setAssignForm({ member_id: '', member_name: '', member_email: '', fiscal_year: FISCAL_YEAR_OPTIONS[1], status: 'active', budget: '', theme: '' })
+    setAssignForm({ member_id: '', member_name: '', member_email: '', fiscal_year: activeFiscalYear, status: 'active', budget: '', theme: '' })
   }
 
   return (

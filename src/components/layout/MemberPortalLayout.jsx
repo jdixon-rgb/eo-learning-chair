@@ -14,7 +14,7 @@ const portalNav = [
 ]
 
 export default function MemberPortalLayout() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, isSuperAdmin, isImpersonating } = useAuth()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -31,6 +31,9 @@ export default function MemberPortalLayout() {
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
             <img src={eoLogo} alt="EO Arizona" className="h-8 w-auto" />
+            {isSuperAdmin && !isImpersonating && (
+              <span className="text-xs font-bold tracking-tight text-eo-coral">Super Admin</span>
+            )}
           </div>
 
           {/* Center: Desktop nav */}

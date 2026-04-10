@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDateWithDay } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -16,6 +18,7 @@ export default function CalendarPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
   const { presidentElectTheme, presidentElectName } = useBoardStore()
+  const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = presidentElectTheme || chapter.president_theme || ''
   const incomingPresident = presidentElectName || chapter.president_name || ''
   const [createMonth, setCreateMonth] = useState(null)
@@ -58,7 +61,7 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2 mt-2">
           <Route className="h-4 w-4 text-eo-coral" />
           <p className="text-sm text-muted-foreground">
-            FY 2026–2027{incomingPresident ? ` \u00b7 Incoming President: ${incomingPresident}` : ''} &middot; Theme: <span className="font-semibold text-eo-blue">"{incomingTheme}"</span>
+            {formatFiscalYear(activeFiscalYear)}{incomingPresident ? ` \u00b7 Incoming President: ${incomingPresident}` : ''} &middot; Theme: <span className="font-semibold text-eo-blue">"{incomingTheme}"</span>
           </p>
         </div>
       </div>

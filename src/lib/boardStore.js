@@ -2,31 +2,35 @@ import { useState, useCallback, useEffect, createContext, useContext, createElem
 import { isSupabaseConfigured, supabase } from './supabase'
 import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
 import { useChapter } from './chapter'
+import { useFiscalYear } from './fiscalYearContext'
 import { CHAIR_ROLES } from './constants'
 
 const BoardStoreContext = createContext(null)
 
-function storageKey(chapterId) {
-  return `eo-board-store-${chapterId}`
+function storageKey(chapterId, fiscalYear) {
+  return fiscalYear
+    ? `eo-board-store-${chapterId}-${fiscalYear}`
+    : `eo-board-store-${chapterId}`
 }
 
-function loadCache(chapterId) {
+function loadCache(chapterId, fiscalYear) {
   try {
-    const raw = localStorage.getItem(storageKey(chapterId))
+    const raw = localStorage.getItem(storageKey(chapterId, fiscalYear))
     if (raw) return JSON.parse(raw)
   } catch { /* corrupted */ }
   return null
 }
 
-function saveCache(chapterId, state) {
+function saveCache(chapterId, fiscalYear, state) {
   try {
-    localStorage.setItem(storageKey(chapterId), JSON.stringify(state))
+    localStorage.setItem(storageKey(chapterId, fiscalYear), JSON.stringify(state))
   } catch { /* storage full */ }
 }
 
 export function BoardStoreProvider({ children }) {
   const { activeChapterId, isChapterReady } = useChapter()
-  const cached = loadCache(activeChapterId)
+  const { activeFiscalYear, isFiscalYearReady } = useFiscalYear()
+  const cached = loadCache(activeChapterId, activeFiscalYear)
 
   const [chairReports, setChairReports] = useState(cached?.chairReports ?? [])
   const [communications, setCommunications] = useState(cached?.communications ?? [])
@@ -38,26 +42,27 @@ export function BoardStoreProvider({ children }) {
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
-  const prevChapterId = useRef(activeChapterId)
+  const prevFetchKey = useRef(`${activeChapterId}:${activeFiscalYear}`)
 
   // Persist to localStorage
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers })
-  }, [activeChapterId, chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers])
+    saveCache(activeChapterId, activeFiscalYear, { chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers })
+  }, [activeChapterId, activeFiscalYear, chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers])
 
   // Fetch from Supabase
   useEffect(() => {
-    if (prevChapterId.current !== activeChapterId) {
+    const fetchKey = `${activeChapterId}:${activeFiscalYear}`
+    if (prevFetchKey.current !== fetchKey) {
       hasFetched.current = false
-      prevChapterId.current = activeChapterId
+      prevFetchKey.current = fetchKey
     }
     if (!isSupabaseConfigured() || hasFetched.current) { setLoading(false); return }
-    if (!isChapterReady) return
+    if (!isChapterReady || !isFiscalYearReady) return
     if (!activeChapterId) { setLoading(false); return }
     hasFetched.current = true
 
-    const chapterCache = loadCache(activeChapterId)
+    const chapterCache = loadCache(activeChapterId, activeFiscalYear)
     if (chapterCache) {
       if (chapterCache.chairReports) setChairReports(chapterCache.chairReports)
       if (chapterCache.communications) setCommunications(chapterCache.communications)
@@ -74,10 +79,10 @@ export function BoardStoreProvider({ children }) {
     async function hydrate() {
       try {
         const [reportsRes, commsRes, forumsRes, scorecardsRes, rolesRes, assignmentsRes, membersRes] = await Promise.all([
-          fetchByChapter('chair_reports', activeChapterId),
+          supabase.from('chair_reports').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear),
           fetchByChapter('chapter_communications', activeChapterId),
           fetchByChapter('forums', activeChapterId),
-          fetchByChapter('member_scorecards', activeChapterId),
+          supabase.from('member_scorecards').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear),
           fetchByChapter('chapter_roles', activeChapterId).catch(() => ({ data: null })),
           fetchByChapter('role_assignments', activeChapterId).catch(() => ({ data: null })),
           fetchByChapter('chapter_members', activeChapterId).catch(() => ({ data: null })),
@@ -108,7 +113,7 @@ export function BoardStoreProvider({ children }) {
         setLoading(false)
       }
     }
-  }, [activeChapterId, isChapterReady])
+  }, [activeChapterId, isChapterReady, activeFiscalYear, isFiscalYearReady])
 
   const dbWrite = useCallback(async (fn, label = 'unknown') => {
     if (!isSupabaseConfigured()) return
@@ -130,11 +135,11 @@ export function BoardStoreProvider({ children }) {
   const addChairReport = useCallback((report) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const row = { ...report, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
+    const row = { ...report, id, chapter_id: activeChapterId, fiscal_year: activeFiscalYear, created_at: now, updated_at: now }
     setChairReports(prev => [...prev, row])
     dbWrite(() => insertRow('chair_reports', row), 'insert:chair_reports')
     return row
-  }, [activeChapterId, dbWrite])
+  }, [activeChapterId, activeFiscalYear, dbWrite])
 
   const updateChairReport = useCallback((id, updates) => {
     setChairReports(prev => prev.map(r => r.id === id ? { ...r, ...updates, updated_at: new Date().toISOString() } : r))
@@ -190,11 +195,11 @@ export function BoardStoreProvider({ children }) {
   const addScorecard = useCallback((scorecard) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const row = { ...scorecard, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
+    const row = { ...scorecard, id, chapter_id: activeChapterId, fiscal_year: activeFiscalYear, created_at: now, updated_at: now }
     setMemberScorecards(prev => [...prev, row])
     dbWrite(() => insertRow('member_scorecards', row), 'insert:member_scorecards')
     return row
-  }, [activeChapterId, dbWrite])
+  }, [activeChapterId, activeFiscalYear, dbWrite])
 
   const updateScorecard = useCallback((id, updates) => {
     setMemberScorecards(prev => prev.map(s => s.id === id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s))
@@ -337,23 +342,24 @@ export function BoardStoreProvider({ children }) {
     return roleAssignments.find(a => a.chapter_role_id === role.id && a.status === 'active') ?? null
   }, [chapterRoles, roleAssignments])
 
+  // Helper: find a role assignment by role_key, filtered by active fiscal year
+  const findFYAssignment = useCallback((roleKey, statusFilter) => {
+    if (chapterRoles.length === 0) return null
+    return roleAssignments.find(ra => {
+      const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
+      if (!role || role.role_key !== roleKey) return false
+      if (ra.fiscal_year !== activeFiscalYear) return false
+      return statusFilter ? statusFilter.includes(ra.status) : ra.status === 'active'
+    }) ?? null
+  }, [chapterRoles, roleAssignments, activeFiscalYear])
+
   const activePresidentTheme = (() => {
-    const a = chapterRoles.length > 0
-      ? roleAssignments.find(ra => {
-          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
-          return role?.role_key === 'president' && ra.status === 'active'
-        })
-      : null
+    const a = findFYAssignment('president')
     return a?.theme || null
   })()
 
   const activePresidentName = (() => {
-    const a = chapterRoles.length > 0
-      ? roleAssignments.find(ra => {
-          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
-          return role?.role_key === 'president' && ra.status === 'active'
-        })
-      : null
+    const a = findFYAssignment('president')
     if (!a) return null
     if (a.member_id) {
       const member = chapterMembers.find(m => m.id === a.member_id)
@@ -364,22 +370,12 @@ export function BoardStoreProvider({ children }) {
 
   // President Elect - the person whose theme drives the upcoming FY plan
   const presidentElectTheme = (() => {
-    const a = chapterRoles.length > 0
-      ? roleAssignments.find(ra => {
-          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
-          return role?.role_key === 'president_elect' && (ra.status === 'active' || ra.status === 'elect')
-        })
-      : null
+    const a = findFYAssignment('president_elect', ['active', 'elect'])
     return a?.theme || null
   })()
 
   const presidentElectName = (() => {
-    const a = chapterRoles.length > 0
-      ? roleAssignments.find(ra => {
-          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
-          return role?.role_key === 'president_elect' && (ra.status === 'active' || ra.status === 'elect')
-        })
-      : null
+    const a = findFYAssignment('president_elect', ['active', 'elect'])
     if (!a) return null
     if (a.member_id) {
       const member = chapterMembers.find(m => m.id === a.member_id)
@@ -389,14 +385,9 @@ export function BoardStoreProvider({ children }) {
   })()
 
   const getChairBudget = useCallback((roleKey) => {
-    const a = chapterRoles.length > 0
-      ? roleAssignments.find(ra => {
-          const role = chapterRoles.find(r => r.id === ra.chapter_role_id)
-          return role?.role_key === roleKey && ra.status === 'active'
-        })
-      : null
+    const a = findFYAssignment(roleKey)
     return a?.budget ?? 0
-  }, [chapterRoles, roleAssignments])
+  }, [findFYAssignment])
 
   const value = {
     chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers,

@@ -2,28 +2,32 @@ import { useState, useCallback, useEffect, createContext, useContext, createElem
 import { isSupabaseConfigured, supabase } from './supabase'
 import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
 import { useChapter } from './chapter'
+import { useFiscalYear } from './fiscalYearContext'
 
 const EngagementStoreContext = createContext(null)
 
-function storageKey(chapterId) {
-  return `eo-engagement-store-${chapterId}`
+function storageKey(chapterId, fiscalYear) {
+  return fiscalYear
+    ? `eo-engagement-store-${chapterId}-${fiscalYear}`
+    : `eo-engagement-store-${chapterId}`
 }
-function loadCache(chapterId) {
+function loadCache(chapterId, fiscalYear) {
   try {
-    const raw = localStorage.getItem(storageKey(chapterId))
+    const raw = localStorage.getItem(storageKey(chapterId, fiscalYear))
     if (raw) return JSON.parse(raw)
   } catch { /* corrupted */ }
   return null
 }
-function saveCache(chapterId, state) {
+function saveCache(chapterId, fiscalYear, state) {
   try {
-    localStorage.setItem(storageKey(chapterId), JSON.stringify(state))
+    localStorage.setItem(storageKey(chapterId, fiscalYear), JSON.stringify(state))
   } catch { /* full */ }
 }
 
 export function EngagementStoreProvider({ children }) {
   const { activeChapterId, isChapterReady } = useChapter()
-  const cached = loadCache(activeChapterId)
+  const { activeFiscalYear, isFiscalYearReady } = useFiscalYear()
+  const cached = loadCache(activeChapterId, activeFiscalYear)
 
   const [navigators, setNavigators] = useState(cached?.navigators ?? [])
   const [pairings, setPairings] = useState(cached?.pairings ?? [])
@@ -31,26 +35,27 @@ export function EngagementStoreProvider({ children }) {
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
-  const prevChapterId = useRef(activeChapterId)
+  const prevFetchKey = useRef(`${activeChapterId}:${activeFiscalYear}`)
 
   // Persist
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { navigators, pairings, resources })
-  }, [activeChapterId, navigators, pairings, resources])
+    saveCache(activeChapterId, activeFiscalYear, { navigators, pairings, resources })
+  }, [activeChapterId, activeFiscalYear, navigators, pairings, resources])
 
-  // Hydrate from Supabase when chapter changes
+  // Hydrate from Supabase when chapter or fiscal year changes
   useEffect(() => {
-    if (prevChapterId.current !== activeChapterId) {
+    const fetchKey = `${activeChapterId}:${activeFiscalYear}`
+    if (prevFetchKey.current !== fetchKey) {
       hasFetched.current = false
-      prevChapterId.current = activeChapterId
+      prevFetchKey.current = fetchKey
     }
     if (!isSupabaseConfigured() || hasFetched.current) { setLoading(false); return }
-    if (!isChapterReady) return
+    if (!isChapterReady || !isFiscalYearReady) return
     if (!activeChapterId) { setLoading(false); return }
     hasFetched.current = true
 
-    const chapterCache = loadCache(activeChapterId)
+    const chapterCache = loadCache(activeChapterId, activeFiscalYear)
     if (chapterCache) {
       if (chapterCache.navigators) setNavigators(chapterCache.navigators)
       if (chapterCache.pairings) setPairings(chapterCache.pairings)
@@ -64,7 +69,7 @@ export function EngagementStoreProvider({ children }) {
       try {
         const [navsRes, pairingsRes, resourcesRes] = await Promise.all([
           fetchByChapter('navigators', activeChapterId),
-          fetchByChapter('navigator_pairings', activeChapterId),
+          supabase.from('navigator_pairings').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear),
           fetchByChapter('navigator_resources', activeChapterId),
         ])
         if (navsRes.data) setNavigators(navsRes.data)
@@ -76,7 +81,7 @@ export function EngagementStoreProvider({ children }) {
         setLoading(false)
       }
     }
-  }, [activeChapterId, isChapterReady])
+  }, [activeChapterId, isChapterReady, activeFiscalYear, isFiscalYearReady])
 
   // Optimistic write helper
   const dbWrite = useCallback(async (fn, label) => {

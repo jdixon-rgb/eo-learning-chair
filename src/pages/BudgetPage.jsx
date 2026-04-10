@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { BUDGET_CATEGORIES, FISCAL_MONTHS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { formatFiscalYear } from '@/lib/fiscalYear'
 import { Badge } from '@/components/ui/badge'
 import { DollarSign, AlertTriangle } from 'lucide-react'
 
@@ -75,6 +77,7 @@ export default function BudgetPage() {
     totalBudgeted, totalContracted, totalActualSpent, budgetRemaining,
     upsertBudgetItem,
   } = useStore()
+  const { activeFiscalYear } = useFiscalYear()
 
   const [activeField, setActiveField] = useState('budget_amount')
 
@@ -152,7 +155,7 @@ export default function BudgetPage() {
       <div>
         <h1 className="text-2xl font-bold">Budget</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {formatCurrency(chapter.total_budget)} total budget &middot; FY 2026–2027
+          {formatCurrency(chapter.total_budget)} total budget &middot; {formatFiscalYear(activeFiscalYear)}
         </p>
       </div>
 

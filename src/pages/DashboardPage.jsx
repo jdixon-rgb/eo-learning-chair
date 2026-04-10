@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, PIPELINE_STAGES, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +22,7 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
   const { presidentElectTheme, activePresidentTheme, getChairBudget } = useBoardStore()
+  const { activeFiscalYear } = useFiscalYear()
 
   const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
   const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
@@ -56,7 +59,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            FY 2026-2027 &middot; Theme: "{theme}"
+            {formatFiscalYear(activeFiscalYear)} &middot; Theme: "{theme}"
           </p>
         </div>
         <div className="flex gap-2">

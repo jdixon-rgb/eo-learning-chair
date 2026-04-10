@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { VENUE_PIPELINE_STAGES, AV_QUALITY, ARCHIVE_REASONS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { formatFiscalYear } from '@/lib/fiscalYear'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -66,6 +68,7 @@ function StarRating({ value, onChange, size = 'sm', readonly = false }) {
 
 export default function VenuesPage() {
   const { venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent, archiveVenue, restoreVenue } = useStore()
+  const { activeFiscalYear } = useFiscalYear()
   const [showForm, setShowForm] = useState(false)
   const [editVenue, setEditVenue] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -77,7 +80,7 @@ export default function VenuesPage() {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [archiveTarget, setArchiveTarget] = useState(null)
   const [archiveReason, setArchiveReason] = useState('not_this_year')
-  const [archiveProgramYear, setArchiveProgramYear] = useState('FY 2026-2027')
+  const [archiveProgramYear, setArchiveProgramYear] = useState(formatFiscalYear(activeFiscalYear))
   const [libraryFilter, setLibraryFilter] = useState('all')
 
   // Map venue → events
@@ -971,7 +974,7 @@ export default function VenuesPage() {
               <Input
                 value={archiveProgramYear}
                 onChange={e => setArchiveProgramYear(e.target.value)}
-                placeholder="FY 2026-2027"
+                placeholder={formatFiscalYear(activeFiscalYear)}
               />
             </div>
           </div>

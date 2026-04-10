@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { getChairConfig } from '@/lib/chairRoles'
 import { ChapterProvider } from '@/lib/chapter'
+import { FiscalYearProvider } from '@/lib/fiscalYearContext'
 import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
 import { EngagementStoreProvider } from '@/lib/engagementStore'
@@ -58,6 +59,7 @@ function App() {
   return (
     <AuthProvider>
       <ChapterProvider>
+        <FiscalYearProvider>
         <StoreProvider>
           <BoardStoreProvider>
             <EngagementStoreProvider>
@@ -175,6 +177,7 @@ function App() {
             </EngagementStoreProvider>
           </BoardStoreProvider>
         </StoreProvider>
+        </FiscalYearProvider>
       </ChapterProvider>
     </AuthProvider>
   )
