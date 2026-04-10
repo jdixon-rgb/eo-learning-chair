@@ -321,7 +321,22 @@ export function StoreProvider({ children }) {
   const updateEvent = useCallback((id, updates) => {
     const now = new Date().toISOString()
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates, updated_at: now } : e))
-    dbWrite(() => updateRow('events', id, updates), 'update:events')
+    dbWrite(async () => {
+      const res = await updateRow('events', id, updates)
+      // If a foreign key violation occurs (orphaned venue_id/speaker_id from
+      // a record that was saved locally but never persisted to the DB),
+      // retry with the offending FK nulled out.
+      if (res?.error?.code === '23503') {
+        const fkField = res.error.message?.includes('venue_id') ? 'venue_id'
+          : res.error.message?.includes('speaker_id') ? 'speaker_id'
+          : null
+        if (fkField) {
+          setEvents(prev => prev.map(e => e.id === id ? { ...e, [fkField]: null } : e))
+          return updateRow('events', id, { ...updates, [fkField]: null })
+        }
+      }
+      return res
+    }, 'update:events')
   }, [dbWrite])
 
   const deleteEvent = useCallback((id) => {
