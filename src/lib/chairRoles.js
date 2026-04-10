@@ -83,5 +83,8 @@ export function getChairConfig(role) {
   return CHAIR_ROLE_CONFIGS[role] ?? DEFAULT_CHAIR_CONFIG
 }
 
-// Chair roles available in the "view as" switcher (excludes super_admin and president — they're the switchers, not switchable targets)
-export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS).filter(r => r !== 'super_admin' && r !== 'president')
+// Chair roles available in the "view as" switcher (excludes super_admin — it's not a chair role)
+// Sorted alphabetically by title for easy scanning
+export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS)
+  .filter(r => r !== 'super_admin')
+  .sort((a, b) => CHAIR_ROLE_CONFIGS[a].title.localeCompare(CHAIR_ROLE_CONFIGS[b].title))

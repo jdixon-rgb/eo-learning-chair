@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.34.1 — 2026-04-10
+
+### Role Switcher
+- President is now available as a switchable role in the dropdown (Super Admin can switch to President view).
+- Roles in the Switch Role dropdown are sorted alphabetically by title.
+- User's own role is excluded from the dropdown to avoid redundancy.
+
 ## v1.34.0 — 2026-04-10
 
 ### President Role

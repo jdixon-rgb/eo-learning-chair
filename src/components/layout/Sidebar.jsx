@@ -149,7 +149,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-eo-blue/50"
             >
               <option value="">{isSuperAdmin ? 'Super Admin' : 'President'}</option>
-              {SWITCHABLE_CHAIR_ROLES.map(r => (
+              {SWITCHABLE_CHAIR_ROLES.filter(r => r !== profile?.role).map(r => (
                 <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
               ))}
             </select>
