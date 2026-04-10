@@ -123,29 +123,36 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           <ChapterSwitcher />
         </div>
 
-        {/* Chair "View as" switcher — super admin only */}
+        {/* Role switcher — super admin only */}
         {isSuperAdmin && (
           <div className="px-4 pt-2">
             <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/30 uppercase mb-1">
               <Eye className="h-3 w-3" />
-              View as
+              Switch role
             </label>
             <select
               value={viewAsRole || ''}
-              onChange={e => setViewAsRole(e.target.value || null)}
+              onChange={e => {
+                setViewAsRole(e.target.value || null)
+                // Navigate to the selected role's home page
+                const config = e.target.value
+                  ? CHAIR_ROLE_CONFIGS[e.target.value]
+                  : CHAIR_ROLE_CONFIGS.super_admin
+                if (config?.homePath) navigate(config.homePath)
+              }}
               className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-eo-blue/50"
             >
-              <option value="">Super Admin (me)</option>
+              <option value="">Super Admin</option>
               {SWITCHABLE_CHAIR_ROLES.map(r => (
                 <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
               ))}
             </select>
             {isImpersonating && (
               <button
-                onClick={() => setViewAsRole(null)}
+                onClick={() => { setViewAsRole(null); navigate('/super-admin') }}
                 className="mt-1.5 w-full text-[10px] text-amber-300/80 hover:text-amber-200 underline"
               >
-                Exit view-as mode
+                Back to Super Admin
               </button>
             )}
           </div>
@@ -225,8 +232,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </>
           )}
 
-          {/* Super Admin section */}
-          {isSuperAdmin && (
+          {/* Super Admin section — only when viewing-as a chair role */}
+          {isSuperAdmin && isImpersonating && (
             <>
               <div className="pt-4 pb-2 px-3">
                 <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Platform</p>

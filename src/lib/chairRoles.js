@@ -22,6 +22,13 @@ import {
 } from 'lucide-react'
 
 export const CHAIR_ROLE_CONFIGS = {
+  super_admin: {
+    title: 'Super Admin',
+    homePath: '/super-admin',
+    navItems: [
+      { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
+    ],
+  },
   learning_chair: {
     title: 'Learning Chair',
     homePath: '/',
@@ -50,12 +57,12 @@ export const CHAIR_ROLE_CONFIGS = {
 }
 
 // Default fallback for roles without their own chair surface
-// (super_admin without view-as set, board_liaison, committee_member, etc.)
+// (board_liaison, committee_member, etc.)
 export const DEFAULT_CHAIR_CONFIG = CHAIR_ROLE_CONFIGS.learning_chair
 
 export function getChairConfig(role) {
   return CHAIR_ROLE_CONFIGS[role] ?? DEFAULT_CHAIR_CONFIG
 }
 
-// Roles eligible for the super-admin "view as" switcher
-export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS)
+// Chair roles available in the "view as" switcher (excludes super_admin itself)
+export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS).filter(r => r !== 'super_admin')
