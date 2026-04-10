@@ -7,6 +7,7 @@ import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
 import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
+import { ForumStoreProvider } from '@/lib/forumStore'
 import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
@@ -26,6 +27,7 @@ import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
 import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
 import SurveyPage from '@/pages/portal/SurveyPage'
 import ReflectionsPage from '@/pages/portal/ReflectionsPage'
+import ForumHomePage from '@/pages/portal/ForumHomePage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
@@ -65,6 +67,7 @@ function App() {
           <BoardStoreProvider>
             <EngagementStoreProvider>
             <SAPStoreProvider>
+            <ForumStoreProvider>
             <BrowserRouter>
               <Routes>
               {/* Public */}
@@ -161,6 +164,7 @@ function App() {
                 <Route path="/portal/calendar" element={<MemberCalendarPage embedded />} />
                 <Route path="/portal/survey" element={<SurveyPage />} />
                 <Route path="/portal/reflections" element={<ReflectionsPage />} />
+                <Route path="/portal/forum" element={<ForumHomePage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />
               </Route>
@@ -179,6 +183,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
+            </ForumStoreProvider>
             </SAPStoreProvider>
             </EngagementStoreProvider>
           </BoardStoreProvider>

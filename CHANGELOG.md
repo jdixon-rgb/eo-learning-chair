@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.36.0 — 2026-04-10
+
+### Forum Home (new portal section)
+- New **My Forum** page in the member portal (`/portal/forum`) — a shared workspace for every forum member with seven tabs:
+  - **Roles** — assign/view forum roles per fiscal year (Moderator, Moderator Elect, Moderator Elect-Elect, Timer, Technology, Retreat Planner, Social). Moderator pipeline mirrors the president pipeline. Moderators can assign; members can view.
+  - **Calendar** — per-forum event calendar (meetings, retreats, SAP visits, socials) with chapter calendar events overlaid in blue so forums don't double-book.
+  - **Parking Lot** — placeholder linking to Reflections (standalone lift-out coming next).
+  - **Tools** — placeholder for forum tools (Lifeline, Reflections templates, coaching worksheets).
+  - **Constitution** — upload/view the forum's operating document.
+  - **Partners** — SAP partner directory with per-member "Interested?" toggle and anonymous 5-star ratings + notes for the SAP Chair.
+  - **History** — moderator lineage, past members archive with founding-member flags and year ranges.
+- New data model (migration 018): `forum_role_assignments`, `forum_documents`, `forum_calendar_events`, `sap_forum_interest`, `sap_forum_ratings`, `forum_history_members`. `forums` table gets `founded_year`.
+- New `forumStore.js` with full CRUD for all forum entities.
+- Moderator controls (add/edit/delete) gated by role — moderators and admins see edit controls; members see read-only views.
+
 ## v1.35.0 — 2026-04-10
 
 ### Elect Roles & Partners Access
