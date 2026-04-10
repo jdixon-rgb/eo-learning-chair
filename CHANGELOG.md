@@ -17,6 +17,22 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.31.1 — 2026-04-10
+
+### Reflections
+- All forum mates can now edit any parking lot entry (scores, name, author) — not just the original author. "None of us are admins over anybody else." RLS updated to match (migration 017).
+- Edit controls (inline score dropdowns, edit/delete buttons) persist after author reassignment.
+
+## v1.31.0 — 2026-04-10
+
+### SAP Partners
+- **New SAP Partners page** — tier-grouped directory (Platinum/Gold/Silver/In-Kind) with expandable partner cards, contact management, forum-trained tracking, and list/tier view toggle
+- SAP store with full CRUD for partners and contacts, optimistic writes, Supabase hydration
+- Migration `015_sap_partners.sql` — evolves `saps` table to company-level records with tiers, adds `sap_contacts` table with RLS
+- "Partners" nav item in Learning Chair sidebar
+
+---
+
 ## v1.30.0 — 2026-04-10
 
 ### Reflections

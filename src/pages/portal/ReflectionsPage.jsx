@@ -34,7 +34,7 @@ const CATEGORIES = [
 ]
 
 export default function ReflectionsPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin, isSuperAdmin } = useAuth()
   const { chapterMembers } = useBoardStore()
   const email = user?.email || profile?.email
 
@@ -238,6 +238,7 @@ export default function ReflectionsPage() {
         <ParkingLotView
           entries={parkingLot}
           currentMemberId={member.id}
+          canEditAll={isAdmin || isSuperAdmin}
           chapterMembers={chapterMembers}
           currentForum={member.forum}
           onAddNew={() => setShowAddParkingLot(true)}
@@ -736,7 +737,7 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
 }
 
 // ── Parking lot view ───────────────────────────────────────
-function ParkingLotView({ entries, currentMemberId, chapterMembers, currentForum, onAddNew, onUpdate, onDelete }) {
+function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, currentForum, onAddNew, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(null)
   const [filterMemberId, setFilterMemberId] = useState('all')
 
@@ -826,13 +827,13 @@ function ParkingLotView({ entries, currentMemberId, chapterMembers, currentForum
         </thead>
         <tbody>
           {filteredEntries.map(e => {
-            const isAuthor = e.author_member_id === currentMemberId
+            const canEdit = true // all forum mates are equal
             return (
               <tr key={e.id} className="border-t border-white/5">
                 <td className="px-4 py-3 text-white/90">{e.name}</td>
                 <td className="px-3 py-3 text-white/50 text-xs">{getAuthorName(e.author_member_id)}</td>
                 <td className="text-center px-3 py-3 text-white/70">
-                  {isAuthor ? (
+                  {canEdit ? (
                     <ScoreSelect
                       value={e.importance}
                       onChange={(v) => onUpdate(e.id, { importance: v })}
@@ -842,7 +843,7 @@ function ParkingLotView({ entries, currentMemberId, chapterMembers, currentForum
                   )}
                 </td>
                 <td className="text-center px-3 py-3 text-white/70">
-                  {isAuthor ? (
+                  {canEdit ? (
                     <ScoreSelect
                       value={e.urgency}
                       onChange={(v) => onUpdate(e.id, { urgency: v })}
@@ -853,7 +854,7 @@ function ParkingLotView({ entries, currentMemberId, chapterMembers, currentForum
                 </td>
                 <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
                 <td className="px-3 py-3">
-                  {isAuthor && (
+                  {canEdit && (
                     <div className="flex gap-1">
                       <button onClick={() => setEditing(e)} className="text-white/30 hover:text-white" title="Edit name">
                         <Save className="h-3.5 w-3.5" />
