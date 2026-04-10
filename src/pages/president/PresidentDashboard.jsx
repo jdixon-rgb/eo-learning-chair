@@ -4,11 +4,12 @@ import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { formatCurrency } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import ThemeInfo from '@/components/ThemeInfo'
 import { Crown, DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
 
 export default function PresidentDashboard() {
   const { events, pipelineSpeakers } = useStore()
-  const { chapterRoles, roleAssignments, chapterMembers, activePresidentTheme, activePresidentName } = useBoardStore()
+  const { chapterRoles, roleAssignments, chapterMembers, activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
 
   const theme = activePresidentTheme || ''
@@ -50,7 +51,7 @@ export default function PresidentDashboard() {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           {formatFiscalYear(activeFiscalYear)}
-          {theme && <> &middot; Theme: <span className="font-semibold text-eo-blue">"{theme}"</span></>}
+          {theme && <> &middot; <ThemeInfo theme={theme} description={activePresidentThemeDescription} /></>}
         </p>
       </div>
 

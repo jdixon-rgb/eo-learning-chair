@@ -1,5 +1,6 @@
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import ThemeInfo from '@/components/ThemeInfo'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES } from '@/lib/constants'
@@ -44,7 +45,7 @@ function isEventPast(event) {
 
 export default function MemberCalendarPage({ embedded = false }) {
   const { chapter, events, speakers, venues } = useStore()
-  const { activePresidentTheme } = useBoardStore()
+  const { activePresidentTheme, activePresidentThemeDescription } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const windowMonths = getMonthWindow()
@@ -75,7 +76,7 @@ export default function MemberCalendarPage({ embedded = false }) {
             <div className="flex items-center justify-center gap-2 mt-4">
               <Palette className="h-4 w-4 text-eo-coral" />
               <p className="text-lg text-white/70">
-                {formatFiscalYear(activeFiscalYear)} &middot; Theme: <span className="font-semibold text-white">"{incomingTheme}"</span>
+                {formatFiscalYear(activeFiscalYear)} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} className="text-white/70" />
               </p>
             </div>
             <p className="mt-3 text-sm text-white/40">

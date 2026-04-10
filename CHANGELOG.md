@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.34.2 — 2026-04-10
+
+### Theme
+- **Theme description** — presidents can explain what their theme means and how chairs should bring it to life (new `theme_description` field, migration 022).
+- **ⓘ info icon** next to the theme name on Dashboard, Year Arc, Member Calendar, and President Dashboard. Click to see the full description in a modal.
+- Theme field in Settings now shows for president, president_elect, and president_elect_elect roles.
+
 ## v1.34.1 — 2026-04-10
 
 ### Role Switcher

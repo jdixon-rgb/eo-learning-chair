@@ -358,6 +358,11 @@ export function BoardStoreProvider({ children }) {
     return a?.theme || null
   })()
 
+  const activePresidentThemeDescription = (() => {
+    const a = findFYAssignment('president')
+    return a?.theme_description || null
+  })()
+
   const activePresidentName = (() => {
     const a = findFYAssignment('president')
     if (!a) return null
@@ -401,7 +406,7 @@ export function BoardStoreProvider({ children }) {
     addChapterMember, updateChapterMember, deleteChapterMember, syncMemberInvites, upsertStaffInvite,
     getMemberName, getMemberEmail,
     getChairRoles, getActiveAssignment, getChairBudget,
-    activePresidentTheme, activePresidentName,
+    activePresidentTheme, activePresidentThemeDescription, activePresidentName,
     presidentElectTheme, presidentElectName,
   }
 

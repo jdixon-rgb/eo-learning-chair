@@ -160,7 +160,7 @@ export default function SettingsPage() {
 
   function handleAddAssignment(roleId) {
     const roleObj = chapterRoles.find(r => r.id === roleId)
-    const isPresident = roleObj?.role_key === 'president' || roleObj?.role_key === 'president_elect'
+    const isPresident = ['president', 'president_elect', 'president_elect_elect'].includes(roleObj?.role_key)
     const isStaff = roleObj?.is_staff
 
     if (isStaff) {
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                   {assignments.length > 0 && (
                     <div className="px-3 pb-2 pl-10 space-y-2">
                       {assignments.map(a => {
-                        const isPresident = role.role_key === 'president' || role.role_key === 'president_elect'
+                        const isPresident = ['president', 'president_elect', 'president_elect_elect'].includes(role.role_key)
                         const showBudget = !isPresident && !role.is_staff && (a.status === 'active' || a.status === 'elect')
                         const showTheme = isPresident && (a.status === 'active' || a.status === 'elect')
                         const isEditing = editingAssignmentId === a.id
@@ -476,13 +476,22 @@ export default function SettingsPage() {
                             )}
                             {/* Theme field for president */}
                             {showTheme && (
-                              <div className="flex items-center gap-2 pl-6">
-                                <Palette className="h-3 w-3 text-muted-foreground" />
-                                <Input
-                                  placeholder="President's theme"
-                                  value={a.theme || ''}
-                                  onChange={e => updateRoleAssignment(a.id, { theme: e.target.value })}
-                                  className="h-6 text-xs flex-1"
+                              <div className="space-y-1.5 pl-6">
+                                <div className="flex items-center gap-2">
+                                  <Palette className="h-3 w-3 text-muted-foreground" />
+                                  <Input
+                                    placeholder="President's theme"
+                                    value={a.theme || ''}
+                                    onChange={e => updateRoleAssignment(a.id, { theme: e.target.value })}
+                                    className="h-6 text-xs flex-1"
+                                  />
+                                </div>
+                                <textarea
+                                  placeholder="What does this theme mean? How should chairs bring it to life?"
+                                  value={a.theme_description || ''}
+                                  onChange={e => updateRoleAssignment(a.id, { theme_description: e.target.value })}
+                                  className="w-full text-xs border rounded px-2 py-1.5 bg-background resize-none"
+                                  rows={2}
                                 />
                               </div>
                             )}
@@ -557,7 +566,7 @@ export default function SettingsPage() {
                             <option value="active">Active</option>
                             <option value="elect">Elect</option>
                           </select>
-                          {(role.role_key === 'president' || role.role_key === 'president_elect') ? (
+                          {['president', 'president_elect', 'president_elect_elect'].includes(role.role_key) ? (
                             <Input
                               placeholder="Theme"
                               value={assignForm.theme}

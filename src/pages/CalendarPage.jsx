@@ -6,6 +6,7 @@ import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDateWithDay } from '@/lib/utils'
+import ThemeInfo from '@/components/ThemeInfo'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,7 @@ import { Plus, Calendar, MapPin, DollarSign, Handshake, Route } from 'lucide-rea
 export default function CalendarPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
-  const { activePresidentTheme, activePresidentName } = useBoardStore()
+  const { activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const incomingPresident = activePresidentName || chapter.president_name || ''
@@ -61,7 +62,7 @@ export default function CalendarPage() {
         <div className="flex items-center gap-2 mt-2">
           <Route className="h-4 w-4 text-eo-coral" />
           <p className="text-sm text-muted-foreground">
-            {formatFiscalYear(activeFiscalYear)}{incomingPresident ? ` \u00b7 Incoming President: ${incomingPresident}` : ''} &middot; Theme: <span className="font-semibold text-eo-blue">"{incomingTheme}"</span>
+            {formatFiscalYear(activeFiscalYear)}{incomingPresident ? ` \u00b7 President: ${incomingPresident}` : ''} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} />
           </p>
         </div>
       </div>
