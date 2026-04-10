@@ -84,6 +84,9 @@ export default function ForumHomePage() {
     return m
   }, [chapterMembers])
 
+  // Use the forums table record if it exists, otherwise create a minimal fallback from the member's forum name
+  const effectiveForum = forum || (member?.forum ? { id: null, name: member.forum, is_active: true, founded_year: '' } : null)
+
   // Is current user the moderator?
   const isModerator = useMemo(() => {
     if (isAdmin || isSuperAdmin) return true
@@ -119,9 +122,6 @@ export default function ForumHomePage() {
       </div>
     )
   }
-
-  // Use the forums table record if it exists, otherwise create a minimal fallback from the member's forum name
-  const effectiveForum = forum || { id: null, name: member.forum, is_active: true, founded_year: '' }
 
   const tabs = [
     { key: 'parking', label: 'Parking Lot', icon: Pin },
