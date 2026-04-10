@@ -17,6 +17,12 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.32.3 — 2026-04-10
+
+### Fiscal Year
+- Scenarios are now fiscal-year-scoped (migration 019) — each year gets its own what-if planning.
+- Speakers and venues remain cross-year (persistent).
+
 ## v1.32.2 — 2026-04-10
 
 ### Settings

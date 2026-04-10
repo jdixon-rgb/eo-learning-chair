@@ -116,7 +116,7 @@ export function StoreProvider({ children }) {
             safeFetch('budget_items', () => fetchAll('budget_items')),
             safeFetch('contract_checklists', () => fetchAll('contract_checklists')),
             safeFetch('saps', () => fetchByChapter('saps', activeChapterId)),
-            safeFetch('scenarios', () => fetchByChapter('scenarios', activeChapterId)),
+            safeFetch('scenarios', () => supabase.from('scenarios').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
             safeFetch('event_documents', () => fetchByChapter('event_documents', activeChapterId)),
           ])
 
@@ -445,11 +445,11 @@ export function StoreProvider({ children }) {
   const addScenario = useCallback((scenario) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newScenario = { ...scenario, id, chapter_id: activeChapterId, created_at: now }
+    const newScenario = { ...scenario, id, chapter_id: activeChapterId, fiscal_year: activeFiscalYear, created_at: now }
     setScenarios(prev => [...prev, newScenario])
     dbWrite(() => insertRow('scenarios', newScenario), 'insert:scenarios')
     return newScenario
-  }, [activeChapterId, dbWrite])
+  }, [activeChapterId, activeFiscalYear, dbWrite])
 
   const updateScenario = useCallback((id, updates) => {
     setScenarios(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s))
