@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.31.2 — 2026-04-10
+
+### Portal
+- Simplified header to show only the chapter logo — removed "Learning Chair / Member Portal" text to reflect the broader scope of the portal.
+
 ## v1.31.1 — 2026-04-10
 
 ### Reflections

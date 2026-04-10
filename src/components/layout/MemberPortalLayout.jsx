@@ -30,11 +30,7 @@ export default function MemberPortalLayout() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
-            <img src={eoLogo} alt="EO" className="h-8 w-auto" />
-            <div className="flex flex-col leading-tight">
-              <span className="text-xs font-bold tracking-tight">Learning Chair</span>
-              <span className="text-[10px] text-white/40">Member Portal</span>
-            </div>
+            <img src={eoLogo} alt="EO Arizona" className="h-8 w-auto" />
           </div>
 
           {/* Center: Desktop nav */}
