@@ -36,11 +36,14 @@ export default function ForumHomePage() {
   const { user, profile, isAdmin, isSuperAdmin } = useAuth()
   const { chapterMembers, forums, loading: boardLoading } = useBoardStore()
   const { forumRoles, forumCalendar, forumDocs, sapInterest, sapRatings, forumHistory,
+    agendas, agendaItems,
     addForumRole, updateForumRole, deleteForumRole,
     addForumCalEvent, updateForumCalEvent, deleteForumCalEvent,
     addForumDoc, deleteForumDoc,
     toggleSapInterest, upsertSapRating,
     addHistoryMember, deleteHistoryMember,
+    addAgenda, updateAgenda, deleteAgenda,
+    addAgendaItem, updateAgendaItem, deleteAgendaItem,
   } = useForumStore()
   const { events: chapterEvents, saps } = useStore()
 
@@ -227,9 +230,19 @@ export default function ForumHomePage() {
       )}
 
       {tab === 'agenda' && (
-        <div className="text-center text-white/50 text-sm py-8">
-          Build your forum meeting agenda here. Coming soon.
-        </div>
+        <AgendaTab
+          forum={effectiveForum}
+          agendas={agendas.filter(a => a.forum_id === effectiveForum?.id)}
+          agendaItems={agendaItems}
+          isModerator={isModerator}
+          memberId={member.id}
+          onAddAgenda={addAgenda}
+          onUpdateAgenda={updateAgenda}
+          onDeleteAgenda={deleteAgenda}
+          onAddItem={addAgendaItem}
+          onUpdateItem={updateAgendaItem}
+          onDeleteItem={deleteAgendaItem}
+        />
       )}
 
       {tab === 'tools' && (
@@ -714,6 +727,308 @@ function HistoryTab({ forum, history, roles, memberById, isModerator, onAddHisto
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────
+// Agenda Tab
+// ────────────────────────────────────────────────────────────
+function AgendaTab({ forum, agendas, agendaItems, isModerator, memberId, onAddAgenda, onUpdateAgenda, onDeleteAgenda, onAddItem, onUpdateItem, onDeleteItem }) {
+  const [viewingId, setViewingId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [creating, setCreating] = useState(false)
+
+  // Sort by date, newest first
+  const sorted = useMemo(() =>
+    [...agendas].sort((a, b) => (b.meeting_date || '').localeCompare(a.meeting_date || '')),
+  [agendas])
+
+  const viewing = viewingId ? agendas.find(a => a.id === viewingId) : null
+  const editing = editingId ? agendas.find(a => a.id === editingId) : null
+
+  // ── Agenda viewer ──
+  if (viewing) {
+    const items = agendaItems.filter(i => i.agenda_id === viewing.id).sort((a, b) => a.sort_order - b.sort_order)
+    const totalMin = items.reduce((s, i) => s + (i.minutes || 0), 0)
+    return (
+      <div className="space-y-4">
+        <button onClick={() => setViewingId(null)} className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white">
+          <ChevronLeft className="h-3.5 w-3.5" /> All agendas
+        </button>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
+          {viewing.mission && <p className="text-xs text-white/50 italic"><strong>Mission:</strong> {viewing.mission}</p>}
+          {viewing.forum_values && <p className="text-xs text-white/50"><strong>Values:</strong> {viewing.forum_values}</p>}
+          <div className="text-xs text-white/60 space-y-1">
+            <p><strong>Date:</strong> {viewing.meeting_date}</p>
+            <p><strong>Time:</strong> {viewing.start_time} – {viewing.end_time}</p>
+            {viewing.host && <p><strong>Host / Location:</strong> {viewing.host}{viewing.location ? `, ${viewing.location}` : ''}</p>}
+          </div>
+          <div className="rounded-lg border border-white/10 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+                <tr>
+                  <th className="text-left px-4 py-2">Item</th>
+                  <th className="text-center px-3 py-2 w-20">Minutes</th>
+                  <th className="text-center px-3 py-2 w-24">Start</th>
+                  <th className="text-center px-3 py-2 w-24">End</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(item => (
+                  <tr key={item.id} className="border-t border-white/5">
+                    <td className="px-4 py-2">
+                      <span className="text-white/90">{item.title}</span>
+                      {item.description && <p className="text-[11px] text-white/40 mt-0.5 whitespace-pre-line">{item.description}</p>}
+                    </td>
+                    <td className="text-center px-3 py-2 text-white/60">{item.minutes}</td>
+                    <td className="text-center px-3 py-2 text-white/60">{item.start_time}</td>
+                    <td className="text-center px-3 py-2 text-white/60">{item.end_time}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-white/5">
+                <tr>
+                  <td className="px-4 py-2 text-xs text-white/50 font-semibold">Total (Target: {viewing.target_minutes || 270} min)</td>
+                  <td className="text-center px-3 py-2 text-white font-bold text-xs">{totalMin}</td>
+                  <td colSpan={2}></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <p className="text-[10px] text-white/20 text-center italic">© {new Date(viewing.meeting_date).getFullYear()} {forum.name} Forum Proprietary and Confidential</p>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Agenda editor ──
+  if (editing || creating) {
+    return (
+      <AgendaEditor
+        agenda={editing}
+        forum={forum}
+        items={editing ? agendaItems.filter(i => i.agenda_id === editing.id).sort((a, b) => a.sort_order - b.sort_order) : []}
+        memberId={memberId}
+        onSaveAgenda={(data) => {
+          if (editing) {
+            onUpdateAgenda(editing.id, data)
+            setEditingId(null)
+          } else {
+            const row = onAddAgenda({ forum_id: forum.id, ...data })
+            setCreating(false)
+            setEditingId(row.id)
+          }
+        }}
+        onAddItem={onAddItem}
+        onUpdateItem={onUpdateItem}
+        onDeleteItem={onDeleteItem}
+        onBack={() => { setEditingId(null); setCreating(false) }}
+      />
+    )
+  }
+
+  // ── Agenda list ──
+  return (
+    <div className="space-y-4">
+      {isModerator && (
+        <div className="flex justify-end">
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+            <Plus className="h-3.5 w-3.5" /> New agenda
+          </button>
+        </div>
+      )}
+      {sorted.length === 0 ? (
+        <div className="text-center py-12 text-white/40 text-sm">No agendas yet.</div>
+      ) : (
+        <div className="space-y-2">
+          {sorted.map(a => {
+            const statusColors = { draft: 'text-amber-400 bg-amber-500/20', published: 'text-emerald-400 bg-emerald-500/20', archived: 'text-white/40 bg-white/5' }
+            return (
+              <div key={a.id} className={`rounded-xl border border-white/10 bg-white/[0.03] p-4 flex items-center justify-between ${a.status === 'archived' ? 'opacity-60' : ''}`}>
+                <button onClick={() => setViewingId(a.id)} className="text-left flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white/90">{a.title || a.meeting_date}</span>
+                    <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${statusColors[a.status] || ''}`}>{a.status}</span>
+                  </div>
+                  <p className="text-xs text-white/40 mt-0.5">{a.meeting_date} · {a.start_time} – {a.end_time}</p>
+                </button>
+                {isModerator && (
+                  <div className="flex items-center gap-1 shrink-0 ml-3">
+                    <button onClick={() => setEditingId(a.id)} className="text-white/30 hover:text-white p-1" title="Edit"><Save className="h-3.5 w-3.5" /></button>
+                    {a.status === 'draft' && (
+                      <button onClick={() => onUpdateAgenda(a.id, { status: 'published' })} className="text-white/30 hover:text-emerald-400 p-1" title="Publish">
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {a.status === 'published' && (
+                      <button onClick={() => onUpdateAgenda(a.id, { status: 'archived' })} className="text-white/30 hover:text-amber-400 p-1" title="Archive">
+                        <History className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {a.status === 'archived' && (
+                      <button onClick={() => onUpdateAgenda(a.id, { status: 'published' })} className="text-white/30 hover:text-emerald-400 p-1" title="Restore">
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <button onClick={() => onDeleteAgenda(a.id)} className="text-white/30 hover:text-red-400 p-1" title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Agenda Editor ──────────────────────────────────────────
+function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgenda, onAddItem, onUpdateItem, onDeleteItem, onBack }) {
+  const [title, setTitle] = useState(agenda?.title || `${forum.name} Forum Meeting`)
+  const [meetingDate, setMeetingDate] = useState(agenda?.meeting_date || '')
+  const [startTime, setStartTime] = useState(agenda?.start_time || '12:00 PM')
+  const [endTime, setEndTime] = useState(agenda?.end_time || '4:30 PM')
+  const [location, setLocation] = useState(agenda?.location || '')
+  const [host, setHost] = useState(agenda?.host || '')
+  const [mission, setMission] = useState(agenda?.mission || 'To act as a personal board of directors through a collective commitment to one another. To share, learn, challenge, hold each other accountable, and grow personally and professionally as individuals and as a forum.')
+  const [forumValues, setForumValues] = useState(agenda?.forum_values || 'Respectful, Present, Accountable, and Challengeable')
+  const [targetMinutes, setTargetMinutes] = useState(agenda?.target_minutes || 270)
+  const [status, setStatus] = useState(agenda?.status || 'draft')
+
+  // For new agendas, items are added after the agenda is saved. For existing, they're live.
+  const [newItemTitle, setNewItemTitle] = useState('')
+  const [newItemDesc, setNewItemDesc] = useState('')
+  const [newItemMin, setNewItemMin] = useState(10)
+  const [newItemStart, setNewItemStart] = useState('')
+  const [newItemEnd, setNewItemEnd] = useState('')
+
+  const items = initialItems || []
+  const totalMin = items.reduce((s, i) => s + (i.minutes || 0), 0)
+
+  const handleSave = () => {
+    onSaveAgenda({
+      title, meeting_date: meetingDate, start_time: startTime, end_time: endTime,
+      location, host, mission, forum_values: forumValues,
+      target_minutes: targetMinutes, status, created_by: memberId,
+    })
+  }
+
+  const handleAddItem = () => {
+    if (!newItemTitle || !agenda?.id) return
+    onAddItem({
+      agenda_id: agenda.id,
+      title: newItemTitle,
+      description: newItemDesc,
+      minutes: newItemMin,
+      start_time: newItemStart,
+      end_time: newItemEnd,
+      sort_order: items.length,
+    })
+    setNewItemTitle('')
+    setNewItemDesc('')
+    setNewItemMin(10)
+    setNewItemStart('')
+    setNewItemEnd('')
+  }
+
+  return (
+    <div className="space-y-4">
+      <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white">
+        <ChevronLeft className="h-3.5 w-3.5" /> All agendas
+      </button>
+      <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+        <h3 className="text-base font-semibold">{agenda ? 'Edit Agenda' : 'New Agenda'}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2">
+            <label className="text-xs text-white/50 mb-1 block">Title</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Date</label>
+            <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-white/50 mb-1 block">Start</label>
+              <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label className="text-xs text-white/50 mb-1 block">End</label>
+              <input type="text" value={endTime} onChange={e => setEndTime(e.target.value)} placeholder="4:30 PM" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Host</label>
+            <input type="text" value={host} onChange={e => setHost(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Location</label>
+            <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs text-white/50 mb-1 block">Mission</label>
+            <textarea value={mission} onChange={e => setMission(e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Values</label>
+            <input type="text" value={forumValues} onChange={e => setForumValues(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Target minutes</label>
+            <input type="number" value={targetMinutes} onChange={e => setTargetMinutes(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <select value={status} onChange={e => setStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+            <option value="draft" className="bg-eo-navy">Draft</option>
+            <option value="published" className="bg-eo-navy">Published</option>
+            <option value="archived" className="bg-eo-navy">Archived</option>
+          </select>
+          <button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm bg-eo-blue text-white hover:bg-eo-blue/90">
+            {agenda ? 'Save changes' : 'Create agenda'}
+          </button>
+        </div>
+      </div>
+
+      {/* Items editor (only for existing agendas) */}
+      {agenda?.id && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+          <h4 className="text-sm font-semibold">Agenda Items ({totalMin}/{targetMinutes} min)</h4>
+          {items.length > 0 && (
+            <div className="space-y-1">
+              {items.map((item, idx) => (
+                <div key={item.id} className="flex items-start gap-2 rounded-lg bg-white/[0.03] px-3 py-2">
+                  <span className="text-[10px] text-white/30 mt-1 w-5 shrink-0">{idx + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm text-white/90">{item.title}</span>
+                    {item.description && <p className="text-[11px] text-white/40 mt-0.5">{item.description}</p>}
+                    <p className="text-[10px] text-white/30 mt-0.5">{item.minutes} min · {item.start_time} – {item.end_time}</p>
+                  </div>
+                  <button onClick={() => onDeleteItem(item.id)} className="text-white/20 hover:text-red-400 shrink-0 mt-1">
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="border-t border-white/10 pt-3 space-y-2">
+            <p className="text-xs text-white/40">Add item:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+              <div className="sm:col-span-2">
+                <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} placeholder="Item title" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+              </div>
+              <input type="number" value={newItemMin} onChange={e => setNewItemMin(Number(e.target.value))} placeholder="Min" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white" />
+              <input type="text" value={newItemStart} onChange={e => setNewItemStart(e.target.value)} placeholder="Start" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+              <input type="text" value={newItemEnd} onChange={e => setNewItemEnd(e.target.value)} placeholder="End" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+            </div>
+            <textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Description / sub-items (optional)" rows={2} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+            <button onClick={handleAddItem} disabled={!newItemTitle} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add item</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

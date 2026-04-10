@@ -23,6 +23,8 @@ export function ForumStoreProvider({ children }) {
   const [sapInterest, setSapInterest] = useState(cached?.sapInterest ?? [])
   const [sapRatings, setSapRatings] = useState(cached?.sapRatings ?? [])
   const [forumHistory, setForumHistory] = useState(cached?.forumHistory ?? [])
+  const [agendas, setAgendas] = useState(cached?.agendas ?? [])
+  const [agendaItems, setAgendaItems] = useState(cached?.agendaItems ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -30,8 +32,8 @@ export function ForumStoreProvider({ children }) {
 
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory })
-  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory])
+    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems })
+  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems])
 
   useEffect(() => {
     if (prevChapterId.current !== activeChapterId) { hasFetched.current = false; prevChapterId.current = activeChapterId }
@@ -47,19 +49,23 @@ export function ForumStoreProvider({ children }) {
       if (c.sapInterest) setSapInterest(c.sapInterest)
       if (c.sapRatings) setSapRatings(c.sapRatings)
       if (c.forumHistory) setForumHistory(c.forumHistory)
+      if (c.agendas) setAgendas(c.agendas)
+      if (c.agendaItems) setAgendaItems(c.agendaItems)
     }
     setLoading(true)
     hydrate()
 
     async function hydrate() {
       try {
-        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes] = await Promise.all([
+        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes] = await Promise.all([
           fetchByChapter('forum_role_assignments', activeChapterId),
           fetchByChapter('forum_documents', activeChapterId),
           fetchByChapter('forum_calendar_events', activeChapterId),
           fetchByChapter('sap_forum_interest', activeChapterId),
           fetchByChapter('sap_forum_ratings', activeChapterId),
           fetchByChapter('forum_history_members', activeChapterId),
+          fetchByChapter('forum_agendas', activeChapterId),
+          supabase.from('forum_agenda_items').select('*'),
         ])
         if (rolesRes.data) setForumRoles(rolesRes.data)
         if (docsRes.data) setForumDocs(docsRes.data)
@@ -67,6 +73,8 @@ export function ForumStoreProvider({ children }) {
         if (intRes.data) setSapInterest(intRes.data)
         if (ratRes.data) setSapRatings(ratRes.data)
         if (histRes.data) setForumHistory(histRes.data)
+        if (agendaRes.data) setAgendas(agendaRes.data)
+        if (itemsRes.data) setAgendaItems(itemsRes.data)
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
@@ -187,14 +195,59 @@ export function ForumStoreProvider({ children }) {
     dbWrite(() => deleteRow('forum_history_members', id), 'delete:forum_history_members')
   }, [dbWrite])
 
+  // ── Agendas CRUD ────────────────────────────────────────────
+  const addAgenda = useCallback((a) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = { id, chapter_id: activeChapterId, ...a, created_at: now, updated_at: now }
+    setAgendas(prev => [...prev, row])
+    dbWrite(() => insertRow('forum_agendas', row), 'insert:forum_agendas')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateAgenda = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setAgendas(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a))
+    dbWrite(() => updateRow('forum_agendas', id, updates), 'update:forum_agendas')
+  }, [dbWrite])
+
+  const deleteAgenda = useCallback((id) => {
+    setAgendas(prev => prev.filter(a => a.id !== id))
+    setAgendaItems(prev => prev.filter(i => i.agenda_id !== id))
+    dbWrite(() => deleteRow('forum_agendas', id), 'delete:forum_agendas')
+  }, [dbWrite])
+
+  const addAgendaItem = useCallback((item) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = { id, ...item, created_at: now, updated_at: now }
+    setAgendaItems(prev => [...prev, row])
+    dbWrite(() => insertRow('forum_agenda_items', row), 'insert:forum_agenda_items')
+    return row
+  }, [dbWrite])
+
+  const updateAgendaItem = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setAgendaItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i))
+    dbWrite(() => updateRow('forum_agenda_items', id, updates), 'update:forum_agenda_items')
+  }, [dbWrite])
+
+  const deleteAgendaItem = useCallback((id) => {
+    setAgendaItems(prev => prev.filter(i => i.id !== id))
+    dbWrite(() => deleteRow('forum_agenda_items', id), 'delete:forum_agenda_items')
+  }, [dbWrite])
+
   const value = {
     forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory,
+    agendas, agendaItems,
     loading, dbError, clearDbError: () => setDbError(null),
     addForumRole, updateForumRole, deleteForumRole,
     addForumCalEvent, updateForumCalEvent, deleteForumCalEvent,
     addForumDoc, deleteForumDoc,
     toggleSapInterest, upsertSapRating,
     addHistoryMember, deleteHistoryMember,
+    addAgenda, updateAgenda, deleteAgenda,
+    addAgendaItem, updateAgendaItem, deleteAgendaItem,
   }
 
   return createElement(ForumStoreContext.Provider, { value }, children)
