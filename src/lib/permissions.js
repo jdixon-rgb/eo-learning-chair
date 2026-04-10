@@ -7,6 +7,9 @@ export const SUPER_ADMIN_ROLES = ['super_admin']
 // Board roles that can access the board module
 export const BOARD_ROLES = ['super_admin', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director']
 
+// Roles that can manage board positions, assignments, and chapter settings
+export const SETTINGS_ROLES = ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator']
+
 // Engagement Chair scope
 export const ENGAGEMENT_ROLES = ['super_admin', 'engagement_chair']
 
@@ -19,7 +22,7 @@ export const FEATURE_PERMISSIONS = {
   canViewVenues:         ADMIN_ROLES,
   canViewScenarios:      ADMIN_ROLES,
   canEditChapterConfig:  ['super_admin', 'chapter_executive_director'],
-  canManageSettings:     ADMIN_ROLES,
+  canManageSettings:     ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator'],
   canManageMembers:      ADMIN_ROLES,
   canSendNotifications:  ADMIN_ROLES,
   canViewSurveyResults:  ADMIN_ROLES,

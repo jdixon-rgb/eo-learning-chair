@@ -7,7 +7,7 @@ import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
 import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
@@ -96,7 +96,7 @@ function App() {
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><ScenarioPage /></ProtectedRoute>
                 } />
                 <Route path="/settings" element={
-                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><SettingsPage /></ProtectedRoute>
+                  <ProtectedRoute allowedRoles={SETTINGS_ROLES}><SettingsPage /></ProtectedRoute>
                 } />
                 {/* Admin sub-pages */}
                 <Route path="/admin/members" element={

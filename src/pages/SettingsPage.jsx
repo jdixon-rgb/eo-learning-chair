@@ -391,15 +391,17 @@ export default function SettingsPage() {
                                     ))}
                                   </select>
                                 )}
-                                <select
-                                  value={editAssignment.fiscal_year}
-                                  onChange={e => setEditAssignment(prev => ({ ...prev, fiscal_year: e.target.value }))}
-                                  className="h-6 text-[10px] border rounded px-1 bg-background"
-                                >
-                                  {FISCAL_YEAR_OPTIONS.map(fy => (
-                                    <option key={fy} value={fy}>{fy}</option>
-                                  ))}
-                                </select>
+                                {!role.is_staff && (
+                                  <select
+                                    value={editAssignment.fiscal_year}
+                                    onChange={e => setEditAssignment(prev => ({ ...prev, fiscal_year: e.target.value }))}
+                                    className="h-6 text-[10px] border rounded px-1 bg-background"
+                                  >
+                                    {FISCAL_YEAR_OPTIONS.map(fy => (
+                                      <option key={fy} value={fy}>{fy}</option>
+                                    ))}
+                                  </select>
+                                )}
                                 <button
                                   onClick={() => saveEditAssignment(a.id, role.is_staff)}
                                   className="text-green-600 hover:text-green-700 p-0.5"
@@ -436,14 +438,16 @@ export default function SettingsPage() {
                                 >
                                   <Pencil className="h-3 w-3" />
                                 </button>
-                                <span className="text-muted-foreground text-xs ml-auto">FY {a.fiscal_year}</span>
+                                {!role.is_staff && a.fiscal_year && (
+                                  <span className="text-muted-foreground text-xs ml-auto">FY {a.fiscal_year}</span>
+                                )}
                                 <select
                                   value={a.status}
                                   onChange={e => updateRoleAssignment(a.id, { status: e.target.value })}
-                                  className="text-[10px] bg-transparent border rounded px-1 py-0.5"
+                                  className={`text-[10px] bg-transparent border rounded px-1 py-0.5${role.is_staff ? ' ml-auto' : ''}`}
                                 >
                                   <option value="active">Active</option>
-                                  <option value="elect">Elect</option>
+                                  {!role.is_staff && <option value="elect">Elect</option>}
                                   <option value="past">Past</option>
                                 </select>
                                 <button
@@ -506,15 +510,6 @@ export default function SettingsPage() {
                             onChange={e => setAssignForm(prev => ({ ...prev, member_email: e.target.value }))}
                             className="h-7 text-sm flex-1 min-w-[140px]"
                           />
-                          <select
-                            value={assignForm.fiscal_year}
-                            onChange={e => setAssignForm(prev => ({ ...prev, fiscal_year: e.target.value }))}
-                            className="h-7 text-sm border rounded px-2 bg-background"
-                          >
-                            {FISCAL_YEAR_OPTIONS.map(fy => (
-                              <option key={fy} value={fy}>{fy}</option>
-                            ))}
-                          </select>
                           <select
                             value={assignForm.status}
                             onChange={e => setAssignForm(prev => ({ ...prev, status: e.target.value }))}

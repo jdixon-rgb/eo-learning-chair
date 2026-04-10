@@ -17,6 +17,12 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.32.1 — 2026-04-10
+
+### Settings & Permissions
+- Settings page (Board Positions & Assignments) restricted to Super Admin, Executive Director, and Experience Coordinator — no longer visible to Learning Chair or other individual chairs.
+- Staff roles (Executive Director, Experience Coordinator, Executive Assistant) no longer show fiscal year fields — they're ongoing positions without year scoping.
+
 ## v1.32.0 — 2026-04-10
 
 ### Fiscal Year Infrastructure
