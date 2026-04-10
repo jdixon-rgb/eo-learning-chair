@@ -154,6 +154,8 @@ export const DEFAULT_MARKETING_MILESTONES = [
 export const CHAIR_ROLES = [
   { id: 'president', label: 'President' },
   { id: 'president_elect', label: 'President Elect' },
+  { id: 'president_elect_elect', label: 'President Elect-Elect' },
+  { id: 'learning_chair_elect', label: 'Learning Chair Elect' },
   { id: 'finance', label: 'Finance' },
   { id: 'governance', label: 'Governance' },
   { id: 'membership', label: 'Membership' },
