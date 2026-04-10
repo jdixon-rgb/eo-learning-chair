@@ -51,7 +51,7 @@ export default function ForumHomePage() {
     let cancelled = false
     async function init() {
       setLoading(true)
-      const m = await loadCurrentMember(email)
+      const { data: m } = await loadCurrentMember(email)
       if (!cancelled) {
         setMember(m)
         if (m?.forum && m?.chapter_id) {
