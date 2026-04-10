@@ -388,24 +388,68 @@ export const mockSpeakers = [
 ]
 
 // ── STRATEGIC ALLIANCE PARTNERS (SAPs) ────────────────
-// SAPs are sponsors who pay to support EO and can run workshops at events
+// SAPs are company-level partner records with tier and industry.
+// Each SAP has 1–N contacts tracked in mockSAPContacts.
 
 export const mockSAPs = [
-  {
-    id: 'sap-jamie',
-    chapter_id: mockChapter.id,
-    name: 'Jamie Osborn',
-    company: 'Culture Index',
-    role: 'Strategic Alliance Partner',
-    description: 'Culture Index provides behavioral analytics for leadership teams. Jamie runs interactive workshops analyzing attendees\' behavioral profiles.',
-    contribution_type: 'workshop',
-    contribution_description: 'Culture Index Workshop — attendees take the Culture Index survey in advance, Jamie presents high-level group analysis and individual insights live.',
-    contact_email: '',
-    contact_phone: '',
-    annual_sponsorship: null,
-    notes: 'Tied to February event at Wrigley Mansion alongside Dr. Gary Chapman. Culture Index + 5 Love Languages = powerful combination for understanding relationships at home and work.',
-    created_at: new Date().toISOString(),
-  },
+  { id: 'sap-silverhawk', chapter_id: mockChapter.id, name: 'Silverhawk Financial', industry: 'Financial Planning', tier: 'platinum', status: 'active', description: '', contribution_type: 'sponsorship', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-quarles', chapter_id: mockChapter.id, name: 'Quarles & Brady', industry: 'Attorney', tier: 'platinum', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-nextlevel', chapter_id: mockChapter.id, name: 'Next Level Growth', industry: 'Business Growth Specialist', tier: 'platinum', status: 'active', description: '', contribution_type: 'workshop', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-heartland', chapter_id: mockChapter.id, name: 'Heartland Payment Systems', industry: 'Payroll', tier: 'gold', status: 'active', description: '', contribution_type: 'sponsorship', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-corpaliance', chapter_id: mockChapter.id, name: 'Corporate Alliance Production', industry: 'Business Services', tier: 'gold', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-snaptech', chapter_id: mockChapter.id, name: 'SnapTech IT', industry: 'IT Services', tier: 'gold', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-aptive', chapter_id: mockChapter.id, name: 'Aptive Index', industry: 'AI Assistant', tier: 'gold', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-bankers', chapter_id: mockChapter.id, name: 'Bankers Trust', industry: 'Banking', tier: 'silver', status: 'active', description: '', contribution_type: 'sponsorship', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-levrose', chapter_id: mockChapter.id, name: 'Levrose', industry: 'Commercial Real Estate', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-infinity', chapter_id: mockChapter.id, name: 'Infinity Insurance Partners', industry: 'Property & Casualty Insurance', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-remoteraven', chapter_id: mockChapter.id, name: 'Remote Raven', industry: 'Virtual Assistants', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-trainual', chapter_id: mockChapter.id, name: 'Trainual', industry: 'Online Training Platform', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-born', chapter_id: mockChapter.id, name: 'Born Counseling and Consulting', industry: 'Counseling', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-congruity', chapter_id: mockChapter.id, name: 'Congruity', industry: 'PEO', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-tradition', chapter_id: mockChapter.id, name: 'Tradition Capital Bank', industry: 'Banking', tier: 'silver', status: 'active', description: '', contribution_type: 'sponsorship', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-xponential', chapter_id: mockChapter.id, name: 'Xponential Digital', industry: 'IT Services', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-strunk', chapter_id: mockChapter.id, name: 'Strunk HR', industry: 'Property & Casualty Insurance', tier: 'silver', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-marx', chapter_id: mockChapter.id, name: 'Marx Productions', industry: 'Audio & Visual', tier: 'in_kind', status: 'active', description: '', contribution_type: 'service', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sap-select', chapter_id: mockChapter.id, name: 'Select', industry: 'Private Membership', tier: 'in_kind', status: 'active', description: '', contribution_type: 'other', contribution_description: '', contact_email: '', contact_phone: '', website: '', annual_sponsorship: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+]
+
+export const mockSAPContacts = [
+  // Platinum
+  { id: 'sc-laux', sap_id: 'sap-silverhawk', name: 'Joe Laux', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-jackson', sap_id: 'sap-silverhawk', name: 'Kelly Jackson', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-gardner', sap_id: 'sap-quarles', name: 'Jeff Gardner', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-wood', sap_id: 'sap-quarles', name: 'Jason Wood', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-loo', sap_id: 'sap-quarles', name: 'Leonardo Loo', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-buchta', sap_id: 'sap-quarles', name: 'Heather Buchta', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-erath', sap_id: 'sap-nextlevel', name: 'Michael Erath', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-kirk', sap_id: 'sap-nextlevel', name: 'Landon Kirk', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-prenovost', sap_id: 'sap-nextlevel', name: 'Chris Prenovost', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-small', sap_id: 'sap-nextlevel', name: 'Jim Small', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Gold
+  { id: 'sc-lester', sap_id: 'sap-heartland', name: 'Scott Lester', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-harris', sap_id: 'sap-heartland', name: 'Rowland Harris', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-watson', sap_id: 'sap-corpaliance', name: 'Kim Watson', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-strati', sap_id: 'sap-corpaliance', name: 'Mike Strati', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-hulsy', sap_id: 'sap-snaptech', name: 'Ted Hulsy', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-chavez', sap_id: 'sap-snaptech', name: 'Garrett Chavez', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-wargo', sap_id: 'sap-aptive', name: 'Joe Wargo', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // Silver
+  { id: 'sc-cooney', sap_id: 'sap-bankers', name: 'Kevin Cooney', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-klingenberg', sap_id: 'sap-bankers', name: 'Karl Klingenberg', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-baumgardner', sap_id: 'sap-levrose', name: 'Mike Baumgardner', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-delgado', sap_id: 'sap-infinity', name: 'Bridgett Delgado', role: 'Senior Account Manager', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-baio', sap_id: 'sap-remoteraven', name: 'Nancy Baio', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-krinsky', sap_id: 'sap-trainual', name: 'Scott Krinsky', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-beech', sap_id: 'sap-trainual', name: 'Sara Beech', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-bunda', sap_id: 'sap-trainual', name: 'Jade Bunda', role: '', email: '', phone: '', is_primary: false, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-born', sap_id: 'sap-born', name: 'Jamie Born', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-dimond', sap_id: 'sap-congruity', name: 'Brian Dimond', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-crane', sap_id: 'sap-tradition', name: 'Susana Crane', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-mehta', sap_id: 'sap-xponential', name: 'Aakash Mehta', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-norton', sap_id: 'sap-strunk', name: 'Holly Norton', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // In-Kind
+  { id: 'sc-marx', sap_id: 'sap-marx', name: 'Melody Marx', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'sc-burkhardt', sap_id: 'sap-select', name: 'Matthew Burkhardt', role: '', email: '', phone: '', is_primary: true, forum_trained: false, forum_trained_date: null, notes: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ]
 
 // ── EVENTS ──────────────────────────────────────────────
@@ -569,7 +613,7 @@ export const mockEvents = [
     status: 'planning',
     speaker_id: 'spk-chapman',
     candidate_speaker_ids: ['spk-chapman'],
-    sap_ids: ['sap-jamie'],
+    sap_ids: [],
     venue_id: 'venue-wrigley',
     day_chair_name: '',
     day_chair_phone: '',

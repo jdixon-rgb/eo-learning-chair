@@ -5,6 +5,7 @@ import { ChapterProvider } from '@/lib/chapter'
 import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
 import { EngagementStoreProvider } from '@/lib/engagementStore'
+import { SAPStoreProvider } from '@/lib/sapStore'
 import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
@@ -40,6 +41,7 @@ import EngagementDashboard from '@/pages/engagement/EngagementDashboard'
 import NavigatorsPage from '@/pages/engagement/NavigatorsPage'
 import PairingsPage from '@/pages/engagement/PairingsPage'
 import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
+import SAPPartnersPage from '@/pages/SAPPartnersPage'
 
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
@@ -59,6 +61,7 @@ function App() {
         <StoreProvider>
           <BoardStoreProvider>
             <EngagementStoreProvider>
+            <SAPStoreProvider>
             <BrowserRouter>
               <Routes>
               {/* Public */}
@@ -78,6 +81,9 @@ function App() {
                 <Route path="/speakers" element={<SpeakersPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/events/:id" element={<EventDetailPage />} />
+                <Route path="/partners" element={
+                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><SAPPartnersPage /></ProtectedRoute>
+                } />
                 <Route path="/venues" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><VenuesPage /></ProtectedRoute>
                 } />
@@ -165,6 +171,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </BrowserRouter>
+            </SAPStoreProvider>
             </EngagementStoreProvider>
           </BoardStoreProvider>
         </StoreProvider>

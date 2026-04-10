@@ -27,6 +27,22 @@ export const STRATEGIC_MAP = {
   9: { label: 'GRATITUDE GALA', color: 'bg-eo-coral', textColor: 'text-white', description: 'Final event. Celebrate the year. Leave them grateful.' },
 }
 
+// SAP partner tiers
+export const SAP_TIERS = [
+  { id: 'platinum', label: 'Platinum', color: '#6366f1' },
+  { id: 'gold', label: 'Gold', color: '#f59e0b' },
+  { id: 'silver', label: 'Silver', color: '#94a3b8' },
+  { id: 'in_kind', label: 'In-Kind', color: '#22c55e' },
+]
+
+// SAP contribution types
+export const SAP_CONTRIBUTION_TYPES = [
+  { id: 'sponsorship', label: 'Sponsorship' },
+  { id: 'workshop', label: 'Workshop' },
+  { id: 'service', label: 'Service' },
+  { id: 'other', label: 'Other' },
+]
+
 // Speaker pipeline stages
 export const PIPELINE_STAGES = [
   { id: 'researching', label: 'Researching', color: '#64648c' },

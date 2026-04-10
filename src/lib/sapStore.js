@@ -1,0 +1,204 @@
+import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
+import { isSupabaseConfigured } from './supabase'
+import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
+import { useChapter } from './chapter'
+import { mockSAPs, mockSAPContacts } from './mockData'
+
+const SAPStoreContext = createContext(null)
+
+function storageKey(chapterId) {
+  return `eo-sap-store-${chapterId}`
+}
+function loadCache(chapterId) {
+  try {
+    const raw = localStorage.getItem(storageKey(chapterId))
+    if (raw) return JSON.parse(raw)
+  } catch { /* corrupted */ }
+  return null
+}
+function saveCache(chapterId, state) {
+  try {
+    localStorage.setItem(storageKey(chapterId), JSON.stringify(state))
+  } catch { /* full */ }
+}
+
+export function SAPStoreProvider({ children }) {
+  const { activeChapterId, isChapterReady } = useChapter()
+  const cached = loadCache(activeChapterId)
+
+  const [partners, setPartners] = useState(cached?.partners ?? mockSAPs)
+  const [contacts, setContacts] = useState(cached?.contacts ?? mockSAPContacts)
+  const [loading, setLoading] = useState(isSupabaseConfigured())
+  const [dbError, setDbError] = useState(null)
+  const hasFetched = useRef(false)
+  const prevChapterId = useRef(activeChapterId)
+
+  // Persist
+  useEffect(() => {
+    if (!activeChapterId) return
+    saveCache(activeChapterId, { partners, contacts })
+  }, [activeChapterId, partners, contacts])
+
+  // Hydrate from Supabase when chapter changes
+  useEffect(() => {
+    if (prevChapterId.current !== activeChapterId) {
+      hasFetched.current = false
+      prevChapterId.current = activeChapterId
+    }
+    if (!isSupabaseConfigured() || hasFetched.current) { setLoading(false); return }
+    if (!isChapterReady) return
+    if (!activeChapterId) { setLoading(false); return }
+    hasFetched.current = true
+
+    const chapterCache = loadCache(activeChapterId)
+    if (chapterCache) {
+      if (chapterCache.partners) setPartners(chapterCache.partners)
+      if (chapterCache.contacts) setContacts(chapterCache.contacts)
+    }
+
+    setLoading(true)
+    hydrate()
+
+    async function hydrate() {
+      try {
+        const [partnersRes, contactsRes] = await Promise.all([
+          fetchByChapter('saps', activeChapterId),
+          fetchSAPContacts(activeChapterId),
+        ])
+        if (partnersRes.data) setPartners(partnersRes.data)
+        if (contactsRes) setContacts(contactsRes)
+      } catch (err) {
+        setDbError(err.message || String(err))
+      } finally {
+        setLoading(false)
+      }
+    }
+  }, [activeChapterId, isChapterReady])
+
+  // sap_contacts doesn't have chapter_id directly — fetch via join or all and filter client-side
+  async function fetchSAPContacts(chapterId) {
+    if (!isSupabaseConfigured()) return mockSAPContacts
+    const { supabase } = await import('./supabase')
+    const { data, error } = await supabase
+      .from('sap_contacts')
+      .select('*, saps!inner(chapter_id)')
+      .eq('saps.chapter_id', chapterId)
+    if (error) throw error
+    // Strip the joined saps object — we just used it for filtering
+    return (data || []).map(({ saps, ...rest }) => rest)
+  }
+
+  // Optimistic write helper
+  const dbWrite = useCallback(async (fn, label) => {
+    if (!isSupabaseConfigured()) return
+    try {
+      const res = await fn()
+      if (res?.error) throw res.error
+    } catch (err) {
+      setDbError(`${label}: ${err.message || String(err)}`)
+    }
+  }, [])
+
+  // ── Partner CRUD ──────────────────────────────────────────────
+  const addPartner = useCallback((partner) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      name: partner.name,
+      industry: partner.industry ?? '',
+      tier: partner.tier ?? 'gold',
+      status: partner.status ?? 'active',
+      description: partner.description ?? '',
+      contribution_type: partner.contribution_type ?? null,
+      contribution_description: partner.contribution_description ?? '',
+      contact_email: partner.contact_email ?? '',
+      contact_phone: partner.contact_phone ?? '',
+      website: partner.website ?? '',
+      annual_sponsorship: partner.annual_sponsorship ?? null,
+      notes: partner.notes ?? '',
+      created_at: now,
+      updated_at: now,
+    }
+    setPartners(prev => [...prev, row])
+    dbWrite(() => insertRow('saps', row), 'insert:saps')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updatePartner = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => (p.id === id ? { ...p, ...updates } : p)))
+    dbWrite(() => updateRow('saps', id, updates), 'update:saps')
+  }, [dbWrite])
+
+  const deletePartner = useCallback((id) => {
+    setPartners(prev => prev.filter(p => p.id !== id))
+    // Cascade: remove contacts for this partner locally
+    setContacts(prev => prev.filter(c => c.sap_id !== id))
+    dbWrite(() => deleteRow('saps', id), 'delete:saps')
+  }, [dbWrite])
+
+  // ── Contact CRUD ──────────────────────────────────────────────
+  const addContact = useCallback((contact) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      sap_id: contact.sap_id,
+      name: contact.name,
+      role: contact.role ?? '',
+      email: contact.email ?? '',
+      phone: contact.phone ?? '',
+      is_primary: contact.is_primary ?? false,
+      forum_trained: contact.forum_trained ?? false,
+      forum_trained_date: contact.forum_trained_date ?? null,
+      notes: contact.notes ?? '',
+      created_at: now,
+      updated_at: now,
+    }
+    setContacts(prev => [...prev, row])
+    dbWrite(() => insertRow('sap_contacts', row), 'insert:sap_contacts')
+    return row
+  }, [dbWrite])
+
+  const updateContact = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setContacts(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)))
+    dbWrite(() => updateRow('sap_contacts', id, updates), 'update:sap_contacts')
+  }, [dbWrite])
+
+  const deleteContact = useCallback((id) => {
+    setContacts(prev => prev.filter(c => c.id !== id))
+    dbWrite(() => deleteRow('sap_contacts', id), 'delete:sap_contacts')
+  }, [dbWrite])
+
+  // ── Helpers ───────────────────────────────────────────────────
+  const contactsForPartner = useCallback((sapId) => {
+    return contacts.filter(c => c.sap_id === sapId)
+  }, [contacts])
+
+  const primaryContact = useCallback((sapId) => {
+    return contacts.find(c => c.sap_id === sapId && c.is_primary) || contacts.find(c => c.sap_id === sapId)
+  }, [contacts])
+
+  const partnersByTier = useCallback((tier) => {
+    return partners.filter(p => p.tier === tier && p.status === 'active')
+  }, [partners])
+
+  const value = {
+    partners, contacts,
+    loading, dbError, clearDbError: () => setDbError(null),
+    addPartner, updatePartner, deletePartner,
+    addContact, updateContact, deleteContact,
+    contactsForPartner, primaryContact, partnersByTier,
+  }
+
+  return createElement(SAPStoreContext.Provider, { value }, children)
+}
+
+export function useSAPStore() {
+  const ctx = useContext(SAPStoreContext)
+  if (!ctx) throw new Error('useSAPStore must be used within SAPStoreProvider')
+  return ctx
+}

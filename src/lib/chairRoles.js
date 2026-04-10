@@ -18,6 +18,7 @@ import {
   UserCheck,
   BookOpen,
   Compass,
+  Handshake,
 } from 'lucide-react'
 
 export const CHAIR_ROLE_CONFIGS = {
@@ -29,6 +30,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/speakers', icon: Users, label: 'Speakers' },
       { to: '/events', icon: CalendarDays, label: 'Events' },
+      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewVenues' },
       { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
       { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
       { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
