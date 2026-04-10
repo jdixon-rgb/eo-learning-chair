@@ -25,7 +25,9 @@ import {
   ChevronLeft,
   Save,
   Sparkles,
+  Download,
 } from 'lucide-react'
+// reflectionsPdf is dynamic-imported at click time — keeps jspdf out of the initial bundle
 
 const CATEGORIES = [
   { key: 'business',  label: 'Business'  },
@@ -186,6 +188,7 @@ export default function ReflectionsPage() {
         reflection={activeReflection}
         template={template}
         feelings={feelings}
+        memberName={member?.name}
         onAddFeeling={handleAddFeeling}
         onSave={handleSaveReflection}
         onDelete={() => handleDeleteReflection(activeReflection.id)}
@@ -227,6 +230,8 @@ export default function ReflectionsPage() {
         <ReflectionsList
           reflections={reflections}
           templates={templates}
+          memberName={member?.name}
+          forumName={member?.forum}
           onNew={() => setView('picker')}
           onOpen={(r) => { setActiveReflection(r); setView('editor') }}
           onDelete={handleDeleteReflection}
@@ -349,8 +354,12 @@ function TemplatePicker({ templates, onPick, onBack }) {
 }
 
 // ── Reflections list ───────────────────────────────────────
-function ReflectionsList({ reflections, templates, onNew, onOpen, onDelete, onClearAll }) {
+function ReflectionsList({ reflections, templates, memberName, forumName, onNew, onOpen, onDelete, onClearAll }) {
   const tmplName = (slug) => templates.find(t => t.slug === slug)?.name || slug
+  const handleDownloadAll = async () => {
+    const { downloadAllReflectionsPdf } = await import('@/lib/reflectionsPdf')
+    downloadAllReflectionsPdf(reflections, templates, { memberName, forumName })
+  }
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -360,14 +369,25 @@ function ReflectionsList({ reflections, templates, onNew, onOpen, onDelete, onCl
         >
           <Plus className="h-4 w-4" /> New reflection
         </button>
-        {reflections.length > 0 && (
-          <button
-            onClick={onClearAll}
-            className="text-xs text-white/40 hover:text-red-400 transition-colors"
-          >
-            Clear all
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {reflections.length > 0 && (
+            <button
+              onClick={handleDownloadAll}
+              className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition-colors"
+              title="Download all as PDF"
+            >
+              <Download className="h-3.5 w-3.5" /> Download all
+            </button>
+          )}
+          {reflections.length > 0 && (
+            <button
+              onClick={onClearAll}
+              className="text-xs text-white/40 hover:text-red-400 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
       {reflections.length === 0 ? (
@@ -410,7 +430,7 @@ function ReflectionsList({ reflections, templates, onNew, onOpen, onDelete, onCl
 }
 
 // ── Reflection editor ──────────────────────────────────────
-function ReflectionEditor({ reflection, template, feelings, onAddFeeling, onSave, onDelete, onDeclare, onBack }) {
+function ReflectionEditor({ reflection, template, feelings, memberName, onAddFeeling, onSave, onDelete, onDeclare, onBack }) {
   const [content, setContent] = useState(reflection.content || {})
   const [category, setCategory] = useState(reflection.category || '')
   const [selectedFeelings, setSelectedFeelings] = useState(reflection.feelings || [])
@@ -463,6 +483,16 @@ function ReflectionEditor({ reflection, template, feelings, onAddFeeling, onSave
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-eo-coral/90 hover:bg-eo-coral text-white text-xs font-medium"
           >
             <Pin className="h-3.5 w-3.5" /> Declare to parking lot
+          </button>
+          <button
+            onClick={async () => {
+              const { downloadReflectionPdf } = await import('@/lib/reflectionsPdf')
+              downloadReflectionPdf({ ...reflection, content, category: category || null, feelings: selectedFeelings }, template, { memberName })
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs font-medium"
+            title="Download as PDF"
+          >
+            <Download className="h-3.5 w-3.5" /> Download PDF
           </button>
           <button
             onClick={onDelete}

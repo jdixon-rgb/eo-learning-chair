@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.44.0 — 2026-04-10
+
+### Reflections — Download as PDF
+- **Download PDF** button in the reflection editor — exports the reflection you're viewing (including unsaved edits) as a printable, text-selectable PDF. Walks the template schema (single fields or grid rows × columns, MEPS, footers) and renders each field with label + value.
+- **Download all** button on the reflections list — exports every reflection as a single multi-page PDF, newest first, with a cover page showing member name, forum, export date, and count.
+- jsPDF loaded via dynamic import so the ~380KB library only hits the network when a user actually clicks download.
+
 ## v1.43.0 — 2026-04-10
 
 ### Digital Forum Constitution + Ratification
