@@ -97,10 +97,24 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </button>
           </div>
           <div className="mt-3">
-            <h1 className="text-sm font-bold tracking-tight text-white/90">{chairConfig.title}</h1>
-            <p className="text-[10px] text-white/40">
-              {activeChapter ? activeChapter.name : 'Command Center'}
-            </p>
+            {isSuperAdmin && !isImpersonating ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm font-bold tracking-tight text-white/90">Super Admin</h1>
+                  <span className="text-[9px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded uppercase tracking-wider">SA</span>
+                </div>
+                <p className="text-[10px] text-white/40">
+                  {activeChapter ? activeChapter.name : 'Platform'}
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-sm font-bold tracking-tight text-white/90">{chairConfig.title}</h1>
+                <p className="text-[10px] text-white/40">
+                  {activeChapter ? activeChapter.name : 'Command Center'}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
