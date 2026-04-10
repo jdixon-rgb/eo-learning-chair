@@ -885,12 +885,46 @@ function AgendaTab({ forum, agendas, agendaItems, isModerator, memberId, onAddAg
   )
 }
 
+// ── Time helpers ───────────────────────────────────────────
+function parseTime(str) {
+  // Parse "12:00 PM" → minutes since midnight
+  if (!str) return 0
+  const m = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i)
+  if (!m) return 0
+  let h = parseInt(m[1], 10)
+  const min = parseInt(m[2], 10)
+  const ampm = (m[3] || '').toUpperCase()
+  if (ampm === 'PM' && h < 12) h += 12
+  if (ampm === 'AM' && h === 12) h = 0
+  return h * 60 + min
+}
+
+function formatTime(totalMinutes) {
+  // Minutes since midnight → "12:00 PM"
+  let h = Math.floor(totalMinutes / 60) % 24
+  const min = totalMinutes % 60
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  if (h > 12) h -= 12
+  if (h === 0) h = 12
+  return `${h}:${String(min).padStart(2, '0')} ${ampm}`
+}
+
+function computeItemTimes(items, meetingStartTime) {
+  const baseMin = parseTime(meetingStartTime)
+  let cursor = baseMin
+  return items.map(item => {
+    const start = formatTime(cursor)
+    cursor += (item.minutes || 0)
+    const end = formatTime(cursor)
+    return { ...item, start_time: start, end_time: end }
+  })
+}
+
 // ── Agenda Editor ──────────────────────────────────────────
 function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgenda, onAddItem, onUpdateItem, onDeleteItem, onBack }) {
   const [title, setTitle] = useState(agenda?.title || `${forum.name} Forum Meeting`)
   const [meetingDate, setMeetingDate] = useState(agenda?.meeting_date || '')
   const [startTime, setStartTime] = useState(agenda?.start_time || '12:00 PM')
-  const [endTime, setEndTime] = useState(agenda?.end_time || '4:30 PM')
   const [location, setLocation] = useState(agenda?.location || '')
   const [host, setHost] = useState(agenda?.host || '')
   const [mission, setMission] = useState(agenda?.mission || 'To act as a personal board of directors through a collective commitment to one another. To share, learn, challenge, hold each other accountable, and grow personally and professionally as individuals and as a forum.')
@@ -898,15 +932,14 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
   const [targetMinutes, setTargetMinutes] = useState(agenda?.target_minutes || 270)
   const [status, setStatus] = useState(agenda?.status || 'draft')
 
-  // For new agendas, items are added after the agenda is saved. For existing, they're live.
   const [newItemTitle, setNewItemTitle] = useState('')
   const [newItemDesc, setNewItemDesc] = useState('')
   const [newItemMin, setNewItemMin] = useState(10)
-  const [newItemStart, setNewItemStart] = useState('')
-  const [newItemEnd, setNewItemEnd] = useState('')
 
   const items = initialItems || []
+  const itemsWithTimes = useMemo(() => computeItemTimes(items, startTime), [items, startTime])
   const totalMin = items.reduce((s, i) => s + (i.minutes || 0), 0)
+  const endTime = formatTime(parseTime(startTime) + totalMin)
 
   const handleSave = () => {
     onSaveAgenda({
@@ -918,20 +951,20 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
 
   const handleAddItem = () => {
     if (!newItemTitle || !agenda?.id) return
+    // Compute this item's times
+    const nextStart = parseTime(startTime) + totalMin
     onAddItem({
       agenda_id: agenda.id,
       title: newItemTitle,
       description: newItemDesc,
       minutes: newItemMin,
-      start_time: newItemStart,
-      end_time: newItemEnd,
+      start_time: formatTime(nextStart),
+      end_time: formatTime(nextStart + newItemMin),
       sort_order: items.length,
     })
     setNewItemTitle('')
     setNewItemDesc('')
     setNewItemMin(10)
-    setNewItemStart('')
-    setNewItemEnd('')
   }
 
   return (
@@ -950,15 +983,9 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
             <label className="text-xs text-white/50 mb-1 block">Date</label>
             <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs text-white/50 mb-1 block">Start</label>
-              <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
-            </div>
-            <div>
-              <label className="text-xs text-white/50 mb-1 block">End</label>
-              <input type="text" value={endTime} onChange={e => setEndTime(e.target.value)} placeholder="4:30 PM" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
-            </div>
+          <div>
+            <label className="text-xs text-white/50 mb-1 block">Meeting start time</label>
+            <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
             <label className="text-xs text-white/50 mb-1 block">Host</label>
@@ -993,41 +1020,73 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
         </div>
       </div>
 
-      {/* Items editor (only for existing agendas) */}
+      {/* Items editor */}
       {agenda?.id && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
-          <h4 className="text-sm font-semibold">Agenda Items ({totalMin}/{targetMinutes} min)</h4>
-          {items.length > 0 && (
-            <div className="space-y-1">
-              {items.map((item, idx) => (
-                <div key={item.id} className="flex items-start gap-2 rounded-lg bg-white/[0.03] px-3 py-2">
-                  <span className="text-[10px] text-white/30 mt-1 w-5 shrink-0">{idx + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm text-white/90">{item.title}</span>
-                    {item.description && <p className="text-[11px] text-white/40 mt-0.5">{item.description}</p>}
-                    <p className="text-[10px] text-white/30 mt-0.5">{item.minutes} min · {item.start_time} – {item.end_time}</p>
-                  </div>
-                  <button onClick={() => onDeleteItem(item.id)} className="text-white/20 hover:text-red-400 shrink-0 mt-1">
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Agenda Items</h4>
+            <span className={`text-xs font-mono ${totalMin > targetMinutes ? 'text-red-400' : 'text-white/40'}`}>
+              {totalMin} / {targetMinutes} min — ends {endTime}
+            </span>
+          </div>
+          {itemsWithTimes.length > 0 && (
+            <div className="rounded-lg border border-white/10 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+                  <tr>
+                    <th className="text-left px-4 py-2">Item</th>
+                    <th className="text-center px-3 py-2 w-16">Min</th>
+                    <th className="text-center px-3 py-2 w-24">Start</th>
+                    <th className="text-center px-3 py-2 w-24">End</th>
+                    <th className="w-8 px-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itemsWithTimes.map(item => (
+                    <tr key={item.id} className="border-t border-white/5">
+                      <td className="px-4 py-2">
+                        <span className="text-white/90">{item.title}</span>
+                        {item.description && <p className="text-[11px] text-white/40 mt-0.5 whitespace-pre-line">{item.description}</p>}
+                      </td>
+                      <td className="text-center px-3 py-2 text-white/60">{item.minutes}</td>
+                      <td className="text-center px-3 py-2 text-white/50 text-xs">{item.start_time}</td>
+                      <td className="text-center px-3 py-2 text-white/50 text-xs">{item.end_time}</td>
+                      <td className="px-2 py-2">
+                        <button onClick={() => onDeleteItem(item.id)} className="text-white/20 hover:text-red-400">
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
+
+          {/* Add item — just title + minutes + optional description */}
           <div className="border-t border-white/10 pt-3 space-y-2">
-            <p className="text-xs text-white/40">Add item:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-              <div className="sm:col-span-2">
-                <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} placeholder="Item title" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
-              </div>
-              <input type="number" value={newItemMin} onChange={e => setNewItemMin(Number(e.target.value))} placeholder="Min" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white" />
-              <input type="text" value={newItemStart} onChange={e => setNewItemStart(e.target.value)} placeholder="Start" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
-              <input type="text" value={newItemEnd} onChange={e => setNewItemEnd(e.target.value)} placeholder="End" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+            <p className="text-xs text-white/40">Add item (times auto-calculate from meeting start):</p>
+            <div className="flex gap-2">
+              <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} placeholder="Item title"
+                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+              <input type="number" value={newItemMin} onChange={e => setNewItemMin(Number(e.target.value))} min="1"
+                className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white text-center" />
+              <span className="text-xs text-white/30 self-center">min</span>
             </div>
-            <textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Description / sub-items (optional)" rows={2} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
-            <button onClick={handleAddItem} disabled={!newItemTitle} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add item</button>
+            <textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Description / sub-items (optional)" rows={2}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/30">
+                Next item starts at {formatTime(parseTime(startTime) + totalMin)}
+              </span>
+              <button onClick={handleAddItem} disabled={!newItemTitle} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add item</button>
+            </div>
           </div>
         </div>
+      )}
+
+      {!agenda?.id && (
+        <p className="text-xs text-white/40 text-center">Click "Create agenda" above first, then add items.</p>
       )}
     </div>
   )
