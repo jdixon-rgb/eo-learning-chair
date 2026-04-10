@@ -288,7 +288,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors"
           >
             <Globe className="h-3.5 w-3.5" />
-            Member Portal
+            Compass
           </NavLink>
         </div>
 

@@ -6,7 +6,7 @@ import { useStore } from '@/lib/store'
 import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParkingLotEntry, deleteParkingLotEntry } from '@/lib/reflectionsStore'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronRight, Upload,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronRight, Upload, ClipboardList,
 } from 'lucide-react'
 
 const FORUM_ROLE_LABELS = {
@@ -44,7 +44,7 @@ export default function ForumHomePage() {
   const email = user?.email || profile?.email
   const [member, setMember] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('roles')
+  const [tab, setTab] = useState('parking')
   const [parkingLot, setParkingLot] = useState([])
 
   useEffect(() => {
@@ -120,12 +120,13 @@ export default function ForumHomePage() {
   }
 
   const tabs = [
-    { key: 'roles', label: 'Roles', icon: Users },
-    { key: 'calendar', label: 'Calendar', icon: Calendar },
     { key: 'parking', label: 'Parking Lot', icon: Pin },
     { key: 'tools', label: 'Tools', icon: BookOpen },
+    { key: 'agenda', label: 'Agenda', icon: ClipboardList },
+    { key: 'calendar', label: 'Calendar', icon: Calendar },
     { key: 'constitution', label: 'Constitution', icon: FileText },
     { key: 'partners', label: 'Partners', icon: Handshake },
+    { key: 'roles', label: 'Roles', icon: Users },
     { key: 'history', label: 'History', icon: History },
   ]
 
@@ -172,8 +173,6 @@ export default function ForumHomePage() {
         <CalendarTab
           forum={forum}
           events={myForumCal}
-          chapterEvents={chapterEvents}
-          saps={saps}
           isModerator={isModerator}
           onAdd={addForumCalEvent}
           onUpdate={updateForumCalEvent}
@@ -183,7 +182,13 @@ export default function ForumHomePage() {
 
       {tab === 'parking' && (
         <div className="text-center text-white/50 text-sm py-8">
-          Parking lot is available on the <button onClick={() => {}} className="text-eo-blue underline">Reflections</button> page. We're working on bringing it here as a standalone feature.
+          Parking lot is being promoted to a standalone feature here. Coming soon.
+        </div>
+      )}
+
+      {tab === 'agenda' && (
+        <div className="text-center text-white/50 text-sm py-8">
+          Build your forum meeting agenda here. Coming soon.
         </div>
       )}
 
@@ -330,7 +335,7 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
 // ────────────────────────────────────────────────────────────
 // Calendar Tab
 // ────────────────────────────────────────────────────────────
-function CalendarTab({ forum, events, chapterEvents, saps, isModerator, onAdd, onUpdate, onDelete }) {
+function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ title: '', event_date: '', event_type: 'meeting', location: '', notes: '', fiscal_year: '' })
 
@@ -341,14 +346,11 @@ function CalendarTab({ forum, events, chapterEvents, saps, isModerator, onAdd, o
     setForm({ title: '', event_date: '', event_type: 'meeting', location: '', notes: '', fiscal_year: '' })
   }
 
-  // Merge forum + chapter events for display
+  // Forum events only
   const allEvents = useMemo(() => {
-    const forumEvts = events.map(e => ({ ...e, source: 'forum' }))
-    const chapterEvts = (chapterEvents || [])
-      .filter(e => e.event_date)
-      .map(e => ({ id: e.id, title: e.title, event_date: e.event_date, event_type: 'chapter', source: 'chapter', location: '' }))
-    return [...forumEvts, ...chapterEvts].sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''))
-  }, [events, chapterEvents])
+    return events.map(e => ({ ...e, source: 'forum' }))
+      .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''))
+  }, [events])
 
   return (
     <div className="space-y-4">
@@ -383,21 +385,17 @@ function CalendarTab({ forum, events, chapterEvents, saps, isModerator, onAdd, o
       ) : (
         <div className="space-y-2">
           {allEvents.map(e => (
-            <div key={e.id} className={`rounded-xl border px-4 py-3 flex items-center justify-between ${
-              e.source === 'chapter' ? 'border-eo-blue/20 bg-eo-blue/5' : 'border-white/10 bg-white/[0.03]'
-            }`}>
+            <div key={e.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-white/90">{e.title}</span>
-                  <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
-                    e.source === 'chapter' ? 'bg-eo-blue/20 text-eo-blue' : 'bg-white/5 text-white/40'
-                  }`}>
-                    {e.source === 'chapter' ? 'Chapter' : EVENT_TYPE_LABELS[e.event_type] || e.event_type}
+                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-white/5 text-white/40">
+                    {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
                   </span>
                 </div>
                 <p className="text-xs text-white/40 mt-0.5">{e.event_date}{e.location ? ` · ${e.location}` : ''}</p>
               </div>
-              {e.source === 'forum' && isModerator && (
+              {isModerator && (
                 <button onClick={() => onDelete(e.id)} className="text-white/30 hover:text-red-400">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

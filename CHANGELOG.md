@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.37.0 — 2026-04-10
+
+### Compass Rebrand + Portal Redesign
+- **Member Portal is now Compass.** Sidebar link renamed, header updated, welcome subtitle changed to "Your Compass."
+- **Top nav simplified** to 5 items: Home, Forum, Calendar, Vendors, Notifications. Survey and Suggestion|Report Bug moved out of top nav.
+- **Home page redesigned** with 4 destination cards: **Forum** (your forum home), **Learning** (chapter events + Executive Education), **Vendors** (rate and review any vendor in Arizona), **My EO** (interest groups, international travel — links to EO Global).
+- Survey demoted to a slim banner below the cards ("Help us plan better events").
+- **Footer added** to Compass home with Suggestion | Report Bug link + version number.
+- **Forum tabs restructured**: new order is Parking Lot (promoted to first), Tools, Agenda (new stub), Calendar (forum-only, chapter events removed), Constitution, Partners, Roles, History.
+
 ## v1.36.0 — 2026-04-10
 
 ### Forum Home (new portal section)

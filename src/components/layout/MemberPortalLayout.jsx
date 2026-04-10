@@ -1,17 +1,16 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
-import { Calendar, ClipboardList, Bell, LogOut, Menu, X, ArrowLeft, MessageSquarePlus, Users } from 'lucide-react'
+import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store } from 'lucide-react'
 import { useState } from 'react'
 import eoLogo from '@/assets/eo-az-gray.png'
 
 const portalNav = [
-  { to: '/portal', icon: Calendar, label: 'Home', end: true },
-  { to: '/portal/forum', icon: Users, label: 'My Forum' },
+  { to: '/portal', icon: Compass, label: 'Home', end: true },
+  { to: '/portal/forum', icon: Users, label: 'Forum' },
   { to: '/portal/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/portal/survey', icon: ClipboardList, label: 'Survey' },
+  { to: '/portal/vendors', icon: Store, label: 'Vendors' },
   { to: '/portal/notifications', icon: Bell, label: 'Notifications' },
-  { to: '/portal/feedback', icon: MessageSquarePlus, label: 'Suggestion | Report Bug' },
 ]
 
 export default function MemberPortalLayout() {

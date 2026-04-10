@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
-import { Calendar, ClipboardList, Bell, ChevronRight, BookOpen } from 'lucide-react'
+import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
+import { APP_VERSION } from '@/lib/version'
 
 export default function MemberPortalDashboard() {
   const { profile } = useAuth()
@@ -25,80 +26,90 @@ export default function MemberPortalDashboard() {
       <div className="text-center py-6">
         <img src={eoLogo} alt="EO Arizona" className="h-10 w-auto mx-auto mb-4 brightness-0 invert opacity-60" />
         <h1 className="text-2xl md:text-3xl font-bold">Welcome, {firstName}</h1>
-        <p className="text-white/50 text-sm mt-1">Your EO Arizona member hub</p>
+        <p className="text-white/50 text-sm mt-1">Your Compass</p>
       </div>
 
-      {/* Quick action cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Next Event */}
+      {/* Primary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Forum */}
+        <Link
+          to="/portal/forum"
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-eo-blue/50 hover:bg-white/[0.07] transition-all group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <Users className="h-6 w-6 text-eo-blue" />
+            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
+          </div>
+          <h3 className="text-base font-semibold mb-1">Forum</h3>
+          <p className="text-xs text-white/50">Your forum — parking lot, tools, agenda, calendar, partners, and history.</p>
+        </Link>
+
+        {/* Learning */}
         <Link
           to="/portal/calendar"
-          className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-eo-blue/50 hover:bg-white/[0.07] transition-all group"
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-emerald-400/50 hover:bg-white/[0.07] transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
-            <Calendar className="h-5 w-5 text-eo-blue" />
+            <GraduationCap className="h-6 w-6 text-emerald-400" />
             <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
           </div>
-          <h3 className="text-sm font-semibold mb-1">Next Event</h3>
-          {nextEvent ? (
-            <>
-              <p className="text-white/80 text-sm font-medium">{nextEvent.title}</p>
-              <p className="text-xs text-white/40 mt-1">{formatDateWithDay(nextEvent.event_date)}</p>
-              {nextSpeaker && (
-                <p className="text-xs text-white/40">Featuring: {nextSpeaker.name}</p>
-              )}
-            </>
-          ) : (
-            <p className="text-xs text-white/40">No upcoming events</p>
-          )}
+          <h3 className="text-base font-semibold mb-1">Learning</h3>
+          <p className="text-xs text-white/50">
+            Chapter events, speakers, and Executive Education.
+            {nextEvent ? (
+              <span className="block mt-1 text-white/70">
+                Next: {nextEvent.title} — {formatDateWithDay(nextEvent.event_date)}
+              </span>
+            ) : null}
+          </p>
         </Link>
 
-        {/* Survey CTA */}
+        {/* Vendors */}
         <Link
-          to="/portal/survey"
-          className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-eo-coral/50 hover:bg-white/[0.07] transition-all group"
+          to="/portal/vendors"
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-amber-400/50 hover:bg-white/[0.07] transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
-            <ClipboardList className="h-5 w-5 text-eo-coral" />
+            <Store className="h-6 w-6 text-amber-400" />
             <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
           </div>
-          <h3 className="text-sm font-semibold mb-1">Learning Preferences</h3>
-          {profile?.survey_completed_at ? (
-            <p className="text-xs text-white/40">Completed — update anytime</p>
-          ) : (
-            <>
-              <p className="text-white/80 text-sm">Help us plan better events</p>
-              <p className="text-xs text-eo-coral mt-1">Takes ~5 minutes</p>
-            </>
-          )}
+          <h3 className="text-base font-semibold mb-1">Vendors</h3>
+          <p className="text-xs text-white/50">Rate, review, and discover vendors in Arizona. Protect yourself. Find the best.</p>
         </Link>
 
-        {/* Reflections */}
-        <Link
-          to="/portal/reflections"
-          className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-emerald-400/50 hover:bg-white/[0.07] transition-all group"
+        {/* My EO */}
+        <a
+          href="https://www.eonetwork.org/myeo/"
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-purple-400/50 hover:bg-white/[0.07] transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
-            <BookOpen className="h-5 w-5 text-emerald-400" />
+            <Globe className="h-6 w-6 text-purple-400" />
             <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
           </div>
-          <h3 className="text-sm font-semibold mb-1">Reflections</h3>
-          <p className="text-xs text-white/40">Private journaling + forum parking lot</p>
-        </Link>
-
-        {/* Notifications */}
-        <Link
-          to="/portal/notifications"
-          className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-purple-500/50 hover:bg-white/[0.07] transition-all group"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <Bell className="h-5 w-5 text-purple-400" />
-            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
-          </div>
-          <h3 className="text-sm font-semibold mb-1">Notifications</h3>
-          <p className="text-xs text-white/40">Stay updated on chapter news</p>
-        </Link>
+          <h3 className="text-base font-semibold mb-1">My EO</h3>
+          <p className="text-xs text-white/50">Interest groups, international travel with EOers, and experiences you're probably forgetting exist.</p>
+        </a>
       </div>
+
+      {/* Survey banner */}
+      <Link
+        to="/portal/survey"
+        className="block rounded-xl border border-white/5 bg-white/[0.03] px-5 py-3 hover:bg-white/[0.05] transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-white/80">Learning Preferences Survey</p>
+            <p className="text-xs text-white/40 mt-0.5">
+              {profile?.survey_completed_at
+                ? 'Completed — update anytime to help us plan better events.'
+                : 'Help us plan better events — takes ~5 minutes.'}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-white/20 shrink-0" />
+        </div>
+      </Link>
 
       {/* Upcoming events preview */}
       {upcomingEvents.length > 1 && (
@@ -108,7 +119,7 @@ export default function MemberPortalDashboard() {
             {upcomingEvents.slice(0, 3).map(event => (
               <div key={event.id} className="rounded-xl border border-white/5 bg-white/[0.03] p-4 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-eo-blue/20 flex items-center justify-center shrink-0">
-                  <Calendar className="h-4 w-4 text-eo-blue" />
+                  <GraduationCap className="h-4 w-4 text-eo-blue" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold truncate">{event.title}</h4>
@@ -146,6 +157,18 @@ export default function MemberPortalDashboard() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Footer: Suggestion + Version */}
+      <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+        <Link
+          to="/portal/feedback"
+          className="flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors"
+        >
+          <MessageSquarePlus className="h-3.5 w-3.5" />
+          Suggestion | Report Bug
+        </Link>
+        <span className="text-[10px] text-white/20">v{APP_VERSION}</span>
       </div>
     </div>
   )
