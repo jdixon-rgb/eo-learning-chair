@@ -4,10 +4,13 @@ import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
 import { useStore } from '@/lib/store'
 import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParkingLotEntry, deleteParkingLotEntry } from '@/lib/reflectionsStore'
+import { lazy, Suspense } from 'react'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronRight, Upload, ClipboardList,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronRight, ChevronLeft, Upload, ClipboardList,
 } from 'lucide-react'
+
+const ReflectionsPage = lazy(() => import('./ReflectionsPage'))
 
 const FORUM_ROLE_LABELS = {
   moderator: 'Moderator',
@@ -47,6 +50,7 @@ export default function ForumHomePage() {
   const [tab, setTab] = useState('parking')
   const [parkingLot, setParkingLot] = useState([])
   const [showAddParkingLot, setShowAddParkingLot] = useState(false)
+  const [activeTool, setActiveTool] = useState(null) // null = tools list, 'reflections' = inline reflections
 
   useEffect(() => {
     let cancelled = false
@@ -229,37 +233,52 @@ export default function ForumHomePage() {
       )}
 
       {tab === 'tools' && (
-        <div className="space-y-3">
-          <p className="text-xs text-white/40">Tools your forum uses in meetings. More coming soon.</p>
-          <a
-            href="/portal/reflections"
-            className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <BookOpen className="h-5 w-5 text-emerald-400 shrink-0" />
-              <div>
-                <h3 className="text-sm font-semibold text-white/90">Reflections</h3>
-                <p className="text-xs text-white/50 mt-0.5">Private journaling with three templates — Modern, Hesse Classic, and EO Standard.</p>
+        activeTool === 'reflections' ? (
+          <div className="space-y-3">
+            <button
+              onClick={() => setActiveTool(null)}
+              className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Back to Tools
+            </button>
+            <Suspense fallback={<div className="text-white/60 text-center py-8">Loading Reflections…</div>}>
+              <ReflectionsPage />
+            </Suspense>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-xs text-white/40">Tools your forum uses in meetings. More coming soon.</p>
+            <button
+              onClick={() => setActiveTool('reflections')}
+              className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <BookOpen className="h-5 w-5 text-emerald-400 shrink-0" />
+                <div>
+                  <h3 className="text-sm font-semibold text-white/90">Reflections</h3>
+                  <p className="text-xs text-white/50 mt-0.5">Private journaling with three templates — Modern, Hesse Classic, and EO Standard.</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
               </div>
-              <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
-            </div>
-          </a>
-          <a
-            href="https://app.ourchapteros.com"
-            target="_blank"
-            rel="noreferrer"
-            className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <History className="h-5 w-5 text-eo-blue shrink-0" />
-              <div>
-                <h3 className="text-sm font-semibold text-white/90">Lifeline</h3>
-                <p className="text-xs text-white/50 mt-0.5">Build and share your life story timeline with your forum.</p>
+            </button>
+            <a
+              href="https://app.ourchapteros.com"
+              target="_blank"
+              rel="noreferrer"
+              className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <History className="h-5 w-5 text-eo-blue shrink-0" />
+                <div>
+                  <h3 className="text-sm font-semibold text-white/90">Lifeline</h3>
+                  <p className="text-xs text-white/50 mt-0.5">Build and share your life story timeline with your forum.</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
               </div>
-              <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
-            </div>
-          </a>
-        </div>
+            </a>
+          </div>
+        )
       )}
 
       {tab === 'constitution' && (
