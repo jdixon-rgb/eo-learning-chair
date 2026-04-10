@@ -263,7 +263,7 @@ export default function ForumHomePage() {
               </div>
             </button>
             <a
-              href="https://app.ourchapteros.com"
+              href="https://lifeline.ourchapteros.com"
               target="_blank"
               rel="noreferrer"
               className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
