@@ -4,6 +4,7 @@ import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store } from 'lucide-react'
 import { useState } from 'react'
 import eoLogo from '@/assets/eo-az-gray.png'
+import { APP_VERSION } from '@/lib/version'
 
 const portalNav = [
   { to: '/portal', icon: Compass, label: 'Home', end: true },
@@ -134,6 +135,11 @@ export default function MemberPortalLayout() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <Outlet />
       </main>
+
+      {/* Footer: version */}
+      <footer className="max-w-5xl mx-auto px-4 sm:px-6 pb-6 text-center">
+        <span className="text-[10px] text-white/15">v{APP_VERSION}</span>
+      </footer>
     </div>
   )
 }
