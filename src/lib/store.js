@@ -321,8 +321,24 @@ export function StoreProvider({ children }) {
   const updateEvent = useCallback((id, updates) => {
     const now = new Date().toISOString()
     setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates, updated_at: now } : e))
+    // Strip non-UUID values from uuid[] columns before DB write (mock data uses
+    // string IDs like "sap-aptive" which PostgreSQL rejects).
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const sanitized = { ...updates }
+    for (const field of ['sap_ids', 'candidate_speaker_ids']) {
+      if (Array.isArray(sanitized[field])) {
+        sanitized[field] = sanitized[field].filter(v => uuidRe.test(v))
+      }
+    }
+    if (sanitized.sap_contact_ids && typeof sanitized.sap_contact_ids === 'object') {
+      const clean = {}
+      for (const [k, v] of Object.entries(sanitized.sap_contact_ids)) {
+        if (uuidRe.test(k)) clean[k] = v
+      }
+      sanitized.sap_contact_ids = clean
+    }
     dbWrite(async () => {
-      const res = await updateRow('events', id, updates)
+      const res = await updateRow('events', id, sanitized)
       // If a foreign key violation occurs (orphaned venue_id/speaker_id from
       // a record that was saved locally but never persisted to the DB),
       // retry with the offending FK nulled out.
@@ -332,7 +348,7 @@ export function StoreProvider({ children }) {
           : null
         if (fkField) {
           setEvents(prev => prev.map(e => e.id === id ? { ...e, [fkField]: null } : e))
-          return updateRow('events', id, { ...updates, [fkField]: null })
+          return updateRow('events', id, { ...sanitized, [fkField]: null })
         }
       }
       return res

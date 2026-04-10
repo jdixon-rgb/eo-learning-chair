@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.42.1 — 2026-04-10
+
+### Events
+- **Fix: "invalid input syntax for type uuid" on event saves.** Mock SAP IDs (e.g. `sap-aptive`) are strings, not UUIDs. `updateEvent` now strips non-UUID values from `sap_ids`, `candidate_speaker_ids`, and `sap_contact_ids` before writing to the database.
+
 ## v1.41.3 — 2026-04-10
 
 ### Events
