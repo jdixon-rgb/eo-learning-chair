@@ -19,6 +19,7 @@ import {
   Handshake, Building2, Lock, LockOpen, Pencil,
 } from 'lucide-react'
 import EventDocuments from '@/components/EventDocuments'
+import { useSAPStore } from '@/lib/sapStore'
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -30,8 +31,10 @@ export default function EventDetailPage() {
     getOrCreateChecklist, updateChecklist,
   } = useStore()
 
+  const { contactsForPartner } = useSAPStore()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
+  const [selectedSapId, setSelectedSapId] = useState('')
 
   const event = events.find(e => e.id === id)
   if (!event) {
@@ -380,56 +383,138 @@ export default function EventDetailPage() {
                 {(() => {
                   const eventSAPs = (event.sap_ids || []).map(sid => (saps || []).find(s => s.id === sid)).filter(Boolean)
                   const availableSAPs = (saps || []).filter(s => !(event.sap_ids || []).includes(s.id))
+                  const sapContactMap = event.sap_contact_ids || {}
 
-                  const addSAPToEvent = (sapId) => {
+                  const addSAPToEvent = (sapId, contactId) => {
                     if (!sapId) return
                     const current = event.sap_ids || []
                     if (!current.includes(sapId)) {
-                      updateEvent(id, { sap_ids: [...current, sapId] })
+                      const updates = { sap_ids: [...current, sapId] }
+                      if (contactId) {
+                        updates.sap_contact_ids = { ...sapContactMap, [sapId]: contactId }
+                      }
+                      updateEvent(id, updates)
                     }
+                    setSelectedSapId('')
                   }
 
                   const removeSAPFromEvent = (sapId) => {
-                    updateEvent(id, { sap_ids: (event.sap_ids || []).filter(sid => sid !== sapId) })
+                    const { [sapId]: _, ...restContacts } = sapContactMap
+                    updateEvent(id, {
+                      sap_ids: (event.sap_ids || []).filter(sid => sid !== sapId),
+                      sap_contact_ids: restContacts,
+                    })
                   }
+
+                  const updateSAPContact = (sapId, contactId) => {
+                    if (contactId) {
+                      updateEvent(id, { sap_contact_ids: { ...sapContactMap, [sapId]: contactId } })
+                    } else {
+                      const { [sapId]: _, ...restContacts } = sapContactMap
+                      updateEvent(id, { sap_contact_ids: restContacts })
+                    }
+                  }
+
+                  const selectedSapContacts = selectedSapId ? contactsForPartner(selectedSapId) : []
 
                   return (
                     <>
                       {eventSAPs.length > 0 ? (
                         <div className="space-y-2">
-                          {eventSAPs.map(sap => (
-                            <div key={sap.id} className="flex items-start justify-between p-3 rounded-lg border border-eo-coral/30 bg-eo-coral/5">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <Building2 className="h-3.5 w-3.5 text-eo-coral" />
-                                  <span className="text-sm font-semibold">{sap.name}</span>
-                                  <Badge variant="outline" className="text-[9px] border-eo-coral/50 text-eo-coral">{sap.company}</Badge>
+                          {eventSAPs.map(sap => {
+                            const contacts = contactsForPartner(sap.id)
+                            const assignedContactId = sapContactMap[sap.id]
+                            const assignedContact = contacts.find(c => c.id === assignedContactId)
+                            return (
+                              <div key={sap.id} className="p-3 rounded-lg border border-eo-coral/30 bg-eo-coral/5">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <Building2 className="h-3.5 w-3.5 text-eo-coral" />
+                                      <span className="text-sm font-semibold">{sap.name}</span>
+                                    </div>
+                                    {sap.contribution_type && (
+                                      <p className="text-xs text-muted-foreground mt-1 capitalize">{sap.contribution_type}: {sap.contribution_description}</p>
+                                    )}
+                                  </div>
+                                  <button onClick={() => removeSAPFromEvent(sap.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5 ml-2">
+                                    <X className="h-3 w-3" />
+                                  </button>
                                 </div>
-                                {sap.contribution_type && (
-                                  <p className="text-xs text-muted-foreground mt-1 capitalize">{sap.contribution_type}: {sap.contribution_description}</p>
+                                {contacts.length > 0 && (
+                                  <div className="mt-2">
+                                    <label className="text-[11px] text-muted-foreground font-medium">Speaker / contact</label>
+                                    <Select
+                                      value={assignedContactId || ''}
+                                      onChange={e => updateSAPContact(sap.id, e.target.value || null)}
+                                      className="text-xs mt-0.5"
+                                    >
+                                      <option value="">Select a person…</option>
+                                      {contacts.map(c => (
+                                        <option key={c.id} value={c.id}>{c.name}{c.role ? ` — ${c.role}` : ''}</option>
+                                      ))}
+                                    </Select>
+                                    {assignedContact && assignedContact.email && (
+                                      <p className="text-[11px] text-muted-foreground mt-1">{assignedContact.email}{assignedContact.phone ? ` · ${assignedContact.phone}` : ''}</p>
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                              <button onClick={() => removeSAPFromEvent(sap.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5 ml-2">
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       ) : (
                         <p className="text-xs text-muted-foreground italic">No SAPs linked to this event</p>
                       )}
 
                       {availableSAPs.length > 0 && (
-                        <Select
-                          value=""
-                          onChange={e => { addSAPToEvent(e.target.value); e.target.value = '' }}
-                          className="text-xs"
-                        >
-                          <option value="">+ Link a SAP to this event...</option>
-                          {availableSAPs.map(s => (
-                            <option key={s.id} value={s.id}>{s.name} — {s.company}</option>
-                          ))}
-                        </Select>
+                        <div className="space-y-2">
+                          <Select
+                            value={selectedSapId}
+                            onChange={e => setSelectedSapId(e.target.value)}
+                            className="text-xs"
+                          >
+                            <option value="">+ Link a SAP to this event...</option>
+                            {availableSAPs.map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </Select>
+
+                          {selectedSapId && (
+                            <div className="pl-4 border-l-2 border-eo-coral/30 space-y-2">
+                              {selectedSapContacts.length > 0 ? (
+                                <>
+                                  <Select
+                                    value=""
+                                    onChange={e => addSAPToEvent(selectedSapId, e.target.value || null)}
+                                    className="text-xs"
+                                  >
+                                    <option value="">Choose a speaker / contact…</option>
+                                    {selectedSapContacts.map(c => (
+                                      <option key={c.id} value={c.id}>{c.name}{c.role ? ` — ${c.role}` : ''}</option>
+                                    ))}
+                                  </Select>
+                                  <button
+                                    onClick={() => addSAPToEvent(selectedSapId, null)}
+                                    className="text-[11px] text-eo-blue hover:underline"
+                                  >
+                                    Link without choosing a contact
+                                  </button>
+                                </>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[11px] text-muted-foreground italic">No contacts on file.</p>
+                                  <button
+                                    onClick={() => addSAPToEvent(selectedSapId, null)}
+                                    className="text-[11px] text-eo-blue hover:underline"
+                                  >
+                                    Link anyway
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </>
                   )

@@ -17,6 +17,14 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.39.3 — 2026-04-10
+
+### Event SAP Contacts
+- **Two-dropdown SAP linking** on the Event Detail page — first pick the partner company, then choose the specific contact/speaker from that company.
+- Linked SAPs now show a "Speaker / contact" dropdown with that partner's contacts. Selecting a contact shows their email and phone inline.
+- "Link without choosing a contact" option for SAPs where the speaker is TBD.
+- Migration 025: adds `sap_contact_ids` jsonb column to events for per-SAP contact tracking.
+
 ## v1.39.1 — 2026-04-10
 
 ### Speakers
