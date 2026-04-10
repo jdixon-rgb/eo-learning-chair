@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
 import { isSupabaseConfigured } from './supabase'
 import { fetchAll, fetchByChapter, insertRow, updateRow, deleteRow, upsertRow, uploadFile, deleteFile } from './db'
-import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs } from './mockData'
+import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, mockContractChecklists, mockSAPs, mockSpeakerPipeline } from './mockData'
 import { supabase } from './supabase'
 import { useChapter } from './chapter'
 import { useFiscalYear } from './fiscalYearContext'
@@ -43,6 +43,7 @@ export function StoreProvider({ children }) {
   const [budgetItems, setBudgetItems] = useState(cached?.budgetItems ?? mockBudgetItems)
   const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? mockContractChecklists)
   const [saps, setSaps] = useState(cached?.saps ?? mockSAPs)
+  const [speakerPipeline, setSpeakerPipeline] = useState(cached?.speakerPipeline ?? mockSpeakerPipeline)
   const [scenarios, setScenarios] = useState(cached?.scenarios ?? [])
   const [eventDocuments, setEventDocuments] = useState(cached?.eventDocuments ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
@@ -53,8 +54,8 @@ export function StoreProvider({ children }) {
   // Persist to localStorage cache on every state change (per-chapter, per-fiscal-year)
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, activeFiscalYear, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments })
-  }, [activeChapterId, activeFiscalYear, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, scenarios, eventDocuments])
+    saveCache(activeChapterId, activeFiscalYear, { chapter, speakers, venues, events, budgetItems, contractChecklists, saps, speakerPipeline, scenarios, eventDocuments })
+  }, [activeChapterId, activeFiscalYear, chapter, speakers, venues, events, budgetItems, contractChecklists, saps, speakerPipeline, scenarios, eventDocuments])
 
   // Fetch from Supabase when chapter or fiscal year changes
   useEffect(() => {
@@ -79,6 +80,7 @@ export function StoreProvider({ children }) {
       if (chapterCache.budgetItems) setBudgetItems(chapterCache.budgetItems)
       if (chapterCache.contractChecklists) setContractChecklists(chapterCache.contractChecklists)
       if (chapterCache.saps) setSaps(chapterCache.saps)
+      if (chapterCache.speakerPipeline) setSpeakerPipeline(chapterCache.speakerPipeline)
       if (chapterCache.scenarios) setScenarios(chapterCache.scenarios)
       if (chapterCache.eventDocuments) setEventDocuments(chapterCache.eventDocuments)
     }
@@ -107,7 +109,7 @@ export function StoreProvider({ children }) {
       }
 
       try {
-        const [chaptersData, speakersData, venuesData, eventsData, budgetData, checklistsData, sapsData, scenariosData, docsData] =
+        const [chaptersData, speakersData, venuesData, eventsData, budgetData, checklistsData, sapsData, pipelineData, scenariosData, docsData] =
           await Promise.all([
             safeFetch('chapters', () => fetchAll('chapters')),
             safeFetch('speakers', () => fetchByChapter('speakers', activeChapterId)),
@@ -116,6 +118,7 @@ export function StoreProvider({ children }) {
             safeFetch('budget_items', () => fetchAll('budget_items')),
             safeFetch('contract_checklists', () => fetchAll('contract_checklists')),
             safeFetch('saps', () => fetchByChapter('saps', activeChapterId)),
+            safeFetch('speaker_pipeline', () => supabase.from('speaker_pipeline').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
             safeFetch('scenarios', () => supabase.from('scenarios').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
             safeFetch('event_documents', () => fetchByChapter('event_documents', activeChapterId)),
           ])
@@ -132,6 +135,7 @@ export function StoreProvider({ children }) {
         if (budgetData) setBudgetItems(budgetData)
         if (checklistsData) setContractChecklists(checklistsData)
         if (sapsData) setSaps(sapsData)
+        if (pipelineData) setSpeakerPipeline(pipelineData)
         if (scenariosData) setScenarios(scenariosData)
         if (docsData) setEventDocuments(docsData)
 
@@ -180,16 +184,33 @@ export function StoreProvider({ children }) {
     if (activeChapterId) localStorage.removeItem(storageKey(activeChapterId, activeFiscalYear))
   }, [activeChapterId, activeFiscalYear])
 
-  // ── Speaker operations ──
+  // ── Speaker Library operations ──
 
-  const addSpeaker = useCallback((speaker) => {
+  const addSpeaker = useCallback((speakerData) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const newSpeaker = { ...speaker, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
+    // Separate library fields from pipeline fields
+    const { pipeline_stage, fit_score, fee_estimated, fee_actual,
+            contract_storage_path, contract_file_name, w9_storage_path,
+            w9_file_name, notes, ...libraryData } = speakerData
+    const newSpeaker = { ...libraryData, id, chapter_id: activeChapterId, created_at: now, updated_at: now }
     setSpeakers(prev => [...prev, newSpeaker])
     dbWrite(() => insertRow('speakers', newSpeaker), 'insert:speakers')
+    // Simultaneously create pipeline entry for current FY
+    const pipelineId = crypto.randomUUID()
+    const pipelineEntry = {
+      id: pipelineId, speaker_id: id, chapter_id: activeChapterId,
+      fiscal_year: activeFiscalYear,
+      pipeline_stage: pipeline_stage || 'researching',
+      fit_score: fit_score ?? null, fee_estimated: fee_estimated ?? null, fee_actual: fee_actual ?? null,
+      contract_storage_path: contract_storage_path ?? null, contract_file_name: contract_file_name ?? null,
+      w9_storage_path: w9_storage_path ?? null, w9_file_name: w9_file_name ?? null,
+      notes: notes ?? '', created_at: now, updated_at: now,
+    }
+    setSpeakerPipeline(prev => [...prev, pipelineEntry])
+    dbWrite(() => insertRow('speaker_pipeline', pipelineEntry), 'insert:speaker_pipeline')
     return newSpeaker
-  }, [activeChapterId, dbWrite])
+  }, [activeChapterId, activeFiscalYear, dbWrite])
 
   const updateSpeaker = useCallback((id, updates) => {
     const now = new Date().toISOString()
@@ -199,7 +220,45 @@ export function StoreProvider({ children }) {
 
   const deleteSpeaker = useCallback((id) => {
     setSpeakers(prev => prev.filter(s => s.id !== id))
+    // Also remove any pipeline entries for this speaker
+    const pipelineIds = speakerPipeline.filter(p => p.speaker_id === id).map(p => p.id)
+    setSpeakerPipeline(prev => prev.filter(p => p.speaker_id !== id))
     dbWrite(() => deleteRow('speakers', id), 'delete:speakers')
+    pipelineIds.forEach(pid => dbWrite(() => deleteRow('speaker_pipeline', pid), 'delete:speaker_pipeline'))
+  }, [dbWrite, speakerPipeline])
+
+  // ── Speaker Pipeline operations ──
+
+  const addToPipeline = useCallback((speakerId, overrides = {}) => {
+    const existing = speakerPipeline.find(
+      p => p.speaker_id === speakerId && p.fiscal_year === activeFiscalYear
+    )
+    if (existing) return existing
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const entry = {
+      id, speaker_id: speakerId, chapter_id: activeChapterId,
+      fiscal_year: activeFiscalYear, pipeline_stage: 'researching',
+      fit_score: null, fee_estimated: null, fee_actual: null,
+      contract_storage_path: null, contract_file_name: null,
+      w9_storage_path: null, w9_file_name: null,
+      notes: '', created_at: now, updated_at: now,
+      ...overrides,
+    }
+    setSpeakerPipeline(prev => [...prev, entry])
+    dbWrite(() => insertRow('speaker_pipeline', entry), 'insert:speaker_pipeline')
+    return entry
+  }, [speakerPipeline, activeChapterId, activeFiscalYear, dbWrite])
+
+  const updatePipelineEntry = useCallback((id, updates) => {
+    const now = new Date().toISOString()
+    setSpeakerPipeline(prev => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: now } : p))
+    dbWrite(() => updateRow('speaker_pipeline', id, updates), 'update:speaker_pipeline')
+  }, [dbWrite])
+
+  const removePipelineEntry = useCallback((id) => {
+    setSpeakerPipeline(prev => prev.filter(p => p.id !== id))
+    dbWrite(() => deleteRow('speaker_pipeline', id), 'delete:speaker_pipeline')
   }, [dbWrite])
 
   // ── Venue operations ──
@@ -471,6 +530,14 @@ export function StoreProvider({ children }) {
   }, [activeChapterId, dbWrite])
 
   // ── Computed values ──
+
+  // Enriched pipeline: merge library speaker data with pipeline entry for current FY
+  // _pipeline_id disambiguates the pipeline entry id from the library speaker id
+  const pipelineSpeakers = speakerPipeline.map(entry => {
+    const speaker = speakers.find(s => s.id === entry.speaker_id)
+    return speaker ? { ...speaker, ...entry, id: speaker.id, _pipeline_id: entry.id } : null
+  }).filter(Boolean)
+
   const totalBudgeted = budgetItems.reduce((sum, item) => sum + (item.budget_amount || 0), 0)
   const totalContracted = budgetItems.reduce((sum, item) => sum + (item.contracted_amount || 0), 0)
   const totalActualSpent = budgetItems.reduce((sum, item) => sum + (item.actual_amount || 0), 0)
@@ -480,6 +547,8 @@ export function StoreProvider({ children }) {
     // Data
     chapter,
     speakers,
+    speakerPipeline,
+    pipelineSpeakers,
     venues,
     events,
     budgetItems,
@@ -493,10 +562,15 @@ export function StoreProvider({ children }) {
     dbError,
     clearDbError: () => setDbError(null),
 
-    // Speaker ops
+    // Speaker Library ops
     addSpeaker,
     updateSpeaker,
     deleteSpeaker,
+
+    // Speaker Pipeline ops
+    addToPipeline,
+    updatePipelineEntry,
+    removePipelineEntry,
 
     // Venue ops
     addVenue,

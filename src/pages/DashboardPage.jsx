@@ -20,7 +20,7 @@ import {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { chapter, events, speakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
+  const { chapter, events, speakers, pipelineSpeakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
   const { presidentElectTheme, activePresidentTheme, getChairBudget } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
 
@@ -38,7 +38,7 @@ export default function DashboardPage() {
   // Pipeline counts
   const pipelineCounts = PIPELINE_STAGES.map(stage => ({
     ...stage,
-    count: speakers.filter(s => s.pipeline_stage === stage.id).length,
+    count: pipelineSpeakers.filter(s => s.pipeline_stage === stage.id).length,
   }))
 
   // Budget health
@@ -115,7 +115,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4" />
             Speaker Pipeline
           </div>
-          <p className="text-2xl font-bold">{speakers.filter(s => s.pipeline_stage !== 'passed').length}</p>
+          <p className="text-2xl font-bold">{pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').length}</p>
           <p className="text-xs text-muted-foreground mt-1">active speakers</p>
           <div className="flex gap-1 mt-3">
             {pipelineCounts.map(stage => (
@@ -198,11 +198,11 @@ export default function DashboardPage() {
               View All <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
           </div>
-          {speakers.length === 0 ? (
+          {pipelineSpeakers.length === 0 ? (
             <p className="text-sm text-muted-foreground">No speakers yet. Start building your pipeline.</p>
           ) : (
             <div className="space-y-2">
-              {speakers.filter(s => s.pipeline_stage !== 'passed').slice(0, 4).map(speaker => (
+              {pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').slice(0, 4).map(speaker => (
                 <div key={speaker.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                   <div>
                     <p className="text-sm font-medium">{speaker.name}</p>

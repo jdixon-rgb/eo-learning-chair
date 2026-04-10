@@ -4,13 +4,15 @@ import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB 
 import { formatCurrency } from '@/lib/utils'
 import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
 import { useChapter } from '@/lib/chapter'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { formatFiscalYear } from '@/lib/fiscalYear'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, Phone, Mail, Globe, ArrowRight, GripVertical, User, CalendarDays, DollarSign, Play, Upload, FileText, Trash2, Download, Loader2 } from 'lucide-react'
+import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
@@ -21,20 +23,31 @@ const emptyForm = {
 }
 
 export default function SpeakersPage() {
-  const { speakers, events, updateEvent, addSpeaker, updateSpeaker, deleteSpeaker } = useStore()
+  const {
+    speakers, pipelineSpeakers, events,
+    addSpeaker, updateSpeaker, deleteSpeaker,
+    addToPipeline, updatePipelineEntry, removePipelineEntry,
+    updateEvent,
+  } = useStore()
   const { activeChapterId } = useChapter()
+  const { activeFiscalYear } = useFiscalYear()
+  const [activeTab, setActiveTab] = useState('pipeline')
   const [showForm, setShowForm] = useState(false)
   const [editSpeaker, setEditSpeaker] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [search, setSearch] = useState('')
-  const [viewMode, setViewMode] = useState('kanban') // kanban or list
+  const [viewMode, setViewMode] = useState('kanban')
   const [dragSpeaker, setDragSpeaker] = useState(null)
-  const [uploadingDoc, setUploadingDoc] = useState(null) // 'contract' or 'w9'
+  const [uploadingDoc, setUploadingDoc] = useState(null)
   const contractInputRef = useRef(null)
   const w9InputRef = useRef(null)
 
+  // Pipeline-specific fields that live on speaker_pipeline, not speakers
+  const PIPELINE_FIELDS = ['pipeline_stage', 'fit_score', 'fee_estimated', 'fee_actual',
+    'contract_storage_path', 'contract_file_name', 'w9_storage_path', 'w9_file_name', 'notes']
+
   const handleDocUpload = useCallback(async (file, docType) => {
-    if (!editSpeaker) return
+    if (!editSpeaker?._pipeline_id) return
     if (!ALLOWED_FILE_TYPES.includes(file.type)) return
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) return
 
@@ -42,42 +55,36 @@ export default function SpeakersPage() {
     const storagePath = `${activeChapterId}/speakers/${editSpeaker.id}/${docType}_${file.name}`
     try {
       const res = await uploadFile('event-documents', storagePath, file)
-      if (res?.error) {
-        console.error(`${docType} upload error:`, res.error)
-        return
-      }
+      if (res?.error) { console.error(`${docType} upload error:`, res.error); return }
       const pathKey = docType === 'contract' ? 'contract_storage_path' : 'w9_storage_path'
       const nameKey = docType === 'contract' ? 'contract_file_name' : 'w9_file_name'
-      updateSpeaker(editSpeaker.id, { [pathKey]: storagePath, [nameKey]: file.name })
+      updatePipelineEntry(editSpeaker._pipeline_id, { [pathKey]: storagePath, [nameKey]: file.name })
       setEditSpeaker(prev => ({ ...prev, [pathKey]: storagePath, [nameKey]: file.name }))
     } catch (err) {
       console.error(`${docType} upload failed:`, err)
     } finally {
       setUploadingDoc(null)
     }
-  }, [editSpeaker, activeChapterId, updateSpeaker])
+  }, [editSpeaker, activeChapterId, updatePipelineEntry])
 
   const handleDocDelete = useCallback(async (docType) => {
-    if (!editSpeaker) return
+    if (!editSpeaker?._pipeline_id) return
     const pathKey = docType === 'contract' ? 'contract_storage_path' : 'w9_storage_path'
     const nameKey = docType === 'contract' ? 'contract_file_name' : 'w9_file_name'
     const path = editSpeaker[pathKey]
-    if (path) {
-      deleteFile('event-documents', path).catch(() => {})
-    }
-    updateSpeaker(editSpeaker.id, { [pathKey]: null, [nameKey]: null })
+    if (path) deleteFile('event-documents', path).catch(() => {})
+    updatePipelineEntry(editSpeaker._pipeline_id, { [pathKey]: null, [nameKey]: null })
     setEditSpeaker(prev => ({ ...prev, [pathKey]: null, [nameKey]: null }))
-  }, [editSpeaker, updateSpeaker])
+  }, [editSpeaker, updatePipelineEntry])
 
   const handleDocDownload = useCallback(async (storagePath) => {
     const url = await getSignedDownloadUrl('event-documents', storagePath)
     if (url) window.open(url, '_blank')
   }, [])
 
-  // Map speaker → event assignment (includes candidate assignments)
+  // Map speaker → event assignment
   const speakerEventMap = {}
   events.forEach(evt => {
-    // Track all candidate assignments
     const allSpeakerIds = new Set([
       ...(evt.candidate_speaker_ids || []),
       ...(evt.speaker_id ? [evt.speaker_id] : []),
@@ -88,40 +95,63 @@ export default function SpeakersPage() {
     })
   })
 
-  const filteredSpeakers = speakers.filter(s =>
+  // Pipeline speakers filtered by search
+  const filteredPipeline = pipelineSpeakers.filter(s =>
     s.pipeline_stage !== 'passed' &&
     (s.name.toLowerCase().includes(search.toLowerCase()) ||
      s.topic?.toLowerCase().includes(search.toLowerCase()))
   )
+  const passedPipeline = pipelineSpeakers.filter(s => s.pipeline_stage === 'passed')
 
-  const passedSpeakers = speakers.filter(s => s.pipeline_stage === 'passed')
+  // Library speakers filtered by search
+  const filteredLibrary = speakers.filter(s =>
+    s.name.toLowerCase().includes(search.toLowerCase()) ||
+    s.topic?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  // IDs of speakers already in current FY pipeline
+  const pipelineSpeakerIds = new Set(pipelineSpeakers.map(p => p.id))
 
   const handleSubmit = () => {
     if (!form.name) return
-    const { assigned_event_id, ...speakerData } = form
-    const data = {
-      ...speakerData,
-      fee_range_low: speakerData.fee_range_low ? parseFloat(speakerData.fee_range_low) : null,
-      fee_range_high: speakerData.fee_range_high ? parseFloat(speakerData.fee_range_high) : null,
-      fee_estimated: speakerData.fee_estimated ? parseFloat(speakerData.fee_estimated) : null,
-      fee_actual: speakerData.fee_actual ? parseFloat(speakerData.fee_actual) : null,
-      fit_score: parseInt(speakerData.fit_score),
+    const { assigned_event_id, ...allData } = form
+
+    // Split library vs pipeline fields
+    const libraryData = {}
+    const pipelineData = {}
+    for (const [key, val] of Object.entries(allData)) {
+      if (PIPELINE_FIELDS.includes(key)) {
+        pipelineData[key] = val
+      } else {
+        libraryData[key] = val
+      }
     }
+
+    // Parse numeric fields
+    libraryData.fee_range_low = libraryData.fee_range_low ? parseFloat(libraryData.fee_range_low) : null
+    libraryData.fee_range_high = libraryData.fee_range_high ? parseFloat(libraryData.fee_range_high) : null
+    pipelineData.fee_estimated = pipelineData.fee_estimated ? parseFloat(pipelineData.fee_estimated) : null
+    pipelineData.fee_actual = pipelineData.fee_actual ? parseFloat(pipelineData.fee_actual) : null
+    pipelineData.fit_score = parseInt(pipelineData.fit_score)
+
     let speakerId
     if (editSpeaker) {
-      updateSpeaker(editSpeaker.id, data)
+      // Update library fields
+      updateSpeaker(editSpeaker.id, libraryData)
+      // Update pipeline fields if pipeline entry exists
+      if (editSpeaker._pipeline_id) {
+        updatePipelineEntry(editSpeaker._pipeline_id, pipelineData)
+      }
       speakerId = editSpeaker.id
     } else {
-      const newSpeaker = addSpeaker({ ...data, pipeline_stage: 'researching' })
+      // New speaker: addSpeaker creates both library + pipeline entries
+      const newSpeaker = addSpeaker({ ...libraryData, ...pipelineData, pipeline_stage: 'researching' })
       speakerId = newSpeaker.id
     }
 
-    // Handle event assignment changes (adds speaker as candidate)
-    // Build all mutations first, then apply, to avoid stale state issues
+    // Handle event assignment
     if (speakerId) {
       const mutations = []
-
-      // Remove speaker from events they were previously a candidate for (if different event)
       events.forEach(evt => {
         const candidates = evt.candidate_speaker_ids || []
         if (candidates.includes(speakerId) && evt.id !== assigned_event_id) {
@@ -132,8 +162,6 @@ export default function SpeakersPage() {
           }])
         }
       })
-
-      // Add as candidate to the selected event
       if (assigned_event_id) {
         const evt = events.find(e => e.id === assigned_event_id)
         const current = evt?.candidate_speaker_ids || []
@@ -144,8 +172,6 @@ export default function SpeakersPage() {
           }])
         }
       }
-
-      // Apply all mutations
       mutations.forEach(([id, updates]) => updateEvent(id, updates))
     }
 
@@ -180,11 +206,17 @@ export default function SpeakersPage() {
     setShowForm(true)
   }
 
+  const openEditFromLibrary = (librarySpeaker) => {
+    // Enrich with pipeline data if exists
+    const pipelineEntry = pipelineSpeakers.find(p => p.id === librarySpeaker.id)
+    openEdit(pipelineEntry || librarySpeaker)
+  }
+
   const handleDragStart = (speaker) => setDragSpeaker(speaker)
   const handleDragOver = (e) => e.preventDefault()
   const handleDrop = (stageId) => {
-    if (dragSpeaker) {
-      updateSpeaker(dragSpeaker.id, { pipeline_stage: stageId })
+    if (dragSpeaker?._pipeline_id) {
+      updatePipelineEntry(dragSpeaker._pipeline_id, { pipeline_stage: stageId })
       setDragSpeaker(null)
     }
   }
@@ -255,12 +287,12 @@ export default function SpeakersPage() {
           <InlineFeeInput
             label="Estimated"
             value={speaker.fee_estimated}
-            onSave={val => updateSpeaker(speaker.id, { fee_estimated: val })}
+            onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_estimated: val })}
           />
           <InlineFeeInput
             label="Actual"
             value={speaker.fee_actual}
-            onSave={val => updateSpeaker(speaker.id, { fee_actual: val })}
+            onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_actual: val })}
           />
         </div>
         {speaker.notes && (
@@ -275,8 +307,13 @@ export default function SpeakersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Speaker Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">{speakers.length} speakers tracked</p>
+          <h1 className="text-2xl font-bold">Speakers</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {activeTab === 'pipeline'
+              ? `${pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').length} in pipeline · ${formatFiscalYear(activeFiscalYear)}`
+              : `${speakers.length} speakers in library`
+            }
+          </p>
         </div>
         <div className="flex gap-2">
           <div className="relative">
@@ -288,48 +325,149 @@ export default function SpeakersPage() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="sm" onClick={() => setViewMode(viewMode === 'kanban' ? 'list' : 'kanban')}>
-            {viewMode === 'kanban' ? 'List View' : 'Kanban View'}
-          </Button>
+          {activeTab === 'pipeline' && (
+            <Button variant="outline" size="sm" onClick={() => setViewMode(viewMode === 'kanban' ? 'list' : 'kanban')}>
+              {viewMode === 'kanban' ? 'List View' : 'Kanban View'}
+            </Button>
+          )}
           <Button size="sm" onClick={() => { setEditSpeaker(null); setForm(emptyForm); setShowForm(true) }}>
             <Plus className="h-4 w-4" /> Add Speaker
           </Button>
         </div>
       </div>
 
-      {/* Kanban View */}
-      {viewMode === 'kanban' ? (
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {PIPELINE_STAGES.map(stage => {
-            const stageSpeakers = filteredSpeakers.filter(s => s.pipeline_stage === stage.id)
-            return (
-              <div
-                key={stage.id}
-                className="flex-shrink-0 w-64"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(stage.id)}
-              >
-                <div className="flex items-center gap-2 mb-3 px-1">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
-                  <span className="text-sm font-semibold">{stage.label}</span>
-                  <span className="text-xs text-muted-foreground">({stageSpeakers.length})</span>
-                </div>
-                <div className="space-y-2 min-h-[200px] rounded-lg bg-muted/30 p-2">
-                  {stageSpeakers.map(speaker => (
-                    <SpeakerCard key={speaker.id} speaker={speaker} />
-                  ))}
-                  {stageSpeakers.length === 0 && (
-                    <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
-                      Drag speakers here
+      {/* Tabs */}
+      <div className="flex gap-1 border-b">
+        <button
+          onClick={() => setActiveTab('pipeline')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'pipeline'
+              ? 'border-eo-blue text-eo-blue'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Pipeline
+        </button>
+        <button
+          onClick={() => setActiveTab('library')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+            activeTab === 'library'
+              ? 'border-eo-blue text-eo-blue'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <BookOpen className="h-3.5 w-3.5" />
+          Library
+        </button>
+      </div>
+
+      {activeTab === 'pipeline' ? (
+        <>
+          {/* Kanban View */}
+          {viewMode === 'kanban' ? (
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {PIPELINE_STAGES.map(stage => {
+                const stageSpeakers = filteredPipeline.filter(s => s.pipeline_stage === stage.id)
+                return (
+                  <div
+                    key={stage.id}
+                    className="flex-shrink-0 w-64"
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(stage.id)}
+                  >
+                    <div className="flex items-center gap-2 mb-3 px-1">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
+                      <span className="text-sm font-semibold">{stage.label}</span>
+                      <span className="text-xs text-muted-foreground">({stageSpeakers.length})</span>
                     </div>
-                  )}
-                </div>
+                    <div className="space-y-2 min-h-[200px] rounded-lg bg-muted/30 p-2">
+                      {stageSpeakers.map(speaker => (
+                        <SpeakerCard key={speaker.id} speaker={speaker} />
+                      ))}
+                      {stageSpeakers.length === 0 && (
+                        <div className="flex items-center justify-center h-20 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
+                          Drag speakers here
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            /* List View */
+            <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Speaker</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Topic</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fee Range</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Estimated</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actual</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fit</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stage</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Contact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPipeline.map(speaker => (
+                    <tr key={speaker.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEdit(speaker)}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-eo-blue/10 flex items-center justify-center">
+                            <User className="h-4 w-4 text-eo-blue" />
+                          </div>
+                          <span className="text-sm font-medium">{speaker.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">{speaker.topic}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-eo-coral fill-eo-coral" />
+                          <span className="text-sm">{speaker.fit_score}/10</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className="text-[10px]" style={{ borderColor: PIPELINE_STAGES.find(s => s.id === speaker.pipeline_stage)?.color }}>
+                          {PIPELINE_STAGES.find(s => s.id === speaker.pipeline_stage)?.label}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Passed Speakers Archive */}
+          {passedPipeline.length > 0 && (
+            <div className="rounded-xl border bg-card p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">Passed ({passedPipeline.length})</h3>
+              <div className="flex flex-wrap gap-2">
+                {passedPipeline.map(s => (
+                  <Badge key={s.id} variant="secondary" className="cursor-pointer" onClick={() => openEdit(s)}>
+                    {s.name}
+                  </Badge>
+                ))}
               </div>
-            )
-          })}
-        </div>
+            </div>
+          )}
+        </>
       ) : (
-        /* List View */
+        /* Library Tab */
         <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
           <table className="w-full">
             <thead>
@@ -337,66 +475,75 @@ export default function SpeakersPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Speaker</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Topic</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fee Range</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Estimated</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actual</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fit</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stage</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Contact</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Pipeline</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredSpeakers.map(speaker => (
-                <tr key={speaker.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEdit(speaker)}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-eo-blue/10 flex items-center justify-center">
-                        <User className="h-4 w-4 text-eo-blue" />
+              {filteredLibrary.map(speaker => {
+                const inPipeline = pipelineSpeakerIds.has(speaker.id)
+                return (
+                  <tr key={speaker.id} className="border-b hover:bg-accent/50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={() => openEditFromLibrary(speaker)}>
+                        <div className="w-8 h-8 rounded-full bg-eo-blue/10 flex items-center justify-center">
+                          <User className="h-4 w-4 text-eo-blue" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium hover:text-eo-blue">{speaker.name}</span>
+                          {speaker.sizzle_reel_url && (
+                            <a href={speaker.sizzle_reel_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="ml-1.5">
+                              <Play className="inline h-3 w-3 text-eo-blue" />
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-sm font-medium">{speaker.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">{speaker.topic}</td>
-                  <td className="px-4 py-3 text-sm">
-                    {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right">
-                    {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right">
-                    {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 text-eo-coral fill-eo-coral" />
-                      <span className="text-sm">{speaker.fit_score}/10</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant="outline" className="text-[10px]" style={{ borderColor: PIPELINE_STAGES.find(s => s.id === speaker.pipeline_stage)?.color }}>
-                      {PIPELINE_STAGES.find(s => s.id === speaker.pipeline_stage)?.label}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">{speaker.topic}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label}
+                    </td>
+                    <td className="px-4 py-3">
+                      {inPipeline ? (
+                        <Badge variant="outline" className="text-[10px] text-green-600 border-green-500/30">
+                          In Pipeline
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {!inPipeline && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            addToPipeline(speaker.id)
+                            setActiveTab('pipeline')
+                          }}
+                        >
+                          <ArrowRight className="h-3 w-3 mr-1" />
+                          Add to Pipeline
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+              {filteredLibrary.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    No speakers in the library yet. Add speakers through the Pipeline tab.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Passed Speakers Archive */}
-      {passedSpeakers.length > 0 && (
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">Passed ({passedSpeakers.length})</h3>
-          <div className="flex flex-wrap gap-2">
-            {passedSpeakers.map(s => (
-              <Badge key={s.id} variant="secondary" className="cursor-pointer" onClick={() => openEdit(s)}>
-                {s.name}
-              </Badge>
-            ))}
-          </div>
         </div>
       )}
 
@@ -424,14 +571,21 @@ export default function SpeakersPage() {
                 <label className="text-xs font-medium">Fee High ($)</label>
                 <Input type="number" value={form.fee_range_high} onChange={e => setForm(p => ({ ...p, fee_range_high: e.target.value }))} placeholder="25000" />
               </div>
-              <div>
-                <label className="text-xs font-medium">Estimated Fee ($)</label>
-                <Input type="number" value={form.fee_estimated} onChange={e => setForm(p => ({ ...p, fee_estimated: e.target.value }))} placeholder="Negotiated estimate" />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Actual Fee ($)</label>
-                <Input type="number" value={form.fee_actual} onChange={e => setForm(p => ({ ...p, fee_actual: e.target.value }))} placeholder="Final amount paid" />
-              </div>
+
+              {/* Pipeline-specific fields */}
+              {(editSpeaker?._pipeline_id || !editSpeaker) && (
+                <>
+                  <div>
+                    <label className="text-xs font-medium">Estimated Fee ($)</label>
+                    <Input type="number" value={form.fee_estimated} onChange={e => setForm(p => ({ ...p, fee_estimated: e.target.value }))} placeholder="Negotiated estimate" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Actual Fee ($)</label>
+                    <Input type="number" value={form.fee_actual} onChange={e => setForm(p => ({ ...p, fee_actual: e.target.value }))} placeholder="Final amount paid" />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="text-xs font-medium">Contact Method</label>
                 <Select value={form.contact_method} onChange={e => setForm(p => ({ ...p, contact_method: e.target.value }))}>
@@ -470,11 +624,11 @@ export default function SpeakersPage() {
                 <label className="text-xs font-medium">Sizzle Reel URL</label>
                 <Input value={form.sizzle_reel_url} onChange={e => setForm(p => ({ ...p, sizzle_reel_url: e.target.value }))} placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
               </div>
-              {/* Speaker Documents */}
-              {editSpeaker && (
+
+              {/* Speaker Documents — only when pipeline entry exists */}
+              {editSpeaker?._pipeline_id && (
                 <div className="col-span-2 space-y-3 pt-2 border-t">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Speaker Documents</label>
-
                   {/* Contract */}
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
@@ -494,7 +648,6 @@ export default function SpeakersPage() {
                     )}
                     <input ref={contractInputRef} type="file" accept={ALLOWED_FILE_TYPES.join(',')} className="hidden" onChange={e => { if (e.target.files[0]) handleDocUpload(e.target.files[0], 'contract'); e.target.value = '' }} />
                   </div>
-
                   {/* W-9 */}
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-green-500 shrink-0" />
@@ -552,10 +705,10 @@ export default function SpeakersPage() {
             </div>
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSubmit} className="flex-1">{editSpeaker ? 'Save Changes' : 'Add Speaker'}</Button>
-              {editSpeaker && (
+              {editSpeaker?._pipeline_id && (
                 <Button variant="outline" className="text-eo-pink border-eo-pink hover:bg-eo-pink/10" onClick={() => {
                   if (confirm('Move this speaker to Passed?')) {
-                    updateSpeaker(editSpeaker.id, { pipeline_stage: 'passed' })
+                    updatePipelineEntry(editSpeaker._pipeline_id, { pipeline_stage: 'passed' })
                     setShowForm(false)
                   }
                 }}>
@@ -574,7 +727,6 @@ export default function SpeakersPage() {
 function InlineFeeInput({ label, value, onSave }) {
   const [local, setLocal] = useState(value ?? '')
 
-  // Sync from parent when the speaker's stored value changes externally
   useEffect(() => { setLocal(value ?? '') }, [value])
 
   return (

@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.33.0 — 2026-04-10
+
+### Speaker Library + Pipeline Split
+- **Speaker Library** — persistent, cross-year collection of all speakers. New "Library" tab on the Speakers page shows every speaker ever researched, with "Add to Pipeline" action.
+- **Speaker Pipeline** — now fiscal-year-scoped. Pipeline stage, fit score, estimated/actual fees, contracts, W-9s, and notes are tracked per fiscal year via the new `speaker_pipeline` table (migration 020).
+- Same speaker can appear in multiple years' pipelines — researched one year, picked up the next.
+- Dashboard pipeline activity and Scenario planner now read from the year-scoped pipeline.
+- Event candidate selection uses pipeline speakers for the current FY.
+- Adding a speaker creates both a library entry and a pipeline entry for the active fiscal year.
+
 ## v1.32.3 — 2026-04-10
 
 ### Fiscal Year

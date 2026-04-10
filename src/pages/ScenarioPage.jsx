@@ -20,7 +20,7 @@ const STRATEGIC_WEIGHT = {
 
 export default function ScenarioPage() {
   const {
-    chapter, events, speakers, venues, budgetItems,
+    chapter, events, speakers, pipelineSpeakers, venues, budgetItems,
     scenarios, addScenario, updateScenario, deleteScenario, updateEvent,
   } = useStore()
 
@@ -35,10 +35,10 @@ export default function ScenarioPage() {
     [events]
   )
 
-  // Active speakers (exclude passed)
+  // Active speakers (exclude passed) — from current FY pipeline
   const activeSpeakers = useMemo(() =>
-    speakers.filter(s => s.pipeline_stage !== 'passed'),
-    [speakers]
+    pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed'),
+    [pipelineSpeakers]
   )
 
   // Venues sorted by name
@@ -69,7 +69,7 @@ export default function ScenarioPage() {
       const override = overrides.find(o => o.event_id === event.id)
       const speakerId = override ? (override.speaker_id !== undefined ? override.speaker_id : event.speaker_id) : event.speaker_id
       const venueId = override ? (override.venue_id !== undefined ? override.venue_id : event.venue_id) : event.venue_id
-      const speaker = speakerId ? speakers.find(s => s.id === speakerId) : null
+      const speaker = speakerId ? (pipelineSpeakers.find(s => s.id === speakerId) || speakers.find(s => s.id === speakerId)) : null
       const venue = venueId ? venues.find(v => v.id === venueId) : null
 
       const fee = speaker ? getSpeakerFee(speaker) : 0

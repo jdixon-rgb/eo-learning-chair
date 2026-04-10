@@ -24,7 +24,7 @@ export default function EventDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const {
-    events, speakers, venues, budgetItems, contractChecklists, saps,
+    events, speakers, pipelineSpeakers, venues, budgetItems, contractChecklists, saps,
     updateEvent, deleteEvent,
     addBudgetItem, updateBudgetItem,
     getOrCreateChecklist, updateChecklist,
@@ -194,7 +194,7 @@ export default function EventDetailPage() {
 
               {/* Candidate Speakers */}
               {(() => {
-                const candidates = (event.candidate_speaker_ids || []).map(sid => speakers.find(s => s.id === sid)).filter(Boolean)
+                const candidates = (event.candidate_speaker_ids || []).map(sid => pipelineSpeakers.find(s => s.id === sid) || speakers.find(s => s.id === sid)).filter(Boolean)
                 const isSpeakerFinalized = checklist.contract_signed && event.speaker_id
 
                 // Helper: get the best fee estimate for a speaker
@@ -207,7 +207,7 @@ export default function EventDetailPage() {
 
                 // Sync speaker_fee budget line when primary speaker changes
                 const syncSpeakerFeeBudget = (speakerId) => {
-                  const speakerObj = speakerId ? speakers.find(s => s.id === speakerId) : null
+                  const speakerObj = speakerId ? (pipelineSpeakers.find(s => s.id === speakerId) || speakers.find(s => s.id === speakerId)) : null
                   const fee = getSpeakerFee(speakerObj)
                   const existingItem = eventBudget.find(b => b.category === 'speaker_fee')
                   if (existingItem) {
@@ -246,7 +246,7 @@ export default function EventDetailPage() {
                   syncSpeakerFeeBudget(speakerId)
                 }
 
-                const availableSpeakers = speakers.filter(s =>
+                const availableSpeakers = pipelineSpeakers.filter(s =>
                   s.pipeline_stage !== 'passed' && !(event.candidate_speaker_ids || []).includes(s.id)
                 )
 

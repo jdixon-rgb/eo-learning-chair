@@ -747,3 +747,22 @@ export const mockContractChecklists = [
     contract_notes: 'Salim Ismail — awaiting response for August kickoff.',
   },
 ]
+
+// Generate pipeline entries from mock speakers (pipeline-specific fields extracted)
+export const mockSpeakerPipeline = mockSpeakers.map(s => ({
+  id: `pipeline-${s.id}`,
+  speaker_id: s.id,
+  chapter_id: mockChapter.id,
+  fiscal_year: '2026-2027',
+  pipeline_stage: s.pipeline_stage || 'researching',
+  fit_score: s.fit_score ?? null,
+  fee_estimated: s.fee_estimated ?? null,
+  fee_actual: s.fee_actual ?? null,
+  contract_storage_path: s.contract_storage_path ?? null,
+  contract_file_name: s.contract_file_name ?? null,
+  w9_storage_path: s.w9_storage_path ?? null,
+  w9_file_name: s.w9_file_name ?? null,
+  notes: s.notes ?? '',
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}))
