@@ -20,6 +20,7 @@ const emptyForm = {
   contact_email: '', contact_phone: '', agency_name: '', agency_contact: '',
   contact_method: 'direct', fit_score: 7, notes: '', sizzle_reel_url: '',
   routing_flexibility: false, multi_chapter_interest: false,
+  assigned_event_ids: [],
 }
 
 export default function SpeakersPage() {
@@ -114,7 +115,7 @@ export default function SpeakersPage() {
 
   const handleSubmit = () => {
     if (!form.name) return
-    const { assigned_event_id, ...allData } = form
+    const { assigned_event_ids, ...allData } = form
 
     // Split library vs pipeline fields
     const libraryData = {}
@@ -136,42 +137,42 @@ export default function SpeakersPage() {
 
     let speakerId
     if (editSpeaker) {
-      // Update library fields
       updateSpeaker(editSpeaker.id, libraryData)
-      // Update pipeline fields if pipeline entry exists
       if (editSpeaker._pipeline_id) {
         updatePipelineEntry(editSpeaker._pipeline_id, pipelineData)
       }
       speakerId = editSpeaker.id
     } else {
-      // New speaker: addSpeaker creates both library + pipeline entries
       const newSpeaker = addSpeaker({ ...libraryData, ...pipelineData, pipeline_stage: 'researching' })
       speakerId = newSpeaker.id
     }
 
-    // Handle event assignment
+    // Sync event assignments — add/remove speaker from events based on checkboxes
     if (speakerId) {
+      const selectedIds = new Set(assigned_event_ids || [])
       const mutations = []
+
       events.forEach(evt => {
         const candidates = evt.candidate_speaker_ids || []
-        if (candidates.includes(speakerId) && evt.id !== assigned_event_id) {
+        const isAssigned = candidates.includes(speakerId) || evt.speaker_id === speakerId
+        const shouldBeAssigned = selectedIds.has(evt.id)
+
+        if (isAssigned && !shouldBeAssigned) {
+          // Remove from this event
           const filtered = candidates.filter(sid => sid !== speakerId)
           mutations.push([evt.id, {
             candidate_speaker_ids: filtered,
             ...(evt.speaker_id === speakerId ? { speaker_id: filtered[0] || null } : {}),
           }])
-        }
-      })
-      if (assigned_event_id) {
-        const evt = events.find(e => e.id === assigned_event_id)
-        const current = evt?.candidate_speaker_ids || []
-        if (!current.includes(speakerId)) {
-          mutations.push([assigned_event_id, {
-            candidate_speaker_ids: [...current, speakerId],
-            ...(!evt?.speaker_id ? { speaker_id: speakerId } : {}),
+        } else if (!isAssigned && shouldBeAssigned) {
+          // Add to this event
+          mutations.push([evt.id, {
+            candidate_speaker_ids: [...candidates, speakerId],
+            ...(!evt.speaker_id ? { speaker_id: speakerId } : {}),
           }])
         }
-      }
+      })
+
       mutations.forEach(([id, updates]) => updateEvent(id, updates))
     }
 
@@ -182,7 +183,9 @@ export default function SpeakersPage() {
 
   const openEdit = (speaker) => {
     setEditSpeaker(speaker)
-    const assignedEvt = events.find(e => (e.candidate_speaker_ids || []).includes(speaker.id) || e.speaker_id === speaker.id)
+    const assignedEventIds = events
+      .filter(e => (e.candidate_speaker_ids || []).includes(speaker.id) || e.speaker_id === speaker.id)
+      .map(e => e.id)
     setForm({
       name: speaker.name || '',
       topic: speaker.topic || '',
@@ -201,7 +204,7 @@ export default function SpeakersPage() {
       sizzle_reel_url: speaker.sizzle_reel_url || '',
       routing_flexibility: speaker.routing_flexibility || false,
       multi_chapter_interest: speaker.multi_chapter_interest || false,
-      assigned_event_id: assignedEvt?.id || '',
+      assigned_event_ids: assignedEventIds,
     })
     setShowForm(true)
   }
@@ -675,21 +678,39 @@ export default function SpeakersPage() {
                 <Textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Negotiation strategy, referral source, etc." rows={3} />
               </div>
               <div className="col-span-2">
-                <label className="text-xs font-medium">Event Assignment</label>
-                <Select value={form.assigned_event_id || ''} onChange={e => setForm(p => ({ ...p, assigned_event_id: e.target.value }))}>
-                  <option value="">Not assigned to an event</option>
+                <label className="text-xs font-medium">Event Assignments</label>
+                <div className="mt-1.5 space-y-1 max-h-40 overflow-y-auto border rounded-lg p-2 bg-background">
                   {[...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99)).map(evt => {
-                    const candidateCount = (evt.candidate_speaker_ids || []).length
-                    const primarySpeaker = evt.speaker_id ? speakers.find(s => s.id === evt.speaker_id) : null
+                    const checked = (form.assigned_event_ids || []).includes(evt.id)
+                    const isPrimary = evt.speaker_id && editSpeaker && evt.speaker_id === editSpeaker.id
                     return (
-                      <option key={evt.id} value={evt.id}>
-                        {evt.title}{candidateCount > 0 ? ` (${candidateCount} candidates${primarySpeaker ? `, primary: ${primarySpeaker.name}` : ''})` : ''}
-                      </option>
+                      <label key={evt.id} className="flex items-center gap-2 text-xs py-0.5 cursor-pointer hover:bg-accent/50 rounded px-1">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={e => {
+                            const ids = form.assigned_event_ids || []
+                            setForm(p => ({
+                              ...p,
+                              assigned_event_ids: e.target.checked
+                                ? [...ids, evt.id]
+                                : ids.filter(id => id !== evt.id),
+                            }))
+                          }}
+                        />
+                        <span className={isPrimary ? 'font-semibold text-eo-blue' : ''}>
+                          {evt.title}
+                        </span>
+                        {isPrimary && <span className="text-[9px] text-eo-blue">★ primary</span>}
+                      </label>
                     )
                   })}
-                </Select>
+                  {events.length === 0 && (
+                    <p className="text-xs text-muted-foreground py-1">No events created yet.</p>
+                  )}
+                </div>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Adds this speaker as a candidate for the event. Set the primary speaker and finalize via the Contract tab.
+                  Check events to add this speaker as a candidate. A speaker can be assigned to multiple events.
                 </p>
               </div>
               <div className="col-span-2 flex gap-4">

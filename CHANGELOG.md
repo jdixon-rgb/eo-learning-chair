@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.39.1 — 2026-04-10
+
+### Speakers
+- **Multi-event assignment** — speakers can now be assigned to multiple events (up to all 10). The single dropdown is replaced with checkboxes showing all events in the fiscal year. Primary speaker status (★) is indicated per event.
+
 ## v1.39.0 — 2026-04-10
 
 ### Member Vendor Exchange
