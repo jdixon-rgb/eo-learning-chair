@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.42.2 — 2026-04-10
+
+### Forum Agenda
+- **Reorder agenda items** — up/down chevron buttons on each row in the agenda editor swap adjacent items' `sort_order`. Start/end times automatically recalculate.
+
 ## v1.42.1 — 2026-04-10
 
 ### Events

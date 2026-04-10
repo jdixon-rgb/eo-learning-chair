@@ -7,7 +7,7 @@ import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParking
 import { lazy, Suspense } from 'react'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronRight, ChevronLeft, Upload, ClipboardList,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList,
 } from 'lucide-react'
 
 const ReflectionsPage = lazy(() => import('./ReflectionsPage'))
@@ -967,6 +967,16 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
     setNewItemMin(10)
   }
 
+  const handleMoveItem = (index, direction) => {
+    const target = index + direction
+    if (target < 0 || target >= items.length) return
+    const a = items[index]
+    const b = items[target]
+    // Swap sort_order values
+    onUpdateItem(a.id, { sort_order: b.sort_order })
+    onUpdateItem(b.id, { sort_order: a.sort_order })
+  }
+
   return (
     <div className="space-y-4">
       <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white">
@@ -1038,11 +1048,11 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
                     <th className="text-center px-3 py-2 w-16">Min</th>
                     <th className="text-center px-3 py-2 w-24">Start</th>
                     <th className="text-center px-3 py-2 w-24">End</th>
-                    <th className="w-8 px-2"></th>
+                    <th className="w-20 px-2"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {itemsWithTimes.map(item => (
+                  {itemsWithTimes.map((item, idx) => (
                     <tr key={item.id} className="border-t border-white/5">
                       <td className="px-4 py-2">
                         <span className="text-white/90">{item.title}</span>
@@ -1052,9 +1062,27 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
                       <td className="text-center px-3 py-2 text-white/50 text-xs">{item.start_time}</td>
                       <td className="text-center px-3 py-2 text-white/50 text-xs">{item.end_time}</td>
                       <td className="px-2 py-2">
-                        <button onClick={() => onDeleteItem(item.id)} className="text-white/20 hover:text-red-400">
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            onClick={() => handleMoveItem(idx, -1)}
+                            disabled={idx === 0}
+                            className="text-white/20 hover:text-white disabled:opacity-20 disabled:hover:text-white/20 disabled:cursor-not-allowed"
+                            title="Move up"
+                          >
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleMoveItem(idx, 1)}
+                            disabled={idx === itemsWithTimes.length - 1}
+                            className="text-white/20 hover:text-white disabled:opacity-20 disabled:hover:text-white/20 disabled:cursor-not-allowed"
+                            title="Move down"
+                          >
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </button>
+                          <button onClick={() => onDeleteItem(item.id)} className="text-white/20 hover:text-red-400 ml-1" title="Delete">
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
