@@ -27,6 +27,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/super-admin',
     navItems: [
       { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
+      { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
   },
   learning_chair: {

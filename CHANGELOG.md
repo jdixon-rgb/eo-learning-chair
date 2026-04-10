@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.32.2 — 2026-04-10
+
+### Settings
+- Settings link now visible in Super Admin's own nav (not just when viewing as Learning Chair).
+
 ## v1.32.1 — 2026-04-10
 
 ### Settings & Permissions
