@@ -31,7 +31,7 @@ export default function EventDetailPage() {
     getOrCreateChecklist, updateChecklist,
   } = useStore()
 
-  const { contactsForPartner } = useSAPStore()
+  const { partners: sapPartners, contactsForPartner } = useSAPStore()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [selectedSapId, setSelectedSapId] = useState('')
@@ -381,8 +381,9 @@ export default function EventDetailPage() {
 
                 {/* Current SAPs for this event */}
                 {(() => {
-                  const eventSAPs = (event.sap_ids || []).map(sid => (saps || []).find(s => s.id === sid)).filter(Boolean)
-                  const availableSAPs = (saps || []).filter(s => !(event.sap_ids || []).includes(s.id))
+                  const allPartners = sapPartners.length > 0 ? sapPartners : (saps || [])
+                  const eventSAPs = (event.sap_ids || []).map(sid => allPartners.find(s => s.id === sid)).filter(Boolean)
+                  const availableSAPs = allPartners.filter(s => s.status === 'active' && !(event.sap_ids || []).includes(s.id))
                   const sapContactMap = event.sap_contact_ids || {}
 
                   const addSAPToEvent = (sapId, contactId) => {

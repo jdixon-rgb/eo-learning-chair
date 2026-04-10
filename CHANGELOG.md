@@ -17,6 +17,11 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.41.1 — 2026-04-10
+
+### Event SAP Fix
+- Event Detail SAP dropdown now reads from `sapStore` partners (the full company-level partner list) instead of the legacy `saps` from the main store, which only had person-level records. All active SAP companies now appear in the dropdown.
+
 ## v1.39.3 — 2026-04-10
 
 ### Event SAP Contacts
