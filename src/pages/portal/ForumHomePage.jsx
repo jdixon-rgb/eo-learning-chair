@@ -31,7 +31,7 @@ const EVENT_TYPE_LABELS = {
 
 export default function ForumHomePage() {
   const { user, profile, isAdmin, isSuperAdmin } = useAuth()
-  const { chapterMembers, forums } = useBoardStore()
+  const { chapterMembers, forums, loading: boardLoading } = useBoardStore()
   const { forumRoles, forumCalendar, forumDocs, sapInterest, sapRatings, forumHistory,
     addForumRole, updateForumRole, deleteForumRole,
     addForumCalEvent, updateForumCalEvent, deleteForumCalEvent,
@@ -87,19 +87,20 @@ export default function ForumHomePage() {
   // Is current user the moderator?
   const isModerator = useMemo(() => {
     if (isAdmin || isSuperAdmin) return true
-    if (!member || !forum) return false
-    return forumRoles.some(r => r.forum_id === forum.id && r.chapter_member_id === member.id && r.role === 'moderator')
-  }, [member, forum, forumRoles, isAdmin, isSuperAdmin])
+    if (!member || !effectiveForum?.id) return false
+    return forumRoles.some(r => r.forum_id === effectiveForum.id && r.chapter_member_id === member.id && r.role === 'moderator')
+  }, [member, effectiveForum, forumRoles, isAdmin, isSuperAdmin])
 
   // Forum-scoped data
-  const myForumRoles = useMemo(() => forum ? forumRoles.filter(r => r.forum_id === forum.id) : [], [forumRoles, forum])
-  const myForumCal = useMemo(() => forum ? forumCalendar.filter(e => e.forum_id === forum.id).sort((a, b) => a.event_date?.localeCompare(b.event_date)) : [], [forumCalendar, forum])
-  const myForumDocs = useMemo(() => forum ? forumDocs.filter(d => d.forum_id === forum.id) : [], [forumDocs, forum])
-  const myForumHistory = useMemo(() => forum ? forumHistory.filter(h => h.forum_id === forum.id) : [], [forumHistory, forum])
-  const myForumInterest = useMemo(() => forum ? sapInterest.filter(i => i.forum_id === forum.id) : [], [sapInterest, forum])
-  const myForumRatings = useMemo(() => forum ? sapRatings.filter(r => r.forum_id === forum.id) : [], [sapRatings, forum])
+  const fid = effectiveForum?.id
+  const myForumRoles = useMemo(() => fid ? forumRoles.filter(r => r.forum_id === fid) : [], [forumRoles, fid])
+  const myForumCal = useMemo(() => fid ? forumCalendar.filter(e => e.forum_id === fid).sort((a, b) => a.event_date?.localeCompare(b.event_date)) : [], [forumCalendar, fid])
+  const myForumDocs = useMemo(() => fid ? forumDocs.filter(d => d.forum_id === fid) : [], [forumDocs, fid])
+  const myForumHistory = useMemo(() => fid ? forumHistory.filter(h => h.forum_id === fid) : [], [forumHistory, fid])
+  const myForumInterest = useMemo(() => fid ? sapInterest.filter(i => i.forum_id === fid) : [], [sapInterest, fid])
+  const myForumRatings = useMemo(() => fid ? sapRatings.filter(r => r.forum_id === fid) : [], [sapRatings, fid])
 
-  if (loading) return <div className="text-white/60 text-center py-12">Loading…</div>
+  if (loading || boardLoading) return <div className="text-white/60 text-center py-12">Loading…</div>
 
   if (!member) {
     return (
@@ -110,7 +111,7 @@ export default function ForumHomePage() {
     )
   }
 
-  if (!member.forum || !forum) {
+  if (!member.forum) {
     return (
       <div className="text-center py-16">
         <h2 className="text-xl font-bold">You're not in a forum yet</h2>
@@ -118,6 +119,9 @@ export default function ForumHomePage() {
       </div>
     )
   }
+
+  // Use the forums table record if it exists, otherwise create a minimal fallback from the member's forum name
+  const effectiveForum = forum || { id: null, name: member.forum, is_active: true, founded_year: '' }
 
   const tabs = [
     { key: 'parking', label: 'Parking Lot', icon: Pin },
@@ -135,7 +139,7 @@ export default function ForumHomePage() {
       <div className="text-center py-4">
         <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
         <p className="text-white/50 text-sm mt-1">
-          {forumMembers.length} members{forum.founded_year ? ` · Founded ${forum.founded_year}` : ''}
+          {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
         </p>
       </div>
 
@@ -158,7 +162,7 @@ export default function ForumHomePage() {
       {/* Tab content */}
       {tab === 'roles' && (
         <RolesTab
-          forum={forum}
+          forum={effectiveForum}
           roles={myForumRoles}
           forumMembers={forumMembers}
           memberById={memberById}
@@ -171,7 +175,7 @@ export default function ForumHomePage() {
 
       {tab === 'calendar' && (
         <CalendarTab
-          forum={forum}
+          forum={effectiveForum}
           events={myForumCal}
           isModerator={isModerator}
           onAdd={addForumCalEvent}
@@ -201,7 +205,7 @@ export default function ForumHomePage() {
       {tab === 'constitution' && (
         <ConstitutionTab
           docs={myForumDocs}
-          forum={forum}
+          forum={effectiveForum}
           isModerator={isModerator}
           onAdd={addForumDoc}
           onDelete={deleteForumDoc}
@@ -210,19 +214,19 @@ export default function ForumHomePage() {
 
       {tab === 'partners' && (
         <PartnersTab
-          forum={forum}
+          forum={effectiveForum}
           saps={saps}
           interest={myForumInterest}
           ratings={myForumRatings}
           memberId={member.id}
-          onToggleInterest={(sapId, current) => toggleSapInterest(sapId, member.id, forum.id, current)}
-          onRate={(sapId, rating, note) => upsertSapRating(sapId, member.id, forum.id, rating, note)}
+          onToggleInterest={(sapId, current) => toggleSapInterest(sapId, member.id, effectiveForum.id, current)}
+          onRate={(sapId, rating, note) => upsertSapRating(sapId, member.id, effectiveForum.id, rating, note)}
         />
       )}
 
       {tab === 'history' && (
         <HistoryTab
-          forum={forum}
+          forum={effectiveForum}
           history={myForumHistory}
           roles={myForumRoles}
           memberById={memberById}
