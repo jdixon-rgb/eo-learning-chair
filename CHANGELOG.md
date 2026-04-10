@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.41.2 — 2026-04-10
+
+### Venues
+- **Fix: new venues now persist to the database.** The form sent fields (`fb_notes`, `fb_estimated_cost`, `fb_vendor`, `parking_notes`, `setup_notes`) that didn't exist as DB columns — PostgREST rejected the insert silently. Migration 026 adds the missing columns.
+- "Theater / Concert Hall" venue type now accepted by the DB constraint (was missing from the check).
+- `staff_rating` constraint relaxed to allow 0 (no rating selected).
+
 ## v1.41.1 — 2026-04-10
 
 ### Event SAP Fix
