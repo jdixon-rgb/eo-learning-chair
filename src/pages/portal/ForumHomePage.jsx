@@ -44,6 +44,10 @@ export default function ForumHomePage() {
     addHistoryMember, deleteHistoryMember,
     addAgenda, updateAgenda, deleteAgenda,
     addAgendaItem, updateAgendaItem, deleteAgendaItem,
+    constitutions, constitutionVersions, constitutionRatifications,
+    createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
+    proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
+    ratifyConstitutionVersion,
   } = useForumStore()
   const { events: chapterEvents, saps } = useStore()
 
@@ -296,11 +300,20 @@ export default function ForumHomePage() {
 
       {tab === 'constitution' && (
         <ConstitutionTab
-          docs={myForumDocs}
           forum={effectiveForum}
+          memberId={member.id}
+          forumMembers={forumMembers}
           isModerator={isModerator}
-          onAdd={addForumDoc}
-          onDelete={deleteForumDoc}
+          constitutions={constitutions}
+          versions={constitutionVersions}
+          ratifications={constitutionRatifications}
+          onCreateDraft={() => createConstitutionDraft(effectiveForum?.id, member.id)}
+          onProposeAmendment={() => proposeAmendment(effectiveForum?.id, member.id)}
+          onUpdateVersion={updateConstitutionVersion}
+          onProposeVersion={proposeConstitutionVersion}
+          onAdoptVersion={adoptConstitutionVersion}
+          onDeleteVersion={deleteConstitutionVersion}
+          onRatify={(versionId) => ratifyConstitutionVersion(versionId, member.id)}
         />
       )}
 
@@ -504,42 +517,356 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
 }
 
 // ────────────────────────────────────────────────────────────
-// Constitution Tab
+// Constitution Tab — digital, versioned, ratifiable
 // ────────────────────────────────────────────────────────────
-function ConstitutionTab({ docs, forum, isModerator, onAdd, onDelete }) {
-  const constitutions = docs.filter(d => d.doc_type === 'constitution')
+function ConstitutionTab({
+  forum, memberId, forumMembers, isModerator,
+  constitutions, versions, ratifications,
+  onCreateDraft, onProposeAmendment, onUpdateVersion,
+  onProposeVersion, onAdoptVersion, onDeleteVersion, onRatify,
+}) {
+  const constitution = useMemo(
+    () => constitutions.find(c => c.forum_id === forum?.id),
+    [constitutions, forum]
+  )
+  const forumVersions = useMemo(
+    () => (constitution ? versions.filter(v => v.constitution_id === constitution.id) : []),
+    [versions, constitution]
+  )
+  const draft = useMemo(() => forumVersions.find(v => v.status === 'draft'), [forumVersions])
+  const proposed = useMemo(() => forumVersions.find(v => v.status === 'proposed'), [forumVersions])
+  const adopted = useMemo(() => forumVersions.find(v => v.status === 'adopted'), [forumVersions])
+
+  // Prefer showing the proposed version (needs attention), else draft (moderator editing), else adopted
+  const [viewing, setViewing] = useState('current') // 'current' | 'draft' | 'proposed'
+  const targetVersion = viewing === 'draft' ? draft : viewing === 'proposed' ? proposed : (adopted || proposed || draft)
+
+  // Empty state: no constitution yet
+  if (!constitution || forumVersions.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <FileText className="h-10 w-10 text-white/20 mx-auto mb-3" />
+        <p className="text-white/50 text-sm mb-4">No constitution yet for this forum.</p>
+        {isModerator ? (
+          <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white">
+            <Plus className="h-4 w-4" /> Create draft
+          </button>
+        ) : (
+          <p className="text-xs text-white/30">Your moderator hasn't started one yet.</p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
-      {constitutions.length === 0 ? (
-        <div className="text-center py-12 text-white/40 text-sm">
-          No constitution uploaded yet.{isModerator && ' Upload one to get started.'}
-        </div>
-      ) : (
-        constitutions.map(doc => (
-          <div key={doc.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 flex items-center justify-between">
+      {/* Version tabs */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {adopted && (
+          <VersionPill
+            label={`Adopted · v${adopted.version_number}`}
+            active={viewing === 'current' && targetVersion?.id === adopted.id}
+            color="emerald"
+            onClick={() => setViewing('current')}
+          />
+        )}
+        {proposed && (
+          <VersionPill
+            label={`Proposed · v${proposed.version_number}`}
+            active={viewing === 'proposed' || (!adopted && targetVersion?.id === proposed.id)}
+            color="amber"
+            onClick={() => setViewing('proposed')}
+          />
+        )}
+        {draft && (
+          <VersionPill
+            label={`Draft · v${draft.version_number}`}
+            active={viewing === 'draft' || (!adopted && !proposed && targetVersion?.id === draft.id)}
+            color="sky"
+            onClick={() => setViewing('draft')}
+          />
+        )}
+        <div className="flex-1" />
+        {isModerator && adopted && !draft && !proposed && (
+          <button
+            onClick={onProposeAmendment}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
+          >
+            <Plus className="h-3.5 w-3.5" /> Propose amendment
+          </button>
+        )}
+      </div>
+
+      {targetVersion && (
+        <ConstitutionVersionView
+          version={targetVersion}
+          isModerator={isModerator}
+          memberId={memberId}
+          forumMembers={forumMembers}
+          ratifications={ratifications.filter(r => r.version_id === targetVersion.id)}
+          onUpdate={onUpdateVersion}
+          onPropose={onProposeVersion}
+          onAdopt={onAdoptVersion}
+          onDelete={onDeleteVersion}
+          onRatify={onRatify}
+        />
+      )}
+    </div>
+  )
+}
+
+function VersionPill({ label, active, color, onClick }) {
+  const colors = {
+    emerald: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300',
+    amber: 'border-amber-400/40 bg-amber-500/10 text-amber-300',
+    sky: 'border-sky-400/40 bg-sky-500/10 text-sky-300',
+  }
+  return (
+    <button
+      onClick={onClick}
+      className={`text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border ${colors[color]} ${active ? 'ring-2 ring-white/20' : 'opacity-60 hover:opacity-100'}`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function ConstitutionVersionView({
+  version, isModerator, memberId, forumMembers, ratifications,
+  onUpdate, onPropose, onAdopt, onDelete, onRatify,
+}) {
+  const canEdit = isModerator && version.status === 'draft'
+  const [editing, setEditing] = useState(false)
+  const [title, setTitle] = useState(version.title || '')
+  const [preamble, setPreamble] = useState(version.preamble || '')
+  const [sections, setSections] = useState(Array.isArray(version.sections) ? version.sections : [])
+
+  // Keep local state in sync when the version prop changes (e.g. switching tabs)
+  useEffect(() => {
+    setTitle(version.title || '')
+    setPreamble(version.preamble || '')
+    setSections(Array.isArray(version.sections) ? version.sections : [])
+    setEditing(false)
+  }, [version.id])
+
+  const handleSave = () => {
+    onUpdate(version.id, { title, preamble, sections })
+    setEditing(false)
+  }
+
+  const handleAddSection = () => {
+    setSections(prev => [...prev, { id: crypto.randomUUID(), heading: '', body: '' }])
+  }
+
+  const handleUpdateSection = (id, patch) => {
+    setSections(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
+  }
+
+  const handleDeleteSection = (id) => {
+    setSections(prev => prev.filter(s => s.id !== id))
+  }
+
+  const handleMoveSection = (index, direction) => {
+    const target = index + direction
+    if (target < 0 || target >= sections.length) return
+    setSections(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(index, 1)
+      next.splice(target, 0, moved)
+      return next
+    })
+  }
+
+  // Ratification status
+  const hasRatified = ratifications.some(r => r.member_id === memberId)
+  const ratifiedIds = new Set(ratifications.map(r => r.member_id))
+  const ratifiedCount = forumMembers.filter(m => ratifiedIds.has(m.id)).length
+  const total = forumMembers.length
+  const allRatified = total > 0 && ratifiedCount >= total
+
+  return (
+    <div className="space-y-4">
+      {/* Proposed-version ratification banner */}
+      {version.status === 'proposed' && (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-medium text-white/90">{doc.title || 'Forum Constitution'}</p>
-              <p className="text-xs text-white/40 mt-0.5">{doc.file_name}</p>
+              <p className="text-sm font-semibold text-amber-200">Ratification required</p>
+              <p className="text-xs text-amber-200/70 mt-1">
+                {ratifiedCount} of {total} members have ratified. Unanimous ratification adopts this version.
+              </p>
             </div>
             <div className="flex items-center gap-2">
-              {doc.file_url && (
-                <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-xs text-eo-blue hover:underline">Open</a>
+              {!hasRatified ? (
+                <button
+                  onClick={() => onRatify(version.id)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-amber-950"
+                >
+                  I ratify this version
+                </button>
+              ) : (
+                <span className="text-xs text-emerald-300 font-semibold">✓ You ratified</span>
               )}
-              {isModerator && (
-                <button onClick={() => onDelete(doc.id)} className="text-white/30 hover:text-red-400">
-                  <Trash2 className="h-3.5 w-3.5" />
+              {isModerator && allRatified && (
+                <button
+                  onClick={() => onAdopt(version.id)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-emerald-950"
+                >
+                  Adopt version
                 </button>
               )}
             </div>
           </div>
-        ))
+          {/* Ratification roster */}
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {forumMembers.map(m => {
+              const signed = ratifiedIds.has(m.id)
+              return (
+                <span
+                  key={m.id}
+                  className={`text-[10px] px-2 py-0.5 rounded-full border ${signed ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-white/5 text-white/40'}`}
+                  title={signed ? 'Ratified' : 'Not yet ratified'}
+                >
+                  {signed && '✓ '}{m.name}
+                </span>
+              )
+            })}
+          </div>
+        </div>
       )}
-      {isModerator && (
-        <p className="text-xs text-white/30 text-center">
-          Constitution upload via file picker coming soon. For now, add via the board Forums page.
-        </p>
+
+      {/* Moderator controls for drafts */}
+      {isModerator && version.status === 'draft' && (
+        <div className="flex items-center gap-2">
+          {!editing ? (
+            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+              <FileText className="h-3.5 w-3.5" /> Edit
+            </button>
+          ) : (
+            <>
+              <button onClick={handleSave} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-eo-blue hover:bg-eo-blue/90 text-white">
+                <Save className="h-3.5 w-3.5" /> Save draft
+              </button>
+              <button onClick={() => { setTitle(version.title || ''); setPreamble(version.preamble || ''); setSections(Array.isArray(version.sections) ? version.sections : []); setEditing(false) }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/70">
+                Cancel
+              </button>
+            </>
+          )}
+          {!editing && (
+            <button
+              onClick={() => {
+                if (confirm('Propose this draft to the forum for ratification? You will not be able to edit it after this point without starting a new amendment.')) {
+                  onPropose(version.id)
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200"
+            >
+              Propose to forum
+            </button>
+          )}
+          {!editing && (
+            <button
+              onClick={() => {
+                if (confirm('Delete this draft? This cannot be undone.')) onDelete(version.id)
+              }}
+              className="ml-auto text-white/30 hover:text-red-400"
+              title="Delete draft"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       )}
+
+      {/* Content */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-5">
+        {canEdit && editing ? (
+          <>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Constitution title"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-base font-semibold text-white placeholder-white/30"
+            />
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold mb-1 block">Preamble</label>
+              <textarea
+                value={preamble}
+                onChange={e => setPreamble(e.target.value)}
+                rows={3}
+                placeholder="Opening statement (optional)"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+              />
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Sections</label>
+                <button onClick={handleAddSection} className="inline-flex items-center gap-1 text-xs text-eo-blue hover:underline">
+                  <Plus className="h-3 w-3" /> Add section
+                </button>
+              </div>
+              {sections.length === 0 && (
+                <p className="text-xs text-white/30 italic">No sections yet.</p>
+              )}
+              {sections.map((section, idx) => (
+                <div key={section.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/40 font-mono w-6 text-right">{idx + 1}.</span>
+                    <input
+                      type="text"
+                      value={section.heading}
+                      onChange={e => handleUpdateSection(section.id, { heading: e.target.value })}
+                      placeholder="Section heading"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm font-semibold text-white placeholder-white/30"
+                    />
+                    <button onClick={() => handleMoveSection(idx, -1)} disabled={idx === 0} className="text-white/20 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed" title="Move up">
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => handleMoveSection(idx, 1)} disabled={idx === sections.length - 1} className="text-white/20 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed" title="Move down">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => handleDeleteSection(section.id)} className="text-white/20 hover:text-red-400" title="Delete section">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <textarea
+                    value={section.body}
+                    onChange={e => handleUpdateSection(section.id, { body: e.target.value })}
+                    rows={4}
+                    placeholder="Section text..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-semibold text-white">{version.title || 'Forum Constitution'}</h2>
+            {version.preamble && (
+              <p className="text-sm text-white/70 whitespace-pre-wrap italic">{version.preamble}</p>
+            )}
+            {sections.length === 0 ? (
+              <p className="text-xs text-white/30 italic">No content yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {sections.map((section, idx) => (
+                  <div key={section.id}>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">
+                      {idx + 1}. {section.heading || <span className="text-white/30 italic">Untitled section</span>}
+                    </h3>
+                    {section.body && <p className="text-sm text-white/70 whitespace-pre-wrap">{section.body}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {version.status === 'adopted' && version.adopted_at && (
+              <p className="text-[11px] text-white/30 mt-4">Adopted {new Date(version.adopted_at).toLocaleDateString()}</p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }

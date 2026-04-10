@@ -25,6 +25,9 @@ export function ForumStoreProvider({ children }) {
   const [forumHistory, setForumHistory] = useState(cached?.forumHistory ?? [])
   const [agendas, setAgendas] = useState(cached?.agendas ?? [])
   const [agendaItems, setAgendaItems] = useState(cached?.agendaItems ?? [])
+  const [constitutions, setConstitutions] = useState(cached?.constitutions ?? [])
+  const [constitutionVersions, setConstitutionVersions] = useState(cached?.constitutionVersions ?? [])
+  const [constitutionRatifications, setConstitutionRatifications] = useState(cached?.constitutionRatifications ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -32,8 +35,8 @@ export function ForumStoreProvider({ children }) {
 
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems })
-  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems])
+    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications })
+  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications])
 
   useEffect(() => {
     if (prevChapterId.current !== activeChapterId) { hasFetched.current = false; prevChapterId.current = activeChapterId }
@@ -51,13 +54,16 @@ export function ForumStoreProvider({ children }) {
       if (c.forumHistory) setForumHistory(c.forumHistory)
       if (c.agendas) setAgendas(c.agendas)
       if (c.agendaItems) setAgendaItems(c.agendaItems)
+      if (c.constitutions) setConstitutions(c.constitutions)
+      if (c.constitutionVersions) setConstitutionVersions(c.constitutionVersions)
+      if (c.constitutionRatifications) setConstitutionRatifications(c.constitutionRatifications)
     }
     setLoading(true)
     hydrate()
 
     async function hydrate() {
       try {
-        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes] = await Promise.all([
+        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes] = await Promise.all([
           fetchByChapter('forum_role_assignments', activeChapterId),
           fetchByChapter('forum_documents', activeChapterId),
           fetchByChapter('forum_calendar_events', activeChapterId),
@@ -66,6 +72,9 @@ export function ForumStoreProvider({ children }) {
           fetchByChapter('forum_history_members', activeChapterId),
           fetchByChapter('forum_agendas', activeChapterId),
           supabase.from('forum_agenda_items').select('*'),
+          fetchByChapter('forum_constitutions', activeChapterId),
+          fetchByChapter('forum_constitution_versions', activeChapterId),
+          fetchByChapter('forum_constitution_ratifications', activeChapterId),
         ])
         if (rolesRes.data) setForumRoles(rolesRes.data)
         if (docsRes.data) setForumDocs(docsRes.data)
@@ -75,6 +84,9 @@ export function ForumStoreProvider({ children }) {
         if (histRes.data) setForumHistory(histRes.data)
         if (agendaRes.data) setAgendas(agendaRes.data)
         if (itemsRes.data) setAgendaItems(itemsRes.data)
+        if (constRes.data) setConstitutions(constRes.data)
+        if (versRes.data) setConstitutionVersions(versRes.data)
+        if (ratifyRes.data) setConstitutionRatifications(ratifyRes.data)
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
@@ -237,9 +249,127 @@ export function ForumStoreProvider({ children }) {
     dbWrite(() => deleteRow('forum_agenda_items', id), 'delete:forum_agenda_items')
   }, [dbWrite])
 
+  // ── Constitution CRUD ───────────────────────────────────────
+  // Create a constitution (if none exists for the forum) and a v1 draft version.
+  // Returns the new draft version.
+  const createConstitutionDraft = useCallback((forumId, authorMemberId) => {
+    const now = new Date().toISOString()
+    // Find or create the constitution row for this forum
+    let constitution = constitutions.find(c => c.forum_id === forumId)
+    if (!constitution) {
+      constitution = {
+        id: crypto.randomUUID(),
+        chapter_id: activeChapterId,
+        forum_id: forumId,
+        created_at: now,
+      }
+      setConstitutions(prev => [...prev, constitution])
+      dbWrite(() => insertRow('forum_constitutions', constitution), 'insert:forum_constitutions')
+    }
+    // Figure out next version number
+    const existing = constitutionVersions.filter(v => v.constitution_id === constitution.id)
+    const nextVersion = existing.length === 0 ? 1 : Math.max(...existing.map(v => v.version_number)) + 1
+    const version = {
+      id: crypto.randomUUID(),
+      constitution_id: constitution.id,
+      chapter_id: activeChapterId,
+      version_number: nextVersion,
+      status: 'draft',
+      title: 'Forum Constitution',
+      preamble: '',
+      sections: [],
+      authored_by: authorMemberId ?? null,
+      created_at: now,
+      proposed_at: null,
+      adopted_at: null,
+      updated_at: now,
+    }
+    setConstitutionVersions(prev => [...prev, version])
+    dbWrite(() => insertRow('forum_constitution_versions', version), 'insert:forum_constitution_versions')
+    return version
+  }, [activeChapterId, constitutions, constitutionVersions, dbWrite])
+
+  // Clone the current adopted version into a new draft (for amendments).
+  const proposeAmendment = useCallback((forumId, authorMemberId) => {
+    const constitution = constitutions.find(c => c.forum_id === forumId)
+    if (!constitution) return null
+    const adopted = constitutionVersions.find(v => v.constitution_id === constitution.id && v.status === 'adopted')
+    const now = new Date().toISOString()
+    const existing = constitutionVersions.filter(v => v.constitution_id === constitution.id)
+    const nextVersion = existing.length === 0 ? 1 : Math.max(...existing.map(v => v.version_number)) + 1
+    const version = {
+      id: crypto.randomUUID(),
+      constitution_id: constitution.id,
+      chapter_id: activeChapterId,
+      version_number: nextVersion,
+      status: 'draft',
+      title: adopted?.title || 'Forum Constitution',
+      preamble: adopted?.preamble || '',
+      sections: adopted?.sections ? JSON.parse(JSON.stringify(adopted.sections)) : [],
+      authored_by: authorMemberId ?? null,
+      created_at: now,
+      proposed_at: null,
+      adopted_at: null,
+      updated_at: now,
+    }
+    setConstitutionVersions(prev => [...prev, version])
+    dbWrite(() => insertRow('forum_constitution_versions', version), 'insert:forum_constitution_versions')
+    return version
+  }, [activeChapterId, constitutions, constitutionVersions, dbWrite])
+
+  const updateConstitutionVersion = useCallback((versionId, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setConstitutionVersions(prev => prev.map(v => v.id === versionId ? { ...v, ...updates } : v))
+    dbWrite(() => updateRow('forum_constitution_versions', versionId, updates), 'update:forum_constitution_versions')
+  }, [dbWrite])
+
+  const proposeConstitutionVersion = useCallback((versionId) => {
+    const now = new Date().toISOString()
+    const updates = { status: 'proposed', proposed_at: now, updated_at: now }
+    setConstitutionVersions(prev => prev.map(v => v.id === versionId ? { ...v, ...updates } : v))
+    dbWrite(() => updateRow('forum_constitution_versions', versionId, updates), 'propose:forum_constitution_versions')
+  }, [dbWrite])
+
+  const adoptConstitutionVersion = useCallback((versionId) => {
+    const version = constitutionVersions.find(v => v.id === versionId)
+    if (!version) return
+    const now = new Date().toISOString()
+    // Archive any previously adopted version for this constitution
+    const prevAdopted = constitutionVersions.find(v => v.constitution_id === version.constitution_id && v.status === 'adopted')
+    if (prevAdopted) {
+      const archiveUpdates = { status: 'archived', updated_at: now }
+      setConstitutionVersions(prev => prev.map(v => v.id === prevAdopted.id ? { ...v, ...archiveUpdates } : v))
+      dbWrite(() => updateRow('forum_constitution_versions', prevAdopted.id, archiveUpdates), 'archive:forum_constitution_versions')
+    }
+    const updates = { status: 'adopted', adopted_at: now, updated_at: now }
+    setConstitutionVersions(prev => prev.map(v => v.id === versionId ? { ...v, ...updates } : v))
+    dbWrite(() => updateRow('forum_constitution_versions', versionId, updates), 'adopt:forum_constitution_versions')
+  }, [constitutionVersions, dbWrite])
+
+  const deleteConstitutionVersion = useCallback((versionId) => {
+    setConstitutionVersions(prev => prev.filter(v => v.id !== versionId))
+    setConstitutionRatifications(prev => prev.filter(r => r.version_id !== versionId))
+    dbWrite(() => deleteRow('forum_constitution_versions', versionId), 'delete:forum_constitution_versions')
+  }, [dbWrite])
+
+  const ratifyConstitutionVersion = useCallback((versionId, memberId) => {
+    // Don't insert a duplicate ratification
+    if (constitutionRatifications.some(r => r.version_id === versionId && r.member_id === memberId)) return
+    const row = {
+      id: crypto.randomUUID(),
+      version_id: versionId,
+      chapter_id: activeChapterId,
+      member_id: memberId,
+      signed_at: new Date().toISOString(),
+    }
+    setConstitutionRatifications(prev => [...prev, row])
+    dbWrite(() => insertRow('forum_constitution_ratifications', row), 'insert:forum_constitution_ratifications')
+  }, [activeChapterId, constitutionRatifications, dbWrite])
+
   const value = {
     forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory,
     agendas, agendaItems,
+    constitutions, constitutionVersions, constitutionRatifications,
     loading, dbError, clearDbError: () => setDbError(null),
     addForumRole, updateForumRole, deleteForumRole,
     addForumCalEvent, updateForumCalEvent, deleteForumCalEvent,
@@ -248,6 +378,9 @@ export function ForumStoreProvider({ children }) {
     addHistoryMember, deleteHistoryMember,
     addAgenda, updateAgenda, deleteAgenda,
     addAgendaItem, updateAgendaItem, deleteAgendaItem,
+    createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
+    proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
+    ratifyConstitutionVersion,
   }
 
   return createElement(ForumStoreContext.Provider, { value }, children)
