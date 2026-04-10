@@ -46,6 +46,7 @@ export default function ForumHomePage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('parking')
   const [parkingLot, setParkingLot] = useState([])
+  const [showAddParkingLot, setShowAddParkingLot] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -64,6 +65,24 @@ export default function ForumHomePage() {
     if (email) init()
     return () => { cancelled = true }
   }, [email])
+
+  async function refreshParkingLot() {
+    if (!member?.chapter_id || !member?.forum) return
+    const { data } = await loadParkingLot(member.chapter_id, member.forum)
+    setParkingLot(data)
+  }
+
+  async function handleAddParkingLot({ name, importance, urgency }) {
+    if (!member?.id) return
+    await createParkingLotEntry({
+      chapter_id: member.chapter_id,
+      forum: member.forum,
+      author_member_id: member.id,
+      name, importance, urgency,
+    })
+    refreshParkingLot()
+    setShowAddParkingLot(false)
+  }
 
   // Find the forum record
   const forum = useMemo(() => {
@@ -185,9 +204,22 @@ export default function ForumHomePage() {
       )}
 
       {tab === 'parking' && (
-        <div className="text-center text-white/50 text-sm py-8">
-          Parking lot is being promoted to a standalone feature here. Coming soon.
-        </div>
+        <ParkingLotTab
+          entries={parkingLot}
+          currentMemberId={member.id}
+          chapterMembers={chapterMembers}
+          currentForum={member.forum}
+          onAddNew={() => setShowAddParkingLot(true)}
+          onUpdate={async (id, patch) => { await updateParkingLotEntry(id, patch); refreshParkingLot() }}
+          onDelete={async (id) => { await deleteParkingLotEntry(id); refreshParkingLot() }}
+        />
+      )}
+
+      {showAddParkingLot && (
+        <ParkingLotAddModal
+          onClose={() => setShowAddParkingLot(false)}
+          onConfirm={handleAddParkingLot}
+        />
       )}
 
       {tab === 'agenda' && (
@@ -197,8 +229,36 @@ export default function ForumHomePage() {
       )}
 
       {tab === 'tools' && (
-        <div className="text-center text-white/50 text-sm py-8">
-          Forum tools (Lifeline, Reflections templates, coaching worksheets) coming soon.
+        <div className="space-y-3">
+          <p className="text-xs text-white/40">Tools your forum uses in meetings. More coming soon.</p>
+          <a
+            href="/portal/reflections"
+            className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-5 w-5 text-emerald-400 shrink-0" />
+              <div>
+                <h3 className="text-sm font-semibold text-white/90">Reflections</h3>
+                <p className="text-xs text-white/50 mt-0.5">Private journaling with three templates — Modern, Hesse Classic, and EO Standard.</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
+            </div>
+          </a>
+          <a
+            href="https://app.ourchapteros.com"
+            target="_blank"
+            rel="noreferrer"
+            className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <History className="h-5 w-5 text-eo-blue shrink-0" />
+              <div>
+                <h3 className="text-sm font-semibold text-white/90">Lifeline</h3>
+                <p className="text-xs text-white/50 mt-0.5">Build and share your life story timeline with your forum.</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
+            </div>
+          </a>
         </div>
       )}
 
@@ -653,6 +713,201 @@ function HistoryTab({ forum, history, roles, memberById, isModerator, onAddHisto
             ))}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────
+// Parking Lot Tab
+// ────────────────────────────────────────────────────────────
+function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum, onAddNew, onUpdate, onDelete }) {
+  const [editing, setEditing] = useState(null)
+  const [filterMemberId, setFilterMemberId] = useState('all')
+
+  const memberById = useMemo(() => {
+    const m = new Map()
+    ;(chapterMembers || []).forEach(cm => m.set(cm.id, cm))
+    return m
+  }, [chapterMembers])
+
+  const getAuthorName = (authorId) => {
+    if (authorId === currentMemberId) return 'You'
+    return memberById.get(authorId)?.name || 'Unknown'
+  }
+
+  const authors = useMemo(() => {
+    const ids = [...new Set(entries.map(e => e.author_member_id))]
+    return ids
+      .map(id => ({ id, name: id === currentMemberId ? 'You' : (memberById.get(id)?.name || 'Unknown') }))
+      .sort((a, b) => a.name === 'You' ? -1 : b.name === 'You' ? 1 : a.name.localeCompare(b.name))
+  }, [entries, memberById, currentMemberId])
+
+  const forumMembers = useMemo(() => {
+    return (chapterMembers || [])
+      .filter(cm => cm.forum === currentForum && cm.status === 'active')
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  }, [chapterMembers, currentForum])
+
+  const filteredEntries = filterMemberId === 'all'
+    ? entries
+    : entries.filter(e => e.author_member_id === filterMemberId)
+
+  if (entries.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-white/40 text-sm mb-4">Nothing on the parking lot yet.</p>
+        <button onClick={onAddNew} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white">
+          <Pin className="h-4 w-4" /> Add to parking lot
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Show:</label>
+          <select value={filterMemberId} onChange={e => setFilterMemberId(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 focus:border-eo-blue focus:outline-none cursor-pointer">
+            <option value="all" className="bg-eo-navy">Everyone</option>
+            {authors.map(a => <option key={a.id} value={a.id} className="bg-eo-navy">{a.name}</option>)}
+          </select>
+        </div>
+        <button onClick={onAddNew} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+          <Pin className="h-3.5 w-3.5" /> Add item
+        </button>
+      </div>
+      <div className="rounded-xl border border-white/10 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+            <tr>
+              <th className="text-left px-4 py-3">Name</th>
+              <th className="text-left px-3 py-3 w-32">Author</th>
+              <th className="text-center px-3 py-3 w-24">Importance</th>
+              <th className="text-center px-3 py-3 w-24">Urgency</th>
+              <th className="text-center px-3 py-3 w-24">Combined</th>
+              <th className="px-3 py-3 w-16"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredEntries.map(e => (
+              <tr key={e.id} className="border-t border-white/5">
+                <td className="px-4 py-3 text-white/90">{e.name}</td>
+                <td className="px-3 py-3 text-white/50 text-xs">{getAuthorName(e.author_member_id)}</td>
+                <td className="text-center px-3 py-3 text-white/70">
+                  <select value={e.importance} onChange={ev => onUpdate(e.id, { importance: Number(ev.target.value) })}
+                    className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 cursor-pointer">
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-eo-navy">{n}</option>)}
+                  </select>
+                </td>
+                <td className="text-center px-3 py-3 text-white/70">
+                  <select value={e.urgency} onChange={ev => onUpdate(e.id, { urgency: Number(ev.target.value) })}
+                    className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 cursor-pointer">
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-eo-navy">{n}</option>)}
+                  </select>
+                </td>
+                <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
+                <td className="px-3 py-3">
+                  <div className="flex gap-1">
+                    <button onClick={() => setEditing(e)} className="text-white/30 hover:text-white" title="Edit name/author">
+                      <Save className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => onDelete(e.id)} className="text-white/30 hover:text-red-400" title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditing(null)}>
+          <div className="bg-eo-navy border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
+            <h3 className="text-base font-semibold">Edit parking lot entry</h3>
+            <EditParkingLotForm
+              entry={editing}
+              forumMembers={forumMembers}
+              onClose={() => setEditing(null)}
+              onSave={async (patch) => { await onUpdate(editing.id, patch); setEditing(null) }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function EditParkingLotForm({ entry, forumMembers, onClose, onSave }) {
+  const [name, setName] = useState(entry.name || '')
+  const [importance, setImportance] = useState(entry.importance ?? 5)
+  const [urgency, setUrgency] = useState(entry.urgency ?? 5)
+  const [authorId, setAuthorId] = useState(entry.author_member_id || '')
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="text-xs text-white/50 mb-1 block">Name</label>
+        <input type="text" value={name} onChange={e => setName(e.target.value)}
+          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none" />
+      </div>
+      <div>
+        <label className="text-xs text-white/50 mb-1 block">Author (forum mate)</label>
+        <select value={authorId} onChange={e => setAuthorId(e.target.value)}
+          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-eo-blue focus:outline-none cursor-pointer">
+          <option value="" className="bg-eo-navy">Unknown</option>
+          {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-eo-navy">{m.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="text-xs text-white/50 mb-1 block">Importance: {importance}</label>
+        <input type="range" min="1" max="10" value={importance} onChange={e => setImportance(Number(e.target.value))} className="w-full" />
+      </div>
+      <div>
+        <label className="text-xs text-white/50 mb-1 block">Urgency: {urgency}</label>
+        <input type="range" min="1" max="10" value={urgency} onChange={e => setUrgency(Number(e.target.value))} className="w-full" />
+      </div>
+      <div className="flex gap-2 justify-end pt-2">
+        <button onClick={onClose} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
+        <button disabled={!name.trim()} onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
+          className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Save</button>
+      </div>
+    </div>
+  )
+}
+
+function ParkingLotAddModal({ onClose, onConfirm }) {
+  const [name, setName] = useState('')
+  const [importance, setImportance] = useState(5)
+  const [urgency, setUrgency] = useState(5)
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-eo-navy border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
+        <h3 className="text-base font-semibold">Add to parking lot</h3>
+        <p className="text-xs text-white/50">Your forum will see the name and scores. Nothing else.</p>
+        <div>
+          <label className="text-xs text-white/50 mb-1 block">Name</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Short name for this item"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none" />
+        </div>
+        <div>
+          <label className="text-xs text-white/50 mb-1 block">Importance: {importance}</label>
+          <input type="range" min="1" max="10" value={importance} onChange={e => setImportance(Number(e.target.value))} className="w-full" />
+        </div>
+        <div>
+          <label className="text-xs text-white/50 mb-1 block">Urgency: {urgency}</label>
+          <input type="range" min="1" max="10" value={urgency} onChange={e => setUrgency(Number(e.target.value))} className="w-full" />
+        </div>
+        <div className="flex gap-2 justify-end pt-2">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
+          <button disabled={!name.trim()} onClick={() => onConfirm({ name: name.trim(), importance, urgency })}
+            className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add</button>
+        </div>
       </div>
     </div>
   )
