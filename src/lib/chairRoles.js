@@ -1,7 +1,7 @@
 // Per-chair-role command center configs.
 // Each chair role gets its own sidebar title, landing page, and nav items.
 // The sidebar reads from this registry based on the user's *effective* role
-// (which equals their actual role unless a super admin is impersonating).
+// (which equals their actual role unless a super admin or president is switching).
 //
 // Adding a new chair role surface = add an entry here + add the routes in
 // App.jsx + create the pages under src/pages/<role>/. No sidebar refactor.
@@ -19,6 +19,8 @@ import {
   BookOpen,
   Compass,
   Handshake,
+  Crown,
+  Briefcase,
 } from 'lucide-react'
 
 export const CHAIR_ROLE_CONFIGS = {
@@ -28,6 +30,23 @@ export const CHAIR_ROLE_CONFIGS = {
     navItems: [
       { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
+    ],
+  },
+  president: {
+    title: 'President',
+    homePath: '/president',
+    navItems: [
+      { to: '/president', icon: Crown, label: 'Dashboard' },
+      { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
+      { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
+    ],
+  },
+  finance_chair: {
+    title: 'Finance Chair',
+    homePath: '/finance',
+    navItems: [
+      { to: '/finance', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
     ],
   },
   learning_chair: {
@@ -42,7 +61,6 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
       { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
       { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
-      { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
   },
   engagement_chair: {
@@ -65,5 +83,5 @@ export function getChairConfig(role) {
   return CHAIR_ROLE_CONFIGS[role] ?? DEFAULT_CHAIR_CONFIG
 }
 
-// Chair roles available in the "view as" switcher (excludes super_admin itself)
-export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS).filter(r => r !== 'super_admin')
+// Chair roles available in the "view as" switcher (excludes super_admin and president — they're the switchers, not switchable targets)
+export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS).filter(r => r !== 'super_admin' && r !== 'president')

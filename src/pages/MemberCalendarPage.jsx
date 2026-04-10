@@ -44,9 +44,9 @@ function isEventPast(event) {
 
 export default function MemberCalendarPage({ embedded = false }) {
   const { chapter, events, speakers, venues } = useStore()
-  const { presidentElectTheme, presidentElectName } = useBoardStore()
+  const { activePresidentTheme } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
-  const incomingTheme = presidentElectTheme || chapter.president_theme || ''
+  const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const windowMonths = getMonthWindow()
 
   // Sort events by date

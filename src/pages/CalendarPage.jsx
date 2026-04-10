@@ -17,10 +17,10 @@ import { Plus, Calendar, MapPin, DollarSign, Handshake, Route } from 'lucide-rea
 export default function CalendarPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
-  const { presidentElectTheme, presidentElectName } = useBoardStore()
+  const { activePresidentTheme, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
-  const incomingTheme = presidentElectTheme || chapter.president_theme || ''
-  const incomingPresident = presidentElectName || chapter.president_name || ''
+  const incomingTheme = activePresidentTheme || chapter.president_theme || ''
+  const incomingPresident = activePresidentName || chapter.president_name || ''
   const [createMonth, setCreateMonth] = useState(null)
   const [newEvent, setNewEvent] = useState({ title: '', event_type: 'traditional', event_format: 'keynote', theme_connection: '', event_date: '', expected_attendance: '' })
 

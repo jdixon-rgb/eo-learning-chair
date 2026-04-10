@@ -7,7 +7,7 @@ import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
 import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
@@ -43,6 +43,7 @@ import NavigatorsPage from '@/pages/engagement/NavigatorsPage'
 import PairingsPage from '@/pages/engagement/PairingsPage'
 import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
+import PresidentDashboard from '@/pages/president/PresidentDashboard'
 
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
@@ -125,6 +126,11 @@ function App() {
                 } />
                 <Route path="/engagement/library" element={
                   <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><ConversationLibraryPage /></ProtectedRoute>
+                } />
+
+                {/* President routes */}
+                <Route path="/president" element={
+                  <ProtectedRoute allowedRoles={PRESIDENT_ROLES}><PresidentDashboard /></ProtectedRoute>
                 } />
 
                 {/* Board routes */}

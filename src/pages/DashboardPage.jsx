@@ -21,10 +21,10 @@ import {
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, pipelineSpeakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
-  const { presidentElectTheme, activePresidentTheme, getChairBudget } = useBoardStore()
+  const { activePresidentTheme, activePresidentName, getChairBudget } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
 
-  const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
+  const theme = activePresidentTheme || chapter.president_theme || ''
   const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
   const remaining = learningBudget - totalBudgeted
 

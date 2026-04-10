@@ -66,13 +66,14 @@ export function AuthProvider({ children }) {
   }
 
   const role = profile?.role ?? null
-  const isAdmin = !!role && ['super_admin', 'learning_chair', 'engagement_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
+  const isAdmin = !!role && ['super_admin', 'president', 'finance_chair', 'learning_chair', 'engagement_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
   const isSuperAdmin = role === 'super_admin'
+  const isPresident = role === 'president'
+  const canSwitchRoles = isSuperAdmin || isPresident
 
-  // Effective role: super admins can impersonate via viewAsRole.
-  // Non-super-admins always see their actual role.
-  const effectiveRole = isSuperAdmin && viewAsRole ? viewAsRole : role
-  const isImpersonating = isSuperAdmin && !!viewAsRole
+  // Effective role: super admins and presidents can view as other roles.
+  const effectiveRole = canSwitchRoles && viewAsRole ? viewAsRole : role
+  const isImpersonating = canSwitchRoles && !!viewAsRole
 
   const setViewAsRole = useCallback((nextRole) => {
     try {
@@ -96,10 +97,12 @@ export function AuthProvider({ children }) {
     signOut,
     isAdmin,
     isSuperAdmin,
+    isPresident,
+    canSwitchRoles,
     chapterId: profile?.chapter_id ?? null,
     isCommittee: role === 'committee_member',
     isBoardLiaison: role === 'board_liaison',
-    isBoardMember: !!role && ['super_admin', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role),
+    isBoardMember: !!role && ['super_admin', 'president', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role),
     isMember: role === 'member',
   }
 

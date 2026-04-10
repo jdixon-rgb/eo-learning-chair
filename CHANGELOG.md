@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.34.0 — 2026-04-10
+
+### President Role
+- **President as first-class app role** with its own dashboard — shows theme, budget allocation summary, all board/chair assignments for the selected fiscal year.
+- Presidents can **switch into any chair's view** via the sidebar role switcher (same pattern as Super Admin).
+- **Finance Chair** stubbed as a first-class role with its own surface.
+- **`fiscal_year_budgets`** and **`fiscal_year_budget_lines`** tables (migration 021) — FY-level budget with per-chair line items, owned by the President.
+- **Theme now derives from FY-scoped president assignment** — no more president-elect fallback. When viewing FY 2025–2026, shows Chad's "Dive In"; FY 2026–2027 shows Karl's "Every Day".
+- Settings page accessible to President role.
+
 ## v1.33.0 — 2026-04-10
 
 ### Speaker Library + Pipeline Split

@@ -42,7 +42,7 @@ const boardItems = [
 ]
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
-  const { profile, effectiveRole, signOut, isSuperAdmin, isImpersonating, viewAsRole, setViewAsRole } = useAuth()
+  const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole } = useAuth()
   const { activeChapter } = useChapter()
   const navigate = useNavigate()
 
@@ -129,8 +129,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           <FiscalYearSwitcher />
         </div>
 
-        {/* Role switcher — super admin only */}
-        {isSuperAdmin && (
+        {/* Role switcher — super admin + president */}
+        {canSwitchRoles && (
           <div className="px-4 pt-2">
             <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/30 uppercase mb-1">
               <Eye className="h-3 w-3" />
@@ -140,25 +140,29 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               value={viewAsRole || ''}
               onChange={e => {
                 setViewAsRole(e.target.value || null)
-                // Navigate to the selected role's home page
+                const fallbackConfig = isSuperAdmin ? CHAIR_ROLE_CONFIGS.super_admin : CHAIR_ROLE_CONFIGS.president
                 const config = e.target.value
                   ? CHAIR_ROLE_CONFIGS[e.target.value]
-                  : CHAIR_ROLE_CONFIGS.super_admin
+                  : fallbackConfig
                 if (config?.homePath) navigate(config.homePath)
               }}
               className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-eo-blue/50"
             >
-              <option value="">Super Admin</option>
+              <option value="">{isSuperAdmin ? 'Super Admin' : 'President'}</option>
               {SWITCHABLE_CHAIR_ROLES.map(r => (
                 <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
               ))}
             </select>
             {isImpersonating && (
               <button
-                onClick={() => { setViewAsRole(null); navigate('/super-admin') }}
+                onClick={() => {
+                  setViewAsRole(null)
+                  const home = isSuperAdmin ? '/super-admin' : '/president'
+                  navigate(home)
+                }}
                 className="mt-1.5 w-full text-[10px] text-amber-300/80 hover:text-amber-200 underline"
               >
-                Back to Super Admin
+                Back to {isSuperAdmin ? 'Super Admin' : 'President'}
               </button>
             )}
           </div>
