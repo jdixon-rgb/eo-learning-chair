@@ -32,6 +32,8 @@ export function EngagementStoreProvider({ children }) {
   const [navigators, setNavigators] = useState(cached?.navigators ?? [])
   const [pairings, setPairings] = useState(cached?.pairings ?? [])
   const [resources, setResources] = useState(cached?.resources ?? [])
+  const [mentors, setMentors] = useState(cached?.mentors ?? [])
+  const [mentorPairings, setMentorPairings] = useState(cached?.mentorPairings ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -40,8 +42,8 @@ export function EngagementStoreProvider({ children }) {
   // Persist
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, activeFiscalYear, { navigators, pairings, resources })
-  }, [activeChapterId, activeFiscalYear, navigators, pairings, resources])
+    saveCache(activeChapterId, activeFiscalYear, { navigators, pairings, resources, mentors, mentorPairings })
+  }, [activeChapterId, activeFiscalYear, navigators, pairings, resources, mentors, mentorPairings])
 
   // Hydrate from Supabase when chapter or fiscal year changes
   useEffect(() => {
@@ -60,6 +62,8 @@ export function EngagementStoreProvider({ children }) {
       if (chapterCache.navigators) setNavigators(chapterCache.navigators)
       if (chapterCache.pairings) setPairings(chapterCache.pairings)
       if (chapterCache.resources) setResources(chapterCache.resources)
+      if (chapterCache.mentors) setMentors(chapterCache.mentors)
+      if (chapterCache.mentorPairings) setMentorPairings(chapterCache.mentorPairings)
     }
 
     setLoading(true)
@@ -67,14 +71,18 @@ export function EngagementStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [navsRes, pairingsRes, resourcesRes] = await Promise.all([
+        const [navsRes, pairingsRes, resourcesRes, mentorsRes, mentorPairingsRes] = await Promise.all([
           fetchByChapter('navigators', activeChapterId),
           supabase.from('navigator_pairings').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear),
           fetchByChapter('navigator_resources', activeChapterId),
+          fetchByChapter('mentors', activeChapterId),
+          fetchByChapter('mentor_pairings', activeChapterId),
         ])
         if (navsRes.data) setNavigators(navsRes.data)
         if (pairingsRes.data) setPairings(pairingsRes.data)
         if (resourcesRes.data) setResources(resourcesRes.data)
+        if (mentorsRes.data) setMentors(mentorsRes.data)
+        if (mentorPairingsRes.data) setMentorPairings(mentorPairingsRes.data)
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
@@ -135,16 +143,63 @@ export function EngagementStoreProvider({ children }) {
     dbWrite(() => deleteRow('navigators', id), 'delete:navigators')
   }, [dbWrite])
 
+  // ── Mentors CRUD ───────────────────────────────────────────────
+  const addMentor = useCallback((mentor) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      chapter_member_id: mentor.chapter_member_id,
+      appointed_by: mentor.appointed_by ?? null,
+      appointed_at: now,
+      status: 'active',
+      retired_at: null,
+      bio: mentor.bio ?? '',
+      max_concurrent_pairings: mentor.max_concurrent_pairings ?? null,
+      created_at: now,
+      updated_at: now,
+    }
+    setMentors(prev => [...prev, row])
+    dbWrite(() => insertRow('mentors', row), 'insert:mentors')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateMentor = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setMentors(prev => prev.map(n => (n.id === id ? { ...n, ...updates } : n)))
+    dbWrite(() => updateRow('mentors', id, updates), 'update:mentors')
+  }, [dbWrite])
+
+  const retireMentor = useCallback((id) => {
+    updateMentor(id, { status: 'retired', retired_at: new Date().toISOString() })
+  }, [updateMentor])
+
+  const restoreMentor = useCallback((id) => {
+    updateMentor(id, { status: 'active', retired_at: null })
+  }, [updateMentor])
+
+  const deleteMentor = useCallback((id) => {
+    setMentors(prev => prev.filter(n => n.id !== id))
+    dbWrite(() => deleteRow('mentors', id), 'delete:mentors')
+  }, [dbWrite])
+
   // ── Helpers ───────────────────────────────────────────────────
   const activePairingsForNavigator = useCallback((navigatorId) => {
     return pairings.filter(p => p.navigator_id === navigatorId && p.status === 'active').length
   }, [pairings])
 
+  const activePairingsForMentor = useCallback((mentorId) => {
+    return mentorPairings.filter(p => p.mentor_id === mentorId && p.status === 'active').length
+  }, [mentorPairings])
+
   const value = {
-    navigators, pairings, resources,
+    navigators, pairings, resources, mentors, mentorPairings,
     loading, dbError, clearDbError: () => setDbError(null),
     addNavigator, updateNavigator, retireNavigator, restoreNavigator, deleteNavigator,
     activePairingsForNavigator,
+    addMentor, updateMentor, retireMentor, restoreMentor, deleteMentor,
+    activePairingsForMentor,
   }
 
   return createElement(EngagementStoreContext.Provider, { value }, children)
