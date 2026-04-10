@@ -296,10 +296,9 @@ export default function ForumHomePage() {
           forum={effectiveForum}
           saps={saps}
           interest={myForumInterest}
-          ratings={myForumRatings}
           memberId={member.id}
+          forumMemberCount={forumMembers.length}
           onToggleInterest={(sapId, current) => toggleSapInterest(sapId, member.id, effectiveForum.id, current)}
-          onRate={(sapId, rating, note) => upsertSapRating(sapId, member.id, effectiveForum.id, rating, note)}
         />
       )}
 
@@ -533,30 +532,21 @@ function ConstitutionTab({ docs, forum, isModerator, onAdd, onDelete }) {
 }
 
 // ────────────────────────────────────────────────────────────
-// Partners Tab
+// Partners Tab — interest checklist sorted by popularity
 // ────────────────────────────────────────────────────────────
-function PartnersTab({ forum, saps, interest, ratings, memberId, onToggleInterest, onRate }) {
-  const [ratingFor, setRatingFor] = useState(null)
-  const [ratingVal, setRatingVal] = useState(3)
-  const [ratingNote, setRatingNote] = useState('')
-
-  const sapList = (saps || []).filter(s => s.status !== 'inactive').sort((a, b) => (a.company_name || a.name || '').localeCompare(b.company_name || b.name || ''))
-
+function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onToggleInterest }) {
   const isInterested = (sapId) => interest.some(i => i.sap_id === sapId && i.chapter_member_id === memberId)
-  const myRating = (sapId) => ratings.find(r => r.sap_id === sapId && r.chapter_member_id === memberId)
-  const avgRating = (sapId) => {
-    const rs = ratings.filter(r => r.sap_id === sapId)
-    if (rs.length === 0) return null
-    return (rs.reduce((sum, r) => sum + r.rating, 0) / rs.length).toFixed(1)
-  }
   const interestedCount = (sapId) => interest.filter(i => i.sap_id === sapId).length
 
-  const handleSaveRating = () => {
-    if (!ratingFor) return
-    onRate(ratingFor, ratingVal, ratingNote)
-    setRatingFor(null)
-    setRatingNote('')
-  }
+  // Sort by interest count (most popular first), then alphabetically
+  const sapList = useMemo(() => {
+    return (saps || [])
+      .filter(s => s.status !== 'inactive')
+      .map(s => ({ ...s, intCount: interest.filter(i => i.sap_id === s.id).length }))
+      .sort((a, b) => b.intCount - a.intCount || (a.company_name || a.name || '').localeCompare(b.company_name || b.name || ''))
+  }, [saps, interest])
+
+  const total = forumMemberCount || 10
 
   if (sapList.length === 0) {
     return <div className="text-center py-12 text-white/40 text-sm">No SAP partners found. Partners are managed by the SAP Chair.</div>
@@ -564,77 +554,68 @@ function PartnersTab({ forum, saps, interest, ratings, memberId, onToggleInteres
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-white/40">Express interest to let the SAP know your forum wants to connect. Ratings are anonymous and internal.</p>
-      {sapList.map(sap => {
-        const name = sap.company_name || sap.name || 'Unknown'
-        const interested = isInterested(sap.id)
-        const myR = myRating(sap.id)
-        const avg = avgRating(sap.id)
-        const intCount = interestedCount(sap.id)
-        return (
-          <div key={sap.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-white/90">{name}</h3>
-                  {sap.tier && (
-                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">{sap.tier}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-white/40">
-                  {avg && <span>Avg rating: {avg}/5</span>}
-                  {intCount > 0 && <span>{intCount} interested</span>}
-                  {myR && <span>Your rating: {myR.rating}/5</span>}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => onToggleInterest(sap.id, interested)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    interested
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  {interested ? 'Interested ✓' : 'Interested?'}
-                </button>
-                <button
-                  onClick={() => { setRatingFor(sap.id); setRatingVal(myR?.rating || 3); setRatingNote(myR?.note || '') }}
-                  className="px-3 py-1.5 rounded-lg text-xs bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-                >
-                  <Star className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      })}
-
-      {ratingFor && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setRatingFor(null)}>
-          <div className="bg-eo-navy border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
-            <h3 className="text-base font-semibold">Rate this partner</h3>
-            <div>
-              <label className="text-xs text-white/50 mb-1 block">Rating: {ratingVal}/5</label>
-              <input type="range" min="1" max="5" value={ratingVal} onChange={e => setRatingVal(Number(e.target.value))} className="w-full" />
-            </div>
-            <div>
-              <label className="text-xs text-white/50 mb-1 block">Anonymous note (optional)</label>
-              <textarea
-                value={ratingNote}
-                onChange={e => setRatingNote(e.target.value)}
-                rows={3}
-                placeholder="What should the SAP Chair know?"
-                className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setRatingFor(null)} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
-              <button onClick={handleSaveRating} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white">Save rating</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <p className="text-xs text-white/40">
+        Check the partners you're interested in hearing from. Your moderator uses this to decide who to invite — the more interest, the better the fit.
+      </p>
+      <div className="rounded-xl border border-white/10 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+            <tr>
+              <th className="text-left px-4 py-3 w-10"></th>
+              <th className="text-left px-3 py-3">Partner</th>
+              <th className="text-left px-3 py-3 w-24">Tier</th>
+              <th className="text-center px-3 py-3 w-32">Interest</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sapList.map(sap => {
+              const name = sap.company_name || sap.name || 'Unknown'
+              const interested = isInterested(sap.id)
+              const count = sap.intCount
+              const pct = total > 0 ? Math.round((count / total) * 100) : 0
+              return (
+                <tr key={sap.id} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => onToggleInterest(sap.id, interested)}
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
+                        interested
+                          ? 'bg-emerald-500 border-emerald-500 text-white'
+                          : 'border-white/20 hover:border-white/40'
+                      }`}
+                    >
+                      {interested && <span className="text-xs font-bold">✓</span>}
+                    </button>
+                  </td>
+                  <td className="px-3 py-3">
+                    <span className="text-white/90 font-medium">{name}</span>
+                  </td>
+                  <td className="px-3 py-3">
+                    {sap.tier && (
+                      <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
+                        sap.tier === 'Platinum' ? 'bg-amber-500/20 text-amber-400' :
+                        sap.tier === 'Gold' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-white/5 text-white/40'
+                      }`}>{sap.tier}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-white/50 w-12 text-right">{count}/{total}</span>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
