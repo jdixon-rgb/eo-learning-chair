@@ -5,7 +5,7 @@ export const ADMIN_ROLES = ['super_admin', 'president', 'learning_chair', 'chapt
 export const SUPER_ADMIN_ROLES = ['super_admin']
 
 // President-level roles (can view all chairs, manage settings, set budget)
-export const PRESIDENT_ROLES = ['super_admin', 'president']
+export const PRESIDENT_ROLES = ['super_admin', 'president', 'president_elect', 'president_elect_elect']
 
 // Board roles that can access the board module
 export const BOARD_ROLES = ['super_admin', 'president', 'finance_chair', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director']
@@ -43,6 +43,8 @@ export const FEATURE_PERMISSIONS = {
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance
   canManageFYBudget:     ['super_admin', 'president', 'finance_chair'],
+  // Partners (SAP) — visible to leadership, learning chairs, and staff
+  canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
 }
 
 export function hasPermission(role, feature) {
@@ -50,7 +52,7 @@ export function hasPermission(role, feature) {
 }
 
 // All roles that can access the admin layout (sidebar)
-export const ADMIN_LAYOUT_ROLES = ['super_admin', 'president', 'finance_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison']
+export const ADMIN_LAYOUT_ROLES = ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison']
 
 // All roles that can access the member portal
 export const PORTAL_ROLES = ['member', ...ADMIN_LAYOUT_ROLES]

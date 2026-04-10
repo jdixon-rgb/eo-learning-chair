@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.35.0 — 2026-04-10
+
+### Elect Roles & Partners Access
+- **President Elect, President Elect-Elect, Learning Chair Elect** all have their own app surfaces with role switching.
+- **Partners** nav item now visible to: Super Admin, President (all levels), Learning Chair (all levels), Executive Director, Experience Coordinator.
+- Partners permission separated from Venues (`canViewPartners` vs `canViewVenues`).
+- All president-level roles can switch into any chair view.
+- Role switcher dropdown label dynamically reflects the user's actual role title.
+
 ## v1.34.2 — 2026-04-10
 
 ### Theme

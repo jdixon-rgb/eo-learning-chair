@@ -23,8 +23,9 @@ export default function ProtectedRoute({ allowedRoles, children }) {
   }
 
   // Authenticated but wrong role — redirect to appropriate home
-  // Super admins can access everything
-  if (allowedRoles && profile && profile.role !== 'super_admin' && !allowedRoles.includes(profile.role)) {
+  // Super admins and president-level roles can access everything (they switch into chair views)
+  const bypassRoles = ['super_admin', 'president', 'president_elect', 'president_elect_elect']
+  if (allowedRoles && profile && !bypassRoles.includes(profile.role) && !allowedRoles.includes(profile.role)) {
     const home = profile.role === 'member' ? '/portal' : '/'
     return <Navigate to={home} replace />
   }

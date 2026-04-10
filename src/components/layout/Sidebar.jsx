@@ -148,7 +148,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               }}
               className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-eo-blue/50"
             >
-              <option value="">{isSuperAdmin ? 'Super Admin' : 'President'}</option>
+              <option value="">{isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}</option>
               {SWITCHABLE_CHAIR_ROLES.filter(r => r !== profile?.role).map(r => (
                 <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
               ))}
@@ -157,12 +157,12 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               <button
                 onClick={() => {
                   setViewAsRole(null)
-                  const home = isSuperAdmin ? '/super-admin' : '/president'
-                  navigate(home)
+                  const config = isSuperAdmin ? CHAIR_ROLE_CONFIGS.super_admin : CHAIR_ROLE_CONFIGS[profile?.role]
+                  navigate(config?.homePath || '/')
                 }}
                 className="mt-1.5 w-full text-[10px] text-amber-300/80 hover:text-amber-200 underline"
               >
-                Back to {isSuperAdmin ? 'Super Admin' : 'President'}
+                Back to {isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}
               </button>
             )}
           </div>

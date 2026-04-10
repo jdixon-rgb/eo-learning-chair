@@ -23,12 +23,25 @@ import {
   Briefcase,
 } from 'lucide-react'
 
+// Shared nav items reused across similar role configs
+const LEARNING_CHAIR_NAV = [
+  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+  { to: '/speakers', icon: Users, label: 'Speakers' },
+  { to: '/events', icon: CalendarDays, label: 'Events' },
+  { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
+  { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
+  { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
+  { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
+]
+
 export const CHAIR_ROLE_CONFIGS = {
   super_admin: {
     title: 'Super Admin',
     homePath: '/super-admin',
     navItems: [
       { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
+      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
   },
@@ -37,8 +50,27 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/president',
     navItems: [
       { to: '/president', icon: Crown, label: 'Dashboard' },
+      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
       { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
+    ],
+  },
+  president_elect: {
+    title: 'President Elect',
+    homePath: '/president',
+    navItems: [
+      { to: '/president', icon: Crown, label: 'Dashboard' },
+      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
+      { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
+      { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
+    ],
+  },
+  president_elect_elect: {
+    title: 'President Elect-Elect',
+    homePath: '/president',
+    navItems: [
+      { to: '/president', icon: Crown, label: 'Dashboard' },
+      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
     ],
   },
   finance_chair: {
@@ -52,16 +84,12 @@ export const CHAIR_ROLE_CONFIGS = {
   learning_chair: {
     title: 'Learning Chair',
     homePath: '/',
-    navItems: [
-      { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
-      { to: '/speakers', icon: Users, label: 'Speakers' },
-      { to: '/events', icon: CalendarDays, label: 'Events' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewVenues' },
-      { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
-      { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
-      { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
-    ],
+    navItems: LEARNING_CHAIR_NAV,
+  },
+  learning_chair_elect: {
+    title: 'Learning Chair Elect',
+    homePath: '/',
+    navItems: LEARNING_CHAIR_NAV,
   },
   engagement_chair: {
     title: 'Member Engagement Chair',
