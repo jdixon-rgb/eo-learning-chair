@@ -3,6 +3,10 @@
 // The sidebar reads from this registry based on the user's *effective* role
 // (which equals their actual role unless a super admin or president is switching).
 //
+// Elect roles (president_elect, president_elect_elect, learning_chair_elect)
+// are board positions assigned in Settings — they share the same app surface
+// as their parent role. The fiscal year selector determines context.
+//
 // Adding a new chair role surface = add an entry here + add the routes in
 // App.jsx + create the pages under src/pages/<role>/. No sidebar refactor.
 
@@ -18,6 +22,7 @@ import {
   UserCheck,
   BookOpen,
   Compass,
+  Heart,
   Handshake,
   Crown,
   Briefcase,
@@ -55,24 +60,6 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
   },
-  president_elect: {
-    title: 'President Elect',
-    homePath: '/president',
-    navItems: [
-      { to: '/president', icon: Crown, label: 'Dashboard' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
-      { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
-      { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
-    ],
-  },
-  president_elect_elect: {
-    title: 'President Elect-Elect',
-    homePath: '/president',
-    navItems: [
-      { to: '/president', icon: Crown, label: 'Dashboard' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
-    ],
-  },
   finance_chair: {
     title: 'Finance Chair',
     homePath: '/finance',
@@ -86,21 +73,25 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/',
     navItems: LEARNING_CHAIR_NAV,
   },
-  learning_chair_elect: {
-    title: 'Learning Chair Elect',
-    homePath: '/',
-    navItems: LEARNING_CHAIR_NAV,
-  },
   engagement_chair: {
     title: 'Member Engagement Chair',
     homePath: '/engagement',
     navItems: [
       { to: '/engagement', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/engagement/navigators', icon: Compass, label: 'Navigators' },
+      { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/pairings', icon: UserCheck, label: 'Pairings' },
       { to: '/engagement/library', icon: BookOpen, label: 'Conversation Library' },
     ],
   },
+}
+
+// Elect roles map to their parent surface — if someone logs in as president_elect,
+// they see the president surface. The FY selector determines which year they're in.
+const ROLE_ALIASES = {
+  president_elect: 'president',
+  president_elect_elect: 'president',
+  learning_chair_elect: 'learning_chair',
 }
 
 // Default fallback for roles without their own chair surface
@@ -108,10 +99,11 @@ export const CHAIR_ROLE_CONFIGS = {
 export const DEFAULT_CHAIR_CONFIG = CHAIR_ROLE_CONFIGS.learning_chair
 
 export function getChairConfig(role) {
-  return CHAIR_ROLE_CONFIGS[role] ?? DEFAULT_CHAIR_CONFIG
+  const resolved = ROLE_ALIASES[role] || role
+  return CHAIR_ROLE_CONFIGS[resolved] ?? DEFAULT_CHAIR_CONFIG
 }
 
-// Chair roles available in the "view as" switcher (excludes super_admin — it's not a chair role)
+// Chair roles available in the "view as" switcher (only actual surfaces, not aliases)
 // Sorted alphabetically by title for easy scanning
 export const SWITCHABLE_CHAIR_ROLES = Object.keys(CHAIR_ROLE_CONFIGS)
   .filter(r => r !== 'super_admin')

@@ -17,6 +17,32 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.39.0 — 2026-04-10
+
+### Member Vendor Exchange
+- **New `/portal/vendors` page** — members can browse, add, rate (1-5 stars), and review any vendor in the Arizona metro area.
+- **20 curated categories**: Legal, Accounting, Catering, AV/Production, Printing, IT/Technology, Marketing, Real Estate, Insurance, Financial Planning, HR/Staffing, Construction, Consulting, Travel, Health/Wellness, Automotive, Photography/Video, Signage, Coaching, Other.
+- **Fuzzy type-ahead** when adding a vendor — searches existing vendors by name to prevent duplicates.
+- **Vendor cards** show average rating, review count, and category badge. Detail modal shows contact info, reviews with upvote/downvote, and inline editing.
+- **Migration 024**: `vendors` and `vendor_reviews` tables with RLS (members manage own reviews, admins manage all).
+- **`vendorStore.js`** — new store following the context + optimistic writes + Supabase hydration pattern.
+
+## v1.38.1 — 2026-04-10
+
+### Role Switcher Cleanup
+- Elect roles (President Elect, President Elect-Elect, Learning Chair Elect) removed from the Switch Role dropdown — they're board positions in Settings, not separate app surfaces.
+- The fiscal year selector determines context: FY 2026-2027 = President Elect's year, FY 2027-2028 = President Elect-Elect's year.
+- Elect roles alias to their parent surface — a user with `president_elect` profile role sees the President dashboard.
+- Switcher now shows only: President, Finance Chair, Learning Chair, Engagement Chair.
+
+## v1.38.0 — 2026-04-10
+
+### Mentors (Engagement Chair)
+- New **Mentors** page (`/engagement/mentors`) — appoint chapter members as mentors for any member at any tenure (not just first-year like Navigators). Same UI pattern: status pills (active/paused/retired), bio, capacity hint, retire/restore/delete actions.
+- New `mentors` and `mentor_pairings` tables (migration 024) mirroring the navigator schema, with matching RLS policies.
+- Mentor CRUD in `engagementStore.js` — `addMentor`, `updateMentor`, `retireMentor`, `restoreMentor`, `deleteMentor`, plus `activePairingsForMentor` helper.
+- Mentors nav item added to the Engagement Chair sidebar.
+
 ## v1.37.0 — 2026-04-10
 
 ### Compass Rebrand + Portal Redesign
