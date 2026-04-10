@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/auth'
+import { useBoardStore } from '@/lib/boardStore'
 import {
   loadCurrentMember,
   loadTemplates,
@@ -34,6 +35,7 @@ const CATEGORIES = [
 
 export default function ReflectionsPage() {
   const { user, profile } = useAuth()
+  const { chapterMembers } = useBoardStore()
   const email = user?.email || profile?.email
 
   const [member, setMember] = useState(null)
@@ -236,6 +238,8 @@ export default function ReflectionsPage() {
         <ParkingLotView
           entries={parkingLot}
           currentMemberId={member.id}
+          chapterMembers={chapterMembers}
+          currentForum={member.forum}
           onAddNew={() => setShowAddParkingLot(true)}
           onUpdate={async (id, patch) => { await updateParkingLotEntry(id, patch); refreshParkingLot() }}
           onDelete={async (id) => { await deleteParkingLotEntry(id); refreshParkingLot() }}
@@ -732,8 +736,40 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
 }
 
 // ── Parking lot view ───────────────────────────────────────
-function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete }) {
+function ParkingLotView({ entries, currentMemberId, chapterMembers, currentForum, onAddNew, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(null)
+  const [filterMemberId, setFilterMemberId] = useState('all')
+
+  // Build member name lookup
+  const memberById = useMemo(() => {
+    const m = new Map()
+    ;(chapterMembers || []).forEach(cm => m.set(cm.id, cm))
+    return m
+  }, [chapterMembers])
+
+  const getAuthorName = (authorId) => {
+    if (authorId === currentMemberId) return 'You'
+    return memberById.get(authorId)?.name || 'Unknown'
+  }
+
+  // Unique authors in this parking lot (for the filter dropdown)
+  const authors = useMemo(() => {
+    const ids = [...new Set(entries.map(e => e.author_member_id))]
+    return ids
+      .map(id => ({ id, name: id === currentMemberId ? 'You' : (memberById.get(id)?.name || 'Unknown') }))
+      .sort((a, b) => a.name === 'You' ? -1 : b.name === 'You' ? 1 : a.name.localeCompare(b.name))
+  }, [entries, memberById, currentMemberId])
+
+  // Forum mates (for author reassignment in the edit modal)
+  const forumMembers = useMemo(() => {
+    return (chapterMembers || [])
+      .filter(cm => cm.forum === currentForum && cm.status === 'active')
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  }, [chapterMembers, currentForum])
+
+  const filteredEntries = filterMemberId === 'all'
+    ? entries
+    : entries.filter(e => e.author_member_id === filterMemberId)
 
   if (entries.length === 0) {
     return (
@@ -754,7 +790,20 @@ function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Show:</label>
+          <select
+            value={filterMemberId}
+            onChange={(e) => setFilterMemberId(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 hover:border-white/30 focus:border-eo-blue focus:outline-none cursor-pointer"
+          >
+            <option value="all" className="bg-eo-navy">Everyone</option>
+            {authors.map(a => (
+              <option key={a.id} value={a.id} className="bg-eo-navy">{a.name}</option>
+            ))}
+          </select>
+        </div>
         <button
           onClick={onAddNew}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
@@ -768,6 +817,7 @@ function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete
         <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
           <tr>
             <th className="text-left px-4 py-3">Name</th>
+            <th className="text-left px-3 py-3 w-32">Author</th>
             <th className="text-center px-3 py-3 w-24">Importance</th>
             <th className="text-center px-3 py-3 w-24">Urgency</th>
             <th className="text-center px-3 py-3 w-24">Combined</th>
@@ -775,11 +825,12 @@ function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete
           </tr>
         </thead>
         <tbody>
-          {entries.map(e => {
+          {filteredEntries.map(e => {
             const isAuthor = e.author_member_id === currentMemberId
             return (
               <tr key={e.id} className="border-t border-white/5">
                 <td className="px-4 py-3 text-white/90">{e.name}</td>
+                <td className="px-3 py-3 text-white/50 text-xs">{getAuthorName(e.author_member_id)}</td>
                 <td className="text-center px-3 py-3 text-white/70">
                   {isAuthor ? (
                     <ScoreSelect
@@ -820,20 +871,75 @@ function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete
       </table>
 
       {editing && (
-        <Modal onClose={() => setEditing(null)}>
-          <h3 className="text-lg font-bold mb-4">Edit parking lot entry</h3>
-          <ScoreForm
-            initial={editing}
-            onCancel={() => setEditing(null)}
-            onConfirm={async ({ name, importance, urgency }) => {
-              await onUpdate(editing.id, { name, importance, urgency })
-              setEditing(null)
-            }}
-          />
-        </Modal>
+        <EditParkingLotModal
+          entry={editing}
+          forumMembers={forumMembers}
+          onClose={() => setEditing(null)}
+          onSave={async (patch) => {
+            await onUpdate(editing.id, patch)
+            setEditing(null)
+          }}
+        />
       )}
       </div>
     </div>
+  )
+}
+
+// ── Edit parking lot modal (with author reassignment) ──────
+function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
+  const [name, setName] = useState(entry.name || '')
+  const [importance, setImportance] = useState(entry.importance ?? 5)
+  const [urgency, setUrgency] = useState(entry.urgency ?? 5)
+  const [authorId, setAuthorId] = useState(entry.author_member_id || '')
+
+  return (
+    <Modal onClose={onClose}>
+      <h3 className="text-lg font-bold mb-4">Edit parking lot entry</h3>
+      <div className="space-y-4">
+        <div>
+          <Label>Name</Label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Short name for this item"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+          />
+        </div>
+        <div>
+          <Label>Author (forum mate)</Label>
+          <select
+            value={authorId}
+            onChange={(e) => setAuthorId(e.target.value)}
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-eo-blue focus:outline-none cursor-pointer"
+          >
+            <option value="" className="bg-eo-navy">Unknown</option>
+            {forumMembers.map(m => (
+              <option key={m.id} value={m.id} className="bg-eo-navy">{m.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <Label>Importance: {importance}</Label>
+          <input type="range" min="1" max="10" value={importance} onChange={(e) => setImportance(Number(e.target.value))} className="w-full" />
+        </div>
+        <div>
+          <Label>Urgency: {urgency}</Label>
+          <input type="range" min="1" max="10" value={urgency} onChange={(e) => setUrgency(Number(e.target.value))} className="w-full" />
+        </div>
+        <div className="flex gap-2 justify-end pt-2">
+          <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onClose}>Cancel</button>
+          <button
+            className="px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white disabled:opacity-40"
+            disabled={!name.trim()}
+            onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 

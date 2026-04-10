@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.30.0 — 2026-04-10
+
+### Reflections
+- Parking lot entries now show author name (resolved from `author_member_id` → chapter members). Your own entries show "You."
+- New **filter by forum mate** dropdown at the top of the parking lot — view everyone's items or just one person's
+- Edit modal now includes an **author picker** so you can reassign entries to the correct forum mate (for items entered on someone else's behalf)
+
 ## v1.29.3 — 2026-04-08
 
 ### Reflections
