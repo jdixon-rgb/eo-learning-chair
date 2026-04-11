@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, createContext, useContext, createElement, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo, createContext, useContext, createElement, useRef } from 'react'
 import { isSupabaseConfigured, supabase } from './supabase'
 import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
 import { useChapter } from './chapter'
