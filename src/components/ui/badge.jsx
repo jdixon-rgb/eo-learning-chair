@@ -14,6 +14,8 @@ const badgeVariants = cva(
         pink: "border-transparent bg-eo-pink text-white",
         blue: "border-transparent bg-eo-blue text-white",
         success: "border-transparent bg-green-500 text-white",
+        positive: "bg-lifeline-positive-bg text-lifeline-positive border-lifeline-positive-light",
+        negative: "bg-lifeline-negative-bg text-lifeline-negative border-lifeline-negative-light",
       },
     },
     defaultVariants: {
