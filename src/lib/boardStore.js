@@ -394,6 +394,18 @@ export function BoardStoreProvider({ children }) {
     return a?.budget ?? 0
   }, [findFYAssignment])
 
+  // Total budget allocated across ALL chair roles for the active FY
+  const totalChairAllocated = useMemo(() => {
+    if (!activeFiscalYear || chapterRoles.length === 0) return 0
+    return roleAssignments
+      .filter(ra => {
+        if (ra.fiscal_year !== activeFiscalYear) return false
+        if (ra.status !== 'active') return false
+        return true
+      })
+      .reduce((sum, ra) => sum + (ra.budget || 0), 0)
+  }, [roleAssignments, chapterRoles, activeFiscalYear])
+
   const value = {
     chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers,
     loading, dbError, clearDbError: () => setDbError(null),
@@ -405,7 +417,7 @@ export function BoardStoreProvider({ children }) {
     addRoleAssignment, updateRoleAssignment, deleteRoleAssignment,
     addChapterMember, updateChapterMember, deleteChapterMember, syncMemberInvites, upsertStaffInvite,
     getMemberName, getMemberEmail,
-    getChairRoles, getActiveAssignment, getChairBudget,
+    getChairRoles, getActiveAssignment, getChairBudget, totalChairAllocated,
     activePresidentTheme, activePresidentThemeDescription, activePresidentName,
     presidentElectTheme, presidentElectName,
   }

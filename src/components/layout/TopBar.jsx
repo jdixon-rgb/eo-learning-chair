@@ -5,16 +5,17 @@ import { formatCurrency } from '@/lib/utils'
 import { Menu, Palette } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
-  const { chapter, totalBudgeted, budgetRemaining } = useStore()
-  const { activePresidentTheme, activePresidentName, presidentElectTheme, presidentElectName, getChairBudget } = useBoardStore()
+  const { chapter } = useStore()
+  const { activePresidentTheme, activePresidentName, presidentElectTheme, presidentElectName, totalChairAllocated } = useBoardStore()
   const { profile } = useAuth()
 
   // Prefer President Elect (incoming) since this tool plans the next FY
   const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
   const presidentName = presidentElectName || activePresidentName || chapter.president_name || ''
-  const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
-  const budgetPercent = learningBudget > 0 ? ((totalBudgeted / learningBudget) * 100).toFixed(0) : 0
-  const remaining = learningBudget - totalBudgeted
+  const chapterBudget = chapter.total_budget || 0
+  const budgetUsed = totalChairAllocated
+  const budgetPercent = chapterBudget > 0 ? ((budgetUsed / chapterBudget) * 100).toFixed(0) : 0
+  const remaining = chapterBudget - budgetUsed
 
   return (
     <header className="h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
@@ -43,9 +44,9 @@ export default function TopBar({ onMenuToggle }) {
         <div className="text-right">
           <p className="text-xs text-muted-foreground hidden sm:block">Budget Used</p>
           <p className="text-xs sm:text-sm font-semibold">
-            <span className="hidden sm:inline">{formatCurrency(totalBudgeted)} / </span>
+            <span className="hidden sm:inline">{formatCurrency(budgetUsed)} / </span>
             <span className="sm:hidden">{formatCurrency(remaining)} left</span>
-            <span className="hidden sm:inline">{formatCurrency(learningBudget)}</span>
+            <span className="hidden sm:inline">{formatCurrency(chapterBudget)}</span>
             <span className={`ml-1 sm:ml-2 text-xs ${remaining < 50000 ? 'text-eo-pink' : 'text-green-600'}`}>
               ({budgetPercent}%)
             </span>
