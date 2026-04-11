@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
-import { Compass, UserCheck, BookOpen } from 'lucide-react'
+import { Compass, UserCheck, BookOpen, Send } from 'lucide-react'
 import { useEngagementStore } from '@/lib/engagementStore'
 
 export default function EngagementDashboard() {
-  const { navigators, pairings, resources } = useEngagementStore()
+  const { navigators, pairings, resources, broadcasts } = useEngagementStore()
 
   const activeNavigators = navigators.filter(n => n.status === 'active').length
   const activePairings = pairings.filter(p => p.status === 'active').length
   const publishedResources = resources.filter(r => r.status === 'published').length
+  const openBroadcasts = broadcasts.filter(b => b.status === 'open').length
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
@@ -18,7 +19,7 @@ export default function EngagementDashboard() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link
           to="/engagement/navigators"
           className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-eo-blue hover:shadow-sm transition-all group"
@@ -53,6 +54,18 @@ export default function EngagementDashboard() {
           </div>
           <h3 className="text-sm font-semibold text-gray-900">Conversation Library</h3>
           <p className="text-xs text-gray-500 mt-1">Published resources Navigators can surface to members</p>
+        </Link>
+
+        <Link
+          to="/engagement/broadcasts"
+          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-eo-blue hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <Send className="h-6 w-6 text-sky-600" />
+            <span className="text-2xl font-bold text-gray-900">{openBroadcasts}</span>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">Broadcasts</h3>
+          <p className="text-xs text-gray-500 mt-1">One-tap check-ins sent to every active navigator</p>
         </Link>
       </div>
     </div>

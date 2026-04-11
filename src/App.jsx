@@ -46,6 +46,7 @@ import NavigatorsPage from '@/pages/engagement/NavigatorsPage'
 import MentorsPage from '@/pages/engagement/MentorsPage'
 import PairingsPage from '@/pages/engagement/PairingsPage'
 import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
+import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
 import VendorsPage from '@/pages/portal/VendorsPage'
@@ -136,6 +137,9 @@ function App() {
                 } />
                 <Route path="/engagement/library" element={
                   <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><ConversationLibraryPage /></ProtectedRoute>
+                } />
+                <Route path="/engagement/broadcasts" element={
+                  <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><NavigatorBroadcastsPage /></ProtectedRoute>
                 } />
 
                 {/* President routes */}

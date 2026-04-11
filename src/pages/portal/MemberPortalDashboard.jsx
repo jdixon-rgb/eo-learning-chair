@@ -1,14 +1,23 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
+import { useBoardStore } from '@/lib/boardStore'
 import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
+import NavigatorBroadcastCard from './NavigatorBroadcastCard'
 
 export default function MemberPortalDashboard() {
   const { profile } = useAuth()
   const { events, speakers } = useStore()
+  const { chapterMembers } = useBoardStore()
+
+  const currentMember = (() => {
+    const email = profile?.email
+    if (!email) return null
+    return chapterMembers.find(cm => (cm.email || '').toLowerCase() === email.toLowerCase()) || null
+  })()
 
   // Next upcoming event
   const now = new Date()
@@ -28,6 +37,9 @@ export default function MemberPortalDashboard() {
         <h1 className="text-2xl md:text-3xl font-bold">Welcome, {firstName}</h1>
         <p className="text-white/50 text-sm mt-1">Your Compass</p>
       </div>
+
+      {/* Navigator broadcast check-in (visible only to active navigators with open broadcasts) */}
+      <NavigatorBroadcastCard currentMember={currentMember} />
 
       {/* Primary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

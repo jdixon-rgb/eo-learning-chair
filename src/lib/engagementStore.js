@@ -34,6 +34,8 @@ export function EngagementStoreProvider({ children }) {
   const [resources, setResources] = useState(cached?.resources ?? [])
   const [mentors, setMentors] = useState(cached?.mentors ?? [])
   const [mentorPairings, setMentorPairings] = useState(cached?.mentorPairings ?? [])
+  const [broadcasts, setBroadcasts] = useState(cached?.broadcasts ?? [])
+  const [broadcastResponses, setBroadcastResponses] = useState(cached?.broadcastResponses ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -42,8 +44,8 @@ export function EngagementStoreProvider({ children }) {
   // Persist
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, activeFiscalYear, { navigators, pairings, resources, mentors, mentorPairings })
-  }, [activeChapterId, activeFiscalYear, navigators, pairings, resources, mentors, mentorPairings])
+    saveCache(activeChapterId, activeFiscalYear, { navigators, pairings, resources, mentors, mentorPairings, broadcasts, broadcastResponses })
+  }, [activeChapterId, activeFiscalYear, navigators, pairings, resources, mentors, mentorPairings, broadcasts, broadcastResponses])
 
   // Hydrate from Supabase when chapter or fiscal year changes
   useEffect(() => {
@@ -64,6 +66,8 @@ export function EngagementStoreProvider({ children }) {
       if (chapterCache.resources) setResources(chapterCache.resources)
       if (chapterCache.mentors) setMentors(chapterCache.mentors)
       if (chapterCache.mentorPairings) setMentorPairings(chapterCache.mentorPairings)
+      if (chapterCache.broadcasts) setBroadcasts(chapterCache.broadcasts)
+      if (chapterCache.broadcastResponses) setBroadcastResponses(chapterCache.broadcastResponses)
     }
 
     setLoading(true)
@@ -71,18 +75,25 @@ export function EngagementStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [navsRes, pairingsRes, resourcesRes, mentorsRes, mentorPairingsRes] = await Promise.all([
+        const [navsRes, pairingsRes, resourcesRes, mentorsRes, mentorPairingsRes, broadcastsRes, broadcastResponsesRes] = await Promise.all([
           fetchByChapter('navigators', activeChapterId),
           supabase.from('navigator_pairings').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear),
           fetchByChapter('navigator_resources', activeChapterId),
           fetchByChapter('mentors', activeChapterId),
           fetchByChapter('mentor_pairings', activeChapterId),
+          supabase.from('navigator_broadcasts').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear).order('sent_at', { ascending: false }),
+          supabase.from('navigator_broadcast_responses').select('*, broadcast:navigator_broadcasts!inner(chapter_id, fiscal_year)').eq('broadcast.chapter_id', activeChapterId).eq('broadcast.fiscal_year', activeFiscalYear),
         ])
         if (navsRes.data) setNavigators(navsRes.data)
         if (pairingsRes.data) setPairings(pairingsRes.data)
         if (resourcesRes.data) setResources(resourcesRes.data)
         if (mentorsRes.data) setMentors(mentorsRes.data)
         if (mentorPairingsRes.data) setMentorPairings(mentorPairingsRes.data)
+        if (broadcastsRes.data) setBroadcasts(broadcastsRes.data)
+        if (broadcastResponsesRes.data) {
+          // Strip the join alias before storing
+          setBroadcastResponses(broadcastResponsesRes.data.map(({ broadcast, ...rest }) => rest))
+        }
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
@@ -184,6 +195,73 @@ export function EngagementStoreProvider({ children }) {
     dbWrite(() => deleteRow('mentors', id), 'delete:mentors')
   }, [dbWrite])
 
+  // ── Navigator Broadcasts CRUD ─────────────────────────────────
+  const createBroadcast = useCallback(({ prompt, options, senderMemberId }) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      fiscal_year: activeFiscalYear,
+      sender_member_id: senderMemberId ?? null,
+      prompt,
+      options: options && options.length > 0
+        ? options
+        : [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }],
+      status: 'open',
+      sent_at: now,
+      closed_at: null,
+      created_at: now,
+      updated_at: now,
+    }
+    setBroadcasts(prev => [row, ...prev])
+    dbWrite(() => insertRow('navigator_broadcasts', row), 'insert:navigator_broadcasts')
+    return row
+  }, [activeChapterId, activeFiscalYear, dbWrite])
+
+  const closeBroadcast = useCallback((id) => {
+    const now = new Date().toISOString()
+    setBroadcasts(prev => prev.map(b => (b.id === id ? { ...b, status: 'closed', closed_at: now, updated_at: now } : b)))
+    dbWrite(() => updateRow('navigator_broadcasts', id, { status: 'closed', closed_at: now, updated_at: now }), 'update:navigator_broadcasts')
+  }, [dbWrite])
+
+  const reopenBroadcast = useCallback((id) => {
+    const now = new Date().toISOString()
+    setBroadcasts(prev => prev.map(b => (b.id === id ? { ...b, status: 'open', closed_at: null, updated_at: now } : b)))
+    dbWrite(() => updateRow('navigator_broadcasts', id, { status: 'open', closed_at: null, updated_at: now }), 'update:navigator_broadcasts')
+  }, [dbWrite])
+
+  const deleteBroadcast = useCallback((id) => {
+    setBroadcasts(prev => prev.filter(b => b.id !== id))
+    setBroadcastResponses(prev => prev.filter(r => r.broadcast_id !== id))
+    dbWrite(() => deleteRow('navigator_broadcasts', id), 'delete:navigator_broadcasts')
+  }, [dbWrite])
+
+  const submitBroadcastResponse = useCallback(async ({ broadcastId, navigatorId, chapterMemberId, responseValue, note }) => {
+    const now = new Date().toISOString()
+    // Upsert by (broadcast_id, navigator_id) — change-your-mind semantics
+    const existing = broadcastResponses.find(r => r.broadcast_id === broadcastId && r.navigator_id === navigatorId)
+    if (existing) {
+      const updates = { response_value: responseValue, note: note ?? '', responded_at: now }
+      setBroadcastResponses(prev => prev.map(r => (r.id === existing.id ? { ...r, ...updates } : r)))
+      await dbWrite(() => updateRow('navigator_broadcast_responses', existing.id, updates), 'update:navigator_broadcast_responses')
+      return existing.id
+    }
+    const id = crypto.randomUUID()
+    const row = {
+      id,
+      broadcast_id: broadcastId,
+      navigator_id: navigatorId,
+      chapter_member_id: chapterMemberId,
+      response_value: responseValue,
+      note: note ?? '',
+      responded_at: now,
+    }
+    setBroadcastResponses(prev => [...prev, row])
+    await dbWrite(() => insertRow('navigator_broadcast_responses', row), 'insert:navigator_broadcast_responses')
+    return id
+  }, [broadcastResponses, dbWrite])
+
   // ── Helpers ───────────────────────────────────────────────────
   const activePairingsForNavigator = useCallback((navigatorId) => {
     return pairings.filter(p => p.navigator_id === navigatorId && p.status === 'active').length
@@ -193,13 +271,24 @@ export function EngagementStoreProvider({ children }) {
     return mentorPairings.filter(p => p.mentor_id === mentorId && p.status === 'active').length
   }, [mentorPairings])
 
+  const responsesForBroadcast = useCallback((broadcastId) => {
+    return broadcastResponses.filter(r => r.broadcast_id === broadcastId)
+  }, [broadcastResponses])
+
+  const navigatorForMember = useCallback((chapterMemberId) => {
+    if (!chapterMemberId) return null
+    return navigators.find(n => n.chapter_member_id === chapterMemberId && n.status === 'active') || null
+  }, [navigators])
+
   const value = {
-    navigators, pairings, resources, mentors, mentorPairings,
+    navigators, pairings, resources, mentors, mentorPairings, broadcasts, broadcastResponses,
     loading, dbError, clearDbError: () => setDbError(null),
     addNavigator, updateNavigator, retireNavigator, restoreNavigator, deleteNavigator,
     activePairingsForNavigator,
     addMentor, updateMentor, retireMentor, restoreMentor, deleteMentor,
     activePairingsForMentor,
+    createBroadcast, closeBroadcast, reopenBroadcast, deleteBroadcast,
+    submitBroadcastResponse, responsesForBroadcast, navigatorForMember,
   }
 
   return createElement(EngagementStoreContext.Provider, { value }, children)
