@@ -6,7 +6,7 @@ import { USER_ROLES } from '@/lib/constants'
 import {
   Users, Search, Mail, UserPlus, Trash2, Loader2, Upload,
   ChevronDown, ChevronUp, FileSpreadsheet, Pencil, Check, X,
-  Star, Building2, Phone,
+  Star, Building2, Phone, UserCircle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ export default function MemberManagementPage() {
   const { activeChapterId } = useChapter()
   const {
     chapterMembers, addChapterMember, updateChapterMember, deleteChapterMember,
-    syncMemberInvites,
+    syncMemberInvites, pendingProfileChangeRequests, resolveProfileCheckin,
   } = useBoardStore()
 
   // Profile / invite status (for showing who has signed up)
@@ -355,6 +355,44 @@ export default function MemberManagementPage() {
           />
         </div>
       </div>
+
+      {/* Pending profile change requests */}
+      {pendingProfileChangeRequests.length > 0 && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
+          <h2 className="text-sm font-semibold text-amber-900 flex items-center gap-2 mb-2">
+            <UserCircle className="h-4 w-4" />
+            Profile updates requested ({pendingProfileChangeRequests.length})
+          </h2>
+          <p className="text-xs text-amber-800 mb-3">
+            Members flagged something changed in their profile. Update their record, then mark resolved.
+          </p>
+          <div className="space-y-2">
+            {pendingProfileChangeRequests.map(req => {
+              const m = chapterMembers.find(cm => cm.id === req.member_id)
+              return (
+                <div key={req.id} className="flex items-start justify-between gap-3 bg-white rounded-lg border border-amber-200 px-3 py-2.5">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-gray-900">{m?.name || 'Unknown member'}</span>
+                      {m?.forum && <span className="text-[10px] uppercase tracking-wider bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">{m.forum}</span>}
+                      <span className="text-[11px] text-gray-400">{new Date(req.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {req.note && <p className="text-xs text-gray-700 mt-1 whitespace-pre-line">&ldquo;{req.note}&rdquo;</p>}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => resolveProfileCheckin(req.id)}
+                    className="shrink-0"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" /> Resolved
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Add Member */}
       <div className="rounded-xl border border-border p-4 bg-muted/30">

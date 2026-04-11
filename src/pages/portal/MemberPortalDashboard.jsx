@@ -7,6 +7,7 @@ import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
 import NavigatorBroadcastCard from './NavigatorBroadcastCard'
+import ProfileFreshnessCard from './ProfileFreshnessCard'
 
 export default function MemberPortalDashboard() {
   const { profile } = useAuth()
@@ -40,6 +41,9 @@ export default function MemberPortalDashboard() {
 
       {/* Navigator broadcast check-in (visible only to active navigators with open broadcasts) */}
       <NavigatorBroadcastCard currentMember={currentMember} />
+
+      {/* Profile freshness ping (shows quarterly) */}
+      <ProfileFreshnessCard currentMember={currentMember} />
 
       {/* Primary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

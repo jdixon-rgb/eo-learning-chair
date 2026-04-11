@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.47.0 — 2026-04-11
+
+### Profile Freshness ping
+Also from the product review: profile data rots silently because members never think to tell us when their life changes. Now we ask.
+
+- **Quarterly ping** on the member portal home. If the member has no profile check-in in the last 90 days, an amber "Profile check-in" card appears above the primary tiles: *"Has anything changed in your world since we last checked? New company, role, partner, kids, address, interests — anything we should know."* Shows the date of their last confirmation if they have one.
+- **Two-path answer:**
+  - **All good** — one tap, stamps a `no_change` check-in, card flips to an emerald "Thanks — we'll check back in a few months" state and stays out of the way for 90 days.
+  - **Something changed** — expands a textarea, member describes the change in their own words, submit creates a `change_requested` check-in that queues for the admin team and the card flips to "Got it — someone will reach out to update your profile."
+- **Admin queue** at the top of `/admin/members` (Member Management page). When there are pending change requests, an amber banner lists each one: member name, forum, submitted date, the member's own words about what changed, and a "Resolved" button to close the ticket once the record is updated.
+- Migration 030: `profile_checkins` table with `kind` enum (`no_change` | `change_requested`) and `status` (`open` | `resolved`). RLS: admins see all, members see their own; self or admin can insert; admin-only update/delete. Note: `no_change` rows are auto-marked `resolved` on insert so they don't clutter the queue.
+
 ## v1.46.0 — 2026-04-11
 
 ### Navigator Broadcasts — one-tap check-ins

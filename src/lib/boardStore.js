@@ -39,6 +39,7 @@ export function BoardStoreProvider({ children }) {
   const [chapterRoles, setChapterRoles] = useState(cached?.chapterRoles ?? [])
   const [roleAssignments, setRoleAssignments] = useState(cached?.roleAssignments ?? [])
   const [chapterMembers, setChapterMembers] = useState(cached?.chapterMembers ?? [])
+  const [profileCheckins, setProfileCheckins] = useState(cached?.profileCheckins ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -47,8 +48,8 @@ export function BoardStoreProvider({ children }) {
   // Persist to localStorage
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, activeFiscalYear, { chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers })
-  }, [activeChapterId, activeFiscalYear, chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers])
+    saveCache(activeChapterId, activeFiscalYear, { chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers, profileCheckins })
+  }, [activeChapterId, activeFiscalYear, chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers, profileCheckins])
 
   // Fetch from Supabase
   useEffect(() => {
@@ -71,6 +72,7 @@ export function BoardStoreProvider({ children }) {
       if (chapterCache.chapterRoles) setChapterRoles(chapterCache.chapterRoles)
       if (chapterCache.roleAssignments) setRoleAssignments(chapterCache.roleAssignments)
       if (chapterCache.chapterMembers) setChapterMembers(chapterCache.chapterMembers)
+      if (chapterCache.profileCheckins) setProfileCheckins(chapterCache.profileCheckins)
     }
 
     setLoading(true)
@@ -78,7 +80,7 @@ export function BoardStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [reportsRes, commsRes, forumsRes, scorecardsRes, rolesRes, assignmentsRes, membersRes] = await Promise.all([
+        const [reportsRes, commsRes, forumsRes, scorecardsRes, rolesRes, assignmentsRes, membersRes, checkinsRes] = await Promise.all([
           supabase.from('chair_reports').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear),
           fetchByChapter('chapter_communications', activeChapterId),
           fetchByChapter('forums', activeChapterId),
@@ -86,6 +88,7 @@ export function BoardStoreProvider({ children }) {
           fetchByChapter('chapter_roles', activeChapterId).catch(() => ({ data: null })),
           fetchByChapter('role_assignments', activeChapterId).catch(() => ({ data: null })),
           fetchByChapter('chapter_members', activeChapterId).catch(() => ({ data: null })),
+          fetchByChapter('profile_checkins', activeChapterId).catch(() => ({ data: null })),
         ])
 
         const coreResults = [reportsRes, commsRes, forumsRes, scorecardsRes]
@@ -105,6 +108,7 @@ export function BoardStoreProvider({ children }) {
         if (rolesRes?.data) setChapterRoles(rolesRes.data.sort((a, b) => a.sort_order - b.sort_order))
         if (assignmentsRes?.data) setRoleAssignments(assignmentsRes.data)
         if (membersRes?.data) setChapterMembers(membersRes.data.sort((a, b) => a.name.localeCompare(b.name)))
+        if (checkinsRes?.data) setProfileCheckins(checkinsRes.data)
         setDbError(null)
       } catch (err) {
         console.error('Board store hydrate failed:', err)
@@ -394,6 +398,57 @@ export function BoardStoreProvider({ children }) {
     return a?.budget ?? 0
   }, [findFYAssignment])
 
+  // ── Profile Check-ins (freshness ping) ─────────────────────────
+  const PROFILE_FRESHNESS_DAYS = 90
+
+  const submitProfileCheckin = useCallback(async ({ memberId, kind, note }) => {
+    if (!memberId) return null
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      member_id: memberId,
+      kind, // 'no_change' | 'change_requested'
+      note: note || '',
+      status: kind === 'no_change' ? 'resolved' : 'open',
+      created_at: now,
+      resolved_at: kind === 'no_change' ? now : null,
+      resolved_by: null,
+    }
+    setProfileCheckins(prev => [row, ...prev])
+    await dbWrite(() => insertRow('profile_checkins', row), 'insert:profile_checkins')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const resolveProfileCheckin = useCallback(async (id, resolvedByMemberId) => {
+    const now = new Date().toISOString()
+    const updates = { status: 'resolved', resolved_at: now, resolved_by: resolvedByMemberId ?? null }
+    setProfileCheckins(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)))
+    await dbWrite(() => updateRow('profile_checkins', id, updates), 'update:profile_checkins')
+  }, [dbWrite])
+
+  const latestCheckinForMember = useCallback((memberId) => {
+    if (!memberId) return null
+    const sorted = profileCheckins
+      .filter(c => c.member_id === memberId)
+      .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+    return sorted[0] || null
+  }, [profileCheckins])
+
+  const profileIsStale = useCallback((memberId) => {
+    const latest = latestCheckinForMember(memberId)
+    if (!latest) return true
+    const ageDays = (Date.now() - new Date(latest.created_at).getTime()) / (1000 * 60 * 60 * 24)
+    return ageDays > PROFILE_FRESHNESS_DAYS
+  }, [latestCheckinForMember])
+
+  const pendingProfileChangeRequests = useMemo(() => {
+    return profileCheckins
+      .filter(c => c.kind === 'change_requested' && c.status === 'open')
+      .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+  }, [profileCheckins])
+
   // Total budget allocated across ALL chair roles for the active FY
   const totalChairAllocated = useMemo(() => {
     if (!activeFiscalYear || chapterRoles.length === 0) return 0
@@ -407,7 +462,7 @@ export function BoardStoreProvider({ children }) {
   }, [roleAssignments, chapterRoles, activeFiscalYear])
 
   const value = {
-    chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers,
+    chairReports, communications, forums, memberScorecards, chapterRoles, roleAssignments, chapterMembers, profileCheckins,
     loading, dbError, clearDbError: () => setDbError(null),
     addChairReport, updateChairReport, deleteChairReport,
     addCommunication, updateCommunication, deleteCommunication,
@@ -420,6 +475,7 @@ export function BoardStoreProvider({ children }) {
     getChairRoles, getActiveAssignment, getChairBudget, totalChairAllocated,
     activePresidentTheme, activePresidentThemeDescription, activePresidentName,
     presidentElectTheme, presidentElectName,
+    submitProfileCheckin, resolveProfileCheckin, latestCheckinForMember, profileIsStale, pendingProfileChangeRequests,
   }
 
   return createElement(BoardStoreContext.Provider, { value }, children)
