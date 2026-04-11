@@ -58,6 +58,7 @@ export default function ForumHomePage() {
   const [parkingLot, setParkingLot] = useState([])
   const [showAddParkingLot, setShowAddParkingLot] = useState(false)
   const [activeTool, setActiveTool] = useState(null) // null = tools list, 'reflections' = inline reflections
+  const [pageError, setPageError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -85,12 +86,19 @@ export default function ForumHomePage() {
 
   async function handleAddParkingLot({ name, importance, urgency }) {
     if (!member?.id) return
-    await createParkingLotEntry({
+    const { error } = await createParkingLotEntry({
       chapter_id: member.chapter_id,
       forum: member.forum,
       author_member_id: member.id,
       name, importance, urgency,
     })
+    if (error) {
+      const msg = error.message || error.details || JSON.stringify(error)
+      console.error('[parking_lot:insert]', error)
+      setPageError(`Could not add parking lot item: ${msg}`)
+      return
+    }
+    setPageError(null)
     refreshParkingLot()
     setShowAddParkingLot(false)
   }
@@ -160,6 +168,7 @@ export default function ForumHomePage() {
     { key: 'calendar', label: 'Calendar', icon: Calendar },
     { key: 'constitution', label: 'Constitution', icon: FileText },
     { key: 'partners', label: 'Partners', icon: Handshake },
+    { key: 'members', label: 'Members', icon: Users },
     { key: 'roles', label: 'Roles', icon: Users },
     { key: 'history', label: 'History', icon: History },
   ]
@@ -168,10 +177,27 @@ export default function ForumHomePage() {
     <div className="space-y-6">
       <div className="text-center py-4">
         <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
-        <p className="text-white/50 text-sm mt-1">
+        <button
+          type="button"
+          onClick={() => setTab('members')}
+          className="text-white/50 text-sm mt-1 hover:text-white/80 transition-colors cursor-pointer"
+        >
           {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
-        </p>
+        </button>
       </div>
+
+      {pageError && (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
+          <span>{pageError}</span>
+          <button
+            type="button"
+            onClick={() => setPageError(null)}
+            className="text-red-200/70 hover:text-red-100 font-medium text-xs underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Tab nav */}
       <div className="flex flex-wrap justify-center gap-1 border-b border-white/10">
@@ -221,8 +247,28 @@ export default function ForumHomePage() {
           chapterMembers={chapterMembers}
           currentForum={member.forum}
           onAddNew={() => setShowAddParkingLot(true)}
-          onUpdate={async (id, patch) => { await updateParkingLotEntry(id, patch); refreshParkingLot() }}
-          onDelete={async (id) => { await deleteParkingLotEntry(id); refreshParkingLot() }}
+          onUpdate={async (id, patch) => {
+            const { error } = await updateParkingLotEntry(id, patch)
+            if (error) {
+              const msg = error.message || error.details || JSON.stringify(error)
+              console.error('[parking_lot:update]', error)
+              setPageError(`Could not update parking lot item: ${msg}`)
+              return
+            }
+            setPageError(null)
+            refreshParkingLot()
+          }}
+          onDelete={async (id) => {
+            const { error } = await deleteParkingLotEntry(id)
+            if (error) {
+              const msg = error.message || error.details || JSON.stringify(error)
+              console.error('[parking_lot:delete]', error)
+              setPageError(`Could not delete parking lot item: ${msg}`)
+              return
+            }
+            setPageError(null)
+            refreshParkingLot()
+          }}
         />
       )}
 
@@ -325,6 +371,13 @@ export default function ForumHomePage() {
           memberId={member.id}
           forumMemberCount={forumMembers.length}
           onToggleInterest={(sapId, current) => toggleSapInterest(sapId, member.id, effectiveForum.id, current)}
+        />
+      )}
+
+      {tab === 'members' && (
+        <MembersTab
+          forumMembers={forumMembers}
+          currentMemberId={member.id}
         />
       )}
 
@@ -436,6 +489,65 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
           </div>
         ))
       )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────
+// Members Tab — visible to every forum mate
+// ────────────────────────────────────────────────────────────
+function MembersTab({ forumMembers, currentMemberId }) {
+  if (!forumMembers || forumMembers.length === 0) {
+    return (
+      <div className="text-center py-12 text-white/40 text-sm">
+        No other members in this forum yet.
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-white/40 px-1">Your forum mates. Tap a name to see the contact details your chapter has on file.</p>
+      <div className="rounded-xl border border-white/10 overflow-hidden divide-y divide-white/5">
+        {forumMembers.map(m => {
+          const isMe = m.id === currentMemberId
+          return (
+            <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-white/90 truncate">{m.name || 'Unknown'}</span>
+                  {isMe && (
+                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-eo-blue/20 text-eo-blue">You</span>
+                  )}
+                </div>
+                {m.company && (
+                  <p className="text-xs text-white/40 mt-0.5 truncate">{m.company}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-3 text-xs text-white/40 shrink-0">
+                {m.email && (
+                  <a
+                    href={`mailto:${m.email}`}
+                    className="hover:text-white/80 transition-colors hidden sm:inline"
+                    title={m.email}
+                  >
+                    Email
+                  </a>
+                )}
+                {m.phone && (
+                  <a
+                    href={`tel:${m.phone}`}
+                    className="hover:text-white/80 transition-colors"
+                    title={m.phone}
+                  >
+                    Call
+                  </a>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
