@@ -61,12 +61,16 @@ export function SAPStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [partnersRes, contactsRes] = await Promise.all([
-          fetchByChapter('saps', activeChapterId),
-          fetchSAPContacts(activeChapterId),
-        ])
+        const partnersRes = await fetchByChapter('saps', activeChapterId)
         if (partnersRes.data) setPartners(partnersRes.data)
-        if (contactsRes) setContacts(contactsRes)
+        // sap_contacts may not exist yet — fetch separately so partner load isn't blocked
+        try {
+          const contactsRes = await fetchSAPContacts(activeChapterId)
+          if (contactsRes) setContacts(contactsRes)
+        } catch {
+          // sap_contacts table may not exist; contacts will stay at defaults
+          setContacts([])
+        }
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
