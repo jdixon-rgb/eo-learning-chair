@@ -383,7 +383,7 @@ export default function EventDetailPage() {
                 {(() => {
                   const allPartners = sapPartners.length > 0 ? sapPartners : (saps || [])
                   const eventSAPs = (event.sap_ids || []).map(sid => allPartners.find(s => s.id === sid)).filter(Boolean)
-                  const availableSAPs = allPartners.filter(s => s.status === 'active' && !(event.sap_ids || []).includes(s.id))
+                  const availableSAPs = allPartners.filter(s => (s.status || 'active') === 'active' && !(event.sap_ids || []).includes(s.id))
                   const sapContactMap = event.sap_contact_ids || {}
 
                   const addSAPToEvent = (sapId, contactId) => {
