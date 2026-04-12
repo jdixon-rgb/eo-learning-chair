@@ -45,7 +45,7 @@ function isEventPast(event) {
 }
 
 export default function MemberCalendarPage({ embedded = false }) {
-  const { chapter, events, speakers, venues } = useStore()
+  const { chapter, events, speakers, venues, saps } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription } = useBoardStore()
   const { activeChapter } = useChapter()
   const chapterName = activeChapter?.name || 'Our Chapter OS'
@@ -101,6 +101,9 @@ export default function MemberCalendarPage({ embedded = false }) {
           <div className="space-y-4">
             {upcomingDetailed.map(event => {
               const speaker = speakers.find(s => s.id === event.speaker_id)
+              const sapPartner = !speaker && event.sap_ids?.length > 0
+                ? (saps || []).find(s => s.id === event.sap_ids[0])
+                : null
               const venue = venues.find(v => v.id === event.venue_id)
               const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
               const month = event.month_index != null ? FISCAL_MONTHS[event.month_index] : null
@@ -138,14 +141,20 @@ export default function MemberCalendarPage({ embedded = false }) {
                           </div>
                         )}
 
-                        {/* Speaker */}
-                        {speaker && (
+                        {/* Speaker or SAP partner fallback */}
+                        {speaker ? (
                           <div className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
                             <Users className="h-4 w-4 text-purple-400" />
                             <span className="font-medium text-white">{speaker.name}</span>
                             {speaker.topic && <span className="text-white/50">&middot; {speaker.topic.split('—')[0].trim()}</span>}
                           </div>
-                        )}
+                        ) : sapPartner ? (
+                          <div className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
+                            <Users className="h-4 w-4 text-amber-400" />
+                            <span className="font-medium text-white">{sapPartner.company || sapPartner.name}</span>
+                            <span className="text-white/40">&middot; SAP Partner</span>
+                          </div>
+                        ) : null}
 
                         {/* Venue */}
                         {venue && (

@@ -157,6 +157,11 @@ export default function CalendarPage() {
                               <MapPin className="h-3 w-3" />
                               {primarySpeaker.name}
                             </div>
+                          ) : eventSAPs.length > 0 ? (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-eo-coral">
+                              <Handshake className="h-3 w-3" />
+                              {eventSAPs[0].company || eventSAPs[0].name}
+                            </div>
                           ) : null}
 
                           {budget > 0 && (

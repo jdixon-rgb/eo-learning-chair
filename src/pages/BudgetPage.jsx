@@ -73,7 +73,7 @@ const VIEW_OPTIONS = [
 export default function BudgetPage() {
   const navigate = useNavigate()
   const {
-    chapter, events, speakers, budgetItems,
+    chapter, events, speakers, saps, budgetItems,
     totalBudgeted, totalContracted, totalActualSpent, budgetRemaining,
     upsertBudgetItem,
   } = useStore()
@@ -142,12 +142,18 @@ export default function BudgetPage() {
     warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chapter.total_budget)}. Total budgeted exceeds the ${formatCurrency(chapter.total_budget)} budget.`)
   }
 
-  // Speaker lookup
-  const speakerName = useCallback((speakerId) => {
-    if (!speakerId) return '\u2014'
-    const s = speakers.find(sp => sp.id === speakerId)
-    return s ? s.name : '\u2014'
-  }, [speakers])
+  // Speaker lookup — falls back to SAP partner name if no speaker
+  const speakerOrPartnerName = useCallback((event) => {
+    if (event.speaker_id) {
+      const s = speakers.find(sp => sp.id === event.speaker_id)
+      if (s) return s.name
+    }
+    if (event.sap_ids?.length > 0) {
+      const sap = (saps || []).find(s => s.id === event.sap_ids[0])
+      if (sap) return sap.company || sap.name
+    }
+    return '\u2014'
+  }, [speakers, saps])
 
   return (
     <div className="space-y-6">
@@ -271,7 +277,7 @@ export default function BudgetPage() {
                     </button>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground truncate max-w-[140px]">
-                    {speakerName(event.speaker_id)}
+                    {speakerOrPartnerName(event)}
                   </td>
                   {BUDGET_CATEGORIES.map(cat => {
                     const cellValue = getCellValue(event.id, cat.id)
