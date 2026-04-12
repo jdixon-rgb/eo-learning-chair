@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.48.0 — 2026-04-11
+
+### Multi-tenant RLS hardening + dynamic branding
+With Chad green-lighting chapter-to-chapter licensing, this locks down the one blocker: cross-tenant data leaks via permissive SELECT policies.
+
+- **30+ `using (true)` SELECT policies dropped and replaced** with chapter-scoped equivalents. Every tenant-owned table now enforces `chapter_id = user_chapter_id() OR is_super_admin()` at the RLS layer, not just at the client. Child tables without a direct `chapter_id` column use `EXISTS` subqueries against their parent (e.g., `forum_agenda_items` → `forum_agendas`, `navigator_broadcast_responses` → `navigator_broadcasts`). Global reference tables (`reflection_feelings`, `reflection_templates`) are unchanged — they're intentionally shared.
+- **Dynamic chapter name in Learning Calendar.** Hardcoded "EO Arizona" replaced with `activeChapter.name` in the header and footer of `MemberCalendarPage`, making the calendar ready for any chapter.
+- Migration 032: `032_multi_tenant_rls_hardening.sql` — idempotent drop-if-exists + create. Safe to re-run.
+
 ## v1.47.0 — 2026-04-11
 
 ### Profile Freshness ping

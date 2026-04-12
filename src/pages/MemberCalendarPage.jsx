@@ -1,5 +1,6 @@
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import { useChapter } from '@/lib/chapter'
 import ThemeInfo from '@/components/ThemeInfo'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
@@ -46,6 +47,8 @@ function isEventPast(event) {
 export default function MemberCalendarPage({ embedded = false }) {
   const { chapter, events, speakers, venues } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription } = useBoardStore()
+  const { activeChapter } = useChapter()
+  const chapterName = activeChapter?.name || 'Our Chapter OS'
   const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const windowMonths = getMonthWindow()
@@ -67,7 +70,7 @@ export default function MemberCalendarPage({ embedded = false }) {
           <div className="relative max-w-4xl mx-auto px-6 py-12 text-center">
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className="w-8 h-[2px] bg-eo-coral" />
-              <span className="text-xs font-bold tracking-[0.3em] text-eo-coral uppercase">EO Arizona</span>
+              <span className="text-xs font-bold tracking-[0.3em] text-eo-coral uppercase">{chapterName}</span>
               <div className="w-8 h-[2px] bg-eo-coral" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -238,7 +241,7 @@ export default function MemberCalendarPage({ embedded = false }) {
       {!embedded && (
         <footer className="border-t border-white/5 py-8">
           <div className="max-w-4xl mx-auto px-6 text-center text-xs text-white/30">
-            <p>EO Arizona &middot; Learning Calendar &middot; {formatFiscalYear(activeFiscalYear)}</p>
+            <p>{chapterName} &middot; Learning Calendar &middot; {formatFiscalYear(activeFiscalYear)}</p>
             <p className="mt-1">All learning events are included with your EO membership. No additional fees.</p>
           </div>
         </footer>
