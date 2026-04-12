@@ -157,24 +157,19 @@ export default function CalendarPage() {
                               <MapPin className="h-3 w-3" />
                               {primarySpeaker.name}
                             </div>
-                          ) : eventSAPs.length > 0 ? (
+                          ) : null}
+
+                          {eventSAPs.length > 0 && (
                             <div className="flex items-center gap-1 mt-1 text-xs text-eo-coral">
                               <Handshake className="h-3 w-3" />
-                              {eventSAPs[0].company || eventSAPs[0].name}
+                              {eventSAPs.map(s => s.company || s.name).join(', ')}
                             </div>
-                          ) : null}
+                          )}
 
                           {budget > 0 && (
                             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                               <DollarSign className="h-3 w-3" />
                               {formatCurrency(budget)}
-                            </div>
-                          )}
-
-                          {eventSAPs.length > 0 && (
-                            <div className="flex items-center gap-1 mt-1 text-xs text-eo-coral">
-                              <Handshake className="h-3 w-3" />
-                              {eventSAPs.map(s => s.company).join(', ')}
                             </div>
                           )}
 

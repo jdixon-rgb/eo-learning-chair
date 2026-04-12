@@ -99,12 +99,13 @@ export default function EventsPage() {
                       <Users className="h-3 w-3" />
                       {primarySpeaker.name}
                     </div>
-                  ) : eventSAPs.length > 0 ? (
-                    <div className="flex items-center gap-2 text-xs text-eo-coral">
-                      <Users className="h-3 w-3" />
-                      {eventSAPs[0].company || eventSAPs[0].name} <span className="text-muted-foreground ml-0.5">· SAP</span>
-                    </div>
                   ) : null}
+                  {eventSAPs.length > 0 && (
+                    <div className="flex items-center gap-2 text-xs text-eo-coral">
+                      <Handshake className="h-3 w-3" />
+                      {eventSAPs.map(s => s.company || s.name).join(', ')}
+                    </div>
+                  )}
                   {venue && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
@@ -115,12 +116,6 @@ export default function EventsPage() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <DollarSign className="h-3 w-3" />
                       {formatCurrency(budget)}
-                    </div>
-                  )}
-                  {eventSAPs.length > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-eo-coral">
-                      <Handshake className="h-3 w-3" />
-                      {eventSAPs.map(s => s.company).join(', ')}
                     </div>
                   )}
                 </div>

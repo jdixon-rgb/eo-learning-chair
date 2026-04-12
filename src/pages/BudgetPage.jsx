@@ -144,28 +144,30 @@ export default function BudgetPage() {
     warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chapter.total_budget)}. Total budgeted exceeds the ${formatCurrency(chapter.total_budget)} budget.`)
   }
 
-  // Speaker lookup — falls back to SAP partner + primary contact if no speaker
-  const speakerOrPartnerName = useCallback((event) => {
+  // Build display name(s) for speaker + SAP partners on an event
+  const eventPresenterNames = useCallback((event) => {
+    const parts = []
+    // Regular speaker
     if (event.speaker_id) {
       const s = speakers.find(sp => sp.id === event.speaker_id)
-      if (s) return s.name
+      if (s) parts.push(s.name)
     }
+    // SAP partner(s)
     if (event.sap_ids?.length > 0) {
-      // Find first SAP that still exists in the DB (skip orphaned IDs)
+      const contactMap = event.sap_contact_ids || {}
       for (const sapId of event.sap_ids) {
         const sap = (saps || []).find(s => s.id === sapId)
         if (sap) {
           const label = sap.company || sap.name
-          const contactMap = event.sap_contact_ids || {}
           const contactId = contactMap[sapId]
           const contact = contactId
             ? sapContacts.find(c => c.id === contactId)
             : primaryContact(sapId)
-          return contact ? `${label} (${contact.name})` : label
+          parts.push(contact ? `${label} (${contact.name})` : label)
         }
       }
     }
-    return '\u2014'
+    return parts.length > 0 ? parts.join(' · ') : '\u2014'
   }, [speakers, saps, sapContacts, primaryContact])
 
   return (
@@ -290,7 +292,7 @@ export default function BudgetPage() {
                     </button>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground truncate max-w-[140px]">
-                    {speakerOrPartnerName(event)}
+                    {eventPresenterNames(event)}
                   </td>
                   {BUDGET_CATEGORIES.map(cat => {
                     const cellValue = getCellValue(event.id, cat.id)
