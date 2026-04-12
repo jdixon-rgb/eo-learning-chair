@@ -736,6 +736,17 @@ export default function SpeakersPage() {
                   Mark Passed
                 </Button>
               )}
+              {editSpeaker && (
+                <Button variant="outline" className="text-eo-pink border-eo-pink/30 hover:bg-eo-pink/10" onClick={() => {
+                  if (confirm(`Delete ${editSpeaker.name}? This removes them from the library and any event assignments.`)) {
+                    deleteSpeaker(editSpeaker.id)
+                    setShowForm(false)
+                    setEditSpeaker(null)
+                  }
+                }}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
