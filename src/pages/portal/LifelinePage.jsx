@@ -374,11 +374,19 @@ export default function LifelinePage() {
                   <EmptyState onAdd={() => setShowEventForm(true)} />
                 )
               ) : (
-                <LifelineGraph
-                  events={displayEvents}
-                  birthYear={birthYear}
-                  onEventClick={setSelectedEvent}
-                />
+                /* On narrow / portrait screens the 16:7 chart gets
+                   crushed. Wrap in a scrollable container with a min-width
+                   so users can swipe left-right to explore the timeline.
+                   On wider screens the min-width has no effect. */
+                <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div className="min-w-[700px]">
+                    <LifelineGraph
+                      events={displayEvents}
+                      birthYear={birthYear}
+                      onEventClick={setSelectedEvent}
+                    />
+                  </div>
+                </div>
               )}
 
               {/* Legend */}
