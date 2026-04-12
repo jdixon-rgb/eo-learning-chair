@@ -47,7 +47,7 @@ export default function SAPPartnersPage() {
   const [contactForm, setContactForm] = useState(emptyContactForm)
   const [contactForPartnerId, setContactForPartnerId] = useState(null)
 
-  const activePartners = partners.filter(p => p.status === 'active')
+  const activePartners = partners.filter(p => (p.status || 'active') === 'active')
   const inactivePartners = partners.filter(p => p.status === 'inactive')
 
   const filtered = activePartners.filter(p =>
