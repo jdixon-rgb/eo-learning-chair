@@ -207,7 +207,7 @@ export default function LifelinePage() {
 
   // ── Page ─────────────────────────────────────────────────
   return (
-    <div className="bg-lifeline-paper min-h-full">
+    <div className="bg-lifeline-paper text-lifeline-ink min-h-full">
       {/* Toolbar */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-4 flex items-center gap-3 print:hidden">
         <div className="flex-1">
