@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
-import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus } from 'lucide-react'
+import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus, Activity } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
@@ -91,6 +91,19 @@ export default function MemberPortalDashboard() {
           </div>
           <h3 className="text-base font-semibold mb-1">Vendors</h3>
           <p className="text-xs text-white/50">Rate, review, and discover vendors in Arizona. Protect yourself. Find the best.</p>
+        </Link>
+
+        {/* Lifeline */}
+        <Link
+          to="/portal/lifeline"
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-orange-400/50 hover:bg-white/[0.07] transition-all group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <Activity className="h-6 w-6 text-orange-400" />
+            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
+          </div>
+          <h3 className="text-base font-semibold mb-1">Lifeline</h3>
+          <p className="text-xs text-white/50">Chart your journey — plot the highs and lows that shaped who you are.</p>
         </Link>
 
         {/* My EO */}

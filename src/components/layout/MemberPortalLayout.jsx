@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
-import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store } from 'lucide-react'
+import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store, Activity } from 'lucide-react'
 import { useState } from 'react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
@@ -10,6 +10,7 @@ const portalNav = [
   { to: '/portal', icon: Compass, label: 'Home', end: true },
   { to: '/portal/forum', icon: Users, label: 'Forum' },
   { to: '/portal/calendar', icon: Calendar, label: 'Calendar' },
+  { to: '/portal/lifeline', icon: Activity, label: 'Lifeline' },
   { to: '/portal/vendors', icon: Store, label: 'Vendors' },
   { to: '/portal/notifications', icon: Bell, label: 'Notifications' },
 ]
