@@ -32,7 +32,6 @@ export default function ChapterConfigPage() {
   const [chapter, setChapter] = useState({
     name: '',
     fiscal_year_start: 8,
-    total_budget: 0,
     president_theme: '',
     president_name: '',
   })
@@ -84,7 +83,6 @@ export default function ChapterConfigPage() {
     const payload = {
       name: chapter.name,
       fiscal_year_start: chapter.fiscal_year_start,
-      total_budget: chapter.total_budget,
       president_theme: chapter.president_theme,
       president_name: chapter.president_name,
     }
@@ -221,14 +219,6 @@ export default function ChapterConfigPage() {
                 <option key={m.value} value={m.value}>{m.label}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium">Total Budget ($)</label>
-            <Input
-              type="number"
-              value={chapter.total_budget}
-              onChange={(e) => setChapter({ ...chapter, total_budget: parseFloat(e.target.value) || 0 })}
-            />
           </div>
           <div>
             <label className="text-xs font-medium">President's Theme</label>
