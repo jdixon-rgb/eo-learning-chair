@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
@@ -325,21 +326,19 @@ export default function ForumHomePage() {
                 <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
               </div>
             </button>
-            <a
-              href="https://lifeline.ourchapteros.com"
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              to="/portal/lifeline"
               className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
             >
               <div className="flex items-center gap-3">
                 <History className="h-5 w-5 text-eo-blue shrink-0" />
                 <div>
                   <h3 className="text-sm font-semibold text-white/90">Lifeline</h3>
-                  <p className="text-xs text-white/50 mt-0.5">Build and share your life story timeline with your forum.</p>
+                  <p className="text-xs text-white/50 mt-0.5">Chart your journey — plot the highs and lows that shaped who you are.</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
               </div>
-            </a>
+            </Link>
           </div>
         )
       )}
