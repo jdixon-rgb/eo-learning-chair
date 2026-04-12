@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
+import { useSAPStore } from '@/lib/sapStore'
 import { BUDGET_CATEGORIES, FISCAL_MONTHS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -77,6 +78,7 @@ export default function BudgetPage() {
     totalBudgeted, totalContracted, totalActualSpent, budgetRemaining,
     upsertBudgetItem,
   } = useStore()
+  const { contacts: sapContacts, primaryContact } = useSAPStore()
   const { activeFiscalYear } = useFiscalYear()
 
   const [activeField, setActiveField] = useState('budget_amount')
@@ -142,18 +144,28 @@ export default function BudgetPage() {
     warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chapter.total_budget)}. Total budgeted exceeds the ${formatCurrency(chapter.total_budget)} budget.`)
   }
 
-  // Speaker lookup — falls back to SAP partner name if no speaker
+  // Speaker lookup — falls back to SAP partner + primary contact if no speaker
   const speakerOrPartnerName = useCallback((event) => {
     if (event.speaker_id) {
       const s = speakers.find(sp => sp.id === event.speaker_id)
       if (s) return s.name
     }
     if (event.sap_ids?.length > 0) {
-      const sap = (saps || []).find(s => s.id === event.sap_ids[0])
-      if (sap) return sap.company || sap.name
+      const sapId = event.sap_ids[0]
+      const sap = (saps || []).find(s => s.id === sapId)
+      if (sap) {
+        const label = sap.company || sap.name
+        // Use assigned contact if set, otherwise primary contact for this SAP
+        const contactMap = event.sap_contact_ids || {}
+        const contactId = contactMap[sapId]
+        const contact = contactId
+          ? sapContacts.find(c => c.id === contactId)
+          : primaryContact(sapId)
+        return contact ? `${label} (${contact.name})` : label
+      }
     }
     return '\u2014'
-  }, [speakers, saps])
+  }, [speakers, saps, sapContacts, primaryContact])
 
   return (
     <div className="space-y-6">
