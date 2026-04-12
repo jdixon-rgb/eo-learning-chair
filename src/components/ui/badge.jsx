@@ -16,6 +16,7 @@ const badgeVariants = cva(
         success: "border-transparent bg-green-500 text-white",
         positive: "bg-lifeline-positive-bg text-lifeline-positive border-lifeline-positive-light",
         negative: "bg-lifeline-negative-bg text-lifeline-negative border-lifeline-negative-light",
+        neutral: "bg-transparent text-lifeline-ink-muted border-lifeline-border",
       },
     },
     defaultVariants: {

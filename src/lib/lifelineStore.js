@@ -60,6 +60,42 @@ function validateBirthYear(birthYear) {
   return null
 }
 
+// ── Row → domain object mappers ──────────────────────────────
+// Supabase returns snake_case columns. The Lifeline components were
+// authored against camelCase field names (ported near-verbatim from
+// lifeline.ourchapteros.com), so the store normalises rows on the way
+// out. Mapping at the boundary means components don't need to know the
+// column casing, and it keeps the ported components close to their
+// originals for easy auditing.
+
+function toLifeEvent(row) {
+  if (!row) return null
+  return {
+    id: row.id,
+    memberId: row.member_id,
+    title: row.title,
+    summary: row.summary,
+    valence: row.valence,
+    intensity: row.intensity,
+    timeType: row.time_type,
+    timeValue: row.time_value,
+    computedYear: row.computed_year,
+    sortOrder: row.sort_order,
+    brief: row.brief,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function toMemberPrivate(row) {
+  if (!row) return null
+  return {
+    memberId: row.member_id,
+    birthYear: row.birth_year,
+    updatedAt: row.updated_at,
+  }
+}
+
 // ── member_private (birth_year and future owner-only fields) ─
 // 1:1 with chapter_members. Row may not exist until the member sets a
 // value, so loadMemberPrivate returns { data: null } cleanly.
@@ -71,7 +107,7 @@ export async function loadMemberPrivate(memberId) {
     .select('member_id, birth_year, updated_at')
     .eq('member_id', memberId)
     .maybeSingle()
-  return { data, error }
+  return { data: toMemberPrivate(data), error }
 }
 
 // Upsert the member's birth_year. Safe to call whether the row exists or
@@ -97,7 +133,7 @@ export async function setBirthYear(memberId, birthYear) {
     )
     .select()
     .single()
-  return { data, error }
+  return { data: toMemberPrivate(data), error }
 }
 
 // ── life_events ──────────────────────────────────────────────
@@ -114,7 +150,7 @@ export async function loadLifeEvents(memberId) {
     .order('computed_year', { ascending: true })
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
-  return { data: data || [], error }
+  return { data: (data || []).map(toLifeEvent), error }
 }
 
 // Create a new event. Caller passes the raw form values; this function
@@ -174,7 +210,7 @@ export async function createLifeEvent(memberId, payload, birthYear) {
     })
     .select()
     .single()
-  return { data, error }
+  return { data: toLifeEvent(data), error }
 }
 
 // Update an event. Recomputes computed_year if time_type/time_value
@@ -243,7 +279,7 @@ export async function updateLifeEvent(id, memberId, payload, birthYear) {
     .eq('id', id)
     .select()
     .single()
-  return { data, error }
+  return { data: toLifeEvent(data), error }
 }
 
 // Delete an event. RLS scopes to the caller.
@@ -267,7 +303,7 @@ export async function toggleLifeEventBrief(id, brief) {
     .eq('id', id)
     .select()
     .single()
-  return { data, error }
+  return { data: toLifeEvent(data), error }
 }
 
 // Reorder an event within its year group, one step up or down.
