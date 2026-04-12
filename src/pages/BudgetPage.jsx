@@ -151,17 +151,18 @@ export default function BudgetPage() {
       if (s) return s.name
     }
     if (event.sap_ids?.length > 0) {
-      const sapId = event.sap_ids[0]
-      const sap = (saps || []).find(s => s.id === sapId)
-      if (sap) {
-        const label = sap.company || sap.name
-        // Use assigned contact if set, otherwise primary contact for this SAP
-        const contactMap = event.sap_contact_ids || {}
-        const contactId = contactMap[sapId]
-        const contact = contactId
-          ? sapContacts.find(c => c.id === contactId)
-          : primaryContact(sapId)
-        return contact ? `${label} (${contact.name})` : label
+      // Find first SAP that still exists in the DB (skip orphaned IDs)
+      for (const sapId of event.sap_ids) {
+        const sap = (saps || []).find(s => s.id === sapId)
+        if (sap) {
+          const label = sap.company || sap.name
+          const contactMap = event.sap_contact_ids || {}
+          const contactId = contactMap[sapId]
+          const contact = contactId
+            ? sapContacts.find(c => c.id === contactId)
+            : primaryContact(sapId)
+          return contact ? `${label} (${contact.name})` : label
+        }
       }
     }
     return '\u2014'
