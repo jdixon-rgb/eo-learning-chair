@@ -117,8 +117,8 @@ export default function SAPProfilePage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-white/50">Your Contact Info</h2>
           {!editing && (
-            <Button size="sm" variant="outline" onClick={startEdit}
-              className="text-xs border-white/20 text-white/70 hover:bg-white/10">
+            <Button size="sm" variant="ghost" onClick={startEdit}
+              className="text-xs border border-white/20 text-white/70 hover:bg-white/10">
               Edit
             </Button>
           )}
@@ -167,8 +167,8 @@ export default function SAPProfilePage() {
             </div>
             <div className="flex gap-2 pt-1">
               <Button size="sm" onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700">Save</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(false)}
-                className="border-white/20 text-white/70 hover:bg-white/10">Cancel</Button>
+              <Button size="sm" variant="ghost" onClick={() => setEditing(false)}
+                className="border border-white/20 text-white/70 hover:bg-white/10">Cancel</Button>
             </div>
           </div>
         ) : (
@@ -264,8 +264,8 @@ function ForumAppearancesSection({ contactId, appearances, onAdd, onDelete }) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-bold uppercase tracking-wider text-white/50">Forum Appearances</h2>
         {!showForm && (
-          <Button size="sm" variant="outline" onClick={() => setShowForm(true)}
-            className="text-xs border-white/20 text-white/70 hover:bg-white/10">
+          <Button size="sm" variant="ghost" onClick={() => setShowForm(true)}
+            className="text-xs border border-white/20 text-white/70 hover:bg-white/10">
             <Plus className="h-3 w-3 mr-1" /> Add
           </Button>
         )}
@@ -295,8 +295,8 @@ function ForumAppearancesSection({ contactId, appearances, onAdd, onDelete }) {
           </div>
           <div className="flex gap-2">
             <Button size="sm" onClick={handleSubmit} className="bg-indigo-600 hover:bg-indigo-700 text-xs">Save</Button>
-            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}
-              className="border-white/20 text-white/70 hover:bg-white/10 text-xs">Cancel</Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}
+              className="border border-white/20 text-white/70 hover:bg-white/10 text-xs">Cancel</Button>
           </div>
         </div>
       )}
