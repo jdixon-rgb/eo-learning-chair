@@ -9,7 +9,7 @@ import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
 import { ForumStoreProvider } from '@/lib/forumStore'
 import { VendorStoreProvider } from '@/lib/vendorStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
@@ -51,11 +51,18 @@ import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
 import VendorsPage from '@/pages/portal/VendorsPage'
+import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
+import SAPPortalDashboard from '@/pages/sap-portal/SAPPortalDashboard'
+import SAPEventListPage from '@/pages/sap-portal/SAPEventListPage'
+import SAPProfilePage from '@/pages/sap-portal/SAPProfilePage'
+import SAPResourcesPage from '@/pages/sap-portal/SAPResourcesPage'
+import SAPAnnouncementsPage from '@/pages/sap-portal/SAPAnnouncementsPage'
 
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
 function ChairHome() {
   const { effectiveRole } = useAuth()
+  if (effectiveRole === 'sap_contact') return <Navigate to="/sap-portal" replace />
   const config = getChairConfig(effectiveRole)
   if (config.homePath && config.homePath !== '/') {
     return <Navigate to={config.homePath} replace />
@@ -181,6 +188,19 @@ function App() {
                 <Route path="/portal/vendors" element={<VendorsPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />
+              </Route>
+
+              {/* SAP Partner Portal routes */}
+              <Route element={
+                <ProtectedRoute allowedRoles={SAP_PORTAL_ROLES}>
+                  <SAPPortalLayout />
+                </ProtectedRoute>
+              }>
+                <Route path="/sap-portal" element={<SAPPortalDashboard />} />
+                <Route path="/sap-portal/events" element={<SAPEventListPage />} />
+                <Route path="/sap-portal/profile" element={<SAPProfilePage />} />
+                <Route path="/sap-portal/resources" element={<SAPResourcesPage />} />
+                <Route path="/sap-portal/announcements" element={<SAPAnnouncementsPage />} />
               </Route>
 
               {/* Super Admin routes (sidebar layout) */}

@@ -56,3 +56,6 @@ export const ADMIN_LAYOUT_ROLES = ['super_admin', 'president', 'president_elect'
 
 // All roles that can access the member portal
 export const PORTAL_ROLES = ['member', ...ADMIN_LAYOUT_ROLES]
+
+// SAP Partner Portal — external partner contacts only
+export const SAP_PORTAL_ROLES = ['sap_contact']

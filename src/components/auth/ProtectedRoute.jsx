@@ -26,7 +26,9 @@ export default function ProtectedRoute({ allowedRoles, children }) {
   // Super admins and president-level roles can access everything (they switch into chair views)
   const bypassRoles = ['super_admin', 'president', 'president_elect', 'president_elect_elect']
   if (allowedRoles && profile && !bypassRoles.includes(profile.role) && !allowedRoles.includes(profile.role)) {
-    const home = profile.role === 'member' ? '/portal' : '/'
+    const home = profile.role === 'member' ? '/portal'
+               : profile.role === 'sap_contact' ? '/sap-portal'
+               : '/'
     return <Navigate to={home} replace />
   }
 

@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.50.0 — 2026-04-12
+
+### SAP Partner Portal
+- **New SAP Partner Portal** at `/sap-portal` — a dedicated portal for external SAP contacts to view their events, profile, resources, and announcements
+- SAP contacts authenticate via magic link (same flow as members), with a new `sap_contact` role
+- **Portal pages**: Dashboard (welcome + tier badge + next event), Events (RSVP + full chapter calendar), Profile (editable contact info + read-only partner details + colleagues), Resources (curated links), Announcements (chapter notifications)
+- **Admin invite flow**: "Invite to Portal" button on each SAP contact in the Partners page — creates a whitelist entry so the contact can sign in
+- **Auth plumbing**: `sap_contact_id` FK on profiles linked via signup trigger, `is_sap_contact()` RLS helper, scoped SELECT policies for contacts/partners/events
+- Migration `035_sap_portal_auth.sql` — role constraints, FK columns, trigger update, RLS policies
+- Mock data: emails on 3 SAP contacts, `sap_ids` on 3 events for dev testing
+
+---
+
 ## v1.48.0 — 2026-04-11
 
 ### Multi-tenant RLS hardening + dynamic branding

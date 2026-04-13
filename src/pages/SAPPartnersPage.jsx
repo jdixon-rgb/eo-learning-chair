@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
+import { useAuth } from '@/lib/auth'
+import { isSupabaseConfigured } from '@/lib/supabase'
+import { insertRow } from '@/lib/db'
 import { SAP_TIERS, SAP_CONTRIBUTION_TYPES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   Plus, Search, Building2, User, ChevronDown, ChevronRight,
-  Mail, Phone, Globe, GraduationCap, Trash2, Pencil, Users,
+  Mail, Phone, Globe, GraduationCap, Trash2, Pencil, Users, Send,
 } from 'lucide-react'
 
 const emptyPartnerForm = {
@@ -31,8 +34,10 @@ export default function SAPPartnersPage() {
     addContact, updateContact, deleteContact,
     contactsForPartner, primaryContact,
   } = useSAPStore()
+  const { profile } = useAuth()
 
   const [search, setSearch] = useState('')
+  const [invitedEmails, setInvitedEmails] = useState(new Set())
   const [expandedPartner, setExpandedPartner] = useState(null)
   const [viewMode, setViewMode] = useState('tiers') // tiers or list
 
@@ -141,6 +146,34 @@ export default function SAPPartnersPage() {
     setEditContact(null)
     setContactForm(emptyContactForm)
   }
+
+  // ── Portal invite handler ───────────────────────────────
+  const inviteToPortal = useCallback(async (contact) => {
+    if (!contact.email) {
+      alert('Add an email for this contact before inviting.')
+      return
+    }
+    if (!isSupabaseConfigured()) {
+      setInvitedEmails(prev => new Set([...prev, contact.email.toLowerCase()]))
+      alert(`[Dev mode] Would invite ${contact.name} (${contact.email}) to SAP Portal.`)
+      return
+    }
+    try {
+      await insertRow('member_invites', {
+        email: contact.email,
+        full_name: contact.name,
+        role: 'sap_contact',
+        invited_by: profile?.id || null,
+      })
+      setInvitedEmails(prev => new Set([...prev, contact.email.toLowerCase()]))
+    } catch (err) {
+      if (err?.message?.includes('duplicate') || err?.code === '23505') {
+        setInvitedEmails(prev => new Set([...prev, contact.email.toLowerCase()]))
+      } else {
+        alert(`Invite failed: ${err.message || err}`)
+      }
+    }
+  }, [profile])
 
   // ── Partner card ───────────────────────────────────────
   const PartnerCard = ({ partner }) => {
@@ -262,6 +295,17 @@ export default function SAPPartnersPage() {
                             <Phone className="h-3.5 w-3.5" />
                           </a>
                         )}
+                        {c.email && !invitedEmails.has(c.email.toLowerCase()) ? (
+                          <button
+                            className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-indigo-500 cursor-pointer"
+                            title="Invite to SAP Portal"
+                            onClick={(e) => { e.stopPropagation(); inviteToPortal(c) }}
+                          >
+                            <Send className="h-3 w-3" />
+                          </button>
+                        ) : c.email && invitedEmails.has(c.email.toLowerCase()) ? (
+                          <span className="text-[9px] text-green-600 font-medium">Invited</span>
+                        ) : null}
                         <button
                           className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-eo-pink cursor-pointer"
                           onClick={(e) => {

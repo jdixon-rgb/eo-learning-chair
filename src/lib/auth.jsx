@@ -104,6 +104,8 @@ export function AuthProvider({ children }) {
     isBoardLiaison: role === 'board_liaison',
     isBoardMember: !!role && ['super_admin', 'president', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role),
     isMember: role === 'member',
+    isSAPContact: role === 'sap_contact',
+    sapContactId: profile?.sap_contact_id ?? null,
   }
 
   return createElement(AuthContext.Provider, { value }, children)
