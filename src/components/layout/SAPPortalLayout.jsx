@@ -1,7 +1,8 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useSAPContact } from '@/lib/useSAPContact'
-import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu, X, Users, Star, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu, X, Users, Star, MessageSquare, ArrowLeft } from 'lucide-react'
+import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { useState } from 'react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
@@ -66,6 +67,16 @@ export default function SAPPortalLayout() {
 
           {/* Right: User + Sign out */}
           <div className="flex items-center gap-3">
+            {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
+              <NavLink
+                to="/"
+                onClick={() => { setViewAsSapContactId(null); setViewAsRole(null) }}
+                className="text-xs text-amber-300 hover:text-amber-200 font-medium flex items-center gap-1 transition-colors"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                Admin
+              </NavLink>
+            )}
             <span className="text-xs text-white/50 hidden sm:inline">
               {profile?.full_name || profile?.email}
             </span>

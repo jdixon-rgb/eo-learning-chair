@@ -11,9 +11,10 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useNavigate } from 'react-router-dom'
 import {
   Plus, Search, Building2, User, ChevronDown, ChevronRight,
-  Mail, Phone, Globe, GraduationCap, Trash2, Pencil, Users, Send,
+  Mail, Phone, Globe, GraduationCap, Trash2, Pencil, Users, Send, Eye,
 } from 'lucide-react'
 
 const emptyPartnerForm = {
@@ -36,7 +37,8 @@ export default function SAPPartnersPage() {
     contactsForPartner, primaryContact,
   } = useSAPStore()
   const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
-  const { profile } = useAuth()
+  const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId } = useAuth()
+  const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
   const [invitedEmails, setInvitedEmails] = useState(new Set())
@@ -308,6 +310,20 @@ export default function SAPPartnersPage() {
                           >
                             <Phone className="h-3.5 w-3.5" />
                           </a>
+                        )}
+                        {canSwitchRoles && (
+                          <button
+                            className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-indigo-500 cursor-pointer"
+                            title={`View portal as ${c.name}`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setViewAsRole('sap_contact')
+                              setViewAsSapContactId(c.id)
+                              navigate('/sap-portal')
+                            }}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </button>
                         )}
                         {c.email && !invitedEmails.has(c.email.toLowerCase()) ? (
                           <button
