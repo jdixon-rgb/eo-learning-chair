@@ -4,12 +4,13 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { Bell, Check } from 'lucide-react'
 
 export default function SAPAnnouncementsPage() {
-  const { user } = useAuth()
+  const { user, isPreviewingOtherUser } = useAuth()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isSupabaseConfigured() || !user) {
+    // PRIVACY GUARD: never fetch another user's notifications during impersonation
+    if (isPreviewingOtherUser || !isSupabaseConfigured() || !user) {
       setLoading(false)
       return
     }

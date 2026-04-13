@@ -105,6 +105,12 @@ export function AuthProvider({ children }) {
     ? viewAsSapContactId
     : profile?.sap_contact_id ?? null
 
+  // PRIVACY GUARD: true when viewing another user's role context.
+  // Any hook that accesses personal data (reflections, lifeline, forum
+  // discussions, parking lot) MUST check this and return empty data.
+  // Impersonation previews the UI/experience — never the person's private content.
+  const isPreviewingOtherUser = isImpersonating || !!viewAsSapContactId
+
   const value = {
     session,
     user: session?.user ?? null,
@@ -130,6 +136,7 @@ export function AuthProvider({ children }) {
     sapContactId: effectiveSapContactId,
     viewAsSapContactId,
     setViewAsSapContactId,
+    isPreviewingOtherUser,
   }
 
   return createElement(AuthContext.Provider, { value }, children)
