@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
+import { useVendorStore } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { insertRow } from '@/lib/db'
@@ -34,6 +35,7 @@ export default function SAPPartnersPage() {
     addContact, updateContact, deleteContact,
     contactsForPartner, primaryContact,
   } = useSAPStore()
+  const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
   const { profile } = useAuth()
 
   const [search, setSearch] = useState('')
@@ -100,7 +102,19 @@ export default function SAPPartnersPage() {
     if (editPartner) {
       updatePartner(editPartner.id, data)
     } else {
-      addPartner(data)
+      const newPartner = addPartner(data)
+      // Auto-create a linked vendor in the Vendor Exchange
+      if (newPartner?.id) {
+        addVendorRecord({
+          name: data.name,
+          category: data.industry || 'Other',
+          website: data.website || '',
+          phone: data.contact_phone || '',
+          tier: 'sap_partner',
+          sap_id: newPartner.id,
+          created_by: profile?.id ?? null,
+        })
+      }
     }
     setShowPartnerForm(false)
     setEditPartner(null)
@@ -544,7 +558,10 @@ export default function SAPPartnersPage() {
               <Button onClick={handlePartnerSubmit} className="flex-1">{editPartner ? 'Save Changes' : 'Add Partner'}</Button>
               {editPartner && (
                 <Button variant="outline" className="text-eo-pink border-eo-pink hover:bg-eo-pink/10" onClick={() => {
-                  if (confirm(`Delete ${editPartner.name}? This will also remove all their contacts.`)) {
+                  if (confirm(`Delete ${editPartner.name}? This will also remove all their contacts and vendor listing.`)) {
+                    // Also remove linked vendor
+                    const linkedVendor = vendorForSAP(editPartner.id)
+                    if (linkedVendor) deleteVendorRecord(linkedVendor.id)
                     deletePartner(editPartner.id)
                     setShowPartnerForm(false)
                   }

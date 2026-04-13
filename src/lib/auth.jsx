@@ -6,6 +6,7 @@ const AuthContext = createContext(null)
 const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev@local', chapter_id: '00000000-0000-4000-a000-000000000001' }
 
 const VIEW_AS_STORAGE_KEY = 'eo-view-as-role'
+const VIEW_AS_SAP_CONTACT_KEY = 'eo-view-as-sap-contact'
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -13,6 +14,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [viewAsRole, setViewAsRoleState] = useState(() => {
     try { return localStorage.getItem(VIEW_AS_STORAGE_KEY) || null } catch { return null }
+  })
+  const [viewAsSapContactId, setViewAsSapContactIdState] = useState(() => {
+    try { return localStorage.getItem(VIEW_AS_SAP_CONTACT_KEY) || null } catch { return null }
   })
 
   const fetchProfile = useCallback(async (userId) => {
@@ -81,7 +85,25 @@ export function AuthProvider({ children }) {
       else localStorage.removeItem(VIEW_AS_STORAGE_KEY)
     } catch { /* ignore */ }
     setViewAsRoleState(nextRole || null)
+    // Clear SAP contact impersonation when switching away from sap_contact
+    if (nextRole !== 'sap_contact') {
+      try { localStorage.removeItem(VIEW_AS_SAP_CONTACT_KEY) } catch { /* ignore */ }
+      setViewAsSapContactIdState(null)
+    }
   }, [])
+
+  const setViewAsSapContactId = useCallback((id) => {
+    try {
+      if (id) localStorage.setItem(VIEW_AS_SAP_CONTACT_KEY, id)
+      else localStorage.removeItem(VIEW_AS_SAP_CONTACT_KEY)
+    } catch { /* ignore */ }
+    setViewAsSapContactIdState(id || null)
+  }, [])
+
+  // Effective SAP contact ID: impersonation takes priority
+  const effectiveSapContactId = canSwitchRoles && viewAsSapContactId
+    ? viewAsSapContactId
+    : profile?.sap_contact_id ?? null
 
   const value = {
     session,
@@ -105,7 +127,9 @@ export function AuthProvider({ children }) {
     isBoardMember: !!role && ['super_admin', 'president', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role),
     isMember: role === 'member',
     isSAPContact: role === 'sap_contact',
-    sapContactId: profile?.sap_contact_id ?? null,
+    sapContactId: effectiveSapContactId,
+    viewAsSapContactId,
+    setViewAsSapContactId,
   }
 
   return createElement(AuthContext.Provider, { value }, children)

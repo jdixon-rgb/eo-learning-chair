@@ -4,10 +4,11 @@ import { useSAPStore } from '@/lib/sapStore'
 import { SAP_TIERS, SAP_CONTRIBUTION_TYPES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Building2, User, Globe, GraduationCap, Check } from 'lucide-react'
+import { Building2, User, Globe, GraduationCap, Check, Plus, Trash2, CalendarDays } from 'lucide-react'
 
 export default function SAPProfilePage() {
   const { contact, partner, colleagueContacts } = useSAPContact()
+  const { appearancesForContact, addForumAppearance, deleteForumAppearance } = useSAPStore()
   const { updateContact } = useSAPStore()
 
   const [editing, setEditing] = useState(false)
@@ -204,6 +205,14 @@ export default function SAPProfilePage() {
       </div>
 
       {/* Colleagues */}
+      {/* Forum Appearances */}
+      {contact && <ForumAppearancesSection
+        contactId={contact.id}
+        appearances={appearancesForContact(contact.id)}
+        onAdd={addForumAppearance}
+        onDelete={deleteForumAppearance}
+      />}
+
       {colleagueContacts.length > 1 && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-sm font-bold uppercase tracking-wider text-white/50 mb-3">
@@ -229,6 +238,93 @@ export default function SAPProfilePage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ForumAppearancesSection({ contactId, appearances, onAdd, onDelete }) {
+  const [showForm, setShowForm] = useState(false)
+  const [forumName, setForumName] = useState('')
+  const [date, setDate] = useState('')
+  const [topic, setTopic] = useState('')
+
+  const handleSubmit = () => {
+    if (!forumName.trim()) return
+    onAdd({ sap_contact_id: contactId, forum_name: forumName.trim(), appearance_date: date || null, topic: topic.trim() })
+    setForumName('')
+    setDate('')
+    setTopic('')
+    setShowForm(false)
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-white/50">Forum Appearances</h2>
+        {!showForm && (
+          <Button size="sm" variant="outline" onClick={() => setShowForm(true)}
+            className="text-xs border-white/20 text-white/70 hover:bg-white/10">
+            <Plus className="h-3 w-3 mr-1" /> Add
+          </Button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="space-y-2 mb-4 p-3 rounded-lg border border-indigo-500/20 bg-indigo-500/5">
+          <Input
+            value={forumName}
+            onChange={e => setForumName(e.target.value)}
+            placeholder="Forum name (e.g. Forum 7)"
+            className="bg-white/10 border-white/10 text-white text-sm"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="bg-white/10 border-white/10 text-white text-sm"
+            />
+            <Input
+              value={topic}
+              onChange={e => setTopic(e.target.value)}
+              placeholder="Topic (optional)"
+              className="bg-white/10 border-white/10 text-white text-sm"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSubmit} className="bg-indigo-600 hover:bg-indigo-700 text-xs">Save</Button>
+            <Button size="sm" variant="outline" onClick={() => setShowForm(false)}
+              className="border-white/20 text-white/70 hover:bg-white/10 text-xs">Cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {appearances.length === 0 && !showForm ? (
+        <p className="text-xs text-white/30 italic">No forum appearances recorded yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {[...appearances].sort((a, b) => (b.appearance_date || '').localeCompare(a.appearance_date || '')).map(a => (
+            <div key={a.id} className="flex items-center gap-3 py-1.5 group">
+              <CalendarDays className="h-3.5 w-3.5 text-indigo-300/60 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium">{a.forum_name}</span>
+                {a.topic && <span className="text-xs text-white/40 ml-2">— {a.topic}</span>}
+                {a.appearance_date && (
+                  <span className="text-[10px] text-white/20 ml-2">
+                    {new Date(a.appearance_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => onDelete(a.id)}
+                className="p-0.5 opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 cursor-pointer"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

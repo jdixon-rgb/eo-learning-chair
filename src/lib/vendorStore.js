@@ -116,6 +116,8 @@ export function VendorStoreProvider({ children }) {
       phone: vendor.phone ?? '',
       website: vendor.website ?? '',
       metro_area: vendor.metro_area ?? 'Phoenix Metro',
+      tier: vendor.tier ?? 'community',
+      sap_id: vendor.sap_id ?? null,
       created_by: vendor.created_by ?? null,
       created_at: now,
       updated_at: now,
@@ -202,12 +204,17 @@ export function VendorStoreProvider({ children }) {
       .slice(0, 8)
   }, [vendors])
 
+  const vendorForSAP = useCallback((sapId) => {
+    return vendors.find(v => v.sap_id === sapId) ?? null
+  }, [vendors])
+
   const value = {
     vendors, reviews,
     loading, dbError, clearDbError: () => setDbError(null),
     addVendor, updateVendor, deleteVendor,
     addReview, updateReview, deleteReview, voteReview,
     reviewsForVendor, averageRating, reviewCount, searchVendors,
+    vendorForSAP,
   }
 
   return createElement(VendorStoreContext.Provider, { value }, children)

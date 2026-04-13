@@ -84,6 +84,11 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/engagement/library', icon: BookOpen, label: 'Conversation Library' },
     ],
   },
+  sap_contact: {
+    title: 'SAP Partner',
+    homePath: '/sap-portal',
+    navItems: [], // SAP portal uses its own layout/nav, not the admin sidebar
+  },
 }
 
 // Elect roles map to their parent surface — if someone logs in as president_elect,

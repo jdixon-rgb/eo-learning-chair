@@ -57,6 +57,9 @@ import SAPEventListPage from '@/pages/sap-portal/SAPEventListPage'
 import SAPProfilePage from '@/pages/sap-portal/SAPProfilePage'
 import SAPResourcesPage from '@/pages/sap-portal/SAPResourcesPage'
 import SAPAnnouncementsPage from '@/pages/sap-portal/SAPAnnouncementsPage'
+import SAPLeadsPage from '@/pages/sap-portal/SAPLeadsPage'
+import SAPReviewsPage from '@/pages/sap-portal/SAPReviewsPage'
+import SAPFeedbackPage from '@/pages/sap-portal/SAPFeedbackPage'
 
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
@@ -200,6 +203,9 @@ function App() {
                 <Route path="/sap-portal/events" element={<SAPEventListPage />} />
                 <Route path="/sap-portal/profile" element={<SAPProfilePage />} />
                 <Route path="/sap-portal/resources" element={<SAPResourcesPage />} />
+                <Route path="/sap-portal/leads" element={<SAPLeadsPage />} />
+                <Route path="/sap-portal/reviews" element={<SAPReviewsPage />} />
+                <Route path="/sap-portal/feedback" element={<SAPFeedbackPage />} />
                 <Route path="/sap-portal/announcements" element={<SAPAnnouncementsPage />} />
               </Route>
 

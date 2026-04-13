@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useSAPContact } from '@/lib/useSAPContact'
-import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu, X, Users, Star, MessageSquare } from 'lucide-react'
 import { useState } from 'react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
@@ -9,14 +9,17 @@ import { APP_VERSION } from '@/lib/version'
 const sapNav = [
   { to: '/sap-portal', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/sap-portal/events', icon: CalendarDays, label: 'Events' },
+  { to: '/sap-portal/leads', icon: Users, label: 'Leads' },
+  { to: '/sap-portal/reviews', icon: Star, label: 'Reviews' },
   { to: '/sap-portal/profile', icon: Building2, label: 'Our Profile' },
+  { to: '/sap-portal/feedback', icon: MessageSquare, label: 'Feedback' },
   { to: '/sap-portal/resources', icon: FileText, label: 'Resources' },
   { to: '/sap-portal/announcements', icon: Bell, label: 'Announcements' },
 ]
 
 export default function SAPPortalLayout() {
-  const { profile, signOut } = useAuth()
-  const { partner } = useSAPContact()
+  const { profile, signOut, isImpersonating, viewAsSapContactId, setViewAsSapContactId, setViewAsRole } = useAuth()
+  const { partner, contact } = useSAPContact()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -114,6 +117,23 @@ export default function SAPPortalLayout() {
           </div>
         )}
       </header>
+
+      {/* Impersonation banner */}
+      {isImpersonating && viewAsSapContactId && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <span className="text-xs text-amber-300">
+              Viewing as <strong>{contact?.name}</strong> — {partner?.name}
+            </span>
+            <button
+              onClick={() => { setViewAsSapContactId(null); setViewAsRole(null); navigate('/super-admin') }}
+              className="text-xs text-amber-300 hover:text-amber-200 underline cursor-pointer"
+            >
+              Exit Preview
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">

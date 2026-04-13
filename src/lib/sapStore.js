@@ -28,6 +28,9 @@ export function SAPStoreProvider({ children }) {
 
   const [partners, setPartners] = useState(cached?.partners ?? mockSAPs)
   const [contacts, setContacts] = useState(cached?.contacts ?? mockSAPContacts)
+  const [connectRequests, setConnectRequests] = useState(cached?.connectRequests ?? [])
+  const [forumAppearances, setForumAppearances] = useState(cached?.forumAppearances ?? [])
+  const [chapterFeedback, setChapterFeedback] = useState(cached?.chapterFeedback ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -36,8 +39,8 @@ export function SAPStoreProvider({ children }) {
   // Persist
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { partners, contacts })
-  }, [activeChapterId, partners, contacts])
+    saveCache(activeChapterId, { partners, contacts, connectRequests, forumAppearances, chapterFeedback })
+  }, [activeChapterId, partners, contacts, connectRequests, forumAppearances, chapterFeedback])
 
   // Hydrate from Supabase when chapter changes
   useEffect(() => {
@@ -177,6 +180,86 @@ export function SAPStoreProvider({ children }) {
     dbWrite(() => deleteRow('sap_contacts', id), 'delete:sap_contacts')
   }, [dbWrite])
 
+  // ── Connect Requests ──────────────────────────────────────────
+  const addConnectRequest = useCallback((req) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      member_id: req.member_id,
+      sap_id: req.sap_id,
+      member_name: req.member_name ?? '',
+      member_company: req.member_company ?? '',
+      message: req.message ?? '',
+      status: 'pending',
+      created_at: now,
+      updated_at: now,
+    }
+    setConnectRequests(prev => [...prev, row])
+    dbWrite(() => insertRow('sap_connect_requests', row), 'insert:sap_connect_requests')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateConnectRequest = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setConnectRequests(prev => prev.map(r => (r.id === id ? { ...r, ...updates } : r)))
+    dbWrite(() => updateRow('sap_connect_requests', id, updates), 'update:sap_connect_requests')
+  }, [dbWrite])
+
+  const connectRequestsForSAP = useCallback((sapId) => {
+    return connectRequests.filter(r => r.sap_id === sapId)
+  }, [connectRequests])
+
+  // ── Forum Appearances ────────────────────────────────────────
+  const addForumAppearance = useCallback((appearance) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      sap_contact_id: appearance.sap_contact_id,
+      forum_name: appearance.forum_name ?? '',
+      appearance_date: appearance.appearance_date ?? null,
+      topic: appearance.topic ?? '',
+      created_at: now,
+    }
+    setForumAppearances(prev => [...prev, row])
+    dbWrite(() => insertRow('sap_forum_appearances', row), 'insert:sap_forum_appearances')
+    return row
+  }, [dbWrite])
+
+  const deleteForumAppearance = useCallback((id) => {
+    setForumAppearances(prev => prev.filter(a => a.id !== id))
+    dbWrite(() => deleteRow('sap_forum_appearances', id), 'delete:sap_forum_appearances')
+  }, [dbWrite])
+
+  const appearancesForContact = useCallback((contactId) => {
+    return forumAppearances.filter(a => a.sap_contact_id === contactId)
+  }, [forumAppearances])
+
+  const appearancesForSAP = useCallback((sapId) => {
+    const contactIds = contacts.filter(c => c.sap_id === sapId).map(c => c.id)
+    return forumAppearances.filter(a => contactIds.includes(a.sap_contact_id))
+  }, [forumAppearances, contacts])
+
+  // ── Chapter Feedback ─────────────────────────────────────────
+  const addChapterFeedback = useCallback((fb) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      sap_contact_id: fb.is_anonymous ? null : fb.sap_contact_id,
+      sap_id: fb.sap_id,
+      rating: fb.rating,
+      feedback_text: fb.feedback_text ?? '',
+      is_anonymous: fb.is_anonymous ?? false,
+      created_at: now,
+    }
+    setChapterFeedback(prev => [...prev, row])
+    dbWrite(() => insertRow('sap_chapter_feedback', row), 'insert:sap_chapter_feedback')
+    return row
+  }, [dbWrite])
+
   // ── Helpers ───────────────────────────────────────────────────
   const contactsForPartner = useCallback((sapId) => {
     return contacts.filter(c => c.sap_id === sapId)
@@ -191,11 +274,14 @@ export function SAPStoreProvider({ children }) {
   }, [partners])
 
   const value = {
-    partners, contacts,
+    partners, contacts, connectRequests, forumAppearances, chapterFeedback,
     loading, dbError, clearDbError: () => setDbError(null),
     addPartner, updatePartner, deletePartner,
     addContact, updateContact, deleteContact,
     contactsForPartner, primaryContact, partnersByTier,
+    addConnectRequest, updateConnectRequest, connectRequestsForSAP,
+    addForumAppearance, deleteForumAppearance, appearancesForContact, appearancesForSAP,
+    addChapterFeedback,
   }
 
   return createElement(SAPStoreContext.Provider, { value }, children)

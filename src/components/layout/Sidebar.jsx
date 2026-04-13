@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
 import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
+import { useSAPStore } from '@/lib/sapStore'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import {
@@ -42,8 +43,9 @@ const boardItems = [
 ]
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
-  const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole } = useAuth()
+  const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId } = useAuth()
   const { activeChapter } = useChapter()
+  const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
   const navigate = useNavigate()
 
   // Look up the chair-role config for the *effective* role.
@@ -153,6 +155,26 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
               ))}
             </select>
+            {/* SAP contact picker — when viewing as SAP Partner */}
+            {viewAsRole === 'sap_contact' && (
+              <div className="mt-2">
+                <label className="text-[10px] text-white/30 mb-0.5 block">as contact</label>
+                <select
+                  value={viewAsSapContactId || ''}
+                  onChange={e => {
+                    setViewAsSapContactId(e.target.value || null)
+                    navigate('/sap-portal')
+                  }}
+                  className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                >
+                  <option value="">— pick a contact —</option>
+                  {sapContacts.map(c => {
+                    const p = sapPartners.find(sp => sp.id === c.sap_id)
+                    return <option key={c.id} value={c.id}>{c.name}{p ? ` (${p.name})` : ''}</option>
+                  })}
+                </select>
+              </div>
+            )}
             {isImpersonating && (
               <button
                 onClick={() => {

@@ -1,10 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
+import { useSAPStore } from '@/lib/sapStore'
 import {
   Store, Plus, Star, Search, X, ThumbsUp, ThumbsDown,
-  ExternalLink, Phone, MapPin, ChevronDown, Pencil, Trash2,
+  ExternalLink, Phone, MapPin, ChevronDown, Pencil, Trash2, Send,
 } from 'lucide-react'
 
 export default function VendorsPage() {
@@ -16,6 +17,7 @@ export default function VendorsPage() {
     addReview, updateReview, deleteReview, voteReview,
     reviewsForVendor, averageRating, reviewCount, searchVendors,
   } = useVendorStore()
+  const { addConnectRequest, appearancesForSAP } = useSAPStore()
 
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
@@ -24,6 +26,19 @@ export default function VendorsPage() {
   const [selectedVendor, setSelectedVendor] = useState(null)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [connectSent, setConnectSent] = useState(new Set())
+
+  const handleConnect = useCallback((vendor, message) => {
+    if (!currentMember || !vendor.sap_id) return
+    addConnectRequest({
+      member_id: user?.id,
+      sap_id: vendor.sap_id,
+      member_name: currentMember.name || '',
+      member_company: currentMember.company || '',
+      message,
+    })
+    setConnectSent(prev => new Set([...prev, vendor.id]))
+  }, [currentMember, user, addConnectRequest])
 
   // Find current member
   const email = user?.email
@@ -45,8 +60,11 @@ export default function VendorsPage() {
         v.category.toLowerCase().includes(q)
       )
     }
-    // Sort by average rating descending, then name
+    // SAP partners sort first, then by average rating descending, then name
     list.sort((a, b) => {
+      const aSAP = a.tier === 'sap_partner' ? 1 : 0
+      const bSAP = b.tier === 'sap_partner' ? 1 : 0
+      if (bSAP !== aSAP) return bSAP - aSAP
       const ra = averageRating(a.id)
       const rb = averageRating(b.id)
       if (rb !== ra) return rb - ra
@@ -159,6 +177,9 @@ export default function VendorsPage() {
           chapterMembers={chapterMembers}
           isAdmin={isAdmin || isSuperAdmin}
           userId={user?.id}
+          onConnect={handleConnect}
+          connectSent={connectSent.has(selectedVendor.id)}
+          forumAppearanceCount={selectedVendor.sap_id ? appearancesForSAP(selectedVendor.sap_id).length : 0}
           onClose={() => { setSelectedVendor(null); setShowReviewForm(false) }}
           onEdit={() => { setEditingVendor(selectedVendor); setShowAddVendor(true); setSelectedVendor(null) }}
           onDelete={() => setDeleteConfirm(selectedVendor)}
@@ -247,13 +268,25 @@ function CategoryBadge({ category }) {
 }
 
 function VendorCard({ vendor, avgRating, numReviews, onClick }) {
+  const isSAP = vendor.tier === 'sap_partner'
   return (
     <button
       onClick={onClick}
-      className="text-left w-full p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/[0.07] transition-all"
+      className={`text-left w-full p-5 rounded-2xl transition-all ${
+        isSAP
+          ? 'bg-indigo-500/5 border border-indigo-500/30 hover:border-indigo-500/50 hover:bg-indigo-500/10'
+          : 'bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/[0.07]'
+      }`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-semibold text-white truncate">{vendor.name}</h3>
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="font-semibold text-white truncate">{vendor.name}</h3>
+          {isSAP && (
+            <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 uppercase tracking-wider">
+              Strategic Partner
+            </span>
+          )}
+        </div>
         <CategoryBadge category={vendor.category} />
       </div>
       <div className="flex items-center gap-2 mb-3">
@@ -408,7 +441,10 @@ function VendorDetailModal({
   onClose, onEdit, onDelete,
   showReviewForm, setShowReviewForm,
   onAddReview, onUpdateReview, onDeleteReview, onVote,
+  onConnect, connectSent, forumAppearanceCount,
 }) {
+  const [connectMsg, setConnectMsg] = useState('')
+  const [showConnectForm, setShowConnectForm] = useState(false)
   const canEdit = isAdmin || vendor.created_by === userId
   const hasReviewed = currentMember && reviews.some(r => r.chapter_member_id === currentMember.id)
 
@@ -459,6 +495,55 @@ function VendorDetailModal({
             </p>
           )}
         </div>
+
+        {/* SAP partner extras */}
+        {vendor.tier === 'sap_partner' && (
+          <div className="space-y-3">
+            {forumAppearanceCount > 0 && (
+              <p className="text-xs text-indigo-300 flex items-center gap-1.5">
+                Spoken at {forumAppearanceCount} forum{forumAppearanceCount !== 1 ? 's' : ''}
+              </p>
+            )}
+            {currentMember && !connectSent && !showConnectForm && (
+              <button
+                onClick={() => setShowConnectForm(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 text-white text-sm font-medium transition-colors cursor-pointer"
+              >
+                <Send className="h-4 w-4" /> Connect with {vendor.name}
+              </button>
+            )}
+            {showConnectForm && !connectSent && (
+              <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 space-y-2">
+                <textarea
+                  value={connectMsg}
+                  onChange={e => setConnectMsg(e.target.value)}
+                  placeholder="Optional message — why do you want to connect?"
+                  className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-indigo-500/30 resize-none"
+                  rows={2}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { onConnect(vendor, connectMsg); setShowConnectForm(false) }}
+                    className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 cursor-pointer"
+                  >
+                    Send Request
+                  </button>
+                  <button
+                    onClick={() => setShowConnectForm(false)}
+                    className="px-3 py-1.5 text-xs text-white/50 hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {connectSent && (
+              <p className="text-xs text-green-400 flex items-center gap-1.5">
+                <Send className="h-3 w-3" /> Connect request sent!
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Divider */}
         <div className="border-t border-white/10" />

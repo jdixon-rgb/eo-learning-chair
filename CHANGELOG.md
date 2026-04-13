@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.51.0 — 2026-04-12
+
+### SAP Partner Portal V2 — Premium Vendors, Leads, Feedback, Reviews
+- **Premium vendor tier**: SAP partners surface in the Vendor Exchange as "Strategic Partners" with indigo badge, sorted above community vendors, same review/rating system
+- **Connect requests**: Members can send connect requests to SAP partners from the Vendor Exchange with an optional message; SAP contacts see incoming leads in a new "Leads" page with status management (pending/contacted/closed)
+- **Forum speaking history**: SAP contacts can log forums they've spoken at (name, date, topic); count appears on their vendor card in the Vendor Exchange
+- **Chapter feedback**: SAP contacts can rate the chapter (1-5 stars) and provide recommendations; anonymous option routes feedback to the Strategic Alliances Chair only
+- **Reviews page**: SAP contacts see all member reviews of their company (read-only, reviewer names anonymized as "EO Member")
+- **Super admin preview**: "SAP Partner" in role switcher with secondary contact picker; impersonation banner in SAP portal shows who you're viewing as
+- Migrations 036-039: vendor tier/sap_id columns, connect requests table, forum appearances table, chapter feedback table
+
+---
+
 ## v1.50.0 — 2026-04-12
 
 ### SAP Partner Portal
