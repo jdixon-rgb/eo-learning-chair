@@ -55,11 +55,7 @@ export default function SuperAdminDashboard() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="text-center p-2 rounded-lg bg-muted">
-                <p className="text-sm font-bold">{formatCurrency(chapter.total_budget)}</p>
-                <p className="text-[10px] text-muted-foreground">Budget</p>
-              </div>
+            <div className="mt-4">
               <div className="text-center p-2 rounded-lg bg-muted">
                 <p className="text-sm font-bold">
                   {MONTH_NAMES[chapter.fiscal_year_start] || 'N/A'}
