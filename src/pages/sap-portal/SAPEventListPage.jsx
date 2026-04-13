@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { useSAPContact } from '@/lib/useSAPContact'
-import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { EVENT_TYPES } from '@/lib/constants'
 import { CalendarDays, MapPin, Check, X as XIcon } from 'lucide-react'
@@ -19,8 +18,7 @@ function saveRsvp(eventId, contactId, status) {
 
 export default function SAPEventListPage() {
   const { sapContactId } = useAuth()
-  const { partnerEvents } = useSAPContact()
-  const { events } = useStore()
+  const { partnerEvents, sapVisibleEvents } = useSAPContact()
   const [rsvps, setRsvps] = useState(loadRsvps)
   const [showAll, setShowAll] = useState(false)
 
@@ -37,9 +35,10 @@ export default function SAPEventListPage() {
     .filter(e => e.event_date && new Date(e.event_date) < now)
     .sort((a, b) => new Date(b.event_date) - new Date(a.event_date))
 
-  // Full chapter calendar (all future events, read-only, no RSVP)
+  // SAP-visible events calendar (only events marked open to SAPs, excluding ones they're already invited to)
+  const partnerEventIds = new Set(partnerEvents.map(e => e.id))
   const allUpcoming = showAll
-    ? events.filter(e => e.event_date && new Date(e.event_date) >= now).sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+    ? sapVisibleEvents.filter(e => e.event_date && new Date(e.event_date) >= now && !partnerEventIds.has(e.id)).sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
     : []
 
   const EventCard = ({ event, canRsvp }) => {
@@ -130,11 +129,11 @@ export default function SAPEventListPage() {
           onClick={() => setShowAll(!showAll)}
           className="text-xs text-indigo-300 hover:text-indigo-200 underline cursor-pointer"
         >
-          {showAll ? 'Hide full chapter calendar' : 'View full chapter calendar'}
+          {showAll ? 'Hide chapter calendar' : 'View other open events'}
         </button>
         {showAll && allUpcoming.length > 0 && (
           <div className="space-y-3 mt-4">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-white/30">All Chapter Events</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-white/30">Other Open Events</h2>
             {allUpcoming.map(e => (
               <div key={e.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
                 <h3 className="text-sm font-medium text-white/70">{e.title}</h3>

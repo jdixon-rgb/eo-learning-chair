@@ -22,7 +22,7 @@ export function useSAPContact() {
     [partners, contact],
   )
 
-  // Events where this partner's ID is in event.sap_ids
+  // Events where this partner's ID is in event.sap_ids (specifically invited)
   const partnerEvents = useMemo(
     () =>
       partner
@@ -31,11 +31,17 @@ export function useSAPContact() {
     [events, partner],
   )
 
+  // All events open to SAP partners (for the calendar view)
+  const sapVisibleEvents = useMemo(
+    () => events.filter(e => e.open_to_saps),
+    [events],
+  )
+
   // All contacts at the same partner company
   const colleagueContacts = useMemo(
     () => (contact ? contacts.filter(c => c.sap_id === contact.sap_id) : []),
     [contacts, contact],
   )
 
-  return { contact, partner, partnerEvents, colleagueContacts }
+  return { contact, partner, partnerEvents, sapVisibleEvents, colleagueContacts }
 }

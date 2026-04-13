@@ -373,11 +373,26 @@ export default function EventDetailPage() {
 
               {/* Strategic Alliance Partners */}
               <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
-                <div className="flex items-center gap-2">
-                  <Handshake className="h-4 w-4 text-eo-coral" />
-                  <h3 className="text-sm font-semibold">Strategic Alliance Partners</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Handshake className="h-4 w-4 text-eo-coral" />
+                    <h3 className="text-sm font-semibold">Strategic Alliance Partners</h3>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <span className="text-[11px] text-muted-foreground">{event.open_to_saps ? 'Open to SAPs' : 'Members only'}</span>
+                    <button
+                      onClick={() => updateEvent(id, { open_to_saps: !event.open_to_saps })}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${event.open_to_saps ? 'bg-eo-blue' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${event.open_to_saps ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </label>
                 </div>
-                <p className="text-[11px] text-muted-foreground">SAPs are sponsors who support EO and can run workshops or contribute to events.</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {event.open_to_saps
+                    ? 'SAP partners can see this event and be invited to attend or present.'
+                    : 'This event is members only — SAP partners will not see it in their portal.'}
+                </p>
 
                 {/* Current SAPs for this event */}
                 {(() => {
