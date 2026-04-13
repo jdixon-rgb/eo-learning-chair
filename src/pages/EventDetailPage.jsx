@@ -379,19 +379,19 @@ export default function EventDetailPage() {
                     <h3 className="text-sm font-semibold">Strategic Alliance Partners</h3>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <span className="text-[11px] text-muted-foreground">{event.open_to_saps ? 'Open to SAPs' : 'Members only'}</span>
+                    <span className="text-[11px] text-muted-foreground">{event.open_to_saps === false ? 'Members only' : 'Open to SAPs'}</span>
                     <button
-                      onClick={() => updateEvent(id, { open_to_saps: !event.open_to_saps })}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${event.open_to_saps ? 'bg-eo-blue' : 'bg-gray-300'}`}
+                      onClick={() => updateEvent(id, { open_to_saps: event.open_to_saps === false ? true : false })}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${event.open_to_saps === false ? 'bg-gray-300' : 'bg-eo-blue'}`}
                     >
-                      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${event.open_to_saps ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${event.open_to_saps === false ? 'translate-x-0.5' : 'translate-x-4.5'}`} />
                     </button>
                   </label>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  {event.open_to_saps
-                    ? 'SAP partners can see this event and be invited to attend or present.'
-                    : 'This event is members only — SAP partners will not see it in their portal.'}
+                  {event.open_to_saps === false
+                    ? 'This event is members only — SAP partners will not see it in their portal.'
+                    : 'SAP partners can see this event and be invited to attend or present.'}
                 </p>
 
                 {/* Current SAP engagements for this event */}

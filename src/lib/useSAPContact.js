@@ -33,7 +33,7 @@ export function useSAPContact() {
 
   // All events open to SAP partners (for the calendar view)
   const sapVisibleEvents = useMemo(
-    () => events.filter(e => e.open_to_saps),
+    () => events.filter(e => e.open_to_saps !== false),
     [events],
   )
 
