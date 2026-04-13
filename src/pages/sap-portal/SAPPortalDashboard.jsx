@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useSAPContact } from '@/lib/useSAPContact'
 import { SAP_TIERS } from '@/lib/constants'
-import { CalendarDays, Building2, FileText, Bell, GraduationCap, ArrowRight } from 'lucide-react'
+import { useStore } from '@/lib/store'
+import { CalendarDays, Building2, FileText, Bell, GraduationCap, ArrowRight, Mic } from 'lucide-react'
 
 const quickLinks = [
   { to: '/sap-portal/events', icon: CalendarDays, label: 'Events', desc: 'See events you\'re invited to' },
@@ -13,17 +14,25 @@ const quickLinks = [
 
 export default function SAPPortalDashboard() {
   const { profile } = useAuth()
-  const { contact, partner, partnerEvents } = useSAPContact()
+  const { contact, partner, partnerEvents, speakingEngagements } = useSAPContact()
+  const { events } = useStore()
 
   const tier = SAP_TIERS.find(t => t.id === partner?.tier)
   const firstName = (contact?.name || profile?.full_name || 'Partner').split(' ')[0]
 
-  // Next upcoming event
   const now = new Date()
+
+  // Next speaking engagement
+  const nextSpeaking = speakingEngagements
+    .map(eng => ({ ...eng, event: events.find(e => e.id === eng.event_id) }))
+    .filter(eng => eng.event?.event_date && new Date(eng.event.event_date) >= now)
+    .sort((a, b) => new Date(a.event.event_date) - new Date(b.event.event_date))[0]
+
+  // Next upcoming event (any type)
   const upcomingEvents = partnerEvents
     .filter(e => e.event_date && new Date(e.event_date) >= now)
     .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
-  const nextEvent = upcomingEvents[0]
+  const nextEvent = nextSpeaking ? null : upcomingEvents[0]
 
   return (
     <div className="space-y-8">
@@ -63,19 +72,39 @@ export default function SAPPortalDashboard() {
         )}
       </div>
 
-      {/* Next Event */}
-      {nextEvent && (
+      {/* Next Speaking Engagement */}
+      {nextSpeaking && (
         <Link to="/sap-portal/events" className="block rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-5 hover:bg-indigo-500/15 transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/60">Next Event</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/60 flex items-center gap-1">
+                <Mic className="h-3 w-3" /> Next Speaking Engagement
+              </p>
+              <h3 className="text-lg font-semibold mt-1">{nextSpeaking.event?.title}</h3>
+              {nextSpeaking.topic && <p className="text-sm text-indigo-300/70 mt-0.5">{nextSpeaking.topic}</p>}
+              <p className="text-sm text-white/50 mt-0.5">
+                {nextSpeaking.event?.event_date && new Date(nextSpeaking.event.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                {nextSpeaking.time_slot && ` · ${nextSpeaking.time_slot}`}
+              </p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-indigo-300/60 shrink-0" />
+          </div>
+        </Link>
+      )}
+
+      {/* Next Event (attending) */}
+      {nextEvent && (
+        <Link to="/sap-portal/events" className="block rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition-colors">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Next Event</p>
               <h3 className="text-lg font-semibold mt-1">{nextEvent.title}</h3>
               <p className="text-sm text-white/50 mt-0.5">
                 {new Date(nextEvent.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {nextEvent.event_time && ` at ${nextEvent.event_time}`}
               </p>
             </div>
-            <ArrowRight className="h-5 w-5 text-indigo-300/60 shrink-0" />
+            <ArrowRight className="h-5 w-5 text-white/20 shrink-0" />
           </div>
         </Link>
       )}

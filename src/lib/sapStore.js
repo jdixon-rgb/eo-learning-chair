@@ -31,6 +31,7 @@ export function SAPStoreProvider({ children }) {
   const [connectRequests, setConnectRequests] = useState(cached?.connectRequests ?? [])
   const [forumAppearances, setForumAppearances] = useState(cached?.forumAppearances ?? [])
   const [chapterFeedback, setChapterFeedback] = useState(cached?.chapterFeedback ?? [])
+  const [engagements, setEngagements] = useState(cached?.engagements ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -39,8 +40,8 @@ export function SAPStoreProvider({ children }) {
   // Persist
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { partners, contacts, connectRequests, forumAppearances, chapterFeedback })
-  }, [activeChapterId, partners, contacts, connectRequests, forumAppearances, chapterFeedback])
+    saveCache(activeChapterId, { partners, contacts, connectRequests, forumAppearances, chapterFeedback, engagements })
+  }, [activeChapterId, partners, contacts, connectRequests, forumAppearances, chapterFeedback, engagements])
 
   // Hydrate from Supabase when chapter changes
   useEffect(() => {
@@ -260,6 +261,56 @@ export function SAPStoreProvider({ children }) {
     return row
   }, [dbWrite])
 
+  // ── Event Engagements ─────────────────────────────────────────
+  const addEngagement = useCallback((eng) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      event_id: eng.event_id,
+      sap_id: eng.sap_id,
+      sap_contact_id: eng.sap_contact_id ?? null,
+      chapter_id: activeChapterId,
+      role: eng.role ?? 'attending',
+      topic: eng.topic ?? '',
+      topic_description: eng.topic_description ?? '',
+      time_slot: eng.time_slot ?? '',
+      run_of_show_notes: eng.run_of_show_notes ?? '',
+      av_needs: eng.av_needs ?? '',
+      materials_notes: eng.materials_notes ?? '',
+      materials_url: eng.materials_url ?? '',
+      status: eng.status ?? 'invited',
+      created_at: now,
+      updated_at: now,
+    }
+    setEngagements(prev => [...prev, row])
+    dbWrite(() => insertRow('sap_event_engagements', row), 'insert:sap_event_engagements')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateEngagement = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setEngagements(prev => prev.map(e => (e.id === id ? { ...e, ...updates } : e)))
+    dbWrite(() => updateRow('sap_event_engagements', id, updates), 'update:sap_event_engagements')
+  }, [dbWrite])
+
+  const deleteEngagement = useCallback((id) => {
+    setEngagements(prev => prev.filter(e => e.id !== id))
+    dbWrite(() => deleteRow('sap_event_engagements', id), 'delete:sap_event_engagements')
+  }, [dbWrite])
+
+  const engagementsForEvent = useCallback((eventId) => {
+    return engagements.filter(e => e.event_id === eventId)
+  }, [engagements])
+
+  const engagementsForContact = useCallback((contactId) => {
+    return engagements.filter(e => e.sap_contact_id === contactId)
+  }, [engagements])
+
+  const engagementsForSAP = useCallback((sapId) => {
+    return engagements.filter(e => e.sap_id === sapId)
+  }, [engagements])
+
   // ── Helpers ───────────────────────────────────────────────────
   const contactsForPartner = useCallback((sapId) => {
     return contacts.filter(c => c.sap_id === sapId)
@@ -282,6 +333,8 @@ export function SAPStoreProvider({ children }) {
     addConnectRequest, updateConnectRequest, connectRequestsForSAP,
     addForumAppearance, deleteForumAppearance, appearancesForContact, appearancesForSAP,
     addChapterFeedback,
+    engagements, addEngagement, updateEngagement, deleteEngagement,
+    engagementsForEvent, engagementsForContact, engagementsForSAP,
   }
 
   return createElement(SAPStoreContext.Provider, { value }, children)

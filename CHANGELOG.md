@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.52.0 — 2026-04-12
+
+### SAP Event Engagements — Attending vs Presenting
+- **New `sap_event_engagements` table** — tracks each SAP partner's role at an event (attending or presenting) with full logistics fields for presenters
+- **Admin event detail** — role selector (Attending/Presenting) per SAP, with expandable logistics fields: topic, description, time slot, AV needs, run of show, materials. Status badges (Invited/Confirmed/Declined)
+- **SAP portal events page** — split into Speaking Engagements (with editable logistics and Confirm/Decline) and Invited Events (with RSVP). Partners fill in their side, chapter reviews
+- **SAP portal dashboard** — distinguishes "Next Speaking Engagement" (with mic icon, indigo styling, topic preview) from regular event invitations
+- Migration `040_sap_event_engagements.sql` with RLS for SAP contacts, admins, and authenticated users
+
+---
+
 ## v1.51.0 — 2026-04-12
 
 ### SAP Partner Portal V2 — Premium Vendors, Leads, Feedback, Reviews

@@ -9,7 +9,7 @@ import { useStore } from './store'
  */
 export function useSAPContact() {
   const { sapContactId } = useAuth()
-  const { contacts, partners } = useSAPStore()
+  const { contacts, partners, engagements } = useSAPStore()
   const { events } = useStore()
 
   const contact = useMemo(
@@ -43,5 +43,21 @@ export function useSAPContact() {
     [contacts, contact],
   )
 
-  return { contact, partner, partnerEvents, sapVisibleEvents, colleagueContacts }
+  // Engagements for this partner
+  const partnerEngagements = useMemo(
+    () => (partner ? engagements.filter(e => e.sap_id === partner.id) : []),
+    [engagements, partner],
+  )
+
+  const speakingEngagements = useMemo(
+    () => partnerEngagements.filter(e => e.role === 'presenting'),
+    [partnerEngagements],
+  )
+
+  const attendingEngagements = useMemo(
+    () => partnerEngagements.filter(e => e.role === 'attending'),
+    [partnerEngagements],
+  )
+
+  return { contact, partner, partnerEvents, sapVisibleEvents, colleagueContacts, partnerEngagements, speakingEngagements, attendingEngagements }
 }

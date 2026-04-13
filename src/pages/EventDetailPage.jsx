@@ -31,7 +31,7 @@ export default function EventDetailPage() {
     getOrCreateChecklist, updateChecklist,
   } = useStore()
 
-  const { partners: sapPartners, contactsForPartner } = useSAPStore()
+  const { partners: sapPartners, contactsForPartner, engagementsForEvent, addEngagement, updateEngagement, deleteEngagement } = useSAPStore()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
   const [selectedSapId, setSelectedSapId] = useState('')
@@ -394,85 +394,112 @@ export default function EventDetailPage() {
                     : 'This event is members only — SAP partners will not see it in their portal.'}
                 </p>
 
-                {/* Current SAPs for this event */}
+                {/* Current SAP engagements for this event */}
                 {(() => {
                   const allPartners = sapPartners.length > 0 ? sapPartners : (saps || [])
-                  const eventSAPs = (event.sap_ids || []).map(sid => allPartners.find(s => s.id === sid)).filter(Boolean)
-                  const availableSAPs = allPartners.filter(s => (s.status || 'active') === 'active' && !(event.sap_ids || []).includes(s.id))
-                  const sapContactMap = event.sap_contact_ids || {}
+                  const eventEngs = engagementsForEvent(id)
+                  const linkedSapIds = new Set(eventEngs.map(e => e.sap_id))
+                  const availableSAPs = allPartners.filter(s => (s.status || 'active') === 'active' && !linkedSapIds.has(s.id))
+                  const selectedSapContacts = selectedSapId ? contactsForPartner(selectedSapId) : []
 
-                  const addSAPToEvent = (sapId, contactId) => {
+                  const handleAddSAP = (sapId, contactId, role) => {
                     if (!sapId) return
+                    addEngagement({ event_id: id, sap_id: sapId, sap_contact_id: contactId || null, role: role || 'attending' })
+                    // Keep sap_ids in sync for backwards compat
                     const current = event.sap_ids || []
-                    if (!current.includes(sapId)) {
-                      const updates = { sap_ids: [...current, sapId] }
-                      if (contactId) {
-                        updates.sap_contact_ids = { ...sapContactMap, [sapId]: contactId }
-                      }
-                      updateEvent(id, updates)
-                    }
+                    if (!current.includes(sapId)) updateEvent(id, { sap_ids: [...current, sapId] })
                     setSelectedSapId('')
                   }
 
-                  const removeSAPFromEvent = (sapId) => {
-                    const { [sapId]: _, ...restContacts } = sapContactMap
-                    updateEvent(id, {
-                      sap_ids: (event.sap_ids || []).filter(sid => sid !== sapId),
-                      sap_contact_ids: restContacts,
-                    })
+                  const handleRemoveSAP = (eng) => {
+                    deleteEngagement(eng.id)
+                    updateEvent(id, { sap_ids: (event.sap_ids || []).filter(sid => sid !== eng.sap_id) })
                   }
-
-                  const updateSAPContact = (sapId, contactId) => {
-                    if (contactId) {
-                      updateEvent(id, { sap_contact_ids: { ...sapContactMap, [sapId]: contactId } })
-                    } else {
-                      const { [sapId]: _, ...restContacts } = sapContactMap
-                      updateEvent(id, { sap_contact_ids: restContacts })
-                    }
-                  }
-
-                  const selectedSapContacts = selectedSapId ? contactsForPartner(selectedSapId) : []
 
                   return (
                     <>
-                      {eventSAPs.length > 0 ? (
-                        <div className="space-y-2">
-                          {eventSAPs.map(sap => {
-                            const contacts = contactsForPartner(sap.id)
-                            const assignedContactId = sapContactMap[sap.id]
-                            const assignedContact = contacts.find(c => c.id === assignedContactId)
+                      {eventEngs.length > 0 ? (
+                        <div className="space-y-3">
+                          {eventEngs.map(eng => {
+                            const sap = allPartners.find(s => s.id === eng.sap_id)
+                            const contacts = contactsForPartner(eng.sap_id)
+                            const assignedContact = contacts.find(c => c.id === eng.sap_contact_id)
+                            if (!sap) return null
                             return (
-                              <div key={sap.id} className="p-3 rounded-lg border border-eo-coral/30 bg-eo-coral/5">
+                              <div key={eng.id} className={`p-3 rounded-lg border ${eng.role === 'presenting' ? 'border-indigo-500/30 bg-indigo-500/5' : 'border-eo-coral/30 bg-eo-coral/5'}`}>
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
-                                      <Building2 className="h-3.5 w-3.5 text-eo-coral" />
+                                      <Building2 className="h-3.5 w-3.5" style={{ color: eng.role === 'presenting' ? '#6366f1' : undefined }} />
                                       <span className="text-sm font-semibold">{sap.name}</span>
+                                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${eng.status === 'confirmed' ? 'bg-green-500/10 text-green-600' : eng.status === 'declined' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-600'}`}>
+                                        {eng.status}
+                                      </span>
                                     </div>
-                                    {sap.contribution_type && (
-                                      <p className="text-xs text-muted-foreground mt-1 capitalize">{sap.contribution_type}: {sap.contribution_description}</p>
-                                    )}
                                   </div>
-                                  <button onClick={() => removeSAPFromEvent(sap.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5 ml-2">
+                                  <button onClick={() => handleRemoveSAP(eng)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5 ml-2">
                                     <X className="h-3 w-3" />
                                   </button>
                                 </div>
-                                {contacts.length > 0 && (
-                                  <div className="mt-2">
-                                    <label className="text-[11px] text-muted-foreground font-medium">Speaker / contact</label>
-                                    <Select
-                                      value={assignedContactId || ''}
-                                      onChange={e => updateSAPContact(sap.id, e.target.value || null)}
-                                      className="text-xs mt-0.5"
-                                    >
-                                      <option value="">Select a person…</option>
-                                      {contacts.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name}{c.role ? ` — ${c.role}` : ''}</option>
-                                      ))}
+                                {/* Role selector + contact */}
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-[11px] text-muted-foreground font-medium">Role</label>
+                                    <Select value={eng.role} onChange={e => updateEngagement(eng.id, { role: e.target.value })} className="text-xs mt-0.5">
+                                      <option value="attending">Attending</option>
+                                      <option value="presenting">Presenting</option>
                                     </Select>
-                                    {assignedContact && assignedContact.email && (
-                                      <p className="text-[11px] text-muted-foreground mt-1">{assignedContact.email}{assignedContact.phone ? ` · ${assignedContact.phone}` : ''}</p>
-                                    )}
+                                  </div>
+                                  {contacts.length > 0 && (
+                                    <div>
+                                      <label className="text-[11px] text-muted-foreground font-medium">Contact</label>
+                                      <Select value={eng.sap_contact_id || ''} onChange={e => updateEngagement(eng.id, { sap_contact_id: e.target.value || null })} className="text-xs mt-0.5">
+                                        <option value="">Select a person…</option>
+                                        {contacts.map(c => (
+                                          <option key={c.id} value={c.id}>{c.name}{c.role ? ` — ${c.role}` : ''}</option>
+                                        ))}
+                                      </Select>
+                                    </div>
+                                  )}
+                                </div>
+                                {assignedContact?.email && (
+                                  <p className="text-[11px] text-muted-foreground mt-1">{assignedContact.email}{assignedContact.phone ? ` · ${assignedContact.phone}` : ''}</p>
+                                )}
+                                {/* Presenting logistics */}
+                                {eng.role === 'presenting' && (
+                                  <div className="mt-3 pt-3 border-t border-indigo-500/20 space-y-2">
+                                    <div>
+                                      <label className="text-[11px] text-muted-foreground font-medium">Topic</label>
+                                      <Input value={eng.topic || ''} onChange={e => updateEngagement(eng.id, { topic: e.target.value })} placeholder="Presentation topic" className="text-xs mt-0.5" />
+                                    </div>
+                                    <div>
+                                      <label className="text-[11px] text-muted-foreground font-medium">Topic Description</label>
+                                      <Textarea value={eng.topic_description || ''} onChange={e => updateEngagement(eng.id, { topic_description: e.target.value })} placeholder="What will be covered..." rows={2} className="text-xs mt-0.5" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="text-[11px] text-muted-foreground font-medium">Time Slot</label>
+                                        <Input value={eng.time_slot || ''} onChange={e => updateEngagement(eng.id, { time_slot: e.target.value })} placeholder="e.g. 2:00 PM - 3:30 PM" className="text-xs mt-0.5" />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] text-muted-foreground font-medium">AV Needs</label>
+                                        <Input value={eng.av_needs || ''} onChange={e => updateEngagement(eng.id, { av_needs: e.target.value })} placeholder="Mic, projector, etc." className="text-xs mt-0.5" />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="text-[11px] text-muted-foreground font-medium">Run of Show Notes</label>
+                                      <Textarea value={eng.run_of_show_notes || ''} onChange={e => updateEngagement(eng.id, { run_of_show_notes: e.target.value })} placeholder="Timing, flow, what comes before/after..." rows={2} className="text-xs mt-0.5" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="text-[11px] text-muted-foreground font-medium">Materials Notes</label>
+                                        <Input value={eng.materials_notes || ''} onChange={e => updateEngagement(eng.id, { materials_notes: e.target.value })} placeholder="Slides, handouts..." className="text-xs mt-0.5" />
+                                      </div>
+                                      <div>
+                                        <label className="text-[11px] text-muted-foreground font-medium">Materials URL</label>
+                                        <Input value={eng.materials_url || ''} onChange={e => updateEngagement(eng.id, { materials_url: e.target.value })} placeholder="https://..." className="text-xs mt-0.5" />
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -485,45 +512,30 @@ export default function EventDetailPage() {
 
                       {availableSAPs.length > 0 && (
                         <div className="space-y-2">
-                          <Select
-                            value={selectedSapId}
-                            onChange={e => setSelectedSapId(e.target.value)}
-                            className="text-xs"
-                          >
+                          <Select value={selectedSapId} onChange={e => setSelectedSapId(e.target.value)} className="text-xs">
                             <option value="">+ Link a SAP to this event...</option>
                             {availableSAPs.map(s => (
                               <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
                           </Select>
-
                           {selectedSapId && (
                             <div className="pl-4 border-l-2 border-eo-coral/30 space-y-2">
                               {selectedSapContacts.length > 0 ? (
                                 <>
-                                  <Select
-                                    value=""
-                                    onChange={e => addSAPToEvent(selectedSapId, e.target.value || null)}
-                                    className="text-xs"
-                                  >
-                                    <option value="">Choose a speaker / contact…</option>
+                                  <Select value="" onChange={e => handleAddSAP(selectedSapId, e.target.value || null, 'attending')} className="text-xs">
+                                    <option value="">Choose a contact…</option>
                                     {selectedSapContacts.map(c => (
                                       <option key={c.id} value={c.id}>{c.name}{c.role ? ` — ${c.role}` : ''}</option>
                                     ))}
                                   </Select>
-                                  <button
-                                    onClick={() => addSAPToEvent(selectedSapId, null)}
-                                    className="text-[11px] text-eo-blue hover:underline"
-                                  >
+                                  <button onClick={() => handleAddSAP(selectedSapId, null, 'attending')} className="text-[11px] text-eo-blue hover:underline cursor-pointer">
                                     Link without choosing a contact
                                   </button>
                                 </>
                               ) : (
                                 <div className="flex items-center gap-2">
                                   <p className="text-[11px] text-muted-foreground italic">No contacts on file.</p>
-                                  <button
-                                    onClick={() => addSAPToEvent(selectedSapId, null)}
-                                    className="text-[11px] text-eo-blue hover:underline"
-                                  >
+                                  <button onClick={() => handleAddSAP(selectedSapId, null, 'attending')} className="text-[11px] text-eo-blue hover:underline cursor-pointer">
                                     Link anyway
                                   </button>
                                 </div>
