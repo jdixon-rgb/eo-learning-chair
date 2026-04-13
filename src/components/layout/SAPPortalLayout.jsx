@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useSAPContact } from '@/lib/useSAPContact'
+import { useSAPStore } from '@/lib/sapStore'
 import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu, X, Users, Star, MessageSquare, ArrowLeft } from 'lucide-react'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { useState } from 'react'
@@ -19,8 +20,9 @@ const sapNav = [
 ]
 
 export default function SAPPortalLayout() {
-  const { profile, signOut, isImpersonating, viewAsSapContactId, setViewAsSapContactId, setViewAsRole } = useAuth()
+  const { profile, signOut, isImpersonating, canSwitchRoles, viewAsSapContactId, setViewAsSapContactId, setViewAsRole } = useAuth()
   const { partner, contact } = useSAPContact()
+  const { partners: allPartners, contacts: allContacts } = useSAPStore()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -129,16 +131,30 @@ export default function SAPPortalLayout() {
         )}
       </header>
 
-      {/* Impersonation banner */}
-      {isImpersonating && viewAsSapContactId && (
+      {/* Admin preview bar — switch contacts or exit */}
+      {canSwitchRoles && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
-          <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <span className="text-xs text-amber-300">
-              Viewing as <strong>{contact?.name}</strong> — {partner?.name}
-            </span>
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <span className="text-[10px] font-bold text-amber-300/60 uppercase tracking-wider shrink-0">Viewing as</span>
+              <select
+                value={viewAsSapContactId || ''}
+                onChange={e => {
+                  setViewAsSapContactId(e.target.value || null)
+                  navigate('/sap-portal')
+                }}
+                className="text-xs bg-white/5 border border-amber-500/20 rounded-lg px-2 py-1 text-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-500/30 max-w-xs"
+              >
+                <option value="">— pick a contact —</option>
+                {allContacts.map(c => {
+                  const p = allPartners.find(sp => sp.id === c.sap_id)
+                  return <option key={c.id} value={c.id}>{c.name}{p ? ` (${p.name})` : ''}</option>
+                })}
+              </select>
+            </div>
             <button
-              onClick={() => { setViewAsSapContactId(null); setViewAsRole(null); navigate('/super-admin') }}
-              className="text-xs text-amber-300 hover:text-amber-200 underline cursor-pointer"
+              onClick={() => { setViewAsSapContactId(null); setViewAsRole(null); navigate('/') }}
+              className="text-xs text-amber-300 hover:text-amber-200 underline cursor-pointer shrink-0"
             >
               Exit Preview
             </button>
