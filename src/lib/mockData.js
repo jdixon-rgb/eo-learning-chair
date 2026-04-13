@@ -342,7 +342,7 @@ export const mockSpeakers = [
     contact_method: 'direct',
     pipeline_stage: 'outreach',
     fit_score: 9,
-    notes: 'Submitted booking request. RELATIONSHIPS theme. SAP Tie-In: Culture Index. Unexpected: Jesse Palmer from The Bachelor. Interactivity: Rose Ceremony + Culture Index Analysis (high level). Marriage can be a challenge — if you treat EVERY DAY like a gift, you can make meaningful progress.',
+    notes: 'Submitted booking request. RELATIONSHIPS theme. Unexpected: Jesse Palmer from The Bachelor. Marriage can be a challenge — if you treat EVERY DAY like a gift, you can make meaningful progress.',
     routing_flexibility: false,
     multi_chapter_interest: false,
   },
@@ -621,7 +621,7 @@ export const mockEvents = [
     actual_attendance: null,
     nps_score: null,
     nps_top_takeaway: null,
-    notes: 'RENEWAL MONTH — critical for retention. Dr. Gary Chapman at The Wrigley Mansion. SAP Tie-In: Culture Index (Jamie Osborn workshop). Unexpected: Jesse Palmer from The Bachelor. Interactivity: Rose Ceremony + Culture Index Analysis.',
+    notes: 'RENEWAL MONTH — critical for retention. Dr. Gary Chapman at The Wrigley Mansion. Unexpected: Jesse Palmer from The Bachelor.',
   },
   {
     id: 'evt-apr',
