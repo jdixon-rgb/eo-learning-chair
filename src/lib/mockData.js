@@ -9,7 +9,7 @@ export const mockChapter = {
   id: uuid(),
   name: 'EO Arizona',
   fiscal_year_start: 8,
-  total_budget: 450000,
+  total_budget: 600000,
   president_theme: 'Every Day',
   president_name: '',
 }

@@ -17,6 +17,14 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.5 — 2026-04-15
+
+### Set chapter and learning chair budgets
+- Chapter total budget set to $600,000, learning chair allocation set to $450,000 for FY 2026-2027
+- Mock data updated to match ($600K chapter budget)
+
+---
+
 ## v1.54.4 — 2026-04-15
 
 ### Fix: Learning Chair budget used wrong role key
