@@ -23,23 +23,23 @@ export default function TourTip({ id }) {
   if (isDismissed(tipId)) return null
 
   return (
-    <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-4 mb-4 flex items-start gap-3">
-      <div className="w-8 h-8 rounded-lg bg-sky-500/15 flex items-center justify-center shrink-0">
-        <Lightbulb className="h-4 w-4 text-sky-500" />
+    <div className="rounded-xl border-2 border-sky-400 bg-sky-50 p-4 mb-4 flex items-start gap-3 shadow-sm">
+      <div className="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center shrink-0">
+        <Lightbulb className="h-4 w-4 text-white" />
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-100">{tip.title}</h3>
-        <p className="text-xs text-sky-800/80 dark:text-sky-200/70 mt-1 leading-relaxed">{tip.body}</p>
+        <h3 className="text-sm font-bold text-sky-900">{tip.title}</h3>
+        <p className="text-sm text-sky-900/80 mt-1 leading-relaxed">{tip.body}</p>
         <button
           onClick={() => dismiss(tipId)}
-          className="mt-2 text-xs font-medium text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer"
+          className="mt-3 text-xs font-semibold text-sky-700 hover:text-sky-900 cursor-pointer underline"
         >
           Got it
         </button>
       </div>
       <button
         onClick={() => dismiss(tipId)}
-        className="text-sky-500/60 hover:text-sky-600 dark:text-sky-400/60 dark:hover:text-sky-300 p-0.5 cursor-pointer shrink-0"
+        className="text-sky-600 hover:text-sky-900 p-0.5 cursor-pointer shrink-0"
         aria-label="Dismiss tip"
       >
         <X className="h-4 w-4" />
