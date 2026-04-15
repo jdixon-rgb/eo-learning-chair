@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.4 — 2026-04-15
+
+### Fix: Learning Chair budget used wrong role key
+- `getChairBudget('learning')` → `getChairBudget('learning_chair')` — was never matching the role assignment, so budget always showed $0
+
+---
+
 ## v1.54.3 — 2026-04-15
 
 ### Fix: Learning Chair dashboard budget shows chair allocation, not chapter total
