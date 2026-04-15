@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.0 — 2026-04-15
+
+### Chapter Executive Director + Chapter Experience Coordinator roles fully built out
+- **Dedicated nav configs** — CED and CEC land on the President Dashboard with a full sidebar: Year Arc, Speakers, Events, Partners, Venues, Chapter Budget, Settings
+- **Role switching enabled** — both staff roles can now view-as any chair role (like super admin and president) for chapter-wide support
+- **Permission gaps filled** — added to `canManageFYBudget`, `ENGAGEMENT_ROLES`, `FINANCE_ROLES`
+- **Route bypass** — both roles pass all ProtectedRoute gates (can access every chapter admin route)
+- **Tour tip welcome** for CED and CEC on the President Dashboard
+
+---
+
 ## v1.53.2 — 2026-04-15
 
 ### Fix: speaker pipeline FK constraint error on new speaker add

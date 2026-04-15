@@ -140,6 +140,14 @@ export const TOUR_CONTENT = {
       title: 'President Dashboard (Preview)',
       body: 'This will be your view next fiscal year. Use the FY selector to toggle between the current year and your incoming year to plan ahead.',
     },
+    chapter_executive_director: {
+      title: 'Welcome, Chapter Executive Director',
+      body: 'You have chapter-wide admin access — every chair module, the FY budget, and settings. Use the role switcher in the sidebar to view the app as any chair when supporting them.',
+    },
+    chapter_experience_coordinator: {
+      title: 'Welcome, Chapter Experience Coordinator',
+      body: 'You have chapter-wide admin access — every chair module, the FY budget, and settings. Use the role switcher in the sidebar to view the app as any chair when supporting them.',
+    },
   },
 
   '/president/budget': {

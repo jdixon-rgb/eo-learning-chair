@@ -13,11 +13,11 @@ export const BOARD_ROLES = ['super_admin', 'president', 'finance_chair', 'board_
 // Roles that can manage board positions, assignments, and chapter settings
 export const SETTINGS_ROLES = ['super_admin', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']
 
-// Engagement Chair scope
-export const ENGAGEMENT_ROLES = ['super_admin', 'engagement_chair']
+// Engagement Chair scope — chapter staff also have access
+export const ENGAGEMENT_ROLES = ['super_admin', 'engagement_chair', 'chapter_executive_director', 'chapter_experience_coordinator']
 
-// Finance Chair scope
-export const FINANCE_ROLES = ['super_admin', 'president', 'finance_chair']
+// Finance Chair scope — chapter staff also have access
+export const FINANCE_ROLES = ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator']
 
 // Feature-level permissions
 export const FEATURE_PERMISSIONS = {
@@ -42,7 +42,7 @@ export const FEATURE_PERMISSIONS = {
   // Engagement Chair module
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance
-  canManageFYBudget:     ['super_admin', 'president', 'finance_chair'],
+  canManageFYBudget:     ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Partners (SAP) — visible to leadership, learning chairs, and staff
   canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
 }

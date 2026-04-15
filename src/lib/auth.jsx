@@ -73,7 +73,8 @@ export function AuthProvider({ children }) {
   const isAdmin = !!role && ['super_admin', 'president', 'finance_chair', 'learning_chair', 'engagement_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
   const isSuperAdmin = role === 'super_admin'
   const isPresident = !!role && ['president', 'president_elect', 'president_elect_elect'].includes(role)
-  const canSwitchRoles = isSuperAdmin || isPresident
+  const isChapterStaff = !!role && ['chapter_executive_director', 'chapter_experience_coordinator'].includes(role)
+  const canSwitchRoles = isSuperAdmin || isPresident || isChapterStaff
 
   // Effective role: super admins and presidents can view as other roles.
   const effectiveRole = canSwitchRoles && viewAsRole ? viewAsRole : role
@@ -126,6 +127,7 @@ export function AuthProvider({ children }) {
     isAdmin,
     isSuperAdmin,
     isPresident,
+    isChapterStaff,
     canSwitchRoles,
     chapterId: profile?.chapter_id ?? null,
     isCommittee: role === 'committee_member',
