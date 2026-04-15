@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.3 — 2026-04-15
+
+### Fix: Learning Chair dashboard budget shows chair allocation, not chapter total
+- Removed fallback to `chapter.total_budget` — budget card now shows only the learning chair's allocated budget from the president's assignment
+
+---
+
 ## v1.54.2 — 2026-04-15
 
 ### President Dashboard budget card shows percentage and total

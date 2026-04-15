@@ -27,7 +27,7 @@ export default function DashboardPage() {
   const { activeFiscalYear } = useFiscalYear()
 
   const theme = activePresidentTheme || chapter.president_theme || ''
-  const learningBudget = getChairBudget('learning') || chapter.total_budget || 0
+  const learningBudget = getChairBudget('learning')
   const remaining = learningBudget - totalBudgeted
 
   // Next upcoming event
