@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.53.0 — 2026-04-15
+
+### Role-specific contextual tour tips
+- **New TourTip component** shows a dismissible, role-tailored banner the first time a user visits a page
+- **Per-role content** in `tourContent.js` — Learning Chair sees different guidance on `/partners` than a Finance Chair would. Covers ~13 routes with content for president, president_elect, learning_chair, engagement_chair, finance_chair, strategic_alliances, board_liaison, chapter_experience_coordinator, chapter_executive_director
+- **LocalStorage-backed dismissal** keyed per user — one-time per tip, never shows again after "Got it"
+- **Reset anytime** — new "Show tour tips" button in the sidebar brings them all back
+- Super admins impersonating a chair see that chair's tips via `effectiveRole`
+
+---
+
 ## v1.52.0 — 2026-04-12
 
 ### SAP Event Engagements — Attending vs Presenting

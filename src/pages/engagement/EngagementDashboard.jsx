@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Compass, UserCheck, BookOpen, Send } from 'lucide-react'
 import { useEngagementStore } from '@/lib/engagementStore'
+import TourTip from '@/components/TourTip'
 
 export default function EngagementDashboard() {
   const { navigators, pairings, resources, broadcasts } = useEngagementStore()
@@ -12,6 +13,7 @@ export default function EngagementDashboard() {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
+      <TourTip />
       <header className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Member Engagement</h1>
         <p className="text-sm text-gray-500 mt-1">

@@ -1,5 +1,6 @@
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import TourTip from '@/components/TourTip'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { formatCurrency } from '@/lib/utils'
@@ -43,6 +44,7 @@ export default function PresidentDashboard() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">

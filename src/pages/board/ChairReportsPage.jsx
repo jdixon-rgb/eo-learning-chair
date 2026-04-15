@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useBoardStore } from '@/lib/boardStore'
 import { FISCAL_MONTHS, REPORT_STATUSES } from '@/lib/constants'
+import TourTip from '@/components/TourTip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Plus, FileText, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
@@ -56,6 +57,7 @@ export default function ChairReportsPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Chair Reports</h1>

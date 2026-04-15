@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useSAPStore } from '@/lib/sapStore'
+import TourTip from '@/components/TourTip'
 import { BUDGET_CATEGORIES, FISCAL_MONTHS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -172,6 +173,7 @@ export default function BudgetPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Budget</h1>

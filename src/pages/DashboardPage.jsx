@@ -3,6 +3,7 @@ import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
+import TourTip from '@/components/TourTip'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, PIPELINE_STAGES, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
@@ -55,6 +56,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>

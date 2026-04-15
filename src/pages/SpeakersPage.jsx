@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useStore } from '@/lib/store'
+import TourTip from '@/components/TourTip'
 import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
@@ -307,6 +308,7 @@ export default function SpeakersPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { insertRow } from '@/lib/db'
 import { SAP_TIERS, SAP_CONTRIBUTION_TYPES } from '@/lib/constants'
+import TourTip from '@/components/TourTip'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -372,6 +373,7 @@ export default function SAPPartnersPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

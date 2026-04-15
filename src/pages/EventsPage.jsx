@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2, Handshake } from 'lucide-react'
+import TourTip from '@/components/TourTip'
 
 export default function EventsPage() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Events</h1>

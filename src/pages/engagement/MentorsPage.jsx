@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useEngagementStore } from '@/lib/engagementStore'
 import { useBoardStore } from '@/lib/boardStore'
 import { Heart, Plus, Pencil, Archive, RotateCcw, Trash2, X } from 'lucide-react'
+import TourTip from '@/components/TourTip'
 
 export default function MentorsPage() {
   const {
@@ -86,6 +87,7 @@ export default function MentorsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
+      <TourTip />
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">

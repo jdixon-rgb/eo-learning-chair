@@ -4,6 +4,7 @@ import { useChapter } from '@/lib/chapter'
 import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import { useSAPStore } from '@/lib/sapStore'
+import { useTourTips } from '@/lib/useTourTips'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import {
@@ -14,6 +15,7 @@ import {
   ClipboardList,
   Bell,
   MessageSquarePlus,
+  Lightbulb,
   Briefcase,
   FileText,
   Mail,
@@ -46,6 +48,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId } = useAuth()
   const { activeChapter } = useChapter()
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
+  const { resetAll: resetTourTips } = useTourTips()
   const navigate = useNavigate()
 
   // Look up the chair-role config for the *effective* role.
@@ -312,6 +315,14 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             <Globe className="h-3.5 w-3.5" />
             Compass
           </NavLink>
+          <button
+            onClick={resetTourTips}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors cursor-pointer w-full"
+            title="Reshow all tour tips"
+          >
+            <Lightbulb className="h-3.5 w-3.5" />
+            Show tour tips
+          </button>
         </div>
 
         {/* Footer: User info + Sign out */}

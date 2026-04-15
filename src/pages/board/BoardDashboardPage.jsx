@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useBoardStore } from '@/lib/boardStore'
 import { useStore } from '@/lib/store'
 import { FISCAL_MONTHS, REPORT_STATUSES, FORUM_HEALTH } from '@/lib/constants'
+import TourTip from '@/components/TourTip'
 import {
   Briefcase,
   FileText,
@@ -54,6 +55,7 @@ export default function BoardDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Board Dashboard</h1>

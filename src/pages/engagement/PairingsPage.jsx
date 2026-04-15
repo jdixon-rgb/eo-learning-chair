@@ -1,8 +1,10 @@
 import { UserCheck } from 'lucide-react'
+import TourTip from '@/components/TourTip'
 
 export default function PairingsPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
+      <TourTip />
       <header className="mb-6">
         <div className="flex items-center gap-2">
           <UserCheck className="h-6 w-6 text-emerald-600" />

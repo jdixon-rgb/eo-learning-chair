@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { VENUE_PIPELINE_STAGES, AV_QUALITY, ARCHIVE_REASONS } from '@/lib/constants'
+import TourTip from '@/components/TourTip'
 import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
@@ -335,6 +336,7 @@ export default function VenuesPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

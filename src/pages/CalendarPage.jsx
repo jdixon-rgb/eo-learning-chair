@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
+import TourTip from '@/components/TourTip'
 import { useBoardStore } from '@/lib/boardStore'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
@@ -56,6 +57,7 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Year Arc Calendar</h1>

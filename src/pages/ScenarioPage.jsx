@@ -1,6 +1,7 @@
 import { useState, useMemo, Fragment } from 'react'
 import { useStore } from '@/lib/store'
 import { FISCAL_MONTHS, STRATEGIC_MAP, BUDGET_CATEGORIES } from '@/lib/constants'
+import TourTip from '@/components/TourTip'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -173,6 +174,7 @@ export default function ScenarioPage() {
 
   return (
     <div className="space-y-6">
+      <TourTip />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
