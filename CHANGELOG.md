@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.53.2 — 2026-04-15
+
+### Fix: speaker pipeline FK constraint error on new speaker add
+- `addSpeaker` now awaits the speaker row insert before inserting the pipeline entry, preventing the race condition where the pipeline FK check fails because the speaker doesn't exist yet
+
+---
+
 ## v1.53.0 — 2026-04-15
 
 ### Role-specific contextual tour tips

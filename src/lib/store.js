@@ -186,18 +186,16 @@ export function StoreProvider({ children }) {
 
   // ── Speaker Library operations ──
 
-  const addSpeaker = useCallback((speakerData) => {
+  const addSpeaker = useCallback(async (speakerData) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    // Separate library fields from pipeline fields
     const { pipeline_stage, fit_score, fee_estimated, fee_actual,
             contract_storage_path, contract_file_name, w9_storage_path,
             w9_file_name, notes, ...libraryData } = speakerData
-    // Include pipeline_stage default for backward compat (column still exists on speakers table)
     const newSpeaker = { ...libraryData, id, chapter_id: activeChapterId, pipeline_stage: pipeline_stage || 'researching', created_at: now, updated_at: now }
     setSpeakers(prev => [...prev, newSpeaker])
-    dbWrite(() => insertRow('speakers', newSpeaker), 'insert:speakers')
-    // Simultaneously create pipeline entry for current FY
+    // Speaker row must exist before pipeline insert (FK constraint)
+    await dbWrite(() => insertRow('speakers', newSpeaker), 'insert:speakers')
     const pipelineId = crypto.randomUUID()
     const pipelineEntry = {
       id: pipelineId, speaker_id: id, chapter_id: activeChapterId,
