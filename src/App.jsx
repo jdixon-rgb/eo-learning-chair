@@ -1,7 +1,8 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { getChairConfig } from '@/lib/chairRoles'
-import { ChapterProvider } from '@/lib/chapter'
+import { ChapterProvider, useChapter } from '@/lib/chapter'
 import { FiscalYearProvider } from '@/lib/fiscalYearContext'
 import { StoreProvider } from '@/lib/store'
 import { BoardStoreProvider } from '@/lib/boardStore'
@@ -61,6 +62,15 @@ import SAPLeadsPage from '@/pages/sap-portal/SAPLeadsPage'
 import SAPReviewsPage from '@/pages/sap-portal/SAPReviewsPage'
 import SAPFeedbackPage from '@/pages/sap-portal/SAPFeedbackPage'
 
+// Updates the browser tab title to the active chapter's name.
+function DocumentTitle() {
+  const { activeChapter } = useChapter()
+  useEffect(() => {
+    document.title = activeChapter?.name || 'Our Chapter OS'
+  }, [activeChapter?.name])
+  return null
+}
+
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
 function ChairHome() {
@@ -77,6 +87,7 @@ function App() {
   return (
     <AuthProvider>
       <ChapterProvider>
+        <DocumentTitle />
         <FiscalYearProvider>
         <StoreProvider>
           <BoardStoreProvider>
