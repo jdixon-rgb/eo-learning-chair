@@ -11,7 +11,7 @@ import ThemeInfo from '@/components/ThemeInfo'
 import { Crown, Briefcase, DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
 
 export default function PresidentDashboard() {
-  const { events, pipelineSpeakers } = useStore()
+  const { chapter, events, pipelineSpeakers } = useStore()
   const { chapterRoles, roleAssignments, chapterMembers, activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
   const { effectiveRole } = useAuth()
@@ -47,6 +47,8 @@ export default function PresidentDashboard() {
     })
 
   const totalAllocated = chairSummary.reduce((sum, c) => sum + c.budget, 0)
+  const totalBudget = chapter.total_budget || 0
+  const budgetPct = totalBudget > 0 ? Math.round((totalAllocated / totalBudget) * 100) : 0
   const activeMembers = chapterMembers.filter(m => m.status === 'active').length
   const plannedEvents = events.filter(e => e.status !== 'cancelled').length
   const activeSpeakers = pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').length
@@ -73,8 +75,8 @@ export default function PresidentDashboard() {
             <DollarSign className="h-4 w-4" />
             <span className="text-xs font-medium">Budget Allocated</span>
           </div>
-          <p className="text-2xl font-bold">{formatCurrency(totalAllocated)}</p>
-          <p className="text-xs text-muted-foreground mt-1">across {chairSummary.filter(c => c.budget > 0).length} chairs</p>
+          <p className="text-2xl font-bold">{formatCurrency(totalAllocated)}<span className="text-base font-normal text-muted-foreground"> / {formatCurrency(totalBudget)}</span></p>
+          <p className="text-xs text-muted-foreground mt-1">{budgetPct}% allocated across {chairSummary.filter(c => c.budget > 0).length} chairs</p>
         </div>
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">

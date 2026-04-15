@@ -17,6 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.2 — 2026-04-15
+
+### President Dashboard budget card shows percentage and total
+- Budget Allocated card now displays allocated/total (e.g. "$450,000 / $600,000") with percentage allocated across chairs
+
+---
+
 ## v1.54.0 — 2026-04-15
 
 ### Chapter Executive Director + Chapter Experience Coordinator roles fully built out
