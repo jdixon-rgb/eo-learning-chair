@@ -1,17 +1,26 @@
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import { useAuth } from '@/lib/auth'
+import { getChairConfig } from '@/lib/chairRoles'
 import TourTip from '@/components/TourTip'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { formatCurrency } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
-import { Crown, DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
+import { Crown, Briefcase, DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
 
 export default function PresidentDashboard() {
   const { events, pipelineSpeakers } = useStore()
   const { chapterRoles, roleAssignments, chapterMembers, activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
+  const { effectiveRole } = useAuth()
+
+  // Heading adapts to viewer's role — CED/CEC see "Chapter Dashboard", President sees "President Dashboard"
+  const isChapterStaff = effectiveRole === 'chapter_executive_director' || effectiveRole === 'chapter_experience_coordinator'
+  const headingTitle = isChapterStaff ? 'Chapter Dashboard' : 'President Dashboard'
+  const HeadingIcon = isChapterStaff ? Briefcase : Crown
+  const headingIconColor = isChapterStaff ? 'text-eo-blue' : 'text-amber-500'
 
   const theme = activePresidentTheme || ''
 
@@ -48,8 +57,8 @@ export default function PresidentDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Crown className="h-6 w-6 text-amber-500" />
-          President Dashboard
+          <HeadingIcon className={`h-6 w-6 ${headingIconColor}`} />
+          {headingTitle}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           {formatFiscalYear(activeFiscalYear)}
