@@ -394,7 +394,7 @@ export function BoardStoreProvider({ children }) {
   })()
 
   const getChairBudget = useCallback((roleKey) => {
-    const a = findFYAssignment(roleKey)
+    const a = findFYAssignment(roleKey, ['active', 'elect'])
     return a?.budget ?? 0
   }, [findFYAssignment])
 
@@ -455,7 +455,7 @@ export function BoardStoreProvider({ children }) {
     return roleAssignments
       .filter(ra => {
         if (ra.fiscal_year !== activeFiscalYear) return false
-        if (ra.status !== 'active') return false
+        if (ra.status !== 'active' && ra.status !== 'elect') return false
         return true
       })
       .reduce((sum, ra) => sum + (ra.budget || 0), 0)

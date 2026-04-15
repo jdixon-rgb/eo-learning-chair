@@ -17,6 +17,14 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.6 — 2026-04-15
+
+### Fix: chair budget lookup includes 'elect' status assignments
+- `getChairBudget` and `totalChairAllocated` now include both 'active' and 'elect' role assignments — the learning chair for FY 2026-2027 has status 'elect', so budget was returning $0
+- Reverted role key back to `'learning'` (matches DB, not `'learning_chair'`)
+
+---
+
 ## v1.54.5 — 2026-04-15
 
 ### Set chapter and learning chair budgets
