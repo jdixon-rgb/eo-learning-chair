@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.9 — 2026-04-16
+
+### Recovered orphaned work from a dead Claude session
+Three commits were stranded on `claude/general-session-nDKyL` when the
+session died mid-task. Cherry-picked onto main:
+
+- **Fix: Dashboard pipeline/events cards clipped long stage labels** — added `min-w-0` to flex items so `truncate` can actually shrink labels below their intrinsic width (fixes "Researching"/"Negotiating" pushing siblings out of bounds).
+- **Migration 042** — whitelist Karl Bickmore (President Elect, EO Arizona) in `member_invites` so he can sign in via magic link.
+- **Migration 043** — backfill `member_invites` from `chapter_members` so every active member is on the auth allowlist (idempotent — safe to rerun). Renumbered from 044 to keep migrations contiguous.
+
+---
+
 ## v1.54.8 — 2026-04-16
 
 ### Fix: Budget page math used chapter total instead of chair allocation
