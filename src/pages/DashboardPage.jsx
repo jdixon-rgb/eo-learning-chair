@@ -122,7 +122,7 @@ export default function DashboardPage() {
           <p className="text-xs text-muted-foreground mt-1">active speakers</p>
           <div className="flex gap-1 mt-3">
             {pipelineCounts.map(stage => (
-              <div key={stage.id} className="flex-1 text-center">
+              <div key={stage.id} className="flex-1 min-w-0 text-center">
                 <div className="text-sm font-semibold" style={{ color: stage.color }}>{stage.count}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{stage.label}</div>
               </div>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
             {EVENT_TYPES.map(type => {
               const count = events.filter(e => e.event_type === type.id).length
               return (
-                <div key={type.id} className="flex-1 text-center">
+                <div key={type.id} className="flex-1 min-w-0 text-center">
                   <div className="text-sm font-semibold" style={{ color: type.color }}>{count}</div>
                   <div className="text-[10px] text-muted-foreground truncate">{type.label.split(' ')[0]}</div>
                 </div>
