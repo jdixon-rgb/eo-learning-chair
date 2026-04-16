@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.7 — 2026-04-16
+
+### Fix: BudgetPage uses learning chair allocation, not chapter total
+- `/budget` page now computes Budget Health, Unallocated, Remaining, and over-allocation warnings against the learning chair allocation ($450K for FY 2026-27), matching the Dashboard card fix in v1.54.3
+- Header subtitle now reads "learning chair allocation" instead of "total budget" for clarity
+- Closes the regression where `budgetRemaining` pulled from the store used `chapter.total_budget` ($600K chapter-wide)
+
+---
+
 ## v1.54.6 — 2026-04-15
 
 ### Fix: chair budget lookup includes 'elect' status assignments
