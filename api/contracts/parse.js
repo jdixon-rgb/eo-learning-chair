@@ -101,7 +101,7 @@ If the document is not a speaker contract or contains no actionable coordinator 
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6-20250627',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4096,
         messages: [{ role: 'user', content }],
       }),
