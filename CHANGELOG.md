@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.8 — 2026-04-16
+
+### Fix: Budget page math used chapter total instead of chair allocation
+- `BudgetPage` was computing health, percent, unallocated, remaining, and over-allocation warnings against `chapter.total_budget` ($600K), not the Learning Chair's FY allocation ($450K). This made every figure on the page misleading for the chair (e.g. "Remaining" showed ~$269K instead of ~$119K).
+- Switched the page to `getChairBudget('learning')` — same source the Dashboard already uses (matching the v1.54.6 fix).
+- Header subtitle now reads "$X chair budget" instead of "$X total budget".
+
+---
+
 ## v1.54.7 — 2026-04-16
 
 ### Fix: contract parser used an invalid Claude model ID

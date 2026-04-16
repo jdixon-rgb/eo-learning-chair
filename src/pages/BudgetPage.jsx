@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
+import { useBoardStore } from '@/lib/boardStore'
 import { useSAPStore } from '@/lib/sapStore'
 import TourTip from '@/components/TourTip'
 import { BUDGET_CATEGORIES, FISCAL_MONTHS } from '@/lib/constants'
@@ -75,18 +76,24 @@ const VIEW_OPTIONS = [
 export default function BudgetPage() {
   const navigate = useNavigate()
   const {
-    chapter, events, speakers, saps, budgetItems,
-    totalBudgeted, totalContracted, totalActualSpent, budgetRemaining,
+    events, speakers, saps, budgetItems,
+    totalBudgeted, totalContracted, totalActualSpent,
     upsertBudgetItem,
   } = useStore()
+  const { getChairBudget } = useBoardStore()
   const { contacts: sapContacts, primaryContact } = useSAPStore()
   const { activeFiscalYear } = useFiscalYear()
 
   const [activeField, setActiveField] = useState('budget_amount')
 
+  // This page is the Learning Chair budget surface — math is scoped to
+  // the chair's allocation for the active FY, not the chapter total.
+  const chairBudget = getChairBudget('learning')
+  const budgetRemaining = chairBudget - totalBudgeted
+
   // Budget health
-  const budgetPercent = chapter.total_budget > 0
-    ? (totalBudgeted / chapter.total_budget) * 100
+  const budgetPercent = chairBudget > 0
+    ? (totalBudgeted / chairBudget) * 100
     : 0
   const budgetHealth = budgetPercent > 90 ? 'critical' : budgetPercent > 75 ? 'warning' : 'healthy'
 
@@ -129,8 +136,8 @@ export default function BudgetPage() {
     : activeField === 'contracted_amount' ? totalContracted
     : totalActualSpent
 
-  // Unallocated = total_budget - totalBudgeted (always based on budget_amount)
-  const unallocated = chapter.total_budget - totalBudgeted
+  // Unallocated = chair budget - totalBudgeted (always based on budget_amount)
+  const unallocated = chairBudget - totalBudgeted
 
   // Warnings
   const warnings = []
@@ -141,8 +148,8 @@ export default function BudgetPage() {
   if (budgetHealth === 'critical') {
     warnings.push(`Budget is ${budgetPercent.toFixed(0)}% allocated — only ${formatCurrency(budgetRemaining)} remaining.`)
   }
-  if (totalBudgeted > chapter.total_budget) {
-    warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chapter.total_budget)}. Total budgeted exceeds the ${formatCurrency(chapter.total_budget)} budget.`)
+  if (totalBudgeted > chairBudget) {
+    warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chairBudget)}. Total budgeted exceeds the ${formatCurrency(chairBudget)} chair budget.`)
   }
 
   // Build display name(s) for speaker + SAP partners on an event
@@ -178,7 +185,7 @@ export default function BudgetPage() {
       <div>
         <h1 className="text-2xl font-bold">Budget</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {formatCurrency(chapter.total_budget)} total budget &middot; {formatFiscalYear(activeFiscalYear)}
+          {formatCurrency(chairBudget)} chair budget &middot; {formatFiscalYear(activeFiscalYear)}
         </p>
       </div>
 
