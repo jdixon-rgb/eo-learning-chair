@@ -17,6 +17,14 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.7 — 2026-04-16
+
+### Fix: contract parser used an invalid Claude model ID
+- `api/contracts/parse.js` was calling Anthropic with `claude-sonnet-4-6-20250627`, which is not a real model alias, so every contract upload returned a 400 from the API (surfaced to the browser as "Claude API error: 400")
+- Changed to the valid alias `claude-sonnet-4-6`
+
+---
+
 ## v1.54.6 — 2026-04-15
 
 ### Fix: chair budget lookup includes 'elect' status assignments
