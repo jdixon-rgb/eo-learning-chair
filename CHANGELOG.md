@@ -17,6 +17,39 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.55.0 — 2026-04-17
+
+### Feature: Demo Mode + Regional Learning Chair persona switcher (v0.1)
+First cut of the demo surface for the Regional Learning Chair role. The full
+story is in `docs/plans/` (to be added); the shippable bones live here.
+
+- **Demo Mode toggle** on the Super Admin dashboard. Per-browser-session
+  localStorage flag, gated on `role === 'super_admin'`. When enabled, a
+  persistent red banner pins to the top of every layout.
+- **Demo User role** (`demo_user`). A permanent account type for external
+  stakeholders — locked into Mock Mode at the auth layer, can never read
+  real chapter data regardless of URL. Migration 044 adds the role to the
+  `profiles.role` + `member_invites.role` check constraints.
+- **Super Admin → Demo Users** page — create and revoke demo accounts by
+  email. Uses the existing `member_invites` allowlist + magic-link flow.
+- **`/demo` surface** with a persona switcher and four clickable personas:
+  - Marcus Delacroix — Global Learning Chair (placeholder view)
+  - Julie Broad — Regional Learning Chair, US West (flagship view: 3
+    chapter cards with NPS, budget health, standout quotes, private-fee
+    callout, notify button)
+  - Karl Bickmore — Chapter President, EO Phoenix
+  - Sarah Chen — Chapter Learning Chair, EO Phoenix
+- **Mock fixtures** (`src/lib/mockFixtures.js`) seed 3 US West chapters
+  with deliberate health variance (healthy / mid / struggling), event
+  feedback with NPS + takeaway + highlight quotes, and speakers with a
+  `fee_private` flag so the "private speaker fee visible to regional
+  chair only" demo beat works.
+- **Read-only by design** in v0.1 — all mutation buttons trigger a
+  "DEMO MODE — nothing persisted" alert. Click-through sandbox upgrade
+  planned for v1.0.
+
+---
+
 ## v1.54.9 — 2026-04-16
 
 ### Recovered orphaned work from a dead Claude session

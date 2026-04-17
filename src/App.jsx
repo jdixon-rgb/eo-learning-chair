@@ -37,6 +37,9 @@ import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
 import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
 import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
+import DemoUsersPage from '@/pages/super-admin/DemoUsersPage'
+import DemoLayout from '@/components/layout/DemoLayout'
+import DemoLanding from '@/pages/demo/DemoLanding'
 import BoardDashboardPage from '@/pages/board/BoardDashboardPage'
 import ChairReportsPage from '@/pages/board/ChairReportsPage'
 import CommunicationsPage from '@/pages/board/CommunicationsPage'
@@ -74,13 +77,28 @@ function DocumentTitle() {
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
 function ChairHome() {
-  const { effectiveRole } = useAuth()
+  const { effectiveRole, isMockMode } = useAuth()
+  // Mock Mode short-circuits the home redirect: super-admin with toggle on OR
+  // any demo_user lands directly on the /demo persona switcher, not in the
+  // real-data chair surface.
+  if (isMockMode) return <Navigate to="/demo" replace />
   if (effectiveRole === 'sap_contact') return <Navigate to="/sap-portal" replace />
   const config = getChairConfig(effectiveRole)
   if (config.homePath && config.homePath !== '/') {
     return <Navigate to={config.homePath} replace />
   }
   return <DashboardPage />
+}
+
+// Gates the /demo routes: only accessible while Mock Mode is active for the
+// current session (super-admin with toggle on, or any demo_user). Otherwise
+// bounces to a sensible home.
+function DemoGate({ children }) {
+  const { isMockMode, isSuperAdmin, session, profile, loading } = useAuth()
+  if (loading) return null
+  if (!session && !profile) return <Navigate to="/login" replace />
+  if (!isMockMode) return <Navigate to={isSuperAdmin ? '/super-admin' : '/'} replace />
+  return children
 }
 
 function App() {
@@ -228,6 +246,13 @@ function App() {
               }>
                 <Route path="/super-admin" element={<SuperAdminDashboard />} />
                 <Route path="/super-admin/chapters/:id" element={<ChapterConfigPage />} />
+                <Route path="/super-admin/demo-users" element={<DemoUsersPage />} />
+              </Route>
+
+              {/* Demo Mode routes — gated on isMockMode (super-admin-with-toggle OR demo_user) */}
+              <Route element={<DemoGate><DemoLayout /></DemoGate>}>
+                <Route path="/demo" element={<DemoLanding />} />
+                <Route path="/demo/:personaId" element={<DemoLanding />} />
               </Route>
 
               {/* Catch-all */}

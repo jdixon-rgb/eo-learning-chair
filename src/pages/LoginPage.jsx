@@ -16,7 +16,8 @@ export default function LoginPage() {
 
   // Already authenticated (or dev mode) — redirect to appropriate home
   if (!loading && profile) {
-    const home = profile.role === 'member' ? '/portal'
+    const home = profile.role === 'demo_user' ? '/demo'
+               : profile.role === 'member' ? '/portal'
                : profile.role === 'sap_contact' ? '/sap-portal'
                : '/'
     return <Navigate to={home} replace />

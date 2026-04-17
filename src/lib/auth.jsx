@@ -7,6 +7,7 @@ const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev
 
 const VIEW_AS_STORAGE_KEY = 'eo-view-as-role'
 const VIEW_AS_SAP_CONTACT_KEY = 'eo-view-as-sap-contact'
+const MOCK_MODE_STORAGE_KEY = 'eo-mock-mode-enabled'
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -17,6 +18,9 @@ export function AuthProvider({ children }) {
   })
   const [viewAsSapContactId, setViewAsSapContactIdState] = useState(() => {
     try { return localStorage.getItem(VIEW_AS_SAP_CONTACT_KEY) || null } catch { return null }
+  })
+  const [mockModeFlag, setMockModeFlagState] = useState(() => {
+    try { return localStorage.getItem(MOCK_MODE_STORAGE_KEY) === '1' } catch { return false }
   })
 
   const fetchProfile = useCallback(async (userId) => {
@@ -72,6 +76,7 @@ export function AuthProvider({ children }) {
   const role = profile?.role ?? null
   const isAdmin = !!role && ['super_admin', 'president', 'finance_chair', 'learning_chair', 'engagement_chair', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role)
   const isSuperAdmin = role === 'super_admin'
+  const isDemoUser = role === 'demo_user'
   const isPresident = !!role && ['president', 'president_elect', 'president_elect_elect'].includes(role)
   const isChapterStaff = !!role && ['chapter_executive_director', 'chapter_experience_coordinator'].includes(role)
   const canSwitchRoles = isSuperAdmin || isPresident || isChapterStaff
@@ -79,6 +84,22 @@ export function AuthProvider({ children }) {
   // Effective role: super admins and presidents can view as other roles.
   const effectiveRole = canSwitchRoles && viewAsRole ? viewAsRole : role
   const isImpersonating = canSwitchRoles && !!viewAsRole
+
+  // ── Mock Data Mode ─────────────────────────────────────────────
+  // Two paths in:
+  //   1. Super-admin flips the toggle in their own browser (mockModeFlag + role check)
+  //   2. A demo_user logs in — they are permanently locked into mock mode, no escape
+  // A chapter user can NEVER see mock data: the role check gates the flag,
+  // and non-super-admin / non-demo_user sessions ignore it entirely.
+  const isMockMode = isDemoUser || (isSuperAdmin && mockModeFlag)
+
+  const setMockMode = useCallback((next) => {
+    try {
+      if (next) localStorage.setItem(MOCK_MODE_STORAGE_KEY, '1')
+      else localStorage.removeItem(MOCK_MODE_STORAGE_KEY)
+    } catch { /* ignore */ }
+    setMockModeFlagState(!!next)
+  }, [])
 
   const setViewAsRole = useCallback((nextRole) => {
     try {
@@ -139,6 +160,9 @@ export function AuthProvider({ children }) {
     viewAsSapContactId,
     setViewAsSapContactId,
     isPreviewingOtherUser,
+    isDemoUser,
+    isMockMode,
+    setMockMode,
   }
 
   return createElement(AuthContext.Provider, { value }, children)

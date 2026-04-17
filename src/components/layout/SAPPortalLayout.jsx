@@ -7,6 +7,7 @@ import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { useState } from 'react'
 import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
+import MockModeBanner from '@/components/MockModeBanner'
 
 const sapNav = [
   { to: '/sap-portal', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -33,6 +34,7 @@ export default function SAPPortalLayout() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white">
+      <MockModeBanner />
       {/* Top Nav */}
       <header className="border-b border-white/10 bg-eo-navy/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
