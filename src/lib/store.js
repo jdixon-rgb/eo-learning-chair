@@ -5,6 +5,9 @@ import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, moc
 import { supabase } from './supabase'
 import { useChapter } from './chapter'
 import { useFiscalYear } from './fiscalYearContext'
+import { useAuth } from './auth'
+import { MOCK_PERSONAS } from './mockFixtures'
+import { getMockStoreData } from './mockStoreData'
 
 // localStorage cache for offline fallback (key is per-chapter, per-fiscal-year)
 function storageKey(chapterId, fiscalYear) {
@@ -32,6 +35,7 @@ const StoreContext = createContext(null)
 export function StoreProvider({ children }) {
   const { activeChapterId, isChapterReady } = useChapter()
   const { activeFiscalYear, isFiscalYearReady } = useFiscalYear()
+  const { isMockMode, mockPersonaId } = useAuth()
 
   const cached = loadCache(activeChapterId, activeFiscalYear)
 
@@ -568,79 +572,120 @@ export function StoreProvider({ children }) {
     return speaker ? { ...speaker, ...entry, id: speaker.id, _pipeline_id: entry.id } : null
   }).filter(Boolean)
 
-  const totalBudgeted = budgetItems.reduce((sum, item) => sum + (item.budget_amount || 0), 0)
-  const totalContracted = budgetItems.reduce((sum, item) => sum + (item.contracted_amount || 0), 0)
-  const totalActualSpent = budgetItems.reduce((sum, item) => sum + (item.actual_amount || 0), 0)
-  const budgetRemaining = chapter.total_budget - totalBudgeted
+  // ── Mock Mode override ─────────────────────────────────────────
+  // When a chapter-tier persona is active in Mock Mode, swap the underlying
+  // data with fixture data for that chapter. Downstream pages (Dashboard,
+  // Year Arc, Events, Speakers, Budget, Scenarios) render with no changes.
+  // Mutations get wrapped in a demo-toast no-op so clicks don't persist.
+  const activeMockPersona = isMockMode && mockPersonaId
+    ? MOCK_PERSONAS.find(p => p.id === mockPersonaId)
+    : null
+  const mockOverride = activeMockPersona?.chapter_id
+    ? getMockStoreData(activeMockPersona.chapter_id)
+    : null
+
+  const effChapter = mockOverride?.chapter ?? chapter
+  const effEvents = mockOverride?.events ?? events
+  const effSpeakers = mockOverride?.speakers ?? speakers
+  const effSpeakerPipeline = mockOverride?.speakerPipeline ?? speakerPipeline
+  const effVenues = mockOverride?.venues ?? venues
+  const effBudgetItems = mockOverride?.budgetItems ?? budgetItems
+  const effSAPs = mockOverride?.saps ?? saps
+  const effScenarios = mockOverride?.scenarios ?? scenarios
+  const effContractChecklists = mockOverride?.contractChecklists ?? contractChecklists
+  const effEventDocuments = mockOverride?.eventDocuments ?? eventDocuments
+
+  // Recompute pipelineSpeakers on top of the effective data
+  const effPipelineSpeakers = mockOverride
+    ? effSpeakerPipeline.map(entry => {
+        const s = effSpeakers.find(sp => sp.id === entry.speaker_id)
+        return s ? { ...s, ...entry, id: s.id, _pipeline_id: entry.id } : null
+      }).filter(Boolean)
+    : pipelineSpeakers
+
+  const totalBudgeted = effBudgetItems.reduce((sum, item) => sum + (item.budget_amount || 0), 0)
+  const totalContracted = effBudgetItems.reduce((sum, item) => sum + (item.contracted_amount || 0), 0)
+  const totalActualSpent = effBudgetItems.reduce((sum, item) => sum + (item.actual_amount || 0), 0)
+  const budgetRemaining = effChapter.total_budget - totalBudgeted
+
+  // Wraps a real mutation so that in Mock Mode it just shows a demo alert
+  // and resolves without touching Supabase, localStorage, or React state.
+  const mockGuard = (realFn, label) => {
+    if (!mockOverride) return realFn
+    return (...args) => {
+      window.alert(`DEMO MODE — ${label} would run in production.\nNothing was persisted.`)
+      return Promise.resolve()
+    }
+  }
 
   const value = {
-    // Data
-    chapter,
-    speakers,
-    speakerPipeline,
-    pipelineSpeakers,
-    venues,
-    events,
-    budgetItems,
-    contractChecklists,
-    eventDocuments,
-    saps,
-    scenarios,
+    // Data (mock-swapped when persona is chapter-tier)
+    chapter: effChapter,
+    speakers: effSpeakers,
+    speakerPipeline: effSpeakerPipeline,
+    pipelineSpeakers: effPipelineSpeakers,
+    venues: effVenues,
+    events: effEvents,
+    budgetItems: effBudgetItems,
+    contractChecklists: effContractChecklists,
+    eventDocuments: effEventDocuments,
+    saps: effSAPs,
+    scenarios: effScenarios,
 
     // Status
-    loading,
-    dbError,
+    loading: mockOverride ? false : loading,
+    dbError: mockOverride ? null : dbError,
     clearDbError: () => setDbError(null),
 
     // Speaker Library ops
-    addSpeaker,
-    updateSpeaker,
-    deleteSpeaker,
+    addSpeaker: mockGuard(addSpeaker, 'Adding a speaker'),
+    updateSpeaker: mockGuard(updateSpeaker, 'Editing a speaker'),
+    deleteSpeaker: mockGuard(deleteSpeaker, 'Deleting a speaker'),
 
     // Speaker Pipeline ops
-    addToPipeline,
-    updatePipelineEntry,
-    removePipelineEntry,
+    addToPipeline: mockGuard(addToPipeline, 'Adding to the pipeline'),
+    updatePipelineEntry: mockGuard(updatePipelineEntry, 'Updating a pipeline entry'),
+    removePipelineEntry: mockGuard(removePipelineEntry, 'Removing a pipeline entry'),
 
     // Venue ops
-    addVenue,
-    updateVenue,
-    deleteVenue,
-    archiveVenue,
-    restoreVenue,
+    addVenue: mockGuard(addVenue, 'Adding a venue'),
+    updateVenue: mockGuard(updateVenue, 'Updating a venue'),
+    deleteVenue: mockGuard(deleteVenue, 'Deleting a venue'),
+    archiveVenue: mockGuard(archiveVenue, 'Archiving a venue'),
+    restoreVenue: mockGuard(restoreVenue, 'Restoring a venue'),
 
     // Event ops
-    addEvent,
-    updateEvent,
-    deleteEvent,
+    addEvent: mockGuard(addEvent, 'Adding an event'),
+    updateEvent: mockGuard(updateEvent, 'Updating an event'),
+    deleteEvent: mockGuard(deleteEvent, 'Deleting an event'),
 
     // Budget ops
-    addBudgetItem,
-    updateBudgetItem,
-    deleteBudgetItem,
-    upsertBudgetItem,
+    addBudgetItem: mockGuard(addBudgetItem, 'Adding a budget item'),
+    updateBudgetItem: mockGuard(updateBudgetItem, 'Updating a budget item'),
+    deleteBudgetItem: mockGuard(deleteBudgetItem, 'Deleting a budget item'),
+    upsertBudgetItem: mockGuard(upsertBudgetItem, 'Saving a budget cell'),
 
     // Contract ops
     getOrCreateChecklist,
-    updateChecklist,
+    updateChecklist: mockGuard(updateChecklist, 'Updating a contract checklist'),
 
     // Document ops
-    addEventDocument,
-    updateEventDocument,
-    deleteEventDocument,
+    addEventDocument: mockGuard(addEventDocument, 'Uploading an event document'),
+    updateEventDocument: mockGuard(updateEventDocument, 'Updating an event document'),
+    deleteEventDocument: mockGuard(deleteEventDocument, 'Deleting an event document'),
 
     // SAP ops
-    addSAP,
-    updateSAP,
-    deleteSAP,
+    addSAP: mockGuard(addSAP, 'Adding a partner'),
+    updateSAP: mockGuard(updateSAP, 'Updating a partner'),
+    deleteSAP: mockGuard(deleteSAP, 'Deleting a partner'),
 
     // Scenario ops
-    addScenario,
-    updateScenario,
-    deleteScenario,
+    addScenario: mockGuard(addScenario, 'Adding a scenario'),
+    updateScenario: mockGuard(updateScenario, 'Updating a scenario'),
+    deleteScenario: mockGuard(deleteScenario, 'Deleting a scenario'),
 
     // Chapter ops
-    updateChapter,
+    updateChapter: mockGuard(updateChapter, 'Updating the chapter'),
 
     // Utility
     resetToDefaults,

@@ -40,6 +40,7 @@ import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
 import DemoUsersPage from '@/pages/super-admin/DemoUsersPage'
 import DemoLayout from '@/components/layout/DemoLayout'
 import DemoLanding from '@/pages/demo/DemoLanding'
+import { MOCK_PERSONAS } from '@/lib/mockFixtures'
 import BoardDashboardPage from '@/pages/board/BoardDashboardPage'
 import ChairReportsPage from '@/pages/board/ChairReportsPage'
 import CommunicationsPage from '@/pages/board/CommunicationsPage'
@@ -77,11 +78,19 @@ function DocumentTitle() {
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
 function ChairHome() {
-  const { effectiveRole, isMockMode } = useAuth()
-  // Mock Mode short-circuits the home redirect: super-admin with toggle on OR
-  // any demo_user lands directly on the /demo persona switcher, not in the
-  // real-data chair surface.
-  if (isMockMode) return <Navigate to="/demo" replace />
+  const { effectiveRole, isMockMode, mockPersonaId } = useAuth()
+  // Mock Mode branches:
+  //   - No persona selected (or a regional/global persona) → /demo landing
+  //   - Chapter-tier persona selected → render the real Learning Chair
+  //     Dashboard, which now has mock Phoenix data injected by the store
+  if (isMockMode) {
+    const persona = mockPersonaId ? MOCK_PERSONAS.find(p => p.id === mockPersonaId) : null
+    if (!persona || persona.tier !== 'chapter') {
+      return <Navigate to="/demo" replace />
+    }
+    // Chapter-tier personas fall through to DashboardPage
+    return <DashboardPage />
+  }
   if (effectiveRole === 'sap_contact') return <Navigate to="/sap-portal" replace />
   const config = getChairConfig(effectiveRole)
   if (config.homePath && config.homePath !== '/') {

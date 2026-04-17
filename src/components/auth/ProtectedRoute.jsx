@@ -24,8 +24,10 @@ export default function ProtectedRoute({ allowedRoles, children }) {
 
   // Authenticated but wrong role — redirect to appropriate home
   // Super admins, president-level roles, and chapter staff can access everything
-  // (they switch into chair views for chapter-wide support)
-  const bypassRoles = ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'chapter_executive_director', 'chapter_experience_coordinator']
+  // (they switch into chair views for chapter-wide support).
+  // demo_user is also bypassed: they are auth-locked into Mock Mode, so any
+  // store query they make returns mock data regardless of the page they hit.
+  const bypassRoles = ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'demo_user']
   if (allowedRoles && profile && !bypassRoles.includes(profile.role) && !allowedRoles.includes(profile.role)) {
     const home = profile.role === 'member' ? '/portal'
                : profile.role === 'sap_contact' ? '/sap-portal'

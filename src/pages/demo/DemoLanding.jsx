@@ -9,7 +9,8 @@
 // We'll upgrade to a click-through sandbox in v1.0 if the demo calls for it.
 
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
+import { useAuth } from '@/lib/auth'
 import {
   MOCK_PERSONAS,
   MOCK_CHAPTERS,
@@ -23,7 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Bell, TrendingUp, TrendingDown, DollarSign, Users, Calendar,
-  AlertTriangle, Lock, Sparkles,
+  AlertTriangle, Lock, Sparkles, ArrowRight,
 } from 'lucide-react'
 
 // ── Read-only mutation guard: every "Save" / "Notify" button routes through this
@@ -246,22 +247,45 @@ function RegionalBody() {
 
 // ── Chapter tier (Karl — President, Sarah — Learning Chair) ──────────
 function ChapterBody({ persona }) {
+  const navigate = useNavigate()
+  const { setViewAsRole } = useAuth()
   const chapter = MOCK_CHAPTERS.find(c => c.id === persona.chapter_id) || MOCK_CHAPTERS[0]
   const feedback = MOCK_EVENT_FEEDBACK[chapter.id] || []
   const colors = HEALTH_COLOR[chapter.health]
   const speakers = MOCK_SPEAKERS.filter(s => s.chapter_id === chapter.id)
 
   const isPresident = persona.viewAsRole === 'president'
+  const isPhoenix = chapter.id === 'mock-chapter-phoenix'
+
+  const handleEnterChapter = () => {
+    // Swap the super-admin's viewAsRole so the sidebar renders the correct
+    // chair nav (president surface vs learning chair surface). Mock store
+    // handles the data injection.
+    setViewAsRole(persona.viewAsRole)
+    navigate('/')
+  }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          {isPresident ? 'Chapter President Dashboard' : 'Chapter Learning Chair Dashboard'}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {chapter.name} · Theme: "{chapter.president_theme}" · President: {chapter.president_name}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {isPresident ? 'Chapter President Dashboard' : 'Chapter Learning Chair Dashboard'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {chapter.name} · Theme: "{chapter.president_theme}" · President: {chapter.president_name}
+          </p>
+        </div>
+        {isPhoenix && (
+          <button
+            type="button"
+            onClick={handleEnterChapter}
+            className="self-start inline-flex items-center gap-2 bg-eo-blue text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-eo-blue/90 transition-colors shadow-sm"
+          >
+            Enter Full Chapter Surface
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className={`rounded-xl border p-5 shadow-sm ${colors.bg}`}>
@@ -367,7 +391,14 @@ function ChapterBody({ persona }) {
 // ── Main component ───────────────────────────────────────────────────
 export default function DemoLanding() {
   const { personaId } = useParams()
+  const { setMockPersonaId } = useAuth()
   const persona = MOCK_PERSONAS.find(p => p.id === personaId)
+
+  // Keep the auth-context persona in sync with whatever is in the URL. The
+  // store watches this to know which chapter fixtures to inject.
+  useEffect(() => {
+    if (persona) setMockPersonaId(persona.id)
+  }, [persona, setMockPersonaId])
 
   // If no persona slug or an unknown one, redirect to Julie (the default demo entry)
   if (!persona) {

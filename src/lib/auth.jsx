@@ -8,6 +8,7 @@ const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev
 const VIEW_AS_STORAGE_KEY = 'eo-view-as-role'
 const VIEW_AS_SAP_CONTACT_KEY = 'eo-view-as-sap-contact'
 const MOCK_MODE_STORAGE_KEY = 'eo-mock-mode-enabled'
+const MOCK_PERSONA_STORAGE_KEY = 'eo-mock-persona-id'
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -21,6 +22,9 @@ export function AuthProvider({ children }) {
   })
   const [mockModeFlag, setMockModeFlagState] = useState(() => {
     try { return localStorage.getItem(MOCK_MODE_STORAGE_KEY) === '1' } catch { return false }
+  })
+  const [mockPersonaId, setMockPersonaIdState] = useState(() => {
+    try { return localStorage.getItem(MOCK_PERSONA_STORAGE_KEY) || null } catch { return null }
   })
 
   const fetchProfile = useCallback(async (userId) => {
@@ -96,9 +100,21 @@ export function AuthProvider({ children }) {
   const setMockMode = useCallback((next) => {
     try {
       if (next) localStorage.setItem(MOCK_MODE_STORAGE_KEY, '1')
-      else localStorage.removeItem(MOCK_MODE_STORAGE_KEY)
+      else {
+        localStorage.removeItem(MOCK_MODE_STORAGE_KEY)
+        localStorage.removeItem(MOCK_PERSONA_STORAGE_KEY)
+      }
     } catch { /* ignore */ }
     setMockModeFlagState(!!next)
+    if (!next) setMockPersonaIdState(null)
+  }, [])
+
+  const setMockPersonaId = useCallback((id) => {
+    try {
+      if (id) localStorage.setItem(MOCK_PERSONA_STORAGE_KEY, id)
+      else localStorage.removeItem(MOCK_PERSONA_STORAGE_KEY)
+    } catch { /* ignore */ }
+    setMockPersonaIdState(id || null)
   }, [])
 
   const setViewAsRole = useCallback((nextRole) => {
@@ -163,6 +179,8 @@ export function AuthProvider({ children }) {
     isDemoUser,
     isMockMode,
     setMockMode,
+    mockPersonaId,
+    setMockPersonaId,
   }
 
   return createElement(AuthContext.Provider, { value }, children)
