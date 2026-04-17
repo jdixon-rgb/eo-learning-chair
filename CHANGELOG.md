@@ -17,6 +17,35 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.56.0 — 2026-04-17
+
+### Feature: Chapter-surface mock injection — Karl/Sarah can now walk the full app
+Demo Mode v0.2 — clicking a chapter-tier persona ("Enter Full Chapter Surface")
+now drops you into the real Learning Chair / President dashboard populated with
+mock Phoenix data. Year Arc, Events, Speakers, Pipeline, Budget grid,
+Scenarios, Venues all render from fixtures.
+
+- `src/lib/mockStoreData.js` — full-shape fixtures for EO Phoenix: 5 venues,
+  12 speakers, 11 events across the fiscal year, 11 pipeline entries, ~40
+  budget items summing to the ~$330K figure Julie sees from her regional view,
+  3 SAPs, 2 scenarios.
+- Main store (`src/lib/store.js`) injects the mock data when
+  `isMockMode && mockPersonaId.tier === 'chapter'`. All mutations wrap with
+  `mockGuard` — clicking Save/Add/Delete fires an alert instead of persisting.
+- Auth context: new `mockPersonaId` + `setMockPersonaId` state, backed by
+  localStorage. Cleared on Mock Mode exit.
+- `ChairHome` routes chapter-tier personas into DashboardPage (mock data
+  renders); regional/global personas still land on /demo.
+- `DemoLanding` syncs URL persona → auth context and exposes an
+  "Enter Full Chapter Surface" button on chapter personas that also
+  sets `viewAsRole` so the sidebar nav matches.
+- `MockModeBanner`: new "← Back to Personas" link visible whenever you're
+  on a non-/demo route in mock mode.
+- `ProtectedRoute`: demo_user added to bypass list (safe — they're
+  auth-locked into mock mode at the store level).
+
+---
+
 ## v1.55.1 — 2026-04-17
 
 ### Fix: Demo Mode toggle now lands you on /demo
