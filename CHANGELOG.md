@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.55.1 — 2026-04-17
+
+### Fix: Demo Mode toggle now lands you on /demo
+Flipping Demo Mode ON previously left you stranded on `/super-admin` with
+no visible way to reach the persona switcher unless you typed `/demo` in the
+address bar. Now:
+- Flipping the toggle ON auto-navigates to `/demo`
+- A "Go to Demo" button appears on the toggle card whenever Mock Mode is active
+
+---
+
 ## v1.55.0 — 2026-04-17
 
 ### Feature: Demo Mode + Regional Learning Chair persona switcher (v0.1)
