@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useChapter } from '@/lib/chapter'
 import { useAuth } from '@/lib/auth'
-import { Building2, Plus, Sparkles } from 'lucide-react'
+import { Building2, Plus, Sparkles, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const MONTH_NAMES = [
@@ -12,6 +12,13 @@ const MONTH_NAMES = [
 export default function SuperAdminDashboard() {
   const { allChapters } = useChapter()
   const { isMockMode, setMockMode } = useAuth()
+  const navigate = useNavigate()
+
+  const handleToggleMock = () => {
+    const next = !isMockMode
+    setMockMode(next)
+    if (next) navigate('/demo')
+  }
 
   return (
     <div className="space-y-6">
@@ -44,17 +51,29 @@ export default function SuperAdminDashboard() {
                 members, events, NPS, budgets — instead of real data. Nothing you do while in
                 demo mode persists. Scope is per-browser; other users are unaffected.
               </p>
-              <Link
-                to="/super-admin/demo-users"
-                className="inline-block text-xs text-eo-blue hover:underline mt-2"
-              >
-                Manage demo user accounts →
-              </Link>
+              <div className="flex items-center gap-4 mt-2">
+                {isMockMode && (
+                  <Button
+                    size="sm"
+                    onClick={() => navigate('/demo')}
+                    className="bg-eo-pink hover:bg-eo-pink/90 text-white"
+                  >
+                    Go to Demo
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+                <Link
+                  to="/super-admin/demo-users"
+                  className="text-xs text-eo-blue hover:underline"
+                >
+                  Manage demo user accounts →
+                </Link>
+              </div>
             </div>
           </div>
           <button
             type="button"
-            onClick={() => setMockMode(!isMockMode)}
+            onClick={handleToggleMock}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-eo-blue focus:ring-offset-2 ${
               isMockMode ? 'bg-eo-pink' : 'bg-muted'
             }`}
