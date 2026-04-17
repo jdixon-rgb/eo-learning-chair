@@ -44,6 +44,12 @@ export default function SuperAdminDashboard() {
                 members, events, NPS, budgets — instead of real data. Nothing you do while in
                 demo mode persists. Scope is per-browser; other users are unaffected.
               </p>
+              <Link
+                to="/super-admin/demo-users"
+                className="inline-block text-xs text-eo-blue hover:underline mt-2"
+              >
+                Manage demo user accounts →
+              </Link>
             </div>
           </div>
           <button

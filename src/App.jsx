@@ -37,6 +37,7 @@ import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
 import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
 import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
+import DemoUsersPage from '@/pages/super-admin/DemoUsersPage'
 import DemoLayout from '@/components/layout/DemoLayout'
 import DemoLanding from '@/pages/demo/DemoLanding'
 import BoardDashboardPage from '@/pages/board/BoardDashboardPage'
@@ -245,6 +246,7 @@ function App() {
               }>
                 <Route path="/super-admin" element={<SuperAdminDashboard />} />
                 <Route path="/super-admin/chapters/:id" element={<ChapterConfigPage />} />
+                <Route path="/super-admin/demo-users" element={<DemoUsersPage />} />
               </Route>
 
               {/* Demo Mode routes — gated on isMockMode (super-admin-with-toggle OR demo_user) */}
