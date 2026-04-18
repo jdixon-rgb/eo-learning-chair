@@ -34,6 +34,8 @@ export default function ChapterConfigPage() {
     fiscal_year_start: 8,
     president_theme: '',
     president_name: '',
+    currency: 'USD',
+    timezone: 'America/Phoenix',
   })
   const [members, setMembers] = useState([])
   const [invites, setInvites] = useState([])
@@ -85,6 +87,8 @@ export default function ChapterConfigPage() {
       fiscal_year_start: chapter.fiscal_year_start,
       president_theme: chapter.president_theme,
       president_name: chapter.president_name,
+      currency: chapter.currency || 'USD',
+      timezone: chapter.timezone || 'America/Phoenix',
     }
 
     if (isNew) {
@@ -134,9 +138,12 @@ export default function ChapterConfigPage() {
     setInviting(true)
     setInviteMsg('')
 
+    const targetEmail = inviteEmail.trim().toLowerCase()
+
     if (isSupabaseConfigured()) {
+      // Step 1: allowlist the user so is_invited_member() passes during login.
       const { error } = await supabase.from('member_invites').insert({
-        email: inviteEmail.trim().toLowerCase(),
+        email: targetEmail,
         full_name: inviteName.trim(),
         role: inviteRole,
         chapter_id: id,
@@ -146,15 +153,30 @@ export default function ChapterConfigPage() {
         setInviting(false)
         return
       }
+
+      // Step 2: fire a magic-link email so the invitee doesn't have to know
+      // they need to visit the login page and self-serve. If this fails the
+      // invite row is still in place and they can request a link themselves.
+      const { error: otpErr } = await supabase.auth.signInWithOtp({
+        email: targetEmail,
+        options: { emailRedirectTo: window.location.origin },
+      })
+      if (otpErr) {
+        console.warn('[invite] magic link send failed:', otpErr)
+        setInviteMsg(`Allowlisted, but magic-link send failed: ${otpErr.message}. Ask them to sign in manually.`)
+      } else {
+        setInviteMsg(`Invite sent! ${targetEmail} will receive a magic link.`)
+      }
+    } else {
+      setInviteMsg('Invite recorded (Supabase not configured — offline).')
     }
 
-    setInviteMsg('Invite sent!')
     setInviteEmail('')
     setInviteName('')
     setInviteRole('member')
     setInviting(false)
     fetchData()
-    setTimeout(() => setInviteMsg(''), 3000)
+    setTimeout(() => setInviteMsg(''), 5000)
   }
 
   const removeInvite = async (inviteId) => {
@@ -235,6 +257,47 @@ export default function ChapterConfigPage() {
               onChange={(e) => setChapter({ ...chapter, president_name: e.target.value })}
               placeholder="Chapter president name"
             />
+          </div>
+          <div>
+            <label className="text-xs font-medium">Currency</label>
+            <select
+              value={chapter.currency || 'USD'}
+              onChange={(e) => setChapter({ ...chapter, currency: e.target.value })}
+              className="w-full text-sm rounded-lg px-3 py-2 border border-border bg-background cursor-pointer"
+            >
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="CNY">CNY — Chinese Yuan</option>
+              <option value="JPY">JPY — Japanese Yen</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium">Timezone</label>
+            <select
+              value={chapter.timezone || 'America/Phoenix'}
+              onChange={(e) => setChapter({ ...chapter, timezone: e.target.value })}
+              className="w-full text-sm rounded-lg px-3 py-2 border border-border bg-background cursor-pointer"
+            >
+              <option value="America/Phoenix">America/Phoenix (Arizona)</option>
+              <option value="America/Los_Angeles">America/Los Angeles</option>
+              <option value="America/Denver">America/Denver</option>
+              <option value="America/Chicago">America/Chicago</option>
+              <option value="America/New_York">America/New York</option>
+              <option value="America/Toronto">America/Toronto</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="Europe/Madrid">Europe/Madrid (Barcelona)</option>
+              <option value="Europe/Berlin">Europe/Berlin</option>
+              <option value="Europe/Paris">Europe/Paris</option>
+              <option value="Asia/Shanghai">Asia/Shanghai</option>
+              <option value="Asia/Hong_Kong">Asia/Hong Kong</option>
+              <option value="Asia/Singapore">Asia/Singapore</option>
+              <option value="Asia/Tokyo">Asia/Tokyo</option>
+              <option value="Asia/Dubai">Asia/Dubai</option>
+              <option value="Australia/Sydney">Australia/Sydney</option>
+            </select>
           </div>
         </div>
 

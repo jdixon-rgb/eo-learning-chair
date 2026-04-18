@@ -5,13 +5,27 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
+// Format a number as currency. `currency` is an ISO 4217 code (USD, EUR, CNY…)
+// and defaults to USD so call sites that haven't been migrated yet still work.
+// For chapter-aware formatting, prefer the useFormatCurrency() hook which
+// reads the current chapter's preferred currency from context.
+export function formatCurrency(amount, currency = 'USD') {
+  // Locale driven by the currency — en-US for USD, de-DE for EUR, etc.
+  // The Intl API handles symbol placement and separators correctly.
+  const locale = currency === 'USD' ? 'en-US'
+               : currency === 'EUR' ? 'de-DE'
+               : currency === 'GBP' ? 'en-GB'
+               : currency === 'CNY' ? 'zh-CN'
+               : currency === 'JPY' ? 'ja-JP'
+               : currency === 'AUD' ? 'en-AU'
+               : currency === 'CAD' ? 'en-CA'
+               : 'en-US'
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(amount || 0)
 }
 
 export function formatDate(dateStr) {

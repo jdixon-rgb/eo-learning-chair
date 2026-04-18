@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react'
 import eoLogo from '@/assets/eo-az-gray.png'
+import { BUILDER, APP_NAME } from '@/lib/appBranding'
 
 export default function LoginPage() {
   const { session, profile, loading, signIn } = useAuth()
@@ -16,8 +17,7 @@ export default function LoginPage() {
 
   // Already authenticated (or dev mode) — redirect to appropriate home
   if (!loading && profile) {
-    const home = profile.role === 'demo_user' ? '/demo'
-               : profile.role === 'member' ? '/portal'
+    const home = profile.role === 'member' ? '/portal'
                : profile.role === 'sap_contact' ? '/sap-portal'
                : '/'
     return <Navigate to={home} replace />
@@ -120,9 +120,24 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-white/30 text-xs mt-6">
-          Entrepreneurs' Organization &middot; Arizona Chapter
-        </p>
+        <div className="text-center mt-6 space-y-1">
+          <p className="text-white/40 text-xs">
+            {APP_NAME} &middot; a platform for EO chapters
+          </p>
+          <p className="text-white/30 text-[11px]">
+            Built by{' '}
+            <a
+              href={BUILDER.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/50 hover:text-white transition-colors underline underline-offset-2"
+            >
+              {BUILDER.name}
+            </a>
+            {' · '}
+            <span>{BUILDER.company}</span>
+          </p>
+        </div>
       </div>
     </div>
   )

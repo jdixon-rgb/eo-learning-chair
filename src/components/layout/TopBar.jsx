@@ -16,6 +16,7 @@ export default function TopBar({ onMenuToggle }) {
   const budgetUsed = totalChairAllocated
   const budgetPercent = chapterBudget > 0 ? ((budgetUsed / chapterBudget) * 100).toFixed(0) : 0
   const remaining = chapterBudget - budgetUsed
+  const currency = chapter?.currency || 'USD'
 
   return (
     <header className="h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
@@ -44,9 +45,9 @@ export default function TopBar({ onMenuToggle }) {
         <div className="text-right">
           <p className="text-xs text-muted-foreground hidden sm:block">Budget Used</p>
           <p className="text-xs sm:text-sm font-semibold">
-            <span className="hidden sm:inline">{formatCurrency(budgetUsed)} / </span>
-            <span className="sm:hidden">{formatCurrency(remaining)} left</span>
-            <span className="hidden sm:inline">{formatCurrency(chapterBudget)}</span>
+            <span className="hidden sm:inline">{formatCurrency(budgetUsed, currency)} / </span>
+            <span className="sm:hidden">{formatCurrency(remaining, currency)} left</span>
+            <span className="hidden sm:inline">{formatCurrency(chapterBudget, currency)}</span>
             <span className={`ml-1 sm:ml-2 text-xs ${remaining < 50000 ? 'text-eo-pink' : 'text-green-600'}`}>
               ({budgetPercent}%)
             </span>

@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const { chapter, events, speakers, pipelineSpeakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription, activePresidentName, getChairBudget } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
+  const currency = chapter?.currency || 'USD'
 
   const theme = activePresidentTheme || chapter.president_theme || ''
   const learningBudget = getChairBudget('learning')
@@ -83,8 +84,8 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4" />
             Budget Health
           </div>
-          <p className="text-2xl font-bold">{formatCurrency(remaining)}</p>
-          <p className="text-xs text-muted-foreground mt-1">remaining of {formatCurrency(learningBudget)}</p>
+          <p className="text-2xl font-bold">{formatCurrency(remaining, currency)}</p>
+          <p className="text-xs text-muted-foreground mt-1">remaining of {formatCurrency(learningBudget, currency)}</p>
           <div className="mt-3 h-2 bg-secondary rounded-full overflow-hidden">
             <div className={`h-full rounded-full ${budgetColor} transition-all`} style={{ width: `${Math.min(budgetPercent, 100)}%` }} />
           </div>
@@ -214,7 +215,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     {speaker.fee_range_low ? (
                       <span className="text-xs text-muted-foreground">
-                        {formatCurrency(speaker.fee_range_low)}–{formatCurrency(speaker.fee_range_high)}
+                        {formatCurrency(speaker.fee_range_low, currency)}–{formatCurrency(speaker.fee_range_high, currency)}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">TBD</span>
@@ -251,7 +252,7 @@ export default function DashboardPage() {
                   <div key={cat}>
                     <div className="flex justify-between text-xs mb-1">
                       <span className="text-muted-foreground">{labels[cat]}</span>
-                      <span className="font-medium">{formatCurrency(total)} ({pct.toFixed(0)}%)</span>
+                      <span className="font-medium">{formatCurrency(total, currency)} ({pct.toFixed(0)}%)</span>
                     </div>
                     <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${colors[cat]}`} style={{ width: `${pct}%` }} />

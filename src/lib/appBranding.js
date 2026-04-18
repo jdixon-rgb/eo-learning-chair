@@ -1,0 +1,17 @@
+// Central "Built by" attribution config. Every surface that mentions the
+// builder reads from here — change once, flows to login page, app footer,
+// and the Settings "About the Builder" card.
+//
+// This is the Trojan-horse layer: every entrepreneur who clicks through this
+// app should know who built it and how to hire that person for their own
+// business.
+
+export const BUILDER = {
+  name: 'John-Scott Dixon',
+  company: 'Aidan Taylor Marketing',
+  url: 'https://aidantaylor.com',
+  tagline: 'Need a platform like this for your business? Let\u2019s talk.',
+  emailCta: 'jdixon@aidantaylor.com',
+}
+
+export const APP_NAME = 'OurChapter OS'

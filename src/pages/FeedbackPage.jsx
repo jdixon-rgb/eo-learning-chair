@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Bug, Lightbulb, Check, Send } from 'lucide-react'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
 
 const feedbackTypes = [
   { value: 'suggestion', label: 'Suggestion', icon: Lightbulb, desc: 'An idea to make things better' },
@@ -8,12 +10,36 @@ const feedbackTypes = [
 ]
 
 export default function FeedbackPage() {
+  const { user, profile } = useAuth()
   const [type, setType] = useState('suggestion')
   const [message, setMessage] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!message.trim()) return
+    setSending(true)
+    setErrorMsg('')
+
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from('platform_feedback').insert({
+        user_id: user?.id ?? null,
+        user_email: user?.email ?? profile?.email ?? null,
+        chapter_id: profile?.chapter_id ?? null,
+        feedback_type: type,
+        message: message.trim(),
+        url: typeof window !== 'undefined' ? window.location.href : null,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      })
+      if (error) {
+        setErrorMsg(`Failed to submit: ${error.message}`)
+        setSending(false)
+        return
+      }
+    }
+
+    setSending(false)
     setSubmitted(true)
   }
 
@@ -100,12 +126,15 @@ export default function FeedbackPage() {
 
       <button
         onClick={handleSubmit}
-        disabled={!message.trim()}
+        disabled={!message.trim() || sending}
         className="w-full py-3 rounded-xl font-medium text-sm bg-eo-blue text-white hover:bg-eo-blue/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
       >
         <Send className="w-4 h-4" />
-        Submit
+        {sending ? 'Sending…' : 'Submit'}
       </button>
+      {errorMsg && (
+        <p className="text-sm text-eo-pink text-center">{errorMsg}</p>
+      )}
     </div>
   )
 }
