@@ -1,6 +1,6 @@
 import { useChapter } from '@/lib/chapter'
 
-export default function ChapterSwitcher() {
+export default function ChapterSwitcher({ onAfterChange }) {
   const { allChapters, activeChapterId, setActiveChapterId } = useChapter()
 
   if (allChapters.length <= 1) return null
@@ -12,7 +12,7 @@ export default function ChapterSwitcher() {
       </label>
       <select
         value={activeChapterId || ''}
-        onChange={(e) => setActiveChapterId(e.target.value)}
+        onChange={(e) => { setActiveChapterId(e.target.value); onAfterChange?.() }}
         className="w-full text-xs rounded-lg px-2.5 py-2 bg-card text-foreground border border-sidebar-border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
       >
         {allChapters.map((ch) => (

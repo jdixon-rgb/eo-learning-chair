@@ -79,11 +79,16 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
     !item.permission || hasPermission(effectiveRole, item.permission)
   )
 
-  const visibleAdmin = adminItems.filter(item =>
+  // Suppress chapter-operational sub-sections (Admin / Board) from the
+  // Super Admin surface — super-admin focuses on platform-level concerns.
+  // Super-admins role-switch into a chair view to access those operations.
+  const hideChapterOps = isSuperAdmin && !isImpersonating
+
+  const visibleAdmin = hideChapterOps ? [] : adminItems.filter(item =>
     !item.permission || hasPermission(effectiveRole, item.permission)
   )
 
-  const visibleBoard = boardItems.filter(item =>
+  const visibleBoard = hideChapterOps ? [] : boardItems.filter(item =>
     !item.permission || hasPermission(effectiveRole, item.permission)
   )
 
@@ -171,14 +176,14 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
 
           {contextExpanded && (
             <div className="pb-3">
-              {/* Chapter Switcher (super admin only) */}
+              {/* Chapter Switcher (super admin only) — collapses on change */}
               <div className="pt-2">
-                <ChapterSwitcher />
+                <ChapterSwitcher onAfterChange={() => setContextExpanded(false)} />
               </div>
 
-              {/* Fiscal Year Switcher */}
+              {/* Fiscal Year Switcher — collapses on change */}
               <div className="pt-2">
-                <FiscalYearSwitcher />
+                <FiscalYearSwitcher onAfterChange={() => setContextExpanded(false)} />
               </div>
 
               {/* Role switcher — super admin + president */}
@@ -202,6 +207,9 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   ? CHAIR_ROLE_CONFIGS[e.target.value]
                   : ownConfig
                 if (config?.homePath) navigate(config.homePath)
+                // Collapse the context block automatically — the user
+                // finished the context switch, get out of their way.
+                setContextExpanded(false)
               }}
               className="w-full text-xs bg-sidebar-accent/40 border border-sidebar-border rounded-lg px-2 py-1.5 text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
             >

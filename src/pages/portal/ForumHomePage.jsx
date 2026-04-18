@@ -168,7 +168,7 @@ export default function ForumHomePage() {
     { key: 'agenda', label: 'Agenda', icon: ClipboardList },
     { key: 'calendar', label: 'Calendar', icon: Calendar },
     { key: 'constitution', label: 'Constitution', icon: FileText },
-    { key: 'partners', label: 'Partners', icon: Handshake },
+    { key: 'partners', label: 'SAPs', icon: Handshake },
     { key: 'members', label: 'Members', icon: Users },
     { key: 'roles', label: 'Roles', icon: Users },
     { key: 'history', label: 'History', icon: History },

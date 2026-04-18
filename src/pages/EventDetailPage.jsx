@@ -371,12 +371,12 @@ export default function EventDetailPage() {
                 <p className="text-[11px] text-muted-foreground italic">Pro tip: Volunteer frequent complainers as Day Chair.</p>
               </div>
 
-              {/* Strategic Alliance Partners */}
+              {/* SAPs */}
               <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Handshake className="h-4 w-4 text-warm" />
-                    <h3 className="text-sm font-semibold">Strategic Alliance Partners</h3>
+                    <h3 className="text-sm font-semibold">SAPs</h3>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <span className="text-[11px] text-muted-foreground">{event.open_to_saps === false ? 'Members only' : 'Open to SAPs'}</span>

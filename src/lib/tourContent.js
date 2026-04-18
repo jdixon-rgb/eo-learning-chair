@@ -57,11 +57,11 @@ export const TOUR_CONTENT = {
 
   '/partners': {
     learning_chair: {
-      title: 'Strategic Alliance Partners',
+      title: 'SAPs',
       body: 'Your SAP partners grouped by tier (Platinum, Gold, Silver, In-Kind). Expand a partner to see contacts. Use the eye icon on a contact to preview their SAP portal experience.',
     },
     president: {
-      title: 'Strategic Alliance Partners',
+      title: 'SAPs',
       body: 'All chapter SAP partners by tier. Partners feed the Vendor Exchange as premium vendors and can be invited to attend or present at events.',
     },
     strategic_alliances: {
