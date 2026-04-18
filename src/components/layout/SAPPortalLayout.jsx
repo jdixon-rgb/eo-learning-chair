@@ -6,6 +6,7 @@ import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu,
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { useState } from 'react'
 import { APP_VERSION } from '@/lib/version'
+import BuiltByFooter from '@/components/BuiltByFooter'
 
 const sapNav = [
   { to: '/sap-portal', icon: LayoutDashboard, label: 'Dashboard', end: true },
@@ -31,17 +32,22 @@ export default function SAPPortalLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ink via-[#121248] to-ink text-white">
-      {/* Top Nav */}
-      <header className="border-b border-white/10 bg-ink/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* Top Nav — light theme, terracotta accent strip */}
+      <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
+        {/* Accent strip — terracotta/warm — context cue */}
+        <div className="h-1 bg-warm" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          {/* Left: Brand + Partner */}
-          <div className="flex items-center gap-3">
-            <span className="text-base font-semibold tracking-tight text-white">
+          {/* Left: Brand + context chip */}
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-base font-semibold tracking-tight shrink-0">
               <span className="text-warm">Our</span>Chapter OS
             </span>
+            <span className="text-[10px] font-bold tracking-widest uppercase text-warm bg-warm/10 px-2 py-0.5 rounded shrink-0">
+              Partner
+            </span>
             {partner && (
-              <span className="text-xs font-semibold text-indigo-300 tracking-tight hidden sm:inline">
+              <span className="text-xs font-medium text-muted-foreground truncate hidden sm:inline">
                 {partner.name}
               </span>
             )}
@@ -57,8 +63,8 @@ export default function SAPPortalLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-white/60 hover:bg-white/10 hover:text-white'
+                      ? 'bg-warm text-warm-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`
                 }
               >
@@ -74,18 +80,18 @@ export default function SAPPortalLayout() {
               <NavLink
                 to="/"
                 onClick={() => { setViewAsSapContactId(null); setViewAsRole(null) }}
-                className="text-xs text-amber-300 hover:text-amber-200 font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-warm hover:text-warm/80 font-medium flex items-center gap-1 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
                 Admin
               </NavLink>
             )}
-            <span className="text-xs text-white/50 hidden sm:inline">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {profile?.full_name || profile?.email}
             </span>
             <button
               onClick={handleSignOut}
-              className="text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer hidden md:block"
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer hidden md:block"
               title="Sign out"
             >
               <LogOut className="h-4 w-4" />
@@ -93,7 +99,7 @@ export default function SAPPortalLayout() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              className="md:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -102,7 +108,7 @@ export default function SAPPortalLayout() {
 
         {/* Mobile nav dropdown */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-ink/95 backdrop-blur-sm">
+          <div className="md:hidden border-t px-4 py-3 space-y-1 bg-card">
             {sapNav.map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={to}
@@ -112,8 +118,8 @@ export default function SAPPortalLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-white/60 hover:bg-white/10 hover:text-white'
+                      ? 'bg-warm text-warm-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`
                 }
               >
@@ -123,7 +129,7 @@ export default function SAPPortalLayout() {
             ))}
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/40 hover:bg-white/10 hover:text-white transition-colors w-full cursor-pointer"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -134,17 +140,17 @@ export default function SAPPortalLayout() {
 
       {/* Admin preview bar — switch contacts or exit */}
       {canSwitchRoles && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
+        <div className="bg-warm/10 border-b border-warm/30 px-4 py-2">
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-amber-300/60 uppercase tracking-wider shrink-0">Viewing as</span>
+              <span className="text-[10px] font-bold text-warm/80 uppercase tracking-wider shrink-0">Viewing as</span>
               <select
                 value={viewAsSapContactId || ''}
                 onChange={e => {
                   setViewAsSapContactId(e.target.value || null)
                   navigate('/sap-portal')
                 }}
-                className="text-xs bg-white/5 border border-amber-500/20 rounded-lg px-2 py-1 text-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-500/30 max-w-xs"
+                className="text-xs bg-card border border-warm/30 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-warm/50 max-w-xs"
               >
                 <option value="">— pick a contact —</option>
                 {allContacts.map(c => {
@@ -155,7 +161,7 @@ export default function SAPPortalLayout() {
             </div>
             <button
               onClick={() => { setViewAsSapContactId(null); setViewAsRole(null); navigate('/') }}
-              className="text-xs text-amber-300 hover:text-amber-200 underline cursor-pointer shrink-0"
+              className="text-xs text-warm hover:text-warm/80 underline cursor-pointer shrink-0"
             >
               Exit Preview
             </button>
@@ -164,14 +170,15 @@ export default function SAPPortalLayout() {
       )}
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 flex-1">
         <Outlet />
       </main>
 
-      {/* Footer */}
-      <footer className="max-w-5xl mx-auto px-4 sm:px-6 pb-6 text-center">
-        <span className="text-[10px] text-white/15">v{APP_VERSION}</span>
-      </footer>
+      {/* Version + builder attribution */}
+      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 text-center pb-2">
+        <span className="text-[10px] text-muted-foreground/60">v{APP_VERSION}</span>
+      </div>
+      <BuiltByFooter />
     </div>
   )
 }

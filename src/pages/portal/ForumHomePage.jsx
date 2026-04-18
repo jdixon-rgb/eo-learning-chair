@@ -142,13 +142,13 @@ export default function ForumHomePage() {
   const myForumInterest = useMemo(() => fid ? sapInterest.filter(i => i.forum_id === fid) : [], [sapInterest, fid])
   const myForumRatings = useMemo(() => fid ? sapRatings.filter(r => r.forum_id === fid) : [], [sapRatings, fid])
 
-  if (loading || boardLoading) return <div className="text-white/60 text-center py-12">Loading…</div>
+  if (loading || boardLoading) return <div className="text-muted-foreground text-center py-12">Loading…</div>
 
   if (!member) {
     return (
       <div className="text-center py-16">
         <h2 className="text-xl font-bold">Member profile not found</h2>
-        <p className="text-white/50 text-sm mt-2">Reach out to your chapter admin to get set up.</p>
+        <p className="text-muted-foreground text-sm mt-2">Reach out to your chapter admin to get set up.</p>
       </div>
     )
   }
@@ -157,7 +157,7 @@ export default function ForumHomePage() {
     return (
       <div className="text-center py-16">
         <h2 className="text-xl font-bold">You're not in a forum yet</h2>
-        <p className="text-white/50 text-sm mt-2">Talk to your Forum Placement Chair — an incredible journey is waiting for you.</p>
+        <p className="text-muted-foreground text-sm mt-2">Talk to your Forum Placement Chair — an incredible journey is waiting for you.</p>
       </div>
     )
   }
@@ -181,7 +181,7 @@ export default function ForumHomePage() {
         <button
           type="button"
           onClick={() => setTab('members')}
-          className="text-white/50 text-sm mt-1 hover:text-white/80 transition-colors cursor-pointer"
+          className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
         >
           {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
         </button>
@@ -201,13 +201,13 @@ export default function ForumHomePage() {
       )}
 
       {/* Tab nav */}
-      <div className="flex flex-wrap justify-center gap-1 border-b border-white/10">
+      <div className="flex flex-wrap justify-center gap-1 border-b border-border">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-3 text-xs font-medium flex items-center gap-1.5 border-b-2 transition-colors ${
-              tab === t.key ? 'border-primary text-white' : 'border-transparent text-white/50 hover:text-white/80'
+              tab === t.key ? 'border-primary text-white' : 'border-transparent text-muted-foreground hover:text-foreground/90'
             }`}
           >
             <t.icon className="h-3.5 w-3.5" />
@@ -301,42 +301,42 @@ export default function ForumHomePage() {
           <div className="space-y-3">
             <button
               onClick={() => setActiveTool(null)}
-              className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Back to Tools
             </button>
-            <Suspense fallback={<div className="text-white/60 text-center py-8">Loading Reflections…</div>}>
+            <Suspense fallback={<div className="text-muted-foreground text-center py-8">Loading Reflections…</div>}>
               <ReflectionsPage />
             </Suspense>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs text-white/40">Tools your forum uses in meetings. More coming soon.</p>
+            <p className="text-xs text-muted-foreground/70">Tools your forum uses in meetings. More coming soon.</p>
             <button
               onClick={() => setActiveTool('reflections')}
-              className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
+              className="w-full text-left rounded-xl border border-border bg-muted/30 p-5 hover:bg-muted/30 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <BookOpen className="h-5 w-5 text-emerald-400 shrink-0" />
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90">Reflections</h3>
-                  <p className="text-xs text-white/50 mt-0.5">Private journaling with three templates — Modern, Hesse Classic, and EO Standard.</p>
+                  <h3 className="text-sm font-semibold text-foreground">Reflections</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Private journaling with three templates — Modern, Hesse Classic, and EO Standard.</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0 ml-auto" />
               </div>
             </button>
             <Link
               to="/portal/lifeline"
-              className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
+              className="block rounded-xl border border-border bg-muted/30 p-5 hover:bg-muted/30 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <History className="h-5 w-5 text-primary shrink-0" />
                 <div>
-                  <h3 className="text-sm font-semibold text-white/90">Lifeline</h3>
-                  <p className="text-xs text-white/50 mt-0.5">Chart your journey — plot the highs and lows that shaped who you are.</p>
+                  <h3 className="text-sm font-semibold text-foreground">Lifeline</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Chart your journey — plot the highs and lows that shaped who you are.</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-white/20 shrink-0 ml-auto" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0 ml-auto" />
               </div>
             </Link>
           </div>
@@ -430,19 +430,19 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
     <div className="space-y-4">
       {isModerator && (
         <div className="flex justify-end">
-          <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+          <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
             <Plus className="h-3.5 w-3.5" /> Assign role
           </button>
         </div>
       )}
 
       {showAdd && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <select value={addRole} onChange={e => setAddRole(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+            <select value={addRole} onChange={e => setAddRole(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
               {FORUM_ROLE_ORDER.map(r => <option key={r} value={r} className="bg-ink">{FORUM_ROLE_LABELS[r]}</option>)}
             </select>
-            <select value={addMember} onChange={e => setAddMember(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+            <select value={addMember} onChange={e => setAddMember(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
               <option value="" className="bg-ink">Select member…</option>
               {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
             </select>
@@ -451,33 +451,33 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
               value={addFY}
               onChange={e => setAddFY(e.target.value)}
               placeholder="FY2028"
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+              className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
             />
           </div>
           <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
+            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
             <button onClick={handleAdd} disabled={!addMember || !addFY} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Assign</button>
           </div>
         </div>
       )}
 
       {byYear.length === 0 ? (
-        <div className="text-center py-12 text-white/40 text-sm">No roles assigned yet.</div>
+        <div className="text-center py-12 text-muted-foreground/70 text-sm">No roles assigned yet.</div>
       ) : (
         byYear.map(({ fy, roles: yearRoles }) => (
-          <div key={fy} className="rounded-xl border border-white/10 overflow-hidden">
-            <div className="bg-white/5 px-4 py-2 text-xs font-semibold text-white/60 uppercase tracking-wider">{fy}</div>
+          <div key={fy} className="rounded-xl border border-border overflow-hidden">
+            <div className="bg-muted/30 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{fy}</div>
             <div className="divide-y divide-white/5">
               {yearRoles.map(r => {
                 const m = memberById.get(r.chapter_member_id)
                 return (
                   <div key={r.id} className="px-4 py-3 flex items-center justify-between">
                     <div>
-                      <span className="text-sm text-white/90 font-medium">{m?.name || 'Unknown'}</span>
-                      <span className="ml-2 text-[10px] uppercase tracking-wide text-white/40 bg-white/5 px-2 py-0.5 rounded-full">{FORUM_ROLE_LABELS[r.role]}</span>
+                      <span className="text-sm text-foreground font-medium">{m?.name || 'Unknown'}</span>
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground/70 bg-muted/30 px-2 py-0.5 rounded-full">{FORUM_ROLE_LABELS[r.role]}</span>
                     </div>
                     {isModerator && (
-                      <button onClick={() => onDelete(r.id)} className="text-white/30 hover:text-red-400" title="Remove">
+                      <button onClick={() => onDelete(r.id)} className="text-muted-foreground/60 hover:text-red-400" title="Remove">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -498,7 +498,7 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
 function MembersTab({ forumMembers, currentMemberId }) {
   if (!forumMembers || forumMembers.length === 0) {
     return (
-      <div className="text-center py-12 text-white/40 text-sm">
+      <div className="text-center py-12 text-muted-foreground/70 text-sm">
         No other members in this forum yet.
       </div>
     )
@@ -506,28 +506,28 @@ function MembersTab({ forumMembers, currentMemberId }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-white/40 px-1">Your forum mates. Tap a name to see the contact details your chapter has on file.</p>
-      <div className="rounded-xl border border-white/10 overflow-hidden divide-y divide-white/5">
+      <p className="text-xs text-muted-foreground/70 px-1">Your forum mates. Tap a name to see the contact details your chapter has on file.</p>
+      <div className="rounded-xl border border-border overflow-hidden divide-y divide-white/5">
         {forumMembers.map(m => {
           const isMe = m.id === currentMemberId
           return (
             <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-white/90 truncate">{m.name || 'Unknown'}</span>
+                  <span className="text-sm font-medium text-foreground truncate">{m.name || 'Unknown'}</span>
                   {isMe && (
                     <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">You</span>
                   )}
                 </div>
                 {m.company && (
-                  <p className="text-xs text-white/40 mt-0.5 truncate">{m.company}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">{m.company}</p>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-xs text-white/40 shrink-0">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground/70 shrink-0">
                 {m.email && (
                   <a
                     href={`mailto:${m.email}`}
-                    className="hover:text-white/80 transition-colors hidden sm:inline"
+                    className="hover:text-foreground/90 transition-colors hidden sm:inline"
                     title={m.email}
                   >
                     Email
@@ -536,7 +536,7 @@ function MembersTab({ forumMembers, currentMemberId }) {
                 {m.phone && (
                   <a
                     href={`tel:${m.phone}`}
-                    className="hover:text-white/80 transition-colors"
+                    className="hover:text-foreground/90 transition-colors"
                     title={m.phone}
                   >
                     Call
@@ -575,47 +575,47 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
     <div className="space-y-4">
       {isModerator && (
         <div className="flex justify-end">
-          <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+          <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
             <Plus className="h-3.5 w-3.5" /> Add event
           </button>
         </div>
       )}
 
       {showAdd && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-          <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Event title" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+          <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Event title" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
           <div className="grid grid-cols-2 gap-3">
-            <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
-            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+            <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
               {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-ink">{v}</option>)}
             </select>
           </div>
-          <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
-          <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+          <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+          <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
           <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
+            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
             <button onClick={handleAdd} disabled={!form.title || !form.event_date} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
           </div>
         </div>
       )}
 
       {allEvents.length === 0 ? (
-        <div className="text-center py-12 text-white/40 text-sm">No events scheduled.</div>
+        <div className="text-center py-12 text-muted-foreground/70 text-sm">No events scheduled.</div>
       ) : (
         <div className="space-y-2">
           {allEvents.map(e => (
-            <div key={e.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 flex items-center justify-between">
+            <div key={e.id} className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-white/90">{e.title}</span>
-                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-white/5 text-white/40">
+                  <span className="text-sm font-medium text-foreground">{e.title}</span>
+                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
                     {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
                   </span>
                 </div>
-                <p className="text-xs text-white/40 mt-0.5">{e.event_date}{e.location ? ` · ${e.location}` : ''}</p>
+                <p className="text-xs text-muted-foreground/70 mt-0.5">{e.event_date}{e.location ? ` · ${e.location}` : ''}</p>
               </div>
               {isModerator && (
-                <button onClick={() => onDelete(e.id)} className="text-white/30 hover:text-red-400">
+                <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               )}
@@ -656,14 +656,14 @@ function ConstitutionTab({
   if (!constitution || forumVersions.length === 0) {
     return (
       <div className="text-center py-16">
-        <FileText className="h-10 w-10 text-white/20 mx-auto mb-3" />
-        <p className="text-white/50 text-sm mb-4">No constitution yet for this forum.</p>
+        <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+        <p className="text-muted-foreground text-sm mb-4">No constitution yet for this forum.</p>
         {isModerator ? (
           <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
             <Plus className="h-4 w-4" /> Create draft
           </button>
         ) : (
-          <p className="text-xs text-white/30">Your moderator hasn't started one yet.</p>
+          <p className="text-xs text-muted-foreground/60">Your moderator hasn't started one yet.</p>
         )}
       </div>
     )
@@ -701,7 +701,7 @@ function ConstitutionTab({
         {isModerator && adopted && !draft && !proposed && (
           <button
             onClick={onProposeAmendment}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90"
           >
             <Plus className="h-3.5 w-3.5" /> Propose amendment
           </button>
@@ -835,7 +835,7 @@ function ConstitutionVersionView({
               return (
                 <span
                   key={m.id}
-                  className={`text-[10px] px-2 py-0.5 rounded-full border ${signed ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-white/5 text-white/40'}`}
+                  className={`text-[10px] px-2 py-0.5 rounded-full border ${signed ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300' : 'border-border bg-muted/30 text-muted-foreground/70'}`}
                   title={signed ? 'Ratified' : 'Not yet ratified'}
                 >
                   {signed && '✓ '}{m.name}
@@ -850,7 +850,7 @@ function ConstitutionVersionView({
       {isModerator && version.status === 'draft' && (
         <div className="flex items-center gap-2">
           {!editing ? (
-            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
               <FileText className="h-3.5 w-3.5" /> Edit
             </button>
           ) : (
@@ -858,7 +858,7 @@ function ConstitutionVersionView({
               <button onClick={handleSave} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-primary hover:bg-primary/90 text-white">
                 <Save className="h-3.5 w-3.5" /> Save draft
               </button>
-              <button onClick={() => { setTitle(version.title || ''); setPreamble(version.preamble || ''); setSections(Array.isArray(version.sections) ? version.sections : []); setEditing(false) }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/70">
+              <button onClick={() => { setTitle(version.title || ''); setPreamble(version.preamble || ''); setSections(Array.isArray(version.sections) ? version.sections : []); setEditing(false) }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/80">
                 Cancel
               </button>
             </>
@@ -880,7 +880,7 @@ function ConstitutionVersionView({
               onClick={() => {
                 if (confirm('Delete this draft? This cannot be undone.')) onDelete(version.id)
               }}
-              className="ml-auto text-white/30 hover:text-red-400"
+              className="ml-auto text-muted-foreground/60 hover:text-red-400"
               title="Delete draft"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -890,7 +890,7 @@ function ConstitutionVersionView({
       )}
 
       {/* Content */}
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-5">
+      <div className="rounded-xl border border-border bg-muted/30 p-6 space-y-5">
         {canEdit && editing ? (
           <>
             <input
@@ -898,46 +898,46 @@ function ConstitutionVersionView({
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Constitution title"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-base font-semibold text-white placeholder-white/30"
+              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-base font-semibold text-white placeholder-white/30"
             />
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold mb-1 block">Preamble</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mb-1 block">Preamble</label>
               <textarea
                 value={preamble}
                 onChange={e => setPreamble(e.target.value)}
                 rows={3}
                 placeholder="Opening statement (optional)"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+                className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
               />
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Sections</label>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Sections</label>
                 <button onClick={handleAddSection} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                   <Plus className="h-3 w-3" /> Add section
                 </button>
               </div>
               {sections.length === 0 && (
-                <p className="text-xs text-white/30 italic">No sections yet.</p>
+                <p className="text-xs text-muted-foreground/60 italic">No sections yet.</p>
               )}
               {sections.map((section, idx) => (
-                <div key={section.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-3 space-y-2">
+                <div key={section.id} className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/40 font-mono w-6 text-right">{idx + 1}.</span>
+                    <span className="text-xs text-muted-foreground/70 font-mono w-6 text-right">{idx + 1}.</span>
                     <input
                       type="text"
                       value={section.heading}
                       onChange={e => handleUpdateSection(section.id, { heading: e.target.value })}
                       placeholder="Section heading"
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm font-semibold text-white placeholder-white/30"
+                      className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-sm font-semibold text-white placeholder-white/30"
                     />
-                    <button onClick={() => handleMoveSection(idx, -1)} disabled={idx === 0} className="text-white/20 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed" title="Move up">
+                    <button onClick={() => handleMoveSection(idx, -1)} disabled={idx === 0} className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed" title="Move up">
                       <ChevronUp className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => handleMoveSection(idx, 1)} disabled={idx === sections.length - 1} className="text-white/20 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed" title="Move down">
+                    <button onClick={() => handleMoveSection(idx, 1)} disabled={idx === sections.length - 1} className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed" title="Move down">
                       <ChevronDown className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => handleDeleteSection(section.id)} className="text-white/20 hover:text-red-400" title="Delete section">
+                    <button onClick={() => handleDeleteSection(section.id)} className="text-muted-foreground/40 hover:text-red-400" title="Delete section">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -946,7 +946,7 @@ function ConstitutionVersionView({
                     onChange={e => handleUpdateSection(section.id, { body: e.target.value })}
                     rows={4}
                     placeholder="Section text..."
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+                    className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
                   />
                 </div>
               ))}
@@ -956,24 +956,24 @@ function ConstitutionVersionView({
           <>
             <h2 className="text-xl font-semibold text-white">{version.title || 'Forum Constitution'}</h2>
             {version.preamble && (
-              <p className="text-sm text-white/70 whitespace-pre-wrap italic">{version.preamble}</p>
+              <p className="text-sm text-foreground/80 whitespace-pre-wrap italic">{version.preamble}</p>
             )}
             {sections.length === 0 ? (
-              <p className="text-xs text-white/30 italic">No content yet.</p>
+              <p className="text-xs text-muted-foreground/60 italic">No content yet.</p>
             ) : (
               <div className="space-y-4">
                 {sections.map((section, idx) => (
                   <div key={section.id}>
-                    <h3 className="text-sm font-semibold text-white/90 mb-1">
-                      {idx + 1}. {section.heading || <span className="text-white/30 italic">Untitled section</span>}
+                    <h3 className="text-sm font-semibold text-foreground mb-1">
+                      {idx + 1}. {section.heading || <span className="text-muted-foreground/60 italic">Untitled section</span>}
                     </h3>
-                    {section.body && <p className="text-sm text-white/70 whitespace-pre-wrap">{section.body}</p>}
+                    {section.body && <p className="text-sm text-foreground/80 whitespace-pre-wrap">{section.body}</p>}
                   </div>
                 ))}
               </div>
             )}
             {version.status === 'adopted' && version.adopted_at && (
-              <p className="text-[11px] text-white/30 mt-4">Adopted {new Date(version.adopted_at).toLocaleDateString()}</p>
+              <p className="text-[11px] text-muted-foreground/60 mt-4">Adopted {new Date(version.adopted_at).toLocaleDateString()}</p>
             )}
           </>
         )}
@@ -1000,17 +1000,17 @@ function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onTogg
   const total = forumMemberCount || 10
 
   if (sapList.length === 0) {
-    return <div className="text-center py-12 text-white/40 text-sm">No SAP partners found. Partners are managed by the SAP Chair.</div>
+    return <div className="text-center py-12 text-muted-foreground/70 text-sm">No SAP partners found. Partners are managed by the SAP Chair.</div>
   }
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-muted-foreground/70">
         Check the partners you're interested in hearing from. Your moderator uses this to decide who to invite — the more interest, the better the fit.
       </p>
-      <div className="rounded-xl border border-white/10 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+          <thead className="bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground/70">
             <tr>
               <th className="text-left px-4 py-3 w-10"></th>
               <th className="text-left px-3 py-3">Partner</th>
@@ -1025,40 +1025,40 @@ function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onTogg
               const count = sap.intCount
               const pct = total > 0 ? Math.round((count / total) * 100) : 0
               return (
-                <tr key={sap.id} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
+                <tr key={sap.id} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3">
                     <button
                       onClick={() => onToggleInterest(sap.id, interested)}
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
                         interested
                           ? 'bg-emerald-500 border-emerald-500 text-white'
-                          : 'border-white/20 hover:border-white/40'
+                          : 'border-border hover:border-primary/40'
                       }`}
                     >
                       {interested && <span className="text-xs font-bold">✓</span>}
                     </button>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-white/90 font-medium">{name}</span>
+                    <span className="text-foreground font-medium">{name}</span>
                   </td>
                   <td className="px-3 py-3">
                     {sap.tier && (
                       <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
                         sap.tier === 'Platinum' ? 'bg-amber-500/20 text-amber-400' :
                         sap.tier === 'Gold' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-white/5 text-white/40'
+                        'bg-muted/30 text-muted-foreground/70'
                       }`}>{sap.tier}</span>
                     )}
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-emerald-500 transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="text-xs text-white/50 w-12 text-right">{count}/{total}</span>
+                      <span className="text-xs text-muted-foreground w-12 text-right">{count}/{total}</span>
                     </div>
                   </td>
                 </tr>
@@ -1097,16 +1097,16 @@ function HistoryTab({ forum, history, roles, memberById, isModerator, onAddHisto
     <div className="space-y-6">
       {/* Moderator lineage */}
       <div>
-        <h3 className="text-sm font-semibold text-white/80 mb-3">Moderator Lineage</h3>
+        <h3 className="text-sm font-semibold text-foreground/90 mb-3">Moderator Lineage</h3>
         {moderatorLineage.length === 0 ? (
-          <p className="text-xs text-white/40">No moderators assigned yet. Add them in the Roles tab.</p>
+          <p className="text-xs text-muted-foreground/70">No moderators assigned yet. Add them in the Roles tab.</p>
         ) : (
           <div className="space-y-1">
             {moderatorLineage.map((r, i) => (
-              <div key={r.id} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/[0.03]">
-                <span className="text-xs text-white/30 w-8">#{i + 1}</span>
-                <span className="text-sm text-white/90 font-medium">{r.name}</span>
-                <span className="text-xs text-white/40">{r.fiscal_year}</span>
+              <div key={r.id} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted/30">
+                <span className="text-xs text-muted-foreground/60 w-8">#{i + 1}</span>
+                <span className="text-sm text-foreground font-medium">{r.name}</span>
+                <span className="text-xs text-muted-foreground/70">{r.fiscal_year}</span>
               </div>
             ))}
           </div>
@@ -1116,47 +1116,47 @@ function HistoryTab({ forum, history, roles, memberById, isModerator, onAddHisto
       {/* Past members */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-white/80">Past Members</h3>
+          <h3 className="text-sm font-semibold text-foreground/90">Past Members</h3>
           {isModerator && (
-            <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/60">
+            <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-muted-foreground">
               <Plus className="h-3 w-3" /> Add
             </button>
           )}
         </div>
 
         {showAdd && (
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 mb-3 space-y-3">
-            <input type="text" value={form.member_name} onChange={e => setForm(f => ({ ...f, member_name: e.target.value }))} placeholder="Member name" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+          <div className="rounded-xl border border-border bg-muted/30 p-4 mb-3 space-y-3">
+            <input type="text" value={form.member_name} onChange={e => setForm(f => ({ ...f, member_name: e.target.value }))} placeholder="Member name" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
             <div className="grid grid-cols-2 gap-3">
-              <input type="text" value={form.joined_year} onChange={e => setForm(f => ({ ...f, joined_year: e.target.value }))} placeholder="Joined year" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
-              <input type="text" value={form.left_year} onChange={e => setForm(f => ({ ...f, left_year: e.target.value }))} placeholder="Left year" className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+              <input type="text" value={form.joined_year} onChange={e => setForm(f => ({ ...f, joined_year: e.target.value }))} placeholder="Joined year" className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+              <input type="text" value={form.left_year} onChange={e => setForm(f => ({ ...f, left_year: e.target.value }))} placeholder="Left year" className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
             </div>
-            <label className="flex items-center gap-2 text-xs text-white/60">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={form.is_founding_member} onChange={e => setForm(f => ({ ...f, is_founding_member: e.target.checked }))} />
               Founding member
             </label>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-white/50">Cancel</button>
+              <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground">Cancel</button>
               <button onClick={handleAdd} disabled={!form.member_name} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
             </div>
           </div>
         )}
 
         {history.length === 0 ? (
-          <p className="text-xs text-white/40">No past members recorded yet.</p>
+          <p className="text-xs text-muted-foreground/70">No past members recorded yet.</p>
         ) : (
           <div className="space-y-1">
             {history.sort((a, b) => (a.joined_year || '').localeCompare(b.joined_year || '')).map(h => (
-              <div key={h.id} className="flex items-center justify-between px-4 py-2 rounded-lg bg-white/[0.03]">
+              <div key={h.id} className="flex items-center justify-between px-4 py-2 rounded-lg bg-muted/30">
                 <div>
-                  <span className="text-sm text-white/90">{h.member_name}</span>
+                  <span className="text-sm text-foreground">{h.member_name}</span>
                   {h.is_founding_member && <span className="ml-2 text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full uppercase">Founder</span>}
-                  <span className="ml-2 text-xs text-white/40">
+                  <span className="ml-2 text-xs text-muted-foreground/70">
                     {h.joined_year && h.left_year ? `${h.joined_year}–${h.left_year}` : h.joined_year || h.left_year || ''}
                   </span>
                 </div>
                 {isModerator && (
-                  <button onClick={() => onDeleteHistory(h.id)} className="text-white/30 hover:text-red-400">
+                  <button onClick={() => onDeleteHistory(h.id)} className="text-muted-foreground/60 hover:text-red-400">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
@@ -1191,20 +1191,20 @@ function AgendaTab({ forum, agendas, agendaItems, isModerator, memberId, onAddAg
     const totalMin = items.reduce((s, i) => s + (i.minutes || 0), 0)
     return (
       <div className="space-y-4">
-        <button onClick={() => setViewingId(null)} className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white">
+        <button onClick={() => setViewingId(null)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ChevronLeft className="h-3.5 w-3.5" /> All agendas
         </button>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6 space-y-4">
-          {viewing.mission && <p className="text-xs text-white/50 italic"><strong>Mission:</strong> {viewing.mission}</p>}
-          {viewing.forum_values && <p className="text-xs text-white/50"><strong>Values:</strong> {viewing.forum_values}</p>}
-          <div className="text-xs text-white/60 space-y-1">
+        <div className="rounded-xl border border-border bg-muted/30 p-6 space-y-4">
+          {viewing.mission && <p className="text-xs text-muted-foreground italic"><strong>Mission:</strong> {viewing.mission}</p>}
+          {viewing.forum_values && <p className="text-xs text-muted-foreground"><strong>Values:</strong> {viewing.forum_values}</p>}
+          <div className="text-xs text-muted-foreground space-y-1">
             <p><strong>Date:</strong> {viewing.meeting_date}</p>
             <p><strong>Time:</strong> {viewing.start_time} – {viewing.end_time}</p>
             {viewing.host && <p><strong>Host / Location:</strong> {viewing.host}{viewing.location ? `, ${viewing.location}` : ''}</p>}
           </div>
-          <div className="rounded-lg border border-white/10 overflow-hidden">
+          <div className="rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+              <thead className="bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground/70">
                 <tr>
                   <th className="text-left px-4 py-2">Item</th>
                   <th className="text-center px-3 py-2 w-20">Minutes</th>
@@ -1214,27 +1214,27 @@ function AgendaTab({ forum, agendas, agendaItems, isModerator, memberId, onAddAg
               </thead>
               <tbody>
                 {items.map(item => (
-                  <tr key={item.id} className="border-t border-white/5">
+                  <tr key={item.id} className="border-t border-border/50">
                     <td className="px-4 py-2">
-                      <span className="text-white/90">{item.title}</span>
-                      {item.description && <p className="text-[11px] text-white/40 mt-0.5 whitespace-pre-line">{item.description}</p>}
+                      <span className="text-foreground">{item.title}</span>
+                      {item.description && <p className="text-[11px] text-muted-foreground/70 mt-0.5 whitespace-pre-line">{item.description}</p>}
                     </td>
-                    <td className="text-center px-3 py-2 text-white/60">{item.minutes}</td>
-                    <td className="text-center px-3 py-2 text-white/60">{item.start_time}</td>
-                    <td className="text-center px-3 py-2 text-white/60">{item.end_time}</td>
+                    <td className="text-center px-3 py-2 text-muted-foreground">{item.minutes}</td>
+                    <td className="text-center px-3 py-2 text-muted-foreground">{item.start_time}</td>
+                    <td className="text-center px-3 py-2 text-muted-foreground">{item.end_time}</td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-white/5">
+              <tfoot className="bg-muted/30">
                 <tr>
-                  <td className="px-4 py-2 text-xs text-white/50 font-semibold">Total (Target: {viewing.target_minutes || 270} min)</td>
+                  <td className="px-4 py-2 text-xs text-muted-foreground font-semibold">Total (Target: {viewing.target_minutes || 270} min)</td>
                   <td className="text-center px-3 py-2 text-white font-bold text-xs">{totalMin}</td>
                   <td colSpan={2}></td>
                 </tr>
               </tfoot>
             </table>
           </div>
-          <p className="text-[10px] text-white/20 text-center italic">© {new Date(viewing.meeting_date).getFullYear()} {forum.name} Forum Proprietary and Confidential</p>
+          <p className="text-[10px] text-muted-foreground/40 text-center italic">© {new Date(viewing.meeting_date).getFullYear()} {forum.name} Forum Proprietary and Confidential</p>
         </div>
       </div>
     )
@@ -1271,45 +1271,45 @@ function AgendaTab({ forum, agendas, agendaItems, isModerator, memberId, onAddAg
     <div className="space-y-4">
       {isModerator && (
         <div className="flex justify-end">
-          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
             <Plus className="h-3.5 w-3.5" /> New agenda
           </button>
         </div>
       )}
       {sorted.length === 0 ? (
-        <div className="text-center py-12 text-white/40 text-sm">No agendas yet.</div>
+        <div className="text-center py-12 text-muted-foreground/70 text-sm">No agendas yet.</div>
       ) : (
         <div className="space-y-2">
           {sorted.map(a => {
-            const statusColors = { draft: 'text-amber-400 bg-amber-500/20', published: 'text-emerald-400 bg-emerald-500/20', archived: 'text-white/40 bg-white/5' }
+            const statusColors = { draft: 'text-amber-400 bg-amber-500/20', published: 'text-emerald-400 bg-emerald-500/20', archived: 'text-muted-foreground/70 bg-muted/30' }
             return (
-              <div key={a.id} className={`rounded-xl border border-white/10 bg-white/[0.03] p-4 flex items-center justify-between ${a.status === 'archived' ? 'opacity-60' : ''}`}>
+              <div key={a.id} className={`rounded-xl border border-border bg-muted/30 p-4 flex items-center justify-between ${a.status === 'archived' ? 'opacity-60' : ''}`}>
                 <button onClick={() => setViewingId(a.id)} className="text-left flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white/90">{a.title || a.meeting_date}</span>
+                    <span className="text-sm font-medium text-foreground">{a.title || a.meeting_date}</span>
                     <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${statusColors[a.status] || ''}`}>{a.status}</span>
                   </div>
-                  <p className="text-xs text-white/40 mt-0.5">{a.meeting_date} · {a.start_time} – {a.end_time}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">{a.meeting_date} · {a.start_time} – {a.end_time}</p>
                 </button>
                 {isModerator && (
                   <div className="flex items-center gap-1 shrink-0 ml-3">
-                    <button onClick={() => setEditingId(a.id)} className="text-white/30 hover:text-white p-1" title="Edit"><Save className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => setEditingId(a.id)} className="text-muted-foreground/60 hover:text-foreground p-1" title="Edit"><Save className="h-3.5 w-3.5" /></button>
                     {a.status === 'draft' && (
-                      <button onClick={() => onUpdateAgenda(a.id, { status: 'published' })} className="text-white/30 hover:text-emerald-400 p-1" title="Publish">
+                      <button onClick={() => onUpdateAgenda(a.id, { status: 'published' })} className="text-muted-foreground/60 hover:text-emerald-400 p-1" title="Publish">
                         <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     )}
                     {a.status === 'published' && (
-                      <button onClick={() => onUpdateAgenda(a.id, { status: 'archived' })} className="text-white/30 hover:text-amber-400 p-1" title="Archive">
+                      <button onClick={() => onUpdateAgenda(a.id, { status: 'archived' })} className="text-muted-foreground/60 hover:text-amber-400 p-1" title="Archive">
                         <History className="h-3.5 w-3.5" />
                       </button>
                     )}
                     {a.status === 'archived' && (
-                      <button onClick={() => onUpdateAgenda(a.id, { status: 'published' })} className="text-white/30 hover:text-emerald-400 p-1" title="Restore">
+                      <button onClick={() => onUpdateAgenda(a.id, { status: 'published' })} className="text-muted-foreground/60 hover:text-emerald-400 p-1" title="Restore">
                         <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     )}
-                    <button onClick={() => onDeleteAgenda(a.id)} className="text-white/30 hover:text-red-400 p-1" title="Delete">
+                    <button onClick={() => onDeleteAgenda(a.id)} className="text-muted-foreground/60 hover:text-red-400 p-1" title="Delete">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -1417,47 +1417,47 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
 
   return (
     <div className="space-y-4">
-      <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white">
+      <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
         <ChevronLeft className="h-3.5 w-3.5" /> All agendas
       </button>
-      <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+      <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
         <h3 className="text-base font-semibold">{agenda ? 'Edit Agenda' : 'New Agenda'}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
-            <label className="text-xs text-white/50 mb-1 block">Title</label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Title</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
-            <label className="text-xs text-white/50 mb-1 block">Date</label>
-            <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Date</label>
+            <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
-            <label className="text-xs text-white/50 mb-1 block">Meeting start time</label>
-            <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Meeting start time</label>
+            <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
-            <label className="text-xs text-white/50 mb-1 block">Host</label>
-            <input type="text" value={host} onChange={e => setHost(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Host</label>
+            <input type="text" value={host} onChange={e => setHost(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
-            <label className="text-xs text-white/50 mb-1 block">Location</label>
-            <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Location</label>
+            <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div className="sm:col-span-2">
-            <label className="text-xs text-white/50 mb-1 block">Mission</label>
-            <textarea value={mission} onChange={e => setMission(e.target.value)} rows={2} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Mission</label>
+            <textarea value={mission} onChange={e => setMission(e.target.value)} rows={2} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
-            <label className="text-xs text-white/50 mb-1 block">Values</label>
-            <input type="text" value={forumValues} onChange={e => setForumValues(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Values</label>
+            <input type="text" value={forumValues} onChange={e => setForumValues(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
           <div>
-            <label className="text-xs text-white/50 mb-1 block">Target minutes</label>
-            <input type="number" value={targetMinutes} onChange={e => setTargetMinutes(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+            <label className="text-xs text-muted-foreground mb-1 block">Target minutes</label>
+            <input type="number" value={targetMinutes} onChange={e => setTargetMinutes(Number(e.target.value))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <select value={status} onChange={e => setStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+          <select value={status} onChange={e => setStatus(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
             <option value="draft" className="bg-ink">Draft</option>
             <option value="published" className="bg-ink">Published</option>
             <option value="archived" className="bg-ink">Archived</option>
@@ -1470,17 +1470,17 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
 
       {/* Items editor */}
       {agenda?.id && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+        <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold">Agenda Items</h4>
-            <span className={`text-xs font-mono ${totalMin > targetMinutes ? 'text-red-400' : 'text-white/40'}`}>
+            <span className={`text-xs font-mono ${totalMin > targetMinutes ? 'text-red-400' : 'text-muted-foreground/70'}`}>
               {totalMin} / {targetMinutes} min — ends {endTime}
             </span>
           </div>
           {itemsWithTimes.length > 0 && (
-            <div className="rounded-lg border border-white/10 overflow-hidden">
+            <div className="rounded-lg border border-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+                <thead className="bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground/70">
                   <tr>
                     <th className="text-left px-4 py-2">Item</th>
                     <th className="text-center px-3 py-2 w-16">Min</th>
@@ -1491,20 +1491,20 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
                 </thead>
                 <tbody>
                   {itemsWithTimes.map((item, idx) => (
-                    <tr key={item.id} className="border-t border-white/5">
+                    <tr key={item.id} className="border-t border-border/50">
                       <td className="px-4 py-2">
-                        <span className="text-white/90">{item.title}</span>
-                        {item.description && <p className="text-[11px] text-white/40 mt-0.5 whitespace-pre-line">{item.description}</p>}
+                        <span className="text-foreground">{item.title}</span>
+                        {item.description && <p className="text-[11px] text-muted-foreground/70 mt-0.5 whitespace-pre-line">{item.description}</p>}
                       </td>
-                      <td className="text-center px-3 py-2 text-white/60">{item.minutes}</td>
-                      <td className="text-center px-3 py-2 text-white/50 text-xs">{item.start_time}</td>
-                      <td className="text-center px-3 py-2 text-white/50 text-xs">{item.end_time}</td>
+                      <td className="text-center px-3 py-2 text-muted-foreground">{item.minutes}</td>
+                      <td className="text-center px-3 py-2 text-muted-foreground text-xs">{item.start_time}</td>
+                      <td className="text-center px-3 py-2 text-muted-foreground text-xs">{item.end_time}</td>
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-0.5">
                           <button
                             onClick={() => handleMoveItem(idx, -1)}
                             disabled={idx === 0}
-                            className="text-white/20 hover:text-white disabled:opacity-20 disabled:hover:text-white/20 disabled:cursor-not-allowed"
+                            className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 disabled:hover:text-muted-foreground/40 disabled:cursor-not-allowed"
                             title="Move up"
                           >
                             <ChevronUp className="h-3.5 w-3.5" />
@@ -1512,12 +1512,12 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
                           <button
                             onClick={() => handleMoveItem(idx, 1)}
                             disabled={idx === itemsWithTimes.length - 1}
-                            className="text-white/20 hover:text-white disabled:opacity-20 disabled:hover:text-white/20 disabled:cursor-not-allowed"
+                            className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 disabled:hover:text-muted-foreground/40 disabled:cursor-not-allowed"
                             title="Move down"
                           >
                             <ChevronDown className="h-3.5 w-3.5" />
                           </button>
-                          <button onClick={() => onDeleteItem(item.id)} className="text-white/20 hover:text-red-400 ml-1" title="Delete">
+                          <button onClick={() => onDeleteItem(item.id)} className="text-muted-foreground/40 hover:text-red-400 ml-1" title="Delete">
                             <Trash2 className="h-3 w-3" />
                           </button>
                         </div>
@@ -1530,19 +1530,19 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
           )}
 
           {/* Add item — just title + minutes + optional description */}
-          <div className="border-t border-white/10 pt-3 space-y-2">
-            <p className="text-xs text-white/40">Add item (times auto-calculate from meeting start):</p>
+          <div className="border-t border-border pt-3 space-y-2">
+            <p className="text-xs text-muted-foreground/70">Add item (times auto-calculate from meeting start):</p>
             <div className="flex gap-2">
               <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} placeholder="Item title"
-                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+                className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
               <input type="number" value={newItemMin} onChange={e => setNewItemMin(Number(e.target.value))} min="1"
-                className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white text-center" />
-              <span className="text-xs text-white/30 self-center">min</span>
+                className="w-20 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white text-center" />
+              <span className="text-xs text-muted-foreground/60 self-center">min</span>
             </div>
             <textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Description / sub-items (optional)" rows={2}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-white/30">
+              <span className="text-[10px] text-muted-foreground/60">
                 Next item starts at {formatTime(parseTime(startTime) + totalMin)}
               </span>
               <button onClick={handleAddItem} disabled={!newItemTitle} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add item</button>
@@ -1552,7 +1552,7 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
       )}
 
       {!agenda?.id && (
-        <p className="text-xs text-white/40 text-center">Click "Create agenda" above first, then add items.</p>
+        <p className="text-xs text-muted-foreground/70 text-center">Click "Create agenda" above first, then add items.</p>
       )}
     </div>
   )
@@ -1596,7 +1596,7 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
   if (entries.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-white/40 text-sm mb-4">Nothing on the parking lot yet.</p>
+        <p className="text-muted-foreground/70 text-sm mb-4">Nothing on the parking lot yet.</p>
         <button onClick={onAddNew} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
           <Pin className="h-4 w-4" /> Add to parking lot
         </button>
@@ -1608,20 +1608,20 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Show:</label>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Show:</label>
           <select value={filterMemberId} onChange={e => setFilterMemberId(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 focus:border-primary focus:outline-none cursor-pointer">
+            className="bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground/90 focus:border-primary focus:outline-none cursor-pointer">
             <option value="all" className="bg-ink">Everyone</option>
             {authors.map(a => <option key={a.id} value={a.id} className="bg-ink">{a.name}</option>)}
           </select>
         </div>
-        <button onClick={onAddNew} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+        <button onClick={onAddNew} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
           <Pin className="h-3.5 w-3.5" /> Add item
         </button>
       </div>
-      <div className="rounded-xl border border-white/10 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+          <thead className="bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground/70">
             <tr>
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-3 py-3 w-32">Author</th>
@@ -1633,28 +1633,28 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
           </thead>
           <tbody>
             {filteredEntries.map(e => (
-              <tr key={e.id} className="border-t border-white/5">
-                <td className="px-4 py-3 text-white/90">{e.name}</td>
-                <td className="px-3 py-3 text-white/50 text-xs">{getAuthorName(e.author_member_id)}</td>
-                <td className="text-center px-3 py-3 text-white/70">
+              <tr key={e.id} className="border-t border-border/50">
+                <td className="px-4 py-3 text-foreground">{e.name}</td>
+                <td className="px-3 py-3 text-muted-foreground text-xs">{getAuthorName(e.author_member_id)}</td>
+                <td className="text-center px-3 py-3 text-foreground/80">
                   <select value={e.importance} onChange={ev => onUpdate(e.id, { importance: Number(ev.target.value) })}
-                    className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 cursor-pointer">
+                    className="bg-muted/30 border border-border rounded px-2 py-1 text-sm text-foreground cursor-pointer">
                     {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-ink">{n}</option>)}
                   </select>
                 </td>
-                <td className="text-center px-3 py-3 text-white/70">
+                <td className="text-center px-3 py-3 text-foreground/80">
                   <select value={e.urgency} onChange={ev => onUpdate(e.id, { urgency: Number(ev.target.value) })}
-                    className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 cursor-pointer">
+                    className="bg-muted/30 border border-border rounded px-2 py-1 text-sm text-foreground cursor-pointer">
                     {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-ink">{n}</option>)}
                   </select>
                 </td>
                 <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
                 <td className="px-3 py-3">
                   <div className="flex gap-1">
-                    <button onClick={() => setEditing(e)} className="text-white/30 hover:text-white" title="Edit name/author">
+                    <button onClick={() => setEditing(e)} className="text-muted-foreground/60 hover:text-foreground" title="Edit name/author">
                       <Save className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => onDelete(e.id)} className="text-white/30 hover:text-red-400" title="Delete">
+                    <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400" title="Delete">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -1667,7 +1667,7 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditing(null)}>
-          <div className="bg-ink border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
+          <div className="bg-ink border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
             <h3 className="text-base font-semibold">Edit parking lot entry</h3>
             <EditParkingLotForm
               entry={editing}
@@ -1691,28 +1691,28 @@ function EditParkingLotForm({ entry, forumMembers, onClose, onSave }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-xs text-white/50 mb-1 block">Name</label>
+        <label className="text-xs text-muted-foreground mb-1 block">Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)}
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
+          className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
       </div>
       <div>
-        <label className="text-xs text-white/50 mb-1 block">Author (forum mate)</label>
+        <label className="text-xs text-muted-foreground mb-1 block">Author (forum mate)</label>
         <select value={authorId} onChange={e => setAuthorId(e.target.value)}
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-primary focus:outline-none cursor-pointer">
+          className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-white focus:border-primary focus:outline-none cursor-pointer">
           <option value="" className="bg-ink">Unknown</option>
           {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
         </select>
       </div>
       <div>
-        <label className="text-xs text-white/50 mb-1 block">Importance: {importance}</label>
+        <label className="text-xs text-muted-foreground mb-1 block">Importance: {importance}</label>
         <input type="range" min="1" max="10" value={importance} onChange={e => setImportance(Number(e.target.value))} className="w-full" />
       </div>
       <div>
-        <label className="text-xs text-white/50 mb-1 block">Urgency: {urgency}</label>
+        <label className="text-xs text-muted-foreground mb-1 block">Urgency: {urgency}</label>
         <input type="range" min="1" max="10" value={urgency} onChange={e => setUrgency(Number(e.target.value))} className="w-full" />
       </div>
       <div className="flex gap-2 justify-end pt-2">
-        <button onClick={onClose} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
         <button disabled={!name.trim()} onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
           className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Save</button>
       </div>
@@ -1727,24 +1727,24 @@ function ParkingLotAddModal({ onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-ink border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="bg-ink border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <h3 className="text-base font-semibold">Add to parking lot</h3>
-        <p className="text-xs text-white/50">Your forum will see the name and scores. Nothing else.</p>
+        <p className="text-xs text-muted-foreground">Your forum will see the name and scores. Nothing else.</p>
         <div>
-          <label className="text-xs text-white/50 mb-1 block">Name</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Short name for this item"
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
+            className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
         </div>
         <div>
-          <label className="text-xs text-white/50 mb-1 block">Importance: {importance}</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Importance: {importance}</label>
           <input type="range" min="1" max="10" value={importance} onChange={e => setImportance(Number(e.target.value))} className="w-full" />
         </div>
         <div>
-          <label className="text-xs text-white/50 mb-1 block">Urgency: {urgency}</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Urgency: {urgency}</label>
           <input type="range" min="1" max="10" value={urgency} onChange={e => setUrgency(Number(e.target.value))} className="w-full" />
         </div>
         <div className="flex gap-2 justify-end pt-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
+          <button onClick={onClose} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
           <button disabled={!name.trim()} onClick={() => onConfirm({ name: name.trim(), importance, urgency })}
             className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
         </div>

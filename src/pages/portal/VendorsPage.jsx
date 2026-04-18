@@ -74,7 +74,7 @@ export default function VendorsPage() {
   }, [vendors, categoryFilter, search, averageRating])
 
   if (loading) {
-    return <div className="text-white/60 text-center py-12">Loading vendors...</div>
+    return <div className="text-muted-foreground text-center py-12">Loading vendors...</div>
   }
 
   return (
@@ -82,22 +82,22 @@ export default function VendorsPage() {
       {/* Header */}
       <div className="text-center py-4">
         <h1 className="text-2xl md:text-3xl font-bold">Vendor Exchange</h1>
-        <p className="text-white/50 text-sm mt-1">Rate and review any vendor in Arizona</p>
+        <p className="text-muted-foreground text-sm mt-1">Rate and review any vendor in Arizona</p>
       </div>
 
       {/* Search + Filter bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
           <input
             type="text"
             placeholder="Search vendors..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground">
               <X className="h-4 w-4" />
             </button>
           )}
@@ -106,14 +106,14 @@ export default function VendorsPage() {
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-white/30 cursor-pointer"
+            className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white focus:outline-none focus:border-border cursor-pointer"
           >
             <option value="All">All Categories</option>
             {VENDOR_CATEGORIES.map(c => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70 pointer-events-none" />
         </div>
         <button
           onClick={() => { setEditingVendor(null); setShowAddVendor(true) }}
@@ -126,9 +126,9 @@ export default function VendorsPage() {
       {/* Vendor grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <Store className="h-8 w-8 text-white/30 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-white/90">No vendors found</h2>
-          <p className="text-sm text-white/50 mt-2">
+          <Store className="h-8 w-8 text-muted-foreground/60 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground">No vendors found</h2>
+          <p className="text-sm text-muted-foreground mt-2">
             {vendors.length === 0
               ? 'Be the first to add a vendor your chapter uses.'
               : 'Try adjusting your search or filter.'}
@@ -199,11 +199,11 @@ export default function VendorsPage() {
       {deleteConfirm && (
         <Modal onClose={() => setDeleteConfirm(null)}>
           <h3 className="text-lg font-bold mb-2">Delete vendor?</h3>
-          <p className="text-sm text-white/60 mb-5">
-            This will permanently delete <span className="text-white/80">{deleteConfirm.name}</span> and all its reviews. This can't be undone.
+          <p className="text-sm text-muted-foreground mb-5">
+            This will permanently delete <span className="text-foreground/90">{deleteConfirm.name}</span> and all its reviews. This can't be undone.
           </p>
           <div className="flex gap-2 justify-end">
-            <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={() => setDeleteConfirm(null)}>Cancel</button>
+            <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={() => setDeleteConfirm(null)}>Cancel</button>
             <button
               className="px-4 py-2 rounded-lg text-sm bg-red-600/80 hover:bg-red-600 text-white"
               onClick={() => { deleteVendor(deleteConfirm.id); setDeleteConfirm(null); setSelectedVendor(null) }}
@@ -228,7 +228,7 @@ function StarRating({ rating, size = 'sm' }) {
       {[1, 2, 3, 4, 5].map(i => (
         <Star
           key={i}
-          className={`${px} ${i <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+          className={`${px} ${i <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/40'}`}
         />
       ))}
     </div>
@@ -250,7 +250,7 @@ function InteractiveStarRating({ rating, onChange }) {
         >
           <Star
             className={`h-6 w-6 transition-colors ${
-              i <= (hover || rating) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'
+              i <= (hover || rating) ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/40'
             }`}
           />
         </button>
@@ -261,7 +261,7 @@ function InteractiveStarRating({ rating, onChange }) {
 
 function CategoryBadge({ category }) {
   return (
-    <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-medium text-white/70">
+    <span className="inline-block px-2.5 py-0.5 rounded-full bg-muted/50 text-xs font-medium text-foreground/80">
       {category}
     </span>
   )
@@ -275,7 +275,7 @@ function VendorCard({ vendor, avgRating, numReviews, onClick }) {
       className={`text-left w-full p-5 rounded-2xl transition-all ${
         isSAP
           ? 'bg-indigo-500/5 border border-indigo-500/30 hover:border-indigo-500/50 hover:bg-indigo-500/10'
-          : 'bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/[0.07]'
+          : 'bg-muted/30 border border-border hover:border-border hover:bg-muted/30'
       }`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -291,13 +291,13 @@ function VendorCard({ vendor, avgRating, numReviews, onClick }) {
       </div>
       <div className="flex items-center gap-2 mb-3">
         <StarRating rating={avgRating} />
-        <span className="text-xs text-white/50">
+        <span className="text-xs text-muted-foreground">
           {avgRating > 0 ? avgRating.toFixed(1) : '--'}
           {' '}({numReviews} {numReviews === 1 ? 'review' : 'reviews'})
         </span>
       </div>
       {vendor.address && (
-        <p className="text-xs text-white/40 flex items-center gap-1.5 truncate">
+        <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 truncate">
           <MapPin className="h-3 w-3 shrink-0" /> {vendor.address}
         </p>
       )}
@@ -308,7 +308,7 @@ function VendorCard({ vendor, avgRating, numReviews, onClick }) {
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0f1724] border border-white/10 rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-[#0f1724] border border-border rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -345,24 +345,24 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
       <h3 className="text-lg font-bold mb-4">{vendor ? 'Edit Vendor' : 'Add a Vendor'}</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="relative">
-          <label className="block text-xs text-white/50 mb-1">Business Name</label>
+          <label className="block text-xs text-muted-foreground mb-1">Business Name</label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Acme Legal Services"
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
             autoFocus
           />
           {suggestions.length > 0 && !vendor && (
-            <div className="absolute z-10 mt-1 w-full bg-[#1a2332] border border-white/10 rounded-xl overflow-hidden shadow-xl">
-              <p className="text-xs text-white/40 px-3 py-2 border-b border-white/5">Already listed — click to view</p>
+            <div className="absolute z-10 mt-1 w-full bg-[#1a2332] border border-border rounded-xl overflow-hidden shadow-xl">
+              <p className="text-xs text-muted-foreground/70 px-3 py-2 border-b border-border/50">Already listed — click to view</p>
               {suggestions.map(s => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => { setSuggestions([]); onClose() }}
-                  className="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-white/5 flex justify-between items-center"
+                  className="w-full text-left px-3 py-2 text-sm text-foreground/90 hover:bg-muted/30 flex justify-between items-center"
                 >
                   <span>{s.name}</span>
                   <CategoryBadge category={s.category} />
@@ -373,11 +373,11 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
         </div>
 
         <div>
-          <label className="block text-xs text-white/50 mb-1">Category</label>
+          <label className="block text-xs text-muted-foreground mb-1">Category</label>
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-white/30"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white focus:outline-none focus:border-border"
           >
             {VENDOR_CATEGORIES.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -386,41 +386,41 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
         </div>
 
         <div>
-          <label className="block text-xs text-white/50 mb-1">Address</label>
+          <label className="block text-xs text-muted-foreground mb-1">Address</label>
           <input
             type="text"
             value={address}
             onChange={e => setAddress(e.target.value)}
             placeholder="Street address, city, ZIP"
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-white/50 mb-1">Phone</label>
+            <label className="block text-xs text-muted-foreground mb-1">Phone</label>
             <input
               type="text"
               value={phone}
               onChange={e => setPhone(e.target.value)}
               placeholder="(480) 555-0100"
-              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+              className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
             />
           </div>
           <div>
-            <label className="block text-xs text-white/50 mb-1">Website</label>
+            <label className="block text-xs text-muted-foreground mb-1">Website</label>
             <input
               type="text"
               value={website}
               onChange={e => setWebsite(e.target.value)}
               placeholder="https://..."
-              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30"
+              className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
             />
           </div>
         </div>
 
         <div className="flex gap-2 justify-end pt-2">
-          <button type="button" className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onClose}>
+          <button type="button" className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>
             Cancel
           </button>
           <button
@@ -459,10 +459,10 @@ function VendorDetailModal({
           </div>
           {canEdit && (
             <div className="flex gap-1.5 shrink-0">
-              <button onClick={onEdit} className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-white">
+              <button onClick={onEdit} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground">
                 <Pencil className="h-4 w-4" />
               </button>
-              <button onClick={onDelete} className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-red-400">
+              <button onClick={onDelete} className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-red-400">
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -472,23 +472,23 @@ function VendorDetailModal({
         {/* Rating summary */}
         <div className="flex items-center gap-3">
           <StarRating rating={avgRating} size="md" />
-          <span className="text-sm text-white/60">
+          <span className="text-sm text-muted-foreground">
             {avgRating > 0 ? avgRating.toFixed(1) : 'No ratings yet'}
             {reviews.length > 0 && ` (${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'})`}
           </span>
         </div>
 
         {/* Contact info */}
-        <div className="space-y-1.5 text-sm text-white/60">
+        <div className="space-y-1.5 text-sm text-muted-foreground">
           {vendor.address && (
-            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0 text-white/40" /> {vendor.address}</p>
+            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0 text-muted-foreground/70" /> {vendor.address}</p>
           )}
           {vendor.phone && (
-            <p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-white/40" /> {vendor.phone}</p>
+            <p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-muted-foreground/70" /> {vendor.phone}</p>
           )}
           {vendor.website && (
             <p className="flex items-center gap-2">
-              <ExternalLink className="h-4 w-4 shrink-0 text-white/40" />
+              <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground/70" />
               <a href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
                 {vendor.website.replace(/^https?:\/\//, '')}
               </a>
@@ -518,7 +518,7 @@ function VendorDetailModal({
                   value={connectMsg}
                   onChange={e => setConnectMsg(e.target.value)}
                   placeholder="Optional message — why do you want to connect?"
-                  className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-indigo-500/30 resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-indigo-500/30 resize-none"
                   rows={2}
                 />
                 <div className="flex gap-2">
@@ -530,7 +530,7 @@ function VendorDetailModal({
                   </button>
                   <button
                     onClick={() => setShowConnectForm(false)}
-                    className="px-3 py-1.5 text-xs text-white/50 hover:text-white cursor-pointer"
+                    className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -546,12 +546,12 @@ function VendorDetailModal({
         )}
 
         {/* Divider */}
-        <div className="border-t border-white/10" />
+        <div className="border-t border-border" />
 
         {/* Reviews */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white/80">Reviews</h3>
+            <h3 className="text-sm font-semibold text-foreground/90">Reviews</h3>
             {currentMember && !hasReviewed && !showReviewForm && (
               <button
                 onClick={() => setShowReviewForm(true)}
@@ -572,7 +572,7 @@ function VendorDetailModal({
           )}
 
           {reviews.length === 0 && !showReviewForm ? (
-            <p className="text-sm text-white/40 text-center py-4">No reviews yet. Be the first!</p>
+            <p className="text-sm text-muted-foreground/70 text-center py-4">No reviews yet. Be the first!</p>
           ) : (
             <div className="space-y-3 mt-3">
               {reviews
@@ -608,23 +608,23 @@ function ReviewForm({ memberId, vendorId, onSubmit, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+    <form onSubmit={handleSubmit} className="p-4 rounded-xl bg-muted/30 border border-border space-y-3">
       <div>
-        <label className="block text-xs text-white/50 mb-1.5">Your Rating</label>
+        <label className="block text-xs text-muted-foreground mb-1.5">Your Rating</label>
         <InteractiveStarRating rating={rating} onChange={setRating} />
       </div>
       <div>
-        <label className="block text-xs text-white/50 mb-1.5">Review (optional)</label>
+        <label className="block text-xs text-muted-foreground mb-1.5">Review (optional)</label>
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}
           rows={3}
           placeholder="Share your experience..."
-          className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 resize-none"
+          className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border resize-none"
         />
       </div>
       <div className="flex gap-2 justify-end">
-        <button type="button" className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onCancel}>Cancel</button>
+        <button type="button" className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={onCancel}>Cancel</button>
         <button
           type="submit"
           disabled={rating === 0}
@@ -644,16 +644,16 @@ function ReviewCard({ review, memberName, isOwn, isAdmin, onUpdate, onDelete, on
 
   if (editing) {
     return (
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+      <div className="p-4 rounded-xl bg-muted/30 border border-border space-y-3">
         <InteractiveStarRating rating={editRating} onChange={setEditRating} />
         <textarea
           value={editText}
           onChange={e => setEditText(e.target.value)}
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-white/30 resize-none"
+          className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white focus:outline-none focus:border-border resize-none"
         />
         <div className="flex gap-2 justify-end">
-          <button className="px-3 py-1.5 rounded-lg text-xs text-white/60 hover:text-white" onClick={() => setEditing(false)}>Cancel</button>
+          <button className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground" onClick={() => setEditing(false)}>Cancel</button>
           <button
             className="px-4 py-1.5 rounded-lg text-xs bg-primary/80 hover:bg-primary text-white"
             onClick={() => { onUpdate(review.id, { rating: editRating, review_text: editText }); setEditing(false) }}
@@ -668,18 +668,18 @@ function ReviewCard({ review, memberName, isOwn, isAdmin, onUpdate, onDelete, on
   const date = new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   return (
-    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+    <div className="p-4 rounded-xl bg-muted/30 border border-border">
       <div className="flex items-start justify-between gap-2 mb-1">
         <div>
-          <span className="text-sm font-medium text-white/90">{memberName}</span>
-          <span className="text-xs text-white/40 ml-2">{date}</span>
+          <span className="text-sm font-medium text-foreground">{memberName}</span>
+          <span className="text-xs text-muted-foreground/70 ml-2">{date}</span>
         </div>
         {(isOwn || isAdmin) && (
           <div className="flex gap-1">
-            <button onClick={() => setEditing(true)} className="p-1 rounded text-white/30 hover:text-white/70">
+            <button onClick={() => setEditing(true)} className="p-1 rounded text-muted-foreground/60 hover:text-foreground/80">
               <Pencil className="h-3.5 w-3.5" />
             </button>
-            <button onClick={onDelete} className="p-1 rounded text-white/30 hover:text-red-400">
+            <button onClick={onDelete} className="p-1 rounded text-muted-foreground/60 hover:text-red-400">
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -687,18 +687,18 @@ function ReviewCard({ review, memberName, isOwn, isAdmin, onUpdate, onDelete, on
       </div>
       <StarRating rating={review.rating} />
       {review.review_text && (
-        <p className="text-sm text-white/70 mt-2 leading-relaxed">{review.review_text}</p>
+        <p className="text-sm text-foreground/80 mt-2 leading-relaxed">{review.review_text}</p>
       )}
       <div className="flex items-center gap-3 mt-3">
         <button
           onClick={() => onVote(review.id, 'up')}
-          className="flex items-center gap-1 text-xs text-white/40 hover:text-green-400 transition-colors"
+          className="flex items-center gap-1 text-xs text-muted-foreground/70 hover:text-green-400 transition-colors"
         >
           <ThumbsUp className="h-3.5 w-3.5" /> {review.upvotes || 0}
         </button>
         <button
           onClick={() => onVote(review.id, 'down')}
-          className="flex items-center gap-1 text-xs text-white/40 hover:text-red-400 transition-colors"
+          className="flex items-center gap-1 text-xs text-muted-foreground/70 hover:text-red-400 transition-colors"
         >
           <ThumbsDown className="h-3.5 w-3.5" /> {review.downvotes || 0}
         </button>

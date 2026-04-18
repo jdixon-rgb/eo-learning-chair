@@ -4,7 +4,7 @@ import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store, Activity } from 'lucide-react'
 import { useState } from 'react'
 import { APP_VERSION } from '@/lib/version'
-import { APP_NAME } from '@/lib/appBranding'
+import BuiltByFooter from '@/components/BuiltByFooter'
 
 const portalNav = [
   { to: '/portal', icon: Compass, label: 'Home', end: true },
@@ -26,14 +26,19 @@ export default function MemberPortalLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ink via-[#121248] to-ink text-white">
-      {/* Top Nav */}
-      <header className="border-b border-white/10 bg-ink/80 backdrop-blur-sm sticky top-0 z-50">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      {/* Top Nav — light theme, community-green accent strip */}
+      <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
+        {/* Accent strip — community green — context cue */}
+        <div className="h-1 bg-community" />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          {/* Left: Brand */}
+          {/* Left: Brand + context chip */}
           <div className="flex items-center gap-3">
-            <span className="text-base font-semibold tracking-tight text-white">
-              <span className="text-warm">Our</span>Chapter OS
+            <span className="text-base font-semibold tracking-tight">
+              <span className="text-community">Our</span>Chapter OS
+            </span>
+            <span className="text-[10px] font-bold tracking-widest uppercase text-community bg-community/10 px-2 py-0.5 rounded">
+              Member
             </span>
             {isSuperAdmin && !isImpersonating && (
               <span className="text-xs font-bold tracking-tight text-warm">Super Admin</span>
@@ -50,8 +55,8 @@ export default function MemberPortalLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-primary text-white'
-                      : 'text-white/60 hover:bg-white/10 hover:text-white'
+                      ? 'bg-community text-community-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`
                 }
               >
@@ -72,12 +77,12 @@ export default function MemberPortalLayout() {
                 Admin
               </NavLink>
             )}
-            <span className="text-xs text-white/50 hidden sm:inline">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
               {profile?.full_name || profile?.email}
             </span>
             <button
               onClick={handleSignOut}
-              className="text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer hidden md:block"
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer hidden md:block"
               title="Sign out"
             >
               <LogOut className="h-4 w-4" />
@@ -85,7 +90,7 @@ export default function MemberPortalLayout() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              className="md:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -94,7 +99,7 @@ export default function MemberPortalLayout() {
 
         {/* Mobile nav dropdown */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-ink/95 backdrop-blur-sm">
+          <div className="md:hidden border-t px-4 py-3 space-y-1 bg-card">
             {portalNav.map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={to}
@@ -104,8 +109,8 @@ export default function MemberPortalLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-primary text-white'
-                      : 'text-white/60 hover:bg-white/10 hover:text-white'
+                      ? 'bg-community text-community-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`
                 }
               >
@@ -117,7 +122,7 @@ export default function MemberPortalLayout() {
               <NavLink
                 to="/"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-warm hover:bg-white/10 transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-warm hover:bg-muted transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Admin Dashboard
@@ -125,7 +130,7 @@ export default function MemberPortalLayout() {
             )}
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/40 hover:bg-white/10 hover:text-white transition-colors w-full cursor-pointer"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors w-full cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -135,14 +140,15 @@ export default function MemberPortalLayout() {
       </header>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 flex-1">
         <Outlet />
       </main>
 
-      {/* Footer: version */}
-      <footer className="max-w-5xl mx-auto px-4 sm:px-6 pb-6 text-center">
-        <span className="text-[10px] text-white/15">v{APP_VERSION}</span>
-      </footer>
+      {/* Version footer + builder attribution */}
+      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 text-center pb-2">
+        <span className="text-[10px] text-muted-foreground/60">v{APP_VERSION}</span>
+      </div>
+      <BuiltByFooter />
     </div>
   )
 }

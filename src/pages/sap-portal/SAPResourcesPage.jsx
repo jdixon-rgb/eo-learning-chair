@@ -32,7 +32,7 @@ export default function SAPResourcesPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Resources</h1>
-        <p className="text-sm text-white/50 mt-1">Documents and links from your EO chapter</p>
+        <p className="text-sm text-muted-foreground mt-1">Documents and links from your EO chapter</p>
       </div>
 
       <div className="space-y-3">
@@ -45,12 +45,12 @@ export default function SAPResourcesPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold">{r.title}</h3>
-                <p className="text-xs text-white/40 mt-0.5">{r.description}</p>
+                <p className="text-xs text-muted-foreground/70 mt-0.5">{r.description}</p>
                 {r.placeholder && (
-                  <span className="text-[10px] text-white/20 mt-1 inline-block">Coming soon</span>
+                  <span className="text-[10px] text-muted-foreground/40 mt-1 inline-block">Coming soon</span>
                 )}
               </div>
-              {r.url && <ExternalLink className="h-4 w-4 text-white/20 shrink-0 mt-0.5" />}
+              {r.url && <ExternalLink className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-0.5" />}
             </div>
           )
 
@@ -60,12 +60,12 @@ export default function SAPResourcesPage() {
               href={r.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+              className="block rounded-2xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
             >
               {content}
             </a>
           ) : (
-            <div key={i} className="rounded-2xl border border-white/10 bg-white/5 opacity-60">
+            <div key={i} className="rounded-2xl border border-border bg-muted/30 opacity-60">
               {content}
             </div>
           )

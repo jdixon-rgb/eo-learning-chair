@@ -124,14 +124,18 @@ export default function LoginPage() {
           <p className="text-muted-foreground/80 text-[11px]">
             {BUILDER.framing}
             {' · '}
-            <a
-              href={BUILDER.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
-            >
-              {BUILDER.company}
-            </a>
+            {BUILDER.url ? (
+              <a
+                href={BUILDER.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+              >
+                {BUILDER.company}
+              </a>
+            ) : (
+              <span className="text-muted-foreground">{BUILDER.company}</span>
+            )}
           </p>
         </div>
       </div>

@@ -109,7 +109,7 @@ export default function MemberNotificationsPage() {
         {unreadCount > 0 && (
           <button
             onClick={markAllRead}
-            className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <CheckCheck className="h-3.5 w-3.5" />
             Mark all read
@@ -119,16 +119,16 @@ export default function MemberNotificationsPage() {
 
       {/* Notification list */}
       {notifications.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
-          <Bell className="h-8 w-8 text-white/20 mx-auto mb-3" />
-          <p className="text-white/50">No notifications yet</p>
-          <p className="text-xs text-white/30 mt-1">You'll be notified about events and chapter updates</p>
+        <div className="rounded-2xl border border-border bg-muted/30 p-12 text-center">
+          <Bell className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
+          <p className="text-muted-foreground">No notifications yet</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">You'll be notified about events and chapter updates</p>
         </div>
       ) : (
         <div className="space-y-2">
           {notifications.map(n => {
             const Icon = TYPE_ICONS[n.type] || Info
-            const iconColor = TYPE_COLORS[n.type] || 'text-white/50'
+            const iconColor = TYPE_COLORS[n.type] || 'text-muted-foreground'
 
             return (
               <div
@@ -136,8 +136,8 @@ export default function MemberNotificationsPage() {
                 onClick={() => !n.is_read && markAsRead(n.id)}
                 className={`rounded-xl border p-4 transition-all cursor-pointer ${
                   n.is_read
-                    ? 'border-white/5 bg-white/[0.02]'
-                    : 'border-white/15 bg-white/[0.06] hover:border-white/20'
+                    ? 'border-border/50 bg-muted/30'
+                    : 'border-border bg-muted/30 hover:border-border'
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -146,15 +146,15 @@ export default function MemberNotificationsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className={`text-sm font-semibold ${n.is_read ? 'text-white/60' : 'text-white'}`}>
+                      <h3 className={`text-sm font-semibold ${n.is_read ? 'text-muted-foreground' : 'text-white'}`}>
                         {n.title}
                       </h3>
                       {!n.is_read && <div className="w-2 h-2 rounded-full bg-warm shrink-0" />}
                     </div>
-                    <p className={`text-sm mt-1 leading-relaxed ${n.is_read ? 'text-white/30' : 'text-white/60'}`}>
+                    <p className={`text-sm mt-1 leading-relaxed ${n.is_read ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
                       {n.body}
                     </p>
-                    <p className="text-[11px] text-white/25 mt-2">{formatTime(n.created_at)}</p>
+                    <p className="text-[11px] text-muted-foreground/60 mt-2">{formatTime(n.created_at)}</p>
                   </div>
                 </div>
               </div>

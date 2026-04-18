@@ -8,7 +8,9 @@
 
 export const BUILDER = {
   company: 'Aidan Taylor App Works',
-  url: 'https://aidantaylorappworks.com',
+  // Re-enable once the site ships (expected Mon/Tue). When null, the
+  // company name renders as plain text instead of a link.
+  url: null,
   framing: 'Built by an EO member for EO members',
 }
 

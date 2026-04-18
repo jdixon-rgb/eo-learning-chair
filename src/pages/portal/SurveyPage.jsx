@@ -130,7 +130,7 @@ export default function SurveyPage() {
           <Check className="h-8 w-8 text-green-400" />
         </div>
         <h1 className="text-2xl font-bold mb-3">Thank You!</h1>
-        <p className="text-white/60 mb-6">
+        <p className="text-muted-foreground mb-6">
           Your learning preferences have been recorded. The Learning Chair will use this data to design events that match what our members actually want.
         </p>
         <button
@@ -153,15 +153,15 @@ export default function SurveyPage() {
         <ClipboardList className="h-5 w-5 text-warm" />
         <h1 className="text-xl font-bold">Learning Preferences Survey</h1>
       </div>
-      <p className="text-xs text-white/40 mb-6">Help us design events you'll love. Takes about 5 minutes.</p>
+      <p className="text-xs text-muted-foreground/70 mb-6">Help us design events you'll love. Takes about 5 minutes.</p>
 
       {/* Progress bar */}
       <div className="mb-8">
-        <div className="flex items-center justify-between text-xs text-white/40 mb-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground/70 mb-2">
           <span>Section {currentSection + 1} of {SURVEY_SECTIONS.length}</span>
           <span>{Math.round(progress)}%</span>
         </div>
-        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
           <div
             className="h-full bg-primary rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -179,7 +179,7 @@ export default function SurveyPage() {
                   ? 'bg-primary w-6'
                   : idx < currentSection
                     ? 'bg-primary/50'
-                    : 'bg-white/15'
+                    : 'bg-muted/70'
               }`}
             />
           ))}
@@ -187,10 +187,10 @@ export default function SurveyPage() {
       </div>
 
       {/* Section content */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+      <div className="rounded-2xl border border-border bg-muted/30 p-6 md:p-8">
         <div className="mb-8">
           <h2 className="text-lg font-bold">{section.title}</h2>
-          <p className="text-sm text-white/50 mt-1">{section.subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-1">{section.subtitle}</p>
         </div>
 
         <div className="space-y-8">
@@ -217,8 +217,8 @@ export default function SurveyPage() {
           disabled={currentSection === 0}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
             currentSection === 0
-              ? 'text-white/20 cursor-not-allowed'
-              : 'text-white/60 hover:text-white hover:bg-white/10'
+              ? 'text-muted-foreground/40 cursor-not-allowed'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
           }`}
         >
           <ChevronLeft className="h-4 w-4" />

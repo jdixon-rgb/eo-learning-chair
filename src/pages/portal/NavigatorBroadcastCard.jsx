@@ -77,9 +77,9 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-wider text-emerald-400/70 font-semibold mb-0.5">Navigator check-in · Thanks</p>
-            <p className="text-sm text-white/80 mb-1">{broadcast.prompt}</p>
-            <p className="text-xs text-white/50">
-              You answered <span className="text-white/80 font-medium">{pickedLabel}</span>
+            <p className="text-sm text-foreground/90 mb-1">{broadcast.prompt}</p>
+            <p className="text-xs text-muted-foreground">
+              You answered <span className="text-foreground/90 font-medium">{pickedLabel}</span>
               {myResponse.note && <span className="block mt-1 italic">&ldquo;{myResponse.note}&rdquo;</span>}
             </p>
             <div className="mt-2 flex gap-2 flex-wrap">
@@ -92,7 +92,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
                   className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
                     opt.value === myResponse.response_value
                       ? 'border-emerald-400/50 bg-emerald-500/20 text-emerald-200'
-                      : 'border-white/10 text-white/40 hover:text-white/70 hover:border-white/20'
+                      : 'border-border text-muted-foreground/70 hover:text-foreground/80 hover:border-border'
                   }`}
                 >
                   {opt.label}
@@ -113,7 +113,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">Navigator check-in</p>
-          <p className="text-base text-white/90 font-medium whitespace-pre-line">{broadcast.prompt}</p>
+          <p className="text-base text-foreground font-medium whitespace-pre-line">{broadcast.prompt}</p>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
       <button
         type="button"
         onClick={() => setShowNote(v => !v)}
-        className="inline-flex items-center gap-1 text-[11px] text-white/40 hover:text-white/70"
+        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-foreground/80"
       >
         {showNote ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
         {showNote ? 'Hide note' : 'Add a note (optional)'}
@@ -145,7 +145,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
           onChange={e => setNote(e.target.value)}
           rows={2}
           placeholder="Optional context for the chair…"
-          className="mt-2 w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+          className="mt-2 w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
         />
       )}
     </div>
