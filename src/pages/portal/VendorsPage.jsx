@@ -28,6 +28,14 @@ export default function VendorsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [connectSent, setConnectSent] = useState(new Set())
 
+  // Find current member — must be declared BEFORE any callback that
+  // closes over it, otherwise the dependency array hits a TDZ ReferenceError.
+  const email = user?.email
+  const currentMember = useMemo(() => {
+    if (!email) return null
+    return chapterMembers.find(m => m.email?.toLowerCase() === email.toLowerCase()) ?? null
+  }, [email, chapterMembers])
+
   const handleConnect = useCallback((vendor, message) => {
     if (!currentMember || !vendor.sap_id) return
     addConnectRequest({
@@ -39,13 +47,6 @@ export default function VendorsPage() {
     })
     setConnectSent(prev => new Set([...prev, vendor.id]))
   }, [currentMember, user, addConnectRequest])
-
-  // Find current member
-  const email = user?.email
-  const currentMember = useMemo(() => {
-    if (!email) return null
-    return chapterMembers.find(m => m.email?.toLowerCase() === email.toLowerCase()) ?? null
-  }, [email, chapterMembers])
 
   // Filtered vendors
   const filtered = useMemo(() => {
