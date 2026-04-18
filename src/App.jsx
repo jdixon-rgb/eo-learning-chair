@@ -136,7 +136,7 @@ function App() {
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><MemberManagementPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/surveys" element={
-                  <ProtectedRoute allowedRoles={['super_admin', 'learning_chair', 'learning_chair_elect']}><SurveyResultsPage /></ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect']}><SurveyResultsPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/notifications" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><NotificationComposePage /></ProtectedRoute>

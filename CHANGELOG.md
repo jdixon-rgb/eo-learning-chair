@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.5 — 2026-04-17
+
+### Tweak: Survey Results visibility — President yes, Super Admin no
+Following up on v1.61.3. `canViewSurveyResults` is now
+`['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect']`.
+Super-admin no longer has default access — they can still reach it by
+impersonating a Learning Chair if they need the view for support.
+Survey Results now also appears in the President's sidebar nav.
+
+---
+
 ## v1.61.4 — 2026-04-17
 
 ### Fix: SAP Portal preview bar layout on mobile
