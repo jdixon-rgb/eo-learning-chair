@@ -164,26 +164,35 @@ export default function DashboardPage() {
             View Full Calendar <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </div>
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {FISCAL_MONTHS.map((month, i) => {
             const strategic = STRATEGIC_MAP[i]
             const event = eventsByMonth[i]
+            const speaker = event?.speaker_id ? speakers.find(s => s.id === event.speaker_id) : null
+            const dateLabel = event?.event_date
+              ? new Date(event.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+              : month.fullName
+            // Prefer speaker name for the line-2 label; fall back to the
+            // event title (stripped of any 'CHANGE: ' style prefix).
+            const subtitle = speaker?.name || event?.title?.split(':').pop()?.trim()
             return (
               <div key={i} className="text-center">
-                <div className={`text-[10px] md:text-[9px] font-bold px-1 py-0.5 rounded-t truncate ${strategic.color} ${strategic.textColor}`}>
+                <div className={`text-[10px] font-bold px-2 py-1 rounded-t truncate ${strategic.color} ${strategic.textColor}`}>
                   {strategic.label}
                 </div>
                 <div
-                  className={`border rounded-b px-1 py-2 text-xs cursor-pointer hover:bg-accent transition-colors ${
+                  className={`border rounded-b px-2 py-2 text-xs cursor-pointer hover:bg-accent transition-colors ${
                     event ? 'border-primary bg-blue-50' : 'border-border'
                   }`}
                   onClick={() => event ? navigate(`/events/${event.id}`) : navigate('/calendar')}
                 >
-                  <div className="font-medium">{month.shortName}</div>
+                  <div className="text-[11px] font-semibold leading-tight">{dateLabel}</div>
                   {event ? (
-                    <div className="mt-1 text-[10px] text-primary font-medium truncate">{event.title.split(':')[0]}</div>
+                    <div className="mt-1 text-[11px] text-primary font-medium leading-tight">
+                      {subtitle || 'TBD'}
+                    </div>
                   ) : (
-                    <div className="mt-1 text-[10px] text-muted-foreground">—</div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">No event</div>
                   )}
                 </div>
               </div>

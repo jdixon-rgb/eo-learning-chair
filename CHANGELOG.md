@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.62.0 — 2026-04-17
+
+### Feature: Member self-edit profile page + Year Arc upgrade
+**Member Profile (`/portal/profile`)** — new self-edit page covering
+first/last name, email, phone, company, industry, EO join date, and
+bio. Backed by `chapter_members`. Migration 049 adds an RLS policy
+letting a member update only their own row (chapter / role / status /
+forum stay admin-controlled). The "Something changed" button on the
+Profile Check-in card now sends members directly to this page (still
+logs a `change_requested` ping so the chapter team has the trail).
+
+**Year Arc cards** now show the full event date (e.g. "August 13, 2026"
+instead of "Aug") and the speaker's name on row 2 (instead of the
+truncated event title). Grid widened to 2/3/4/6 columns so the longer
+labels actually fit. Cards without a confirmed event read "No event"
++ the full month name.
+
+### Migration to apply
+`supabase/migrations/049_member_self_edit.sql`. Idempotent.
+
+### Coming next (PR 2)
+SLP feature — separate `slps` table linked to chapter_members, with
+RLS allowing members to edit their own + chapter admin (CED/CEC/
+President/Learning Chair) to edit any in their chapter.
+
+---
+
 ## v1.61.7 — 2026-04-17
 
 ### UX: Notifications moves from sidebar to a bell icon in the TopBar

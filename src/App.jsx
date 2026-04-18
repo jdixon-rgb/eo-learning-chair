@@ -27,6 +27,7 @@ import MemberCalendarPage from '@/pages/MemberCalendarPage'
 import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
 import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
 import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
+import MemberProfilePage from '@/pages/portal/MemberProfilePage'
 import SurveyPage from '@/pages/portal/SurveyPage'
 import ReflectionsPage from '@/pages/portal/ReflectionsPage'
 import LifelinePage from '@/pages/portal/LifelinePage'
@@ -208,6 +209,7 @@ function App() {
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
+                <Route path="/portal/profile" element={<MemberProfilePage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />
               </Route>
 

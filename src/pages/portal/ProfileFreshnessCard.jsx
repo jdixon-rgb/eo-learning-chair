@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useBoardStore } from '@/lib/boardStore'
-import { UserCircle, Check, X, ChevronDown } from 'lucide-react'
+import { UserCircle, Check, ChevronRight } from 'lucide-react'
 
 // Quarterly ping: "has anything changed in your profile?"
 // Shows when the member has no check-in in the last 90 days.
@@ -8,9 +9,8 @@ import { UserCircle, Check, X, ChevronDown } from 'lucide-react'
 // queues a change_requested row for the admin team to action.
 export default function ProfileFreshnessCard({ currentMember }) {
   const { submitProfileCheckin, profileIsStale, latestCheckinForMember } = useBoardStore()
+  const navigate = useNavigate()
   const [justSubmitted, setJustSubmitted] = useState(null) // null | 'no_change' | 'change_requested'
-  const [showChangeForm, setShowChangeForm] = useState(false)
-  const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   if (!currentMember) return null
@@ -32,14 +32,21 @@ export default function ProfileFreshnessCard({ currentMember }) {
     }
   }
 
-  const handleSubmitChange = async () => {
-    if (submitting || !note.trim()) return
+  // "Something changed" sends the user to their profile page so they
+  // can edit directly. We still log a change_requested check-in so
+  // the chapter team has a paper trail of who self-updated and when.
+  const handleSomethingChanged = async () => {
+    if (submitting) return
     setSubmitting(true)
     try {
-      await submitProfileCheckin({ memberId: currentMember.id, kind: 'change_requested', note: note.trim() })
-      setJustSubmitted('change_requested')
+      await submitProfileCheckin({
+        memberId: currentMember.id,
+        kind: 'change_requested',
+        note: 'Member opened profile to self-edit',
+      })
     } finally {
       setSubmitting(false)
+      navigate('/portal/profile')
     }
   }
 
@@ -59,30 +66,14 @@ export default function ProfileFreshnessCard({ currentMember }) {
     )
   }
 
-  if (justSubmitted === 'change_requested') {
-    return (
-      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-        <div className="flex items-start gap-3">
-          <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-            <Check className="h-4 w-4 text-emerald-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-foreground/90 font-medium">Got it — someone will reach out to update your profile.</p>
-            <p className="text-xs text-muted-foreground mt-1 italic">&ldquo;{note.trim()}&rdquo;</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="rounded-2xl border border-amber-400/30 bg-amber-500/5 p-5">
+    <div className="rounded-2xl border border-warm/30 bg-warm/10 p-5">
       <div className="flex items-start gap-3 mb-4">
-        <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-          <UserCircle className="h-4 w-4 text-amber-400" />
+        <div className="h-8 w-8 rounded-full bg-warm/20 flex items-center justify-center shrink-0 mt-0.5">
+          <UserCircle className="h-4 w-4 text-warm" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold mb-1">Profile check-in</p>
+          <p className="text-[10px] uppercase tracking-wider text-warm font-semibold mb-1">Profile check-in</p>
           <p className="text-base text-foreground font-medium">Has anything changed in your world since we last checked?</p>
           <p className="text-xs text-muted-foreground mt-1">
             New company, role, partner, kids, address, interests — anything we should know.
@@ -91,54 +82,24 @@ export default function ProfileFreshnessCard({ currentMember }) {
         </div>
       </div>
 
-      {!showChangeForm ? (
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={handleAllGood}
-            className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-500/90 disabled:opacity-50 inline-flex items-center gap-2"
-          >
-            <Check className="h-4 w-4" /> All good
-          </button>
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={() => setShowChangeForm(true)}
-            className="px-4 py-2 rounded-lg bg-card border border-border text-foreground text-sm font-medium hover:bg-muted disabled:opacity-50 inline-flex items-center gap-2"
-          >
-            <ChevronDown className="h-4 w-4" /> Something changed
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            rows={3}
-            autoFocus
-            placeholder="What changed? e.g. new company name, moved to Scottsdale, got married, joined a new board…"
-            className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={submitting || !note.trim()}
-              onClick={handleSubmitChange}
-              className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Send to chapter team
-            </button>
-            <button
-              type="button"
-              onClick={() => { setShowChangeForm(false); setNote('') }}
-              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground/90 inline-flex items-center gap-1.5"
-            >
-              <X className="h-4 w-4" /> Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={handleAllGood}
+          className="px-4 py-2 rounded-lg bg-community text-community-foreground text-sm font-medium hover:bg-community/90 disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          <Check className="h-4 w-4" /> All good
+        </button>
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={handleSomethingChanged}
+          className="px-4 py-2 rounded-lg bg-card border border-border text-foreground text-sm font-medium hover:bg-muted disabled:opacity-50 inline-flex items-center gap-2"
+        >
+          Something changed <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   )
 }
