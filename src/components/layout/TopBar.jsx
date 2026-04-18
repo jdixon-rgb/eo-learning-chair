@@ -1,14 +1,46 @@
+import { useLocation } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { useAuth } from '@/lib/auth'
 import { formatCurrency } from '@/lib/utils'
-import { Menu, Palette } from 'lucide-react'
+import { APP_NAME } from '@/lib/appBranding'
+import { Menu, Palette, Shield } from 'lucide-react'
 
 export default function TopBar({ onMenuToggle }) {
   const { chapter } = useStore()
   const { activePresidentTheme, activePresidentName, presidentElectTheme, presidentElectName, totalChairAllocated } = useBoardStore()
-  const { profile } = useAuth()
+  const { isSuperAdmin, isImpersonating } = useAuth()
+  const location = useLocation()
 
+  // On the Super Admin platform surface (super-admin not impersonating,
+  // viewing /super-admin/* routes) the chapter-scoped theme + budget
+  // aren't meaningful — render a platform header instead.
+  const isPlatformSurface =
+    isSuperAdmin && !isImpersonating && location.pathname.startsWith('/super-admin')
+
+  if (isPlatformSurface) {
+    return (
+      <header className="h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onMenuToggle}
+            className="md:hidden text-foreground p-1.5 -ml-1 rounded-lg hover:bg-accent transition-colors cursor-pointer"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <span className="text-base font-semibold tracking-tight">
+            <span className="text-primary">Our</span>Chapter OS
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs font-bold tracking-widest text-warm bg-warm/10 px-2 py-1 rounded">
+          <Shield className="h-3 w-3" />
+          SUPER ADMIN
+        </div>
+      </header>
+    )
+  }
+
+  // Default chapter-context header (theme + budget).
   // Prefer President Elect (incoming) since this tool plans the next FY
   const theme = presidentElectTheme || activePresidentTheme || chapter.president_theme || ''
   const presidentName = presidentElectName || activePresidentName || chapter.president_name || ''

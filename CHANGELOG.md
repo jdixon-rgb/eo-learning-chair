@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.7 — 2026-04-17
+
+### Fix: Super Admin TopBar is platform-level, not chapter-level
+When a super-admin is on `/super-admin/*` (not impersonating a chair),
+the TopBar now shows a clean platform header — "OurChapter OS" wordmark
+on the left, "SUPER ADMIN" chip on the right — instead of the
+chapter-scoped theme / president / budget, which aren't meaningful at
+the platform level.
+
+When the super-admin impersonates a chair role, the normal
+chapter-context header returns automatically.
+
+---
+
 ## v1.60.6 — 2026-04-17
 
 ### Fix: "Back to my role" button works for elect roles
