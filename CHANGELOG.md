@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.3 — 2026-04-17
+
+### Fix: Scenario Planner anchored to Learning Chair budget, not chapter total
+`ScenarioPage` was using `chapter.total_budget` (the $1.4M chapter-wide
+figure) everywhere — intro copy, budget-remaining math, speaker-fee
+ratio calculations. Swapped to `getChairBudget('learning')` — same
+source the Dashboard and BudgetPage use. Now the planner evaluates
+scenarios against the Learning Chair's actual allocation.
+
+Same class of bug we fixed for BudgetPage in v1.54.8 — just didn't
+catch this second instance at the time.
+
+---
+
 ## v1.60.2 — 2026-04-17
 
 ### Fix: Platform Admin nav hidden from chair-role sidebars
