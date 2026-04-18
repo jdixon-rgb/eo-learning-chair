@@ -41,7 +41,7 @@ export default function SAPPortalDashboard() {
         <h1 className="text-2xl font-bold">Welcome, {firstName}</h1>
         {partner && (
           <div className="flex items-center gap-3 mt-2">
-            <span className="text-muted-foreground">{partner.name}</span>
+            <span className="text-foreground/90 font-medium">{partner.name}</span>
             {tier && (
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
@@ -55,15 +55,15 @@ export default function SAPPortalDashboard() {
         {contact && (
           <div className="flex items-center gap-3 mt-3">
             {contact.forum_trained ? (
-              <span className="flex items-center gap-1.5 text-xs text-green-400">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-community">
                 <GraduationCap className="h-4 w-4" />
                 Forum Trained
                 {contact.forum_trained_date && (
-                  <span className="text-muted-foreground/60">({contact.forum_trained_date})</span>
+                  <span className="text-muted-foreground">({contact.forum_trained_date})</span>
                 )}
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-xs text-amber-400/80">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-warm">
                 <GraduationCap className="h-4 w-4" />
                 Not yet forum trained
               </span>
@@ -97,7 +97,7 @@ export default function SAPPortalDashboard() {
         <Link to="/sap-portal/events" className="block rounded-2xl border border-border bg-muted/30 p-5 hover:bg-muted/50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Next Event</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Next Event</p>
               <h3 className="text-lg font-semibold mt-1">{nextEvent.title}</h3>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {new Date(nextEvent.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -123,7 +123,7 @@ export default function SAPPortalDashboard() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold group-hover:text-indigo-300 transition-colors">{label}</h3>
-                <p className="text-xs text-muted-foreground/70 mt-0.5">{desc}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
               </div>
             </div>
           </Link>
