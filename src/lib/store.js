@@ -115,8 +115,19 @@ export function StoreProvider({ children }) {
             safeFetch('speakers', () => fetchByChapter('speakers', activeChapterId)),
             safeFetch('venues', () => fetchByChapter('venues', activeChapterId)),
             safeFetch('events', () => supabase.from('events').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
-            safeFetch('budget_items', () => fetchAll('budget_items')),
-            safeFetch('contract_checklists', () => fetchAll('contract_checklists')),
+            // Budget items + contract checklists live per-event (no direct
+            // chapter_id column). Scope by joining through events so Shanghai
+            // doesn't see EO Arizona's budget totals.
+            safeFetch('budget_items', () =>
+              supabase.from('budget_items')
+                .select('*, events!inner(chapter_id)')
+                .eq('events.chapter_id', activeChapterId)
+            ),
+            safeFetch('contract_checklists', () =>
+              supabase.from('contract_checklists')
+                .select('*, events!inner(chapter_id)')
+                .eq('events.chapter_id', activeChapterId)
+            ),
             safeFetch('saps', () => fetchByChapter('saps', activeChapterId)),
             safeFetch('speaker_pipeline', () => supabase.from('speaker_pipeline').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
             safeFetch('scenarios', () => supabase.from('scenarios').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
@@ -132,8 +143,10 @@ export function StoreProvider({ children }) {
         if (speakersData) setSpeakers(speakersData)
         if (venuesData) setVenues(venuesData)
         if (eventsData) setEvents(eventsData)
-        if (budgetData) setBudgetItems(budgetData)
-        if (checklistsData) setContractChecklists(checklistsData)
+        // Strip the joined events cruft from budget_items + checklists
+        // before hydrating — consumer code expects flat rows.
+        if (budgetData) setBudgetItems(budgetData.map(({ events: _e, ...rest }) => rest))
+        if (checklistsData) setContractChecklists(checklistsData.map(({ events: _e, ...rest }) => rest))
         if (sapsData) setSaps(sapsData)
         if (pipelineData) setSpeakerPipeline(pipelineData)
         if (scenariosData) setScenarios(scenariosData)
