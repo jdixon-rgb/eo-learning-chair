@@ -116,17 +116,21 @@ export function StoreProvider({ children }) {
             safeFetch('venues', () => fetchByChapter('venues', activeChapterId)),
             safeFetch('events', () => supabase.from('events').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
             // Budget items + contract checklists live per-event (no direct
-            // chapter_id column). Scope by joining through events so Shanghai
-            // doesn't see EO Arizona's budget totals.
+            // chapter_id or fiscal_year column). Scope by joining through
+            // events on BOTH chapter_id and fiscal_year so prior-year rows
+            // don't bleed into the current FY's totals (Dashboard widget,
+            // store-level totalBudgeted, etc.).
             safeFetch('budget_items', () =>
               supabase.from('budget_items')
-                .select('*, events!inner(chapter_id)')
+                .select('*, events!inner(chapter_id, fiscal_year)')
                 .eq('events.chapter_id', activeChapterId)
+                .eq('events.fiscal_year', activeFiscalYear)
             ),
             safeFetch('contract_checklists', () =>
               supabase.from('contract_checklists')
-                .select('*, events!inner(chapter_id)')
+                .select('*, events!inner(chapter_id, fiscal_year)')
                 .eq('events.chapter_id', activeChapterId)
+                .eq('events.fiscal_year', activeFiscalYear)
             ),
             safeFetch('saps', () => fetchByChapter('saps', activeChapterId)),
             safeFetch('speaker_pipeline', () => supabase.from('speaker_pipeline').select('*').eq('chapter_id', activeChapterId).eq('fiscal_year', activeFiscalYear)),
