@@ -17,6 +17,30 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.64.0 — 2026-04-17
+
+### Feature: SAPs auto-surface in the member Vendors directory
+Members no longer need admins to manually duplicate every SAP partner
+as a vendor. The Vendors page now automatically merges every active
+SAP from the chapter's SAP roster into the list:
+
+- **Category** derives from the SAP's `industry` field — SAPs filter
+  alongside real vendors using the existing category dropdown
+- **Tier badge** — each SAP card shows a colored pill (Platinum /
+  Gold / Silver / In-Kind) using the tier's theme color
+- **Sort priority** — SAP partners (both virtual and real linked-by-
+  `sap_id`) rank above non-SAP vendors
+- **Read-only** — virtual SAP entries can't be edited, deleted, or
+  reviewed from the vendor page (admins manage SAPs on the SAPs page;
+  a small "Auto-listed from chapter SAP roster" caption tells members
+  why). Review UI hidden with a helpful note.
+- **De-duplication** — if a real vendor already links a SAP via
+  `sap_id`, the virtual entry is skipped so nothing appears twice
+
+No DB migration needed — this is entirely a display-time merge.
+
+---
+
 ## v1.63.3 — 2026-04-17
 
 ### Fix: Forum Home tab readability + leftover white-on-cream
