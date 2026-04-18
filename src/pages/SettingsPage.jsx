@@ -703,18 +703,18 @@ export default function SettingsPage() {
             <Sparkles className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold">About the Builder</h3>
+            <h3 className="text-sm font-semibold">About This Platform</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
-              <strong>{APP_NAME}</strong> is designed and built by{' '}
+              <strong>{APP_NAME}</strong> is {BUILDER.framing.toLowerCase()}, shipped by{' '}
               <a
                 href={BUILDER.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="text-primary hover:underline font-medium"
               >
-                {BUILDER.name}
-              </a>{' '}
-              at <span className="font-medium">{BUILDER.company}</span>. It started as a tool for one chapter and is now used by learning chairs, presidents, and regional leadership across multiple chapters and countries.
+                {BUILDER.company}
+              </a>
+              . It started as a tool for one chapter and is now used by learning chairs, presidents, and regional leadership across multiple chapters and countries.
             </p>
           </div>
         </div>

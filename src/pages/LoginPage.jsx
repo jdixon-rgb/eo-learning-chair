@@ -122,17 +122,16 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-muted-foreground/80 text-[11px]">
-            Built by{' '}
+            {BUILDER.framing}
+            {' · '}
             <a
               href={BUILDER.url}
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
             >
-              {BUILDER.name}
+              {BUILDER.company}
             </a>
-            {' · '}
-            <span>{BUILDER.company}</span>
           </p>
         </div>
       </div>
