@@ -17,6 +17,29 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.65.2 — 2026-04-18
+
+### Fix: Vendors page readability — white-on-ivory leftovers
+The Vendors page had more dark-theme leftovers. The "All Categories"
+select rendered as white text on ivory (barely visible in the
+screenshot). Same leftover on the search input, the AddVendor modal
+form fields, the review textarea, and two hardcoded dark modal
+backgrounds:
+
+- **Page inputs** — search input + category select swapped to
+  `text-foreground placeholder:text-muted-foreground`
+- **AddVendorModal** — name/address/phone/website inputs, category
+  select, and the type-ahead suggestions dropdown all migrated off
+  `text-white` / `bg-[#1a2332]`
+- **VendorDetailModal** — connect textarea
+- **ReviewForm / ReviewCard** — review textareas
+- **Modal shell** — hardcoded `bg-[#0f1724]` → `bg-card text-foreground`
+  so modal contents inherit the cream theme
+
+Fix only. `src/pages/portal/VendorsPage.jsx`.
+
+---
+
 ## v1.65.1 — 2026-04-18
 
 ### Fix: SAP Industry field is now a dropdown

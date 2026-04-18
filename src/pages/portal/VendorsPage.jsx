@@ -143,7 +143,7 @@ export default function VendorsPage() {
             placeholder="Search vendors..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
           />
           {search && (
             <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground">
@@ -155,7 +155,7 @@ export default function VendorsPage() {
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white focus:outline-none focus:border-border cursor-pointer"
+            className="appearance-none pl-4 pr-10 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground focus:outline-none focus:border-border cursor-pointer"
           >
             <option value="All">All Categories</option>
             {VENDOR_CATEGORIES.map(c => (
@@ -401,7 +401,7 @@ function VendorCard({ vendor, avgRating, numReviews, onClick }) {
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0f1724] border border-border rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-card text-foreground border border-border rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -444,11 +444,11 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Acme Legal Services"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
             autoFocus
           />
           {suggestions.length > 0 && !vendor && (
-            <div className="absolute z-10 mt-1 w-full bg-[#1a2332] border border-border rounded-xl overflow-hidden shadow-xl">
+            <div className="absolute z-10 mt-1 w-full bg-card border border-border rounded-xl overflow-hidden shadow-xl">
               <p className="text-xs text-muted-foreground/70 px-3 py-2 border-b border-border/50">Already listed — click to view</p>
               {suggestions.map(s => (
                 <button
@@ -470,7 +470,7 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white focus:outline-none focus:border-border"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground focus:outline-none focus:border-border"
           >
             {VENDOR_CATEGORIES.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -485,7 +485,7 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
             value={address}
             onChange={e => setAddress(e.target.value)}
             placeholder="Street address, city, ZIP"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
           />
         </div>
 
@@ -497,7 +497,7 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
               value={phone}
               onChange={e => setPhone(e.target.value)}
               placeholder="(480) 555-0100"
-              className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
+              className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
             />
           </div>
           <div>
@@ -507,7 +507,7 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
               value={website}
               onChange={e => setWebsite(e.target.value)}
               placeholder="https://..."
-              className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border"
+              className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border"
             />
           </div>
         </div>
@@ -613,7 +613,7 @@ function VendorDetailModal({
                   value={connectMsg}
                   onChange={e => setConnectMsg(e.target.value)}
                   placeholder="Optional message — why do you want to connect?"
-                  className="w-full px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-indigo-500/30 resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500/30 resize-none"
                   rows={2}
                 />
                 <div className="flex gap-2">
@@ -720,7 +720,7 @@ function ReviewForm({ memberId, vendorId, onSubmit, onCancel }) {
           onChange={e => setText(e.target.value)}
           rows={3}
           placeholder="Share your experience..."
-          className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-border resize-none"
+          className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-border resize-none"
         />
       </div>
       <div className="flex gap-2 justify-end">
@@ -750,7 +750,7 @@ function ReviewCard({ review, memberName, isOwn, isAdmin, onUpdate, onDelete, on
           value={editText}
           onChange={e => setEditText(e.target.value)}
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-white focus:outline-none focus:border-border resize-none"
+          className="w-full px-4 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground focus:outline-none focus:border-border resize-none"
         />
         <div className="flex gap-2 justify-end">
           <button className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground" onClick={() => setEditing(false)}>Cancel</button>
