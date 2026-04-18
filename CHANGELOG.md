@@ -17,6 +17,22 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.6 — 2026-04-17
+
+### Fix: SAP Portal dashboard readability
+Multiple low-contrast text elements on the cream SAP Portal background:
+- "Not yet forum trained" was `text-amber-400/80` — washed out. Now
+  `text-warm` (on-palette terracotta).
+- "Forum Trained" was `text-green-400` — off-palette bright. Now
+  `text-community` (muted English green) matching the member portal's
+  belonging accent.
+- Partner name (e.g. "Silverhawk Financial") was plain muted — now
+  `text-foreground/90 font-medium` so it reads as the heading it is.
+- Card subtitles and "Next Event" label bumped from `/60`/`/70`
+  opacity to full `text-muted-foreground` for AA contrast.
+
+---
+
 ## v1.61.5 — 2026-04-17
 
 ### Tweak: Survey Results visibility — President yes, Super Admin no
