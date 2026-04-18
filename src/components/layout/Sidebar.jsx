@@ -176,11 +176,13 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
 
           {contextExpanded && (
             <div className="pb-3">
-              {/* Fiscal Year Switcher — collapses on change. Chapter
-                  switching for super-admin happens via /super-admin
-                  (Platform Dashboard → pick a chapter). */}
+              {/* Chapter switching for super-admin happens via
+                  /super-admin (Platform Dashboard → pick a chapter),
+                  so the sidebar only surfaces FY + role here. The
+                  chevron is the single control for expand/collapse —
+                  no auto-close on selection. */}
               <div className="pt-2">
-                <FiscalYearSwitcher onAfterChange={() => setContextExpanded(false)} />
+                <FiscalYearSwitcher />
               </div>
 
               {/* Role switcher — super admin + president */}
@@ -204,9 +206,6 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   ? CHAIR_ROLE_CONFIGS[e.target.value]
                   : ownConfig
                 if (config?.homePath) navigate(config.homePath)
-                // Collapse the context block automatically — the user
-                // finished the context switch, get out of their way.
-                setContextExpanded(false)
               }}
               className="w-full text-xs bg-sidebar-accent/40 border border-sidebar-border rounded-lg px-2 py-1.5 text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
             >
