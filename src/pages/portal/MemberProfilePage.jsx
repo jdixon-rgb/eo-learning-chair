@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { loadCurrentMember } from '@/lib/reflectionsStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, Save, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Check, Loader2, Heart } from 'lucide-react'
 
 // Member self-edit profile page. Lives in the Member Portal under
 // /portal/profile. Backed by `chapter_members` — the member can update
@@ -31,6 +31,23 @@ export default function MemberProfilePage() {
     eo_join_date: '',
     notes: '',
   })
+
+  // SLP — one record per member, optional. Loaded alongside the
+  // chapter_members row.
+  const [slp, setSlp] = useState(null)
+  const [slpForm, setSlpForm] = useState({
+    name: '',
+    relationship_type: 'spouse',
+    dob: '',
+    anniversary: '',
+    kids: '',
+    dietary_restrictions: '',
+    allergies: '',
+    notes: '',
+  })
+  const [slpSaving, setSlpSaving] = useState(false)
+  const [slpSavedAt, setSlpSavedAt] = useState(null)
+  const [slpError, setSlpError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -58,6 +75,25 @@ export default function MemberProfilePage() {
               eo_join_date: full.eo_join_date || '',
               notes: full.notes || '',
             })
+            // Load SLP if one exists for this member
+            const { data: slpRow } = await supabase
+              .from('slps')
+              .select('*')
+              .eq('member_id', full.id)
+              .maybeSingle()
+            if (!cancelled && slpRow) {
+              setSlp(slpRow)
+              setSlpForm({
+                name: slpRow.name || '',
+                relationship_type: slpRow.relationship_type || 'spouse',
+                dob: slpRow.dob || '',
+                anniversary: slpRow.anniversary || '',
+                kids: slpRow.kids || '',
+                dietary_restrictions: slpRow.dietary_restrictions || '',
+                allergies: slpRow.allergies || '',
+                notes: slpRow.notes || '',
+              })
+            }
           }
         } else {
           setMember(data)
@@ -105,6 +141,45 @@ export default function MemberProfilePage() {
     setSaving(false)
     setSavedAt(Date.now())
     setTimeout(() => setSavedAt(null), 3000)
+  }
+
+  const handleSaveSlp = async () => {
+    if (!member?.id || !member?.chapter_id) return
+    setSlpSaving(true)
+    setSlpError('')
+
+    const payload = {
+      chapter_id: member.chapter_id,
+      member_id: member.id,
+      name: slpForm.name.trim(),
+      relationship_type: slpForm.relationship_type || 'spouse',
+      dob: slpForm.dob || null,
+      anniversary: slpForm.anniversary || null,
+      kids: slpForm.kids,
+      dietary_restrictions: slpForm.dietary_restrictions,
+      allergies: slpForm.allergies,
+      notes: slpForm.notes,
+    }
+
+    if (isSupabaseConfigured()) {
+      // Upsert by member_id (unique). Insert if no SLP exists, otherwise update.
+      let res
+      if (slp?.id) {
+        res = await supabase.from('slps').update(payload).eq('id', slp.id).select().single()
+      } else {
+        res = await supabase.from('slps').insert(payload).select().single()
+      }
+      if (res.error) {
+        setSlpError(res.error.message)
+        setSlpSaving(false)
+        return
+      }
+      setSlp(res.data)
+    }
+
+    setSlpSaving(false)
+    setSlpSavedAt(Date.now())
+    setTimeout(() => setSlpSavedAt(null), 3000)
   }
 
   if (loading) {
@@ -214,6 +289,107 @@ export default function MemberProfilePage() {
             </span>
           )}
           {error && <span className="text-sm text-destructive">{error}</span>}
+        </div>
+      </div>
+
+      {/* SLP — Significant Life Partner */}
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-warm/10 text-warm shrink-0">
+            <Heart className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Significant Life Partner</h2>
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-lg">
+              Helps the chapter plan SLP-attended events, celebrate milestones,
+              and accommodate dietary needs. Visible only to you and your
+              chapter leadership.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Name</label>
+            <Input value={slpForm.name} onChange={e => setSlpForm(f => ({ ...f, name: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Relationship</label>
+            <select
+              value={slpForm.relationship_type}
+              onChange={e => setSlpForm(f => ({ ...f, relationship_type: e.target.value }))}
+              className="w-full mt-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="spouse">Spouse</option>
+              <option value="partner">Partner</option>
+              <option value="domestic_partner">Domestic Partner</option>
+              <option value="fiance">Fiancé/Fiancée</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Date of birth</label>
+            <Input type="date" value={slpForm.dob} onChange={e => setSlpForm(f => ({ ...f, dob: e.target.value }))} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Anniversary</label>
+            <Input type="date" value={slpForm.anniversary} onChange={e => setSlpForm(f => ({ ...f, anniversary: e.target.value }))} />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Kids</label>
+          <Input
+            value={slpForm.kids}
+            onChange={e => setSlpForm(f => ({ ...f, kids: e.target.value }))}
+            placeholder="e.g. Sarah (12), Michael (9)"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Dietary restrictions</label>
+            <Input
+              value={slpForm.dietary_restrictions}
+              onChange={e => setSlpForm(f => ({ ...f, dietary_restrictions: e.target.value }))}
+              placeholder="e.g. Vegetarian, gluten-free"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Allergies</label>
+            <Input
+              value={slpForm.allergies}
+              onChange={e => setSlpForm(f => ({ ...f, allergies: e.target.value }))}
+              placeholder="e.g. Peanuts, shellfish"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">Notes</label>
+          <textarea
+            value={slpForm.notes}
+            onChange={e => setSlpForm(f => ({ ...f, notes: e.target.value }))}
+            rows={3}
+            placeholder="Anything the chapter should know — interests, communication preferences, milestones coming up…"
+            className="w-full mt-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+
+        <div className="flex items-center gap-3 pt-2">
+          <Button onClick={handleSaveSlp} disabled={slpSaving}>
+            {slpSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save SLP
+          </Button>
+          {slpSavedAt && (
+            <span className="flex items-center gap-1 text-sm text-community font-medium">
+              <Check className="h-4 w-4" /> Saved
+            </span>
+          )}
+          {slpError && <span className="text-sm text-destructive">{slpError}</span>}
         </div>
       </div>
     </div>

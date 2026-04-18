@@ -17,6 +17,35 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.63.0 — 2026-04-17
+
+### Feature: Significant Life Partner (SLP) records on member profile
+New `slps` table (migration 050) — one SLP per chapter member, linked
+by `member_id`. Captured fields: name, relationship type
+(spouse / partner / domestic partner / fiancé / other), date of birth,
+anniversary, kids (free-text list), dietary restrictions, allergies, notes.
+
+**Access model (RLS):**
+- Member can read/insert/update/delete their own SLP record
+- Chapter admin (super_admin / president / president_elect /
+  president_elect_elect / chapter_executive_director /
+  chapter_experience_coordinator / **learning_chair** /
+  learning_chair_elect) can read/edit any SLP in their chapter
+- Nobody else can see SLP data
+
+**UI:** new SLP card on the member profile page (`/portal/profile`),
+sitting beneath the main profile fields. Loads existing SLP on mount,
+upserts on save.
+
+**Coming next:** admin-side UI for chapter staff to view/edit SLPs from
+member management. For now, member self-edit is the only UI; chapter
+admins can edit via Supabase directly if needed.
+
+### Migration to apply
+`supabase/migrations/050_slps_table.sql`. Idempotent.
+
+---
+
 ## v1.62.0 — 2026-04-17
 
 ### Feature: Member self-edit profile page + Year Arc upgrade
