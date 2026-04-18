@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.4 — 2026-04-17
+
+### Fix: SAP Portal preview bar layout on mobile
+The "Viewing as" preview bar at the top of the SAP Portal squeezed the
+contact dropdown against the "Exit Preview" link on narrow screens —
+the "E" of "Exit Preview" was getting clipped behind the dropdown.
+Bar now stacks vertically on mobile (chip + dropdown on row 1, Exit
+Preview on row 2) and stays inline at `sm` and above. Dropdown grows
+to fill row width on mobile so long contact names fit cleanly.
+
+---
+
 ## v1.61.3 — 2026-04-17
 
 ### Restructure: Survey Results is Learning Chair only, not an admin section item
