@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.63.1 — 2026-04-17
+
+### Fix: Vendors page in member portal crashed (TDZ ReferenceError)
+`VendorsPage.jsx` declared a `useCallback` whose dependency array
+referenced `currentMember` BEFORE the `const currentMember = useMemo(...)`
+declaration. JavaScript's temporal dead zone made this throw a
+ReferenceError at render → page crash. Moved the `currentMember`
+declaration above the callback. No behavior change.
+
+---
+
 ## v1.63.0 — 2026-04-17
 
 ### Feature: Significant Life Partner (SLP) records on member profile
