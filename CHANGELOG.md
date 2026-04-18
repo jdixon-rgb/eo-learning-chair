@@ -17,6 +17,26 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.66.3 — 2026-04-18
+
+### Fix: Budget items now scoped to active fiscal year
+The Dashboard "Budget Allocation" widget was showing $138,000 for
+Speaker Fees while the Budget page showed $108,000 — same chapter,
+same FY. Root cause: in `src/lib/store.js` the `events` fetch was
+scoped to `chapter_id AND fiscal_year`, but `budget_items` (and
+`contract_checklists`) were only scoped to `chapter_id`. Prior-year
+budget rows lingered in the store and got summed by any consumer
+that aggregated `budgetItems` directly — Dashboard widget,
+store-level `totalBudgeted` / `totalContracted` / `totalActualSpent`.
+
+Fix: extend the join filter to also `.eq('events.fiscal_year',
+activeFiscalYear)` for both tables. All FY-scoped consumers now
+see consistent totals.
+
+`src/lib/store.js`.
+
+---
+
 ## v1.66.2 — 2026-04-18
 
 ### Fix: "Members" nav item belongs to chapter staff only
