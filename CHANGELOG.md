@@ -17,6 +17,26 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.65.1 — 2026-04-18
+
+### Fix: SAP Industry field is now a dropdown
+The SAP partner Add/Edit form had a freeform text input for Industry,
+which meant SAPs could be categorized under "Financial Planning",
+"financial planning", "FinPlan", or anything else an admin typed.
+That broke category grouping in the Vendors directory because virtual
+SAP entries couldn't match the canonical categories.
+
+- **Dropdown** — same `VENDOR_CATEGORIES` list used by real vendors
+  (Legal, Accounting, Catering, AV/Production, Printing, etc.)
+- **Legacy preservation** — if an existing SAP has a non-canonical
+  industry, the current value shows as "(legacy)" in the dropdown so
+  saving without changing it won't clobber it; editing picks a
+  canonical option going forward
+
+Fix only. `src/pages/SAPPartnersPage.jsx`.
+
+---
+
 ## v1.65.0 — 2026-04-18
 
 ### UX: Vendors directory groups by category in the "All" view

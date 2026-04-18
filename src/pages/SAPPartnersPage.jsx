@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
-import { useVendorStore } from '@/lib/vendorStore'
+import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { insertRow } from '@/lib/db'
@@ -522,7 +522,13 @@ export default function SAPPartnersPage() {
               </div>
               <div>
                 <label className="text-xs font-medium">Industry</label>
-                <Input value={partnerForm.industry} onChange={e => setPartnerForm(p => ({ ...p, industry: e.target.value }))} placeholder="Financial Planning, IT, etc." />
+                <Select value={partnerForm.industry} onChange={e => setPartnerForm(p => ({ ...p, industry: e.target.value }))}>
+                  <option value="">Select industry…</option>
+                  {VENDOR_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {partnerForm.industry && !VENDOR_CATEGORIES.includes(partnerForm.industry) && (
+                    <option value={partnerForm.industry}>{partnerForm.industry} (legacy)</option>
+                  )}
+                </Select>
               </div>
               <div>
                 <label className="text-xs font-medium">Tier</label>
