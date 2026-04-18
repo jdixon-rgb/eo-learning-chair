@@ -50,10 +50,20 @@ export default function DashboardPage() {
   const budgetColor = { critical: 'bg-destructive', warning: 'bg-warm', healthy: 'bg-green-500' }[budgetHealth]
 
   // Events by month for mini arc
+  // Group all events by fiscal month index — a month can have multiple
+  // events (e.g. a kickoff + a workshop in the same month). We render
+  // one card per month and list every event inside.
   const eventsByMonth = {}
   events.forEach(e => {
-    if (e.month_index != null) eventsByMonth[e.month_index] = e
+    if (e.month_index != null) {
+      if (!eventsByMonth[e.month_index]) eventsByMonth[e.month_index] = []
+      eventsByMonth[e.month_index].push(e)
+    }
   })
+  // Sort each month's events by date so they render in chronological order
+  Object.values(eventsByMonth).forEach(arr =>
+    arr.sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''))
+  )
 
   return (
     <div className="space-y-6">
@@ -167,32 +177,52 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {FISCAL_MONTHS.map((month, i) => {
             const strategic = STRATEGIC_MAP[i]
-            const event = eventsByMonth[i]
-            const speaker = event?.speaker_id ? speakers.find(s => s.id === event.speaker_id) : null
-            const dateLabel = event?.event_date
-              ? new Date(event.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-              : month.fullName
-            // Prefer speaker name for the line-2 label; fall back to the
-            // event title (stripped of any 'CHANGE: ' style prefix).
-            const subtitle = speaker?.name || event?.title?.split(':').pop()?.trim()
+            const monthEvents = eventsByMonth[i] || []
+            const hasEvents = monthEvents.length > 0
+            // Card click target: if a single event, jump straight to it;
+            // if multiple, jump to the calendar so the user can pick.
+            const onCardClick = hasEvents
+              ? () => navigate(monthEvents.length === 1 ? `/events/${monthEvents[0].id}` : '/calendar')
+              : () => navigate('/calendar')
             return (
               <div key={i} className="text-center">
-                <div className={`text-[10px] font-bold px-2 py-1 rounded-t truncate ${strategic.color} ${strategic.textColor}`}>
-                  {strategic.label}
+                {/* Banner: strategic theme + month abbreviation
+                    (e.g. "MOMENTUM · AUG"). Month chip lives here so
+                    the card body only has to show the day + speaker. */}
+                <div className={`text-[10px] font-bold px-2 py-1 rounded-t truncate flex items-center justify-center gap-1.5 ${strategic.color} ${strategic.textColor}`}>
+                  <span>{strategic.label}</span>
+                  <span className="opacity-70">·</span>
+                  <span>{month.shortName.toUpperCase()}</span>
                 </div>
                 <div
                   className={`border rounded-b px-2 py-2 text-xs cursor-pointer hover:bg-accent transition-colors ${
-                    event ? 'border-primary bg-blue-50' : 'border-border'
+                    hasEvents ? 'border-primary bg-blue-50' : 'border-border'
                   }`}
-                  onClick={() => event ? navigate(`/events/${event.id}`) : navigate('/calendar')}
+                  onClick={onCardClick}
                 >
-                  <div className="text-[11px] font-semibold leading-tight">{dateLabel}</div>
-                  {event ? (
-                    <div className="mt-1 text-[11px] text-primary font-medium leading-tight">
-                      {subtitle || 'TBD'}
+                  {hasEvents ? (
+                    <div className="space-y-2">
+                      {monthEvents.map(ev => {
+                        const speaker = ev.speaker_id ? speakers.find(s => s.id === ev.speaker_id) : null
+                        const dateLabel = ev.event_date
+                          ? new Date(ev.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                          : 'Date TBD'
+                        const subtitle = speaker?.name || ev.title?.split(':').pop()?.trim()
+                        return (
+                          <div key={ev.id} className="border-t border-primary/20 first:border-t-0 first:pt-0 pt-2">
+                            <div className="text-[11px] font-semibold leading-tight">{dateLabel}</div>
+                            <div className="mt-0.5 text-[11px] text-primary font-medium leading-tight">
+                              {subtitle || 'TBD'}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
-                    <div className="mt-1 text-[10px] text-muted-foreground">No event</div>
+                    <>
+                      <div className="text-[11px] font-semibold leading-tight text-muted-foreground">{month.fullName}</div>
+                      <div className="mt-1 text-[10px] text-muted-foreground">No event</div>
+                    </>
                   )}
                 </div>
               </div>

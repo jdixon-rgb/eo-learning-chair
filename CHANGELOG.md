@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.63.2 — 2026-04-17
+
+### Year Arc cards: month in banner + multiple events per card
+Two improvements to the Dashboard's Year Arc:
+
+- **Month abbreviation now lives in the dark banner** alongside the
+  strategic theme — e.g. `MOMENTUM · AUG`. Card body no longer
+  needs to repeat the month.
+- **Multiple events per month** all render inside the same card,
+  stacked with a thin divider. Previously only one event per month
+  was shown.
+
+Card click behavior: single event → jump to event detail; multiple
+events or none → jump to the full calendar.
+
+---
+
 ## v1.63.1 — 2026-04-17
 
 ### Fix: Vendors page in member portal crashed (TDZ ReferenceError)
