@@ -225,18 +225,26 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 </select>
               </div>
             )}
-            {isImpersonating && (
-              <button
-                onClick={() => {
-                  setViewAsRole(null)
-                  const config = isSuperAdmin ? CHAIR_ROLE_CONFIGS.super_admin : CHAIR_ROLE_CONFIGS[profile?.role]
-                  navigate(config?.homePath || '/')
-                }}
-                className="mt-1.5 w-full text-[10px] font-medium text-warm hover:text-warm/80 underline underline-offset-2"
-              >
-                Back to {isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}
-              </button>
-            )}
+            {isImpersonating && (() => {
+              // Resolve aliases like president_elect -> president so the
+              // "Back to X" button reads correctly and routes correctly
+              // for all roles that can switch (super_admin, president,
+              // president_elect, president_elect_elect, CED, CEC).
+              const myConfig = isSuperAdmin
+                ? CHAIR_ROLE_CONFIGS.super_admin
+                : getChairConfig(profile?.role)
+              return (
+                <button
+                  onClick={() => {
+                    setViewAsRole(null)
+                    navigate(myConfig?.homePath || '/')
+                  }}
+                  className="mt-1.5 w-full text-[10px] font-medium text-warm hover:text-warm/80 underline underline-offset-2"
+                >
+                  Back to {myConfig?.title || 'my role'}
+                </button>
+              )
+            })()}
                 </div>
               )}
             </div>

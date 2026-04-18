@@ -17,6 +17,25 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.6 — 2026-04-17
+
+### Fix: "Back to my role" button works for elect roles
+The sidebar's "Back to X" button (visible when a role-switcher is
+impersonating another chair) was using `CHAIR_ROLE_CONFIGS[profile.role]`
+directly. That works for `president`, `chapter_executive_director`,
+`chapter_experience_coordinator`, and `super_admin`, but FAILS for
+`president_elect` and `president_elect_elect` because those are
+aliases resolved via `getChairConfig()`, not first-class keys.
+
+Result: elect-track presidents saw "Back to my role" and navigation
+fell back to `/`. Now the button reads "Back to President" and routes
+to `/president`, matching the non-elect behavior.
+
+Only super-admin still reads "Back to Super Admin" — unchanged, and
+only visible when a super-admin is impersonating.
+
+---
+
 ## v1.60.5 — 2026-04-17
 
 ### Fix: sidebar context block always starts collapsed
