@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useSAPStore } from '@/lib/sapStore'
+import { SAP_TIERS } from '@/lib/constants'
 import {
   Store, Plus, Star, Search, X, ThumbsUp, ThumbsDown,
   ExternalLink, Phone, MapPin, ChevronDown, Pencil, Trash2, Send,
@@ -17,7 +18,7 @@ export default function VendorsPage() {
     addReview, updateReview, deleteReview, voteReview,
     reviewsForVendor, averageRating, reviewCount, searchVendors,
   } = useVendorStore()
-  const { addConnectRequest, appearancesForSAP } = useSAPStore()
+  const { partners: sapPartners, addConnectRequest, appearancesForSAP } = useSAPStore()
 
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
@@ -48,9 +49,37 @@ export default function VendorsPage() {
     setConnectSent(prev => new Set([...prev, vendor.id]))
   }, [currentMember, user, addConnectRequest])
 
+  // Merge real vendors with virtual entries for every active SAP
+  // partner (so members can discover SAPs through the vendor surface
+  // without admins having to duplicate-create each one as a vendor).
+  // Virtual rows are read-only; they cannot be edited, deleted, or
+  // reviewed. If a real vendor already links a SAP via sap_id, we
+  // don't double-list it.
+  const displayVendors = useMemo(() => {
+    const real = vendors.map(v => ({ ...v, _virtual: false }))
+    const linkedSapIds = new Set(real.filter(v => v.sap_id).map(v => v.sap_id))
+    const virtualFromSaps = (sapPartners || [])
+      .filter(p => (p.status || 'active') === 'active')
+      .filter(p => !linkedSapIds.has(p.id))
+      .map(p => ({
+        id: `sap:${p.id}`,
+        _virtual: true,
+        _sapTier: p.tier,
+        sap_id: p.id,
+        name: p.company || p.name,
+        category: p.industry || 'Other',
+        description: p.description || '',
+        website: p.website || '',
+        phone: '',
+        location: '',
+        status: 'active',
+      }))
+    return [...real, ...virtualFromSaps]
+  }, [vendors, sapPartners])
+
   // Filtered vendors
   const filtered = useMemo(() => {
-    let list = [...vendors]
+    let list = [...displayVendors]
     if (categoryFilter !== 'All') {
       list = list.filter(v => v.category === categoryFilter)
     }
@@ -61,10 +90,10 @@ export default function VendorsPage() {
         v.category.toLowerCase().includes(q)
       )
     }
-    // SAP partners sort first, then by average rating descending, then name
+    // SAP partners sort first (both virtual and linked), then by rating, then name
     list.sort((a, b) => {
-      const aSAP = a.tier === 'sap_partner' ? 1 : 0
-      const bSAP = b.tier === 'sap_partner' ? 1 : 0
+      const aSAP = (a._virtual || a.sap_id) ? 1 : 0
+      const bSAP = (b._virtual || b.sap_id) ? 1 : 0
       if (bSAP !== aSAP) return bSAP - aSAP
       const ra = averageRating(a.id)
       const rb = averageRating(b.id)
@@ -269,22 +298,35 @@ function CategoryBadge({ category }) {
 }
 
 function VendorCard({ vendor, avgRating, numReviews, onClick }) {
-  const isSAP = vendor.tier === 'sap_partner'
+  // Virtual SAP entry (auto-surfaced from the SAPs table) OR a real
+  // vendor linked to a SAP via sap_id. Either way, show tier badge.
+  const isSAP = vendor._virtual || !!vendor.sap_id
+  const tierId = vendor._sapTier || (vendor.tier && vendor.tier !== 'sap_partner' ? vendor.tier : null)
+  const tier = tierId ? SAP_TIERS.find(t => t.id === tierId) : null
+
   return (
     <button
       onClick={onClick}
-      className={`text-left w-full p-5 rounded-2xl transition-all ${
+      className={`text-left w-full p-5 rounded-2xl border transition-all ${
         isSAP
-          ? 'bg-indigo-500/5 border border-indigo-500/30 hover:border-indigo-500/50 hover:bg-indigo-500/10'
-          : 'bg-muted/30 border border-border hover:border-border hover:bg-muted/30'
+          ? 'bg-warm/5 border-warm/30 hover:border-warm/50 hover:bg-warm/10'
+          : 'bg-card border-border hover:border-primary/30 hover:bg-muted/40'
       }`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <h3 className="font-semibold text-white truncate">{vendor.name}</h3>
+        <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          <h3 className="font-semibold text-foreground truncate">{vendor.name}</h3>
           {isSAP && (
-            <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 uppercase tracking-wider">
-              Strategic Partner
+            <span
+              className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider"
+              style={
+                tier
+                  ? { backgroundColor: `${tier.color}20`, color: tier.color, border: `1px solid ${tier.color}40` }
+                  : { backgroundColor: 'rgba(200,75,12,0.15)', color: '#c84b0c', border: '1px solid rgba(200,75,12,0.3)' }
+              }
+              title={tier ? `${tier.label} SAP partner` : 'SAP partner'}
+            >
+              {tier ? `${tier.label} SAP` : 'SAP Partner'}
             </span>
           )}
         </div>
@@ -298,8 +340,13 @@ function VendorCard({ vendor, avgRating, numReviews, onClick }) {
         </span>
       </div>
       {vendor.address && (
-        <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 truncate">
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate">
           <MapPin className="h-3 w-3 shrink-0" /> {vendor.address}
+        </p>
+      )}
+      {vendor._virtual && (
+        <p className="text-[10px] text-muted-foreground mt-2 italic">
+          Auto-listed from chapter SAP roster
         </p>
       )}
     </button>
@@ -446,7 +493,9 @@ function VendorDetailModal({
 }) {
   const [connectMsg, setConnectMsg] = useState('')
   const [showConnectForm, setShowConnectForm] = useState(false)
-  const canEdit = isAdmin || vendor.created_by === userId
+  // Virtual SAP entries are read-only — the admin manages them on the
+  // SAPs page, not here. Real vendors: owner or chapter admin can edit.
+  const canEdit = !vendor._virtual && (isAdmin || vendor.created_by === userId)
   const hasReviewed = currentMember && reviews.some(r => r.chapter_member_id === currentMember.id)
 
   return (
@@ -553,13 +602,18 @@ function VendorDetailModal({
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-foreground/90">Reviews</h3>
-            {currentMember && !hasReviewed && !showReviewForm && (
+            {currentMember && !hasReviewed && !showReviewForm && !vendor._virtual && (
               <button
                 onClick={() => setShowReviewForm(true)}
                 className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80"
               >
                 <Plus className="h-3.5 w-3.5" /> Write a Review
               </button>
+            )}
+            {vendor._virtual && (
+              <span className="text-[10px] text-muted-foreground italic">
+                Reviews unavailable — auto-listed from SAP roster
+              </span>
             )}
           </div>
 
