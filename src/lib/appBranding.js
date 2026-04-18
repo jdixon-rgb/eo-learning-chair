@@ -8,9 +8,8 @@
 
 export const BUILDER = {
   name: 'John-Scott Dixon',
-  company: 'Aidan Taylor Marketing',
-  url: 'https://aidantaylor.com',
-  tagline: 'Need a platform like this for your business? Let\u2019s talk.',
+  company: 'Aidan Taylor App Works',
+  url: 'https://aidantaylorappworks.com',
   emailCta: 'jdixon@aidantaylor.com',
 }
 

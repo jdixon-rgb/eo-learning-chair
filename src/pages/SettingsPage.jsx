@@ -716,17 +716,6 @@ export default function SettingsPage() {
               </a>{' '}
               at <span className="font-medium">{BUILDER.company}</span>. It started as a tool for one chapter and is now used by learning chairs, presidents, and regional leadership across multiple chapters and countries.
             </p>
-            <p className="text-xs mt-3 leading-relaxed">
-              {BUILDER.tagline}{' '}
-              <a
-                href={BUILDER.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary font-medium hover:underline"
-              >
-                Visit {BUILDER.company} &rarr;
-              </a>
-            </p>
           </div>
         </div>
       </div>
