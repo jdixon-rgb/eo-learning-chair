@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.1 — 2026-04-17
+
+### Revert: sidebar context no longer auto-collapses on selection
+Previous v1.61.0 made the context block close automatically when the
+user picked a new role or fiscal year. Reverted — the chevron is now
+the single control for open/shut. User explicit > guessing.
+
+---
+
 ## v1.61.0 — 2026-04-17
 
 ### Feature: SAPs relabel + SAP Chair role + Super Admin sidebar + minimal TopBar
