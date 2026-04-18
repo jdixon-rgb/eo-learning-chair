@@ -37,11 +37,11 @@ export default function SAPPortalDashboard() {
   return (
     <div className="space-y-8">
       {/* Welcome */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div className="rounded-2xl border border-border bg-muted/30 p-6">
         <h1 className="text-2xl font-bold">Welcome, {firstName}</h1>
         {partner && (
           <div className="flex items-center gap-3 mt-2">
-            <span className="text-white/60">{partner.name}</span>
+            <span className="text-muted-foreground">{partner.name}</span>
             {tier && (
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
@@ -59,7 +59,7 @@ export default function SAPPortalDashboard() {
                 <GraduationCap className="h-4 w-4" />
                 Forum Trained
                 {contact.forum_trained_date && (
-                  <span className="text-white/30">({contact.forum_trained_date})</span>
+                  <span className="text-muted-foreground/60">({contact.forum_trained_date})</span>
                 )}
               </span>
             ) : (
@@ -82,7 +82,7 @@ export default function SAPPortalDashboard() {
               </p>
               <h3 className="text-lg font-semibold mt-1">{nextSpeaking.event?.title}</h3>
               {nextSpeaking.topic && <p className="text-sm text-indigo-300/70 mt-0.5">{nextSpeaking.topic}</p>}
-              <p className="text-sm text-white/50 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {nextSpeaking.event?.event_date && new Date(nextSpeaking.event.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {nextSpeaking.time_slot && ` · ${nextSpeaking.time_slot}`}
               </p>
@@ -94,17 +94,17 @@ export default function SAPPortalDashboard() {
 
       {/* Next Event (attending) */}
       {nextEvent && (
-        <Link to="/sap-portal/events" className="block rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition-colors">
+        <Link to="/sap-portal/events" className="block rounded-2xl border border-border bg-muted/30 p-5 hover:bg-muted/50 transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Next Event</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Next Event</p>
               <h3 className="text-lg font-semibold mt-1">{nextEvent.title}</h3>
-              <p className="text-sm text-white/50 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {new Date(nextEvent.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 {nextEvent.event_time && ` at ${nextEvent.event_time}`}
               </p>
             </div>
-            <ArrowRight className="h-5 w-5 text-white/20 shrink-0" />
+            <ArrowRight className="h-5 w-5 text-muted-foreground/40 shrink-0" />
           </div>
         </Link>
       )}
@@ -115,7 +115,7 @@ export default function SAPPortalDashboard() {
           <Link
             key={to}
             to={to}
-            className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition-colors group"
+            className="rounded-2xl border border-border bg-muted/30 p-5 hover:bg-muted/50 transition-colors group"
           >
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
@@ -123,7 +123,7 @@ export default function SAPPortalDashboard() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold group-hover:text-indigo-300 transition-colors">{label}</h3>
-                <p className="text-xs text-white/40 mt-0.5">{desc}</p>
+                <p className="text-xs text-muted-foreground/70 mt-0.5">{desc}</p>
               </div>
             </div>
           </Link>

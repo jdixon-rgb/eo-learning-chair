@@ -706,15 +706,19 @@ export default function SettingsPage() {
             <h3 className="text-sm font-semibold">About This Platform</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
               <strong>{APP_NAME}</strong> — {BUILDER.framing}. Shipped by{' '}
-              <a
-                href={BUILDER.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline font-medium"
-              >
-                {BUILDER.company}
-              </a>
-              . It started as a tool for one chapter and is now used by learning chairs, current and incoming presidents, and regional leadership across multiple chapters and countries.
+              {BUILDER.url ? (
+                <a
+                  href={BUILDER.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-medium"
+                >
+                  {BUILDER.company}
+                </a>
+              ) : (
+                <span className="font-medium text-foreground">{BUILDER.company}</span>
+              )}
+              . It started as a tool for one chapter and is now used by learning chairs and regional leadership across multiple chapters and countries.
             </p>
           </div>
         </div>

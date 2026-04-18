@@ -41,7 +41,7 @@ export default function SAPAnnouncementsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-40">
-        <p className="text-sm text-white/40">Loading...</p>
+        <p className="text-sm text-muted-foreground/70">Loading...</p>
       </div>
     )
   }
@@ -50,14 +50,14 @@ export default function SAPAnnouncementsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Announcements</h1>
-        <p className="text-sm text-white/50 mt-1">Messages from your EO chapter</p>
+        <p className="text-sm text-muted-foreground mt-1">Messages from your EO chapter</p>
       </div>
 
       {notifications.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-          <Bell className="h-8 w-8 text-white/20 mx-auto mb-2" />
-          <p className="text-sm text-white/40">No announcements yet.</p>
-          <p className="text-xs text-white/20 mt-1">You'll see messages from the chapter here.</p>
+        <div className="rounded-2xl border border-border bg-muted/30 p-8 text-center">
+          <Bell className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground/70">No announcements yet.</p>
+          <p className="text-xs text-muted-foreground/40 mt-1">You'll see messages from the chapter here.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -66,22 +66,22 @@ export default function SAPAnnouncementsPage() {
               key={n.id}
               className={`rounded-xl border p-4 transition-colors ${
                 n.is_read
-                  ? 'border-white/5 bg-white/[0.02]'
+                  ? 'border-border/50 bg-muted/30'
                   : 'border-indigo-500/20 bg-indigo-500/5'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className={`text-sm font-semibold ${n.is_read ? 'text-white/60' : ''}`}>{n.title}</h3>
-                  <p className={`text-sm mt-1 ${n.is_read ? 'text-white/30' : 'text-white/60'}`}>{n.body}</p>
-                  <p className="text-[10px] text-white/20 mt-2">
+                  <h3 className={`text-sm font-semibold ${n.is_read ? 'text-muted-foreground' : ''}`}>{n.title}</h3>
+                  <p className={`text-sm mt-1 ${n.is_read ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>{n.body}</p>
+                  <p className="text-[10px] text-muted-foreground/40 mt-2">
                     {new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
                 {!n.is_read && (
                   <button
                     onClick={() => markRead(n.id)}
-                    className="p-1.5 rounded-lg text-white/30 hover:bg-white/10 hover:text-green-400 transition-colors cursor-pointer shrink-0"
+                    className="p-1.5 rounded-lg text-muted-foreground/60 hover:bg-muted/50 hover:text-green-400 transition-colors cursor-pointer shrink-0"
                     title="Mark as read"
                   >
                     <Check className="h-4 w-4" />

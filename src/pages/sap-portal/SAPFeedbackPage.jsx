@@ -34,9 +34,9 @@ export default function SAPFeedbackPage() {
 
   if (!partner || !contact) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-        <MessageSquare className="h-8 w-8 text-white/20 mx-auto mb-2" />
-        <p className="text-sm text-white/40">Your account needs to be linked to a partner first.</p>
+      <div className="rounded-2xl border border-border bg-muted/30 p-8 text-center">
+        <MessageSquare className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground/70">Your account needs to be linked to a partner first.</p>
       </div>
     )
   }
@@ -46,16 +46,16 @@ export default function SAPFeedbackPage() {
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold">Chapter Feedback</h1>
-          <p className="text-sm text-white/50 mt-1">Thank you for your feedback</p>
+          <p className="text-sm text-muted-foreground mt-1">Thank you for your feedback</p>
         </div>
         <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-8 text-center">
           <MessageSquare className="h-8 w-8 text-green-400 mx-auto mb-3" />
           <h2 className="text-lg font-semibold text-green-300">Feedback Received</h2>
-          <p className="text-sm text-white/50 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Your feedback has been submitted{(existing || isAnonymous) ? '' : ` from ${partner.name}`}.
             {(existing?.is_anonymous || isAnonymous) && ' It was submitted anonymously.'}
           </p>
-          <p className="text-xs text-white/30 mt-3">
+          <p className="text-xs text-muted-foreground/60 mt-3">
             This goes directly to the Strategic Alliances Chair.
           </p>
         </div>
@@ -67,13 +67,13 @@ export default function SAPFeedbackPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Chapter Feedback</h1>
-        <p className="text-sm text-white/50 mt-1">Help us improve your experience as an SAP partner</p>
+        <p className="text-sm text-muted-foreground mt-1">Help us improve your experience as an SAP partner</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-6">
+      <div className="rounded-2xl border border-border bg-muted/30 p-6 space-y-6">
         {/* Rating */}
         <div>
-          <label className="text-sm font-medium text-white/70 block mb-2">
+          <label className="text-sm font-medium text-foreground/80 block mb-2">
             How would you rate your experience with EO Arizona?
           </label>
           <div className="flex gap-1">
@@ -88,7 +88,7 @@ export default function SAPFeedbackPage() {
               >
                 <Star
                   className={`h-8 w-8 transition-colors ${
-                    i <= (hover || rating) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'
+                    i <= (hover || rating) ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/40'
                   }`}
                 />
               </button>
@@ -98,14 +98,14 @@ export default function SAPFeedbackPage() {
 
         {/* Text feedback */}
         <div>
-          <label className="text-sm font-medium text-white/70 block mb-2">
+          <label className="text-sm font-medium text-foreground/80 block mb-2">
             What could we do to improve your experience and make the partnership more compelling?
           </label>
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
             placeholder="Your recommendations and feedback..."
-            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-indigo-500/30 resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border text-sm text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-indigo-500/30 resize-none"
             rows={5}
           />
         </div>
@@ -119,10 +119,10 @@ export default function SAPFeedbackPage() {
             className="mt-1"
           />
           <div>
-            <span className="text-sm font-medium text-white/70 flex items-center gap-1.5">
+            <span className="text-sm font-medium text-foreground/80 flex items-center gap-1.5">
               <Shield className="h-3.5 w-3.5" /> Submit anonymously
             </span>
-            <p className="text-xs text-white/30 mt-0.5">
+            <p className="text-xs text-muted-foreground/60 mt-0.5">
               Your name won't be attached — only your company will be identifiable. Feedback goes directly to the Strategic Alliances Chair.
             </p>
           </div>

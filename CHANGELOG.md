@@ -17,6 +17,44 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.59.0 — 2026-04-17
+
+### Portals rebrand: Member + SAP flip to light palette with distinct accents
+Member Portal and SAP Partner Portal were still on the old dark navy
+gradient. Both now use the same light Le Corbusier palette as the admin
+surface, with distinct accent colors keeping them contextually separate:
+
+- **Admin** — céruléen (blue-gray) primary
+- **Member Portal** — new **community green** accent (`#1a5c3a`), signals belonging
+- **SAP Partner Portal** — terracotta `warm` accent (`#c84b0c`), signals partnership
+
+Each portal gets a thin colored strip under the header (top nav gets a
+1px-tall accent bar in its color), plus a pill-shaped context chip in
+the header reading "Member" or "Partner" so users instantly know which
+surface they're on.
+
+**Layout changes**
+- `MemberPortalLayout` + `SAPPortalLayout`: dark navy gradient replaced
+  with `bg-background text-foreground`; cards/headers use `bg-card`.
+  Active nav state uses the portal's accent color.
+- Both layouts now render the `BuiltByFooter` attribution strip like
+  the admin surface.
+
+**Bulk sweep**
+- ~550 class replacements across portal + sap-portal interior pages:
+  `text-white/XX` → `text-muted-foreground`/`text-foreground`,
+  `bg-white/XX` → `bg-muted`, `border-white/XX` → `border-border`,
+  and variants. Preserves bare `text-white` on colored buttons (where
+  it's intentional foreground).
+- `ReflectionsPage` left untouched — uses its own "paper" lifeline theme.
+
+**Known follow-up**
+- Some interior pages still reference `text-indigo-`/`text-amber-`
+  accent colors directly. These render fine on light backgrounds but
+  aren't on-palette; tracked for a polish pass.
+
+---
+
 ## v1.58.0 — 2026-04-17
 
 ### Rebrand: strip EO branding, adopt Le Corbusier palette

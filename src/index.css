@@ -21,13 +21,20 @@
   --color-eo-coral: #c84b0c;  /* ocre rouge → warm statement */
   --color-eo-white: #fffcf7;  /* cream white */
 
-  /* Warm statement accent — terracotta. Used for callouts,
-     warnings, highlighted metadata. `bg-warm`, `text-warm`, etc. */
+  /* Warm statement accent — terracotta. SAP Partner Portal primary
+     accent, also used for callouts and highlighted metadata across
+     the admin surface. `bg-warm`, `text-warm`, etc. */
   --color-warm: #c84b0c;
   --color-warm-foreground: #ffffff;
 
-  /* Ink — soft warm black for dark surfaces (portal layouts, chips,
-     dark overlays). `bg-ink`, `text-ink`, etc. */
+  /* Community green — Member Portal primary accent. English-green
+     from the Le Corbusier palette; signals belonging / community.
+     `bg-community`, `text-community`. */
+  --color-community: #1a5c3a;
+  --color-community-foreground: #ffffff;
+
+  /* Ink — soft warm black for dark surfaces (chips, dark overlays).
+     `bg-ink`, `text-ink`, etc. */
   --color-ink: #1a1714;
 
   /* shadcn/ui semantic tokens */

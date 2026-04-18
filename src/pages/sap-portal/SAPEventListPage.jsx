@@ -79,7 +79,7 @@ export default function SAPEventListPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Events</h1>
-        <p className="text-sm text-white/50 mt-1">Your chapter calendar</p>
+        <p className="text-sm text-muted-foreground mt-1">Your chapter calendar</p>
       </div>
 
       {upcoming.length > 0 ? (
@@ -98,15 +98,15 @@ export default function SAPEventListPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-8 text-center">
-          <CalendarDays className="h-8 w-8 text-white/20 mx-auto mb-2" />
-          <p className="text-sm text-white/40">No upcoming events right now.</p>
+        <div className="rounded-xl border border-border bg-muted/30 p-8 text-center">
+          <CalendarDays className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground/70">No upcoming events right now.</p>
         </div>
       )}
 
       {past.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-white/30">Past</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Past</h2>
           {past.map(item => (
             <EventRow
               key={item.event.id}
@@ -144,7 +144,7 @@ function EventRow({ item, sapContactId, rsvps, onRsvp, expanded, onToggle, onUpd
                 <Mic className="h-4 w-4 text-indigo-400 shrink-0" />
                 <h3 className="text-sm font-semibold">{event.title}</h3>
               </div>
-              <div className="flex items-center gap-3 mt-1.5 text-xs text-white/50">
+              <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <CalendarDays className="h-3 w-3" />
                   {new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -170,7 +170,7 @@ function EventRow({ item, sapContactId, rsvps, onRsvp, expanded, onToggle, onUpd
               </div>
             </div>
             {!isPast && (
-              expanded ? <ChevronDown className="h-4 w-4 text-white/30 shrink-0" /> : <ChevronRight className="h-4 w-4 text-white/30 shrink-0" />
+              expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground/60 shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
             )}
           </div>
         </div>
@@ -184,35 +184,35 @@ function EventRow({ item, sapContactId, rsvps, onRsvp, expanded, onToggle, onUpd
               </div>
             )}
             <div>
-              <label className="text-[11px] text-white/40 font-medium">Topic</label>
-              <Input value={engagement.topic || ''} onChange={e => onUpdateEngagement({ topic: e.target.value })} placeholder="Your presentation topic" className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+              <label className="text-[11px] text-muted-foreground/70 font-medium">Topic</label>
+              <Input value={engagement.topic || ''} onChange={e => onUpdateEngagement({ topic: e.target.value })} placeholder="Your presentation topic" className="bg-muted/30 border-border text-white text-xs mt-0.5" />
             </div>
             <div>
-              <label className="text-[11px] text-white/40 font-medium">Topic Description</label>
-              <Textarea value={engagement.topic_description || ''} onChange={e => onUpdateEngagement({ topic_description: e.target.value })} placeholder="What you'll cover, key takeaways..." rows={2} className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+              <label className="text-[11px] text-muted-foreground/70 font-medium">Topic Description</label>
+              <Textarea value={engagement.topic_description || ''} onChange={e => onUpdateEngagement({ topic_description: e.target.value })} placeholder="What you'll cover, key takeaways..." rows={2} className="bg-muted/30 border-border text-white text-xs mt-0.5" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] text-white/40 font-medium">Time Slot</label>
-                <Input value={engagement.time_slot || ''} onChange={e => onUpdateEngagement({ time_slot: e.target.value })} placeholder="e.g. 2:00 PM - 3:30 PM" className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+                <label className="text-[11px] text-muted-foreground/70 font-medium">Time Slot</label>
+                <Input value={engagement.time_slot || ''} onChange={e => onUpdateEngagement({ time_slot: e.target.value })} placeholder="e.g. 2:00 PM - 3:30 PM" className="bg-muted/30 border-border text-white text-xs mt-0.5" />
               </div>
               <div>
-                <label className="text-[11px] text-white/40 font-medium">AV Needs</label>
-                <Input value={engagement.av_needs || ''} onChange={e => onUpdateEngagement({ av_needs: e.target.value })} placeholder="Mic, projector, clicker..." className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+                <label className="text-[11px] text-muted-foreground/70 font-medium">AV Needs</label>
+                <Input value={engagement.av_needs || ''} onChange={e => onUpdateEngagement({ av_needs: e.target.value })} placeholder="Mic, projector, clicker..." className="bg-muted/30 border-border text-white text-xs mt-0.5" />
               </div>
             </div>
             <div>
-              <label className="text-[11px] text-white/40 font-medium">Run of Show Notes</label>
-              <Textarea value={engagement.run_of_show_notes || ''} onChange={e => onUpdateEngagement({ run_of_show_notes: e.target.value })} placeholder="Timing, flow, what you need before/after..." rows={2} className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+              <label className="text-[11px] text-muted-foreground/70 font-medium">Run of Show Notes</label>
+              <Textarea value={engagement.run_of_show_notes || ''} onChange={e => onUpdateEngagement({ run_of_show_notes: e.target.value })} placeholder="Timing, flow, what you need before/after..." rows={2} className="bg-muted/30 border-border text-white text-xs mt-0.5" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] text-white/40 font-medium">Materials Notes</label>
-                <Input value={engagement.materials_notes || ''} onChange={e => onUpdateEngagement({ materials_notes: e.target.value })} placeholder="Slides, handouts, surveys..." className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+                <label className="text-[11px] text-muted-foreground/70 font-medium">Materials Notes</label>
+                <Input value={engagement.materials_notes || ''} onChange={e => onUpdateEngagement({ materials_notes: e.target.value })} placeholder="Slides, handouts, surveys..." className="bg-muted/30 border-border text-white text-xs mt-0.5" />
               </div>
               <div>
-                <label className="text-[11px] text-white/40 font-medium">Materials URL</label>
-                <Input value={engagement.materials_url || ''} onChange={e => onUpdateEngagement({ materials_url: e.target.value })} placeholder="https://..." className="bg-white/5 border-white/10 text-white text-xs mt-0.5" />
+                <label className="text-[11px] text-muted-foreground/70 font-medium">Materials URL</label>
+                <Input value={engagement.materials_url || ''} onChange={e => onUpdateEngagement({ materials_url: e.target.value })} placeholder="https://..." className="bg-muted/30 border-border text-white text-xs mt-0.5" />
               </div>
             </div>
           </div>
@@ -226,11 +226,11 @@ function EventRow({ item, sapContactId, rsvps, onRsvp, expanded, onToggle, onUpd
   const rsvpStatus = rsvps[rsvpKey]
 
   return (
-    <div className={`rounded-xl border p-4 ${isOpen ? 'border-white/5 bg-white/[0.02]' : 'border-white/10 bg-white/5'}`}>
+    <div className={`rounded-xl border p-4 ${isOpen ? 'border-border/50 bg-muted/30' : 'border-border bg-muted/30'}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className={`text-sm font-semibold ${isOpen ? 'text-white/70' : ''}`}>{event.title}</h3>
-          <div className="flex items-center gap-3 mt-1.5 text-xs text-white/50">
+          <h3 className={`text-sm font-semibold ${isOpen ? 'text-foreground/80' : ''}`}>{event.title}</h3>
+          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3 w-3" />
               {new Date(event.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -253,20 +253,20 @@ function EventRow({ item, sapContactId, rsvps, onRsvp, expanded, onToggle, onUpd
         {/* RSVP / Confirm for invited events */}
         {!isPast && (isInvited || type === 'attending') && engagement && (
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={() => onUpdateEngagement({ status: 'confirmed' })} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${engagement.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'text-white/30 hover:bg-white/10 hover:text-green-400'}`} title="Confirm">
+            <button onClick={() => onUpdateEngagement({ status: 'confirmed' })} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${engagement.status === 'confirmed' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-green-400'}`} title="Confirm">
               <Check className="h-4 w-4" />
             </button>
-            <button onClick={() => onUpdateEngagement({ status: 'declined' })} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${engagement.status === 'declined' ? 'bg-red-500/20 text-red-400' : 'text-white/30 hover:bg-white/10 hover:text-red-400'}`} title="Decline">
+            <button onClick={() => onUpdateEngagement({ status: 'declined' })} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${engagement.status === 'declined' ? 'bg-red-500/20 text-red-400' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-red-400'}`} title="Decline">
               <XIcon className="h-4 w-4" />
             </button>
           </div>
         )}
         {!isPast && !engagement && (isInvited || type === 'invited') && (
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={() => onRsvp(event.id, 'yes')} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${rsvpStatus === 'yes' ? 'bg-green-500/20 text-green-400' : 'text-white/30 hover:bg-white/10 hover:text-green-400'}`} title="Attending">
+            <button onClick={() => onRsvp(event.id, 'yes')} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${rsvpStatus === 'yes' ? 'bg-green-500/20 text-green-400' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-green-400'}`} title="Attending">
               <Check className="h-4 w-4" />
             </button>
-            <button onClick={() => onRsvp(event.id, 'no')} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${rsvpStatus === 'no' ? 'bg-red-500/20 text-red-400' : 'text-white/30 hover:bg-white/10 hover:text-red-400'}`} title="Not attending">
+            <button onClick={() => onRsvp(event.id, 'no')} className={`p-1.5 rounded-lg transition-colors cursor-pointer ${rsvpStatus === 'no' ? 'bg-red-500/20 text-red-400' : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-red-400'}`} title="Not attending">
               <XIcon className="h-4 w-4" />
             </button>
           </div>

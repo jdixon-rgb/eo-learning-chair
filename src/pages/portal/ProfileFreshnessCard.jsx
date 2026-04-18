@@ -51,7 +51,7 @@ export default function ProfileFreshnessCard({ currentMember }) {
           <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
             <Check className="h-4 w-4 text-emerald-400" />
           </div>
-          <p className="text-sm text-white/80">
+          <p className="text-sm text-foreground/90">
             Thanks — we&apos;ll check back in a few months.
           </p>
         </div>
@@ -67,8 +67,8 @@ export default function ProfileFreshnessCard({ currentMember }) {
             <Check className="h-4 w-4 text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-white/80 font-medium">Got it — someone will reach out to update your profile.</p>
-            <p className="text-xs text-white/50 mt-1 italic">&ldquo;{note.trim()}&rdquo;</p>
+            <p className="text-sm text-foreground/90 font-medium">Got it — someone will reach out to update your profile.</p>
+            <p className="text-xs text-muted-foreground mt-1 italic">&ldquo;{note.trim()}&rdquo;</p>
           </div>
         </div>
       </div>
@@ -83,8 +83,8 @@ export default function ProfileFreshnessCard({ currentMember }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold mb-1">Profile check-in</p>
-          <p className="text-base text-white/90 font-medium">Has anything changed in your world since we last checked?</p>
-          <p className="text-xs text-white/50 mt-1">
+          <p className="text-base text-foreground font-medium">Has anything changed in your world since we last checked?</p>
+          <p className="text-xs text-muted-foreground mt-1">
             New company, role, partner, kids, address, interests — anything we should know.
             {latest && <> Last confirmed {new Date(latest.created_at).toLocaleDateString()}.</>}
           </p>
@@ -105,7 +105,7 @@ export default function ProfileFreshnessCard({ currentMember }) {
             type="button"
             disabled={submitting}
             onClick={() => setShowChangeForm(true)}
-            className="px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-white text-sm font-medium hover:bg-white/15 disabled:opacity-50 inline-flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-muted/50 border border-border text-white text-sm font-medium hover:bg-muted/70 disabled:opacity-50 inline-flex items-center gap-2"
           >
             <ChevronDown className="h-4 w-4" /> Something changed
           </button>
@@ -118,7 +118,7 @@ export default function ProfileFreshnessCard({ currentMember }) {
             rows={3}
             autoFocus
             placeholder="What changed? e.g. new company name, moved to Scottsdale, got married, joined a new board…"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+            className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
           />
           <div className="flex gap-2">
             <button
@@ -132,7 +132,7 @@ export default function ProfileFreshnessCard({ currentMember }) {
             <button
               type="button"
               onClick={() => { setShowChangeForm(false); setNote('') }}
-              className="px-4 py-2 text-sm text-white/50 hover:text-white/80 inline-flex items-center gap-1.5"
+              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground/90 inline-flex items-center gap-1.5"
             >
               <X className="h-4 w-4" /> Cancel
             </button>
