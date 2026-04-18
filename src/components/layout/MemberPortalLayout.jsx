@@ -16,13 +16,21 @@ const portalNav = [
 ]
 
 export default function MemberPortalLayout() {
-  const { profile, signOut, isSuperAdmin, isImpersonating } = useAuth()
+  const { profile, signOut, isSuperAdmin, isImpersonating, setViewAsRole } = useAuth()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
+  }
+
+  // When an admin/super-admin was impersonating a member and clicks
+  // "Admin" to go back, clear the impersonation so they return to
+  // their own surface (not an empty 'member' chair config in the
+  // admin sidebar).
+  const exitImpersonation = () => {
+    if (isImpersonating) setViewAsRole(null)
   }
 
   return (
@@ -71,6 +79,7 @@ export default function MemberPortalLayout() {
             {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
               <NavLink
                 to="/"
+                onClick={exitImpersonation}
                 className="text-xs text-warm hover:text-warm/80 font-medium flex items-center gap-1 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
@@ -121,7 +130,7 @@ export default function MemberPortalLayout() {
             {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
               <NavLink
                 to="/"
-                onClick={() => setMobileOpen(false)}
+                onClick={() => { setMobileOpen(false); exitImpersonation() }}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-warm hover:bg-muted transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />

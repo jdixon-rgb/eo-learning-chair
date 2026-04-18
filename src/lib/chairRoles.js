@@ -134,6 +134,11 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/sap-portal',
     navItems: [], // SAP portal uses its own layout/nav, not the admin sidebar
   },
+  member: {
+    title: 'Member',
+    homePath: '/portal',
+    navItems: [], // Member portal uses its own layout/nav, not the admin sidebar
+  },
 }
 
 // Elect roles map to their parent surface — if someone logs in as president_elect,
