@@ -17,6 +17,14 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.54.10 — 2026-04-18
+
+### Fix: Crowded member portal header on mobile
+- `MemberPortalLayout` was cramming the Super Admin badge, "Admin" back-link, and username next to the logo + hamburger on narrow viewports.
+- Hid the Super Admin badge below `sm`; hid the "Admin" back-link and username below `md`. The Admin link is already available inside the mobile dropdown, so nothing is lost.
+
+---
+
 ## v1.54.9 — 2026-04-16
 
 ### Recovered orphaned work from a dead Claude session
