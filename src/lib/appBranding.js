@@ -7,10 +7,9 @@
 // business.
 
 export const BUILDER = {
-  name: 'John-Scott Dixon',
   company: 'Aidan Taylor App Works',
   url: 'https://aidantaylorappworks.com',
-  emailCta: 'jdixon@aidantaylor.com',
+  framing: 'Built by an EO member for EO members',
 }
 
 export const APP_NAME = 'OurChapter OS'
