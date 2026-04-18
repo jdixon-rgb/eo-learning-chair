@@ -6,7 +6,6 @@ import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import { useSAPStore } from '@/lib/sapStore'
 import { useTourTips } from '@/lib/useTourTips'
-import ChapterSwitcher from '@/components/ChapterSwitcher'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import { useState } from 'react'
 import {
@@ -161,8 +160,9 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           >
             <SettingsIcon className="h-3 w-3 text-muted-foreground shrink-0" />
             <span className="flex-1 text-left text-[11px] text-muted-foreground truncate">
+              {/* Chapter name already lives in the TopBar — no need to
+                  restate it here. Summary is just FY + role. */}
               {[
-                activeChapter?.name,
                 activeFiscalYear ? `FY ${activeFiscalYear}` : null,
                 viewAsRole
                   ? CHAIR_ROLE_CONFIGS[viewAsRole]?.title
@@ -176,12 +176,9 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
 
           {contextExpanded && (
             <div className="pb-3">
-              {/* Chapter Switcher (super admin only) — collapses on change */}
-              <div className="pt-2">
-                <ChapterSwitcher onAfterChange={() => setContextExpanded(false)} />
-              </div>
-
-              {/* Fiscal Year Switcher — collapses on change */}
+              {/* Fiscal Year Switcher — collapses on change. Chapter
+                  switching for super-admin happens via /super-admin
+                  (Platform Dashboard → pick a chapter). */}
               <div className="pt-2">
                 <FiscalYearSwitcher onAfterChange={() => setContextExpanded(false)} />
               </div>

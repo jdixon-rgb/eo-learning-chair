@@ -47,10 +47,15 @@ usage, AI cost, NPS aggregates). Dead nav-link avoided, intent is visible.
 sidebar block, no duplication. On `/super-admin/*` shows the "OurChapter
 OS" wordmark + "SUPER ADMIN" chip instead.
 
-**Context block auto-collapses** on any role / chapter / fiscal year
-change. User picks a new context, the switcher panel closes itself and
-nav becomes visible again. Previously you had to tap chevron to close
+**Context block auto-collapses** on any role / fiscal year change.
+User picks a new context, the switcher panel closes itself and nav
+becomes visible again. Previously you had to tap chevron to close
 after every selection.
+
+**Chapter switcher removed from the sidebar.** Chapter name is shown
+in the TopBar already, and super-admin switches chapters via the
+Platform Dashboard (`/super-admin`). Collapsed summary line is now
+just "FY {year} · {role}" — no triple-redundant chapter name.
 
 ### Migration to apply (Supabase SQL Editor)
 Run `supabase/migrations/048_sap_chair_role.sql`. Idempotent.
