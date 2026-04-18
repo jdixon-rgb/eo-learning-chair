@@ -70,6 +70,7 @@ export const CHAIR_ROLE_CONFIGS = {
     navItems: [
       { to: '/president', icon: Crown, label: 'Dashboard' },
       { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
+      { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
       { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],

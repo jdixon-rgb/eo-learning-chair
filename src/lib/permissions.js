@@ -31,10 +31,12 @@ export const FEATURE_PERMISSIONS = {
   canManageSettings:     SETTINGS_ROLES,
   canManageMembers:      ADMIN_ROLES,
   canSendNotifications:  ADMIN_ROLES,
-  // Survey Results are scoped to the Learning Chair surface — they're
-  // about how learning events landed, which only the LC and their elect
-  // successor act on. Super-admin retains visibility for support.
-  canViewSurveyResults:  ['super_admin', 'learning_chair', 'learning_chair_elect'],
+  // Survey Results are about how learning events landed. Owned by the
+  // Learning Chair and their elect successor; the President / President
+  // Elect / Elect-Elect also have visibility (they care about chapter
+  // health). Super-admin sees nothing here by default — if they need
+  // it for support, they impersonate Learning Chair.
+  canViewSurveyResults:  ['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect'],
   // Board module
   canViewBoard:          [...BOARD_ROLES, 'learning_chair'],
   canManageChairReports: BOARD_ROLES,
