@@ -185,7 +185,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   const config = isSuperAdmin ? CHAIR_ROLE_CONFIGS.super_admin : CHAIR_ROLE_CONFIGS[profile?.role]
                   navigate(config?.homePath || '/')
                 }}
-                className="mt-1.5 w-full text-[10px] text-amber-300/80 hover:text-amber-200 underline"
+                className="mt-1.5 w-full text-[10px] font-medium text-warm hover:text-warm/80 underline underline-offset-2"
               >
                 Back to {isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}
               </button>
