@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.8 — 2026-04-17
+
+### Cleanup: remove redundant "Back to my role" button
+Two UI elements were doing the same job — the role-switcher dropdown's
+first (empty-value) option AND a separate "Back to [Role]" button
+beneath it. Removed the button. Returning to your own role is now done
+by picking the first entry in the dropdown. Also fixed the dropdown's
+default-option label to use `getChairConfig()` so president-elect /
+president-elect-elect see "President" (not "My Role") as their own
+option, and the navigation falls through to the right homePath.
+
+---
+
 ## v1.60.7 — 2026-04-17
 
 ### Fix: Super Admin TopBar is platform-level, not chapter-level

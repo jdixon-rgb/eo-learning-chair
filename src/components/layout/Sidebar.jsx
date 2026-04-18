@@ -192,15 +192,24 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               value={viewAsRole || ''}
               onChange={e => {
                 setViewAsRole(e.target.value || null)
-                const fallbackConfig = isSuperAdmin ? CHAIR_ROLE_CONFIGS.super_admin : CHAIR_ROLE_CONFIGS.president
+                // When the user picks the empty option they return to their
+                // own role. `getChairConfig` resolves aliases (president_elect,
+                // president_elect_elect) to the right surface.
+                const ownConfig = isSuperAdmin
+                  ? CHAIR_ROLE_CONFIGS.super_admin
+                  : getChairConfig(profile?.role)
                 const config = e.target.value
                   ? CHAIR_ROLE_CONFIGS[e.target.value]
-                  : fallbackConfig
+                  : ownConfig
                 if (config?.homePath) navigate(config.homePath)
               }}
               className="w-full text-xs bg-sidebar-accent/40 border border-sidebar-border rounded-lg px-2 py-1.5 text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
             >
-              <option value="">{isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}</option>
+              <option value="">
+                {isSuperAdmin
+                  ? 'Super Admin'
+                  : (getChairConfig(profile?.role)?.title || 'My Role')}
+              </option>
               {SWITCHABLE_CHAIR_ROLES.filter(r => r !== profile?.role).map(r => (
                 <option key={r} value={r}>{CHAIR_ROLE_CONFIGS[r].title}</option>
               ))}
@@ -225,26 +234,11 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 </select>
               </div>
             )}
-            {isImpersonating && (() => {
-              // Resolve aliases like president_elect -> president so the
-              // "Back to X" button reads correctly and routes correctly
-              // for all roles that can switch (super_admin, president,
-              // president_elect, president_elect_elect, CED, CEC).
-              const myConfig = isSuperAdmin
-                ? CHAIR_ROLE_CONFIGS.super_admin
-                : getChairConfig(profile?.role)
-              return (
-                <button
-                  onClick={() => {
-                    setViewAsRole(null)
-                    navigate(myConfig?.homePath || '/')
-                  }}
-                  className="mt-1.5 w-full text-[10px] font-medium text-warm hover:text-warm/80 underline underline-offset-2"
-                >
-                  Back to {myConfig?.title || 'my role'}
-                </button>
-              )
-            })()}
+            {/* No "Back to my role" button — returning to your own role is
+                done by selecting the first (own-role) entry in the dropdown
+                above. That empty option's onChange clears viewAsRole and
+                navigates to the owner's homePath. Keeps the sidebar lean
+                and avoids two UI elements doing the same job. */}
                 </div>
               )}
             </div>
