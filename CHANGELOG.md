@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.2 — 2026-04-17
+
+### Fix: sidebar header shows chapter name in bold, not chair title
+The sidebar header was showing the chair title ("Learning Chair") in
+bold with chapter name as a subtitle — but the chair title is already
+in the collapsible context block below, so it was being shown twice.
+
+Now the sidebar top reads:
+- OurChapter OS wordmark
+- **Chapter name in bold** (e.g. "EO Arizona")
+- Collapsible context with FY + Role
+
+Super Admin platform view shows "Platform" with the SA chip instead of
+a chapter name.
+
+---
+
 ## v1.61.1 — 2026-04-17
 
 ### Revert: sidebar context no longer auto-collapses on selection

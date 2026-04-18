@@ -126,24 +126,20 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               <X className="h-5 w-5" />
             </button>
           </div>
+          {/* Chapter name in bold directly under the wordmark. Chair
+              title lives in the collapsible context block below so we
+              don't repeat it at the top of the navigation. Super Admin
+              platform surface shows "Platform" + the SA chip instead. */}
           <div className="mt-3">
             {isSuperAdmin && !isImpersonating ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">Super Admin</h1>
-                  <span className="text-[9px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded uppercase tracking-wider">SA</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground/70">
-                  {activeChapter ? activeChapter.name : 'Platform'}
-                </p>
-              </>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">Platform</h1>
+                <span className="text-[9px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded uppercase tracking-wider">SA</span>
+              </div>
             ) : (
-              <>
-                <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">{chairConfig.title}</h1>
-                <p className="text-[10px] text-muted-foreground/70">
-                  {activeChapter ? activeChapter.name : 'Command Center'}
-                </p>
-              </>
+              <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">
+                {activeChapter ? activeChapter.name : 'OurChapter OS'}
+              </h1>
             )}
           </div>
         </div>
