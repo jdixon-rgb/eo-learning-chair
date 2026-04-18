@@ -34,7 +34,7 @@ export default function MemberPortalLayout() {
           <div className="flex items-center gap-3">
             <img src={eoLogo} alt="EO Arizona" className="h-8 w-auto" />
             {isSuperAdmin && !isImpersonating && (
-              <span className="text-xs font-bold tracking-tight text-eo-coral">Super Admin</span>
+              <span className="hidden sm:inline text-xs font-bold tracking-tight text-eo-coral">Super Admin</span>
             )}
           </div>
 
@@ -64,13 +64,13 @@ export default function MemberPortalLayout() {
             {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
               <NavLink
                 to="/"
-                className="text-xs text-eo-coral hover:text-eo-coral/80 font-medium flex items-center gap-1 transition-colors"
+                className="hidden md:flex text-xs text-eo-coral hover:text-eo-coral/80 font-medium items-center gap-1 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
                 Admin
               </NavLink>
             )}
-            <span className="text-xs text-white/50 hidden sm:inline">
+            <span className="text-xs text-white/50 hidden md:inline">
               {profile?.full_name || profile?.email}
             </span>
             <button
