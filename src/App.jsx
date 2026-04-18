@@ -52,6 +52,7 @@ import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
 import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
+import FinanceDashboard from '@/pages/finance/FinanceDashboard'
 import VendorsPage from '@/pages/portal/VendorsPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
 import SAPPortalDashboard from '@/pages/sap-portal/SAPPortalDashboard'
@@ -135,7 +136,7 @@ function App() {
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><MemberManagementPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/surveys" element={
-                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><SurveyResultsPage /></ProtectedRoute>
+                  <ProtectedRoute allowedRoles={['super_admin', 'learning_chair', 'learning_chair_elect']}><SurveyResultsPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/notifications" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><NotificationComposePage /></ProtectedRoute>
@@ -168,6 +169,11 @@ function App() {
                 {/* President routes */}
                 <Route path="/president" element={
                   <ProtectedRoute allowedRoles={PRESIDENT_ROLES}><PresidentDashboard /></ProtectedRoute>
+                } />
+
+                {/* Finance Chair stub */}
+                <Route path="/finance" element={
+                  <ProtectedRoute allowedRoles={FINANCE_ROLES}><FinanceDashboard /></ProtectedRoute>
                 } />
 
                 {/* Board routes */}

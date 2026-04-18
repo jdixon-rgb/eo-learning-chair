@@ -17,6 +17,30 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.3 — 2026-04-17
+
+### Restructure: Survey Results is Learning Chair only, not an admin section item
+Moved "Survey Results" out of the shared Admin sub-section in the
+sidebar and into the Learning Chair's main nav. Permission tightened
+to `['super_admin', 'learning_chair', 'learning_chair_elect']` — other
+chair roles no longer see or access it. Route guard tightened to match.
+
+### Fix: switching to Finance Chair role no longer crashes the app
+Finance Chair's `homePath: '/finance'` had no matching route. When the
+user role-switched in, ChairHome bounced to `/finance` → catch-all
+bounced back to `/` → ChairHome bounced to `/finance` again → infinite
+redirect loop, app crash.
+
+Stubbed a `FinanceDashboard` at `/finance` (gated to `FINANCE_ROLES`).
+Renders a "Dashboard coming soon" card with a link to the chapter
+budget surface — keeps the role functional, signals what's planned.
+
+(Note: `/president/budget` is still referenced from several chair nav
+configs without a matching route — that's a separate latent bug worth
+fixing in a follow-up.)
+
+---
+
 ## v1.61.2 — 2026-04-17
 
 ### Fix: sidebar header shows chapter name in bold, not chair title
