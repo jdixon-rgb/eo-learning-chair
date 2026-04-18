@@ -13,7 +13,6 @@ import {
   X,
   LogOut,
   Shield,
-  Bell,
   MessageSquarePlus,
   Lightbulb,
   Briefcase,
@@ -33,11 +32,10 @@ import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
 
 // Admin sub-pages.
-// Survey Results moved to the Learning Chair's main nav (it's their tool,
-// not a cross-cutting admin concern).
+// Survey Results moved to the Learning Chair's main nav. Notifications
+// moved to a bell icon in the TopBar (upper right).
 const adminItems = [
   { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
-  { to: '/admin/notifications', icon: Bell, label: 'Notifications', permission: 'canSendNotifications' },
   { to: '/coordinator', icon: ClipboardCheck, label: 'Coordinator', permission: 'canViewCoordinator' },
 ]
 
