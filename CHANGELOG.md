@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.65.0 — 2026-04-18
+
+### UX: Vendors directory groups by category in the "All" view
+The "All Categories" view was a single flat list — mixing Legal,
+Catering, AV/Production, etc. into one scroll. Now each category
+renders as its own section with a header and count, in the canonical
+`VENDOR_CATEGORIES` order:
+
+- **Section header** — uppercase category name + "N vendors" count,
+  separated by a thin border
+- **Canonical order** — categories render in the order defined in
+  `src/lib/vendorStore.js` (Legal → Accounting → Catering → …), with
+  any unknown categories appended alphabetically
+- **Sort preserved within each group** — SAP partners still float to
+  the top of their category, then by rating, then by name
+- **Single-category filter unchanged** — picking a specific category
+  still renders the flat grid (no redundant header)
+
+No schema changes. Client-side only (`src/pages/portal/VendorsPage.jsx`).
+
+---
+
 ## v1.64.0 — 2026-04-17
 
 ### Feature: SAPs auto-surface in the member Vendors directory
