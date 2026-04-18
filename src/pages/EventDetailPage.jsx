@@ -78,7 +78,7 @@ export default function EventDetailPage() {
             <div className="flex items-center gap-2 group">
               {editingTitle && !event.title_locked ? (
                 <input
-                  className="text-2xl font-bold bg-transparent border-b-2 border-eo-blue outline-none flex-1 min-w-0"
+                  className="text-2xl font-bold bg-transparent border-b-2 border-primary outline-none flex-1 min-w-0"
                   value={titleDraft}
                   onChange={e => setTitleDraft(e.target.value)}
                   onBlur={() => {
@@ -93,7 +93,7 @@ export default function EventDetailPage() {
                 />
               ) : (
                 <h1
-                  className={`text-2xl font-bold ${!event.title_locked ? 'cursor-text hover:text-eo-blue/80 transition-colors' : ''}`}
+                  className={`text-2xl font-bold ${!event.title_locked ? 'cursor-text hover:text-primary/80 transition-colors' : ''}`}
                   onClick={() => {
                     if (!event.title_locked) {
                       setTitleDraft(event.title)
@@ -112,7 +112,7 @@ export default function EventDetailPage() {
                 className={`p-1 rounded-md transition-colors cursor-pointer ${
                   event.title_locked
                     ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
-                    : 'text-muted-foreground hover:text-eo-blue hover:bg-accent'
+                    : 'text-muted-foreground hover:text-primary hover:bg-accent'
                 }`}
                 title={event.title_locked ? 'Title is locked — click to unlock' : 'Click to lock title'}
               >
@@ -272,32 +272,32 @@ export default function EventDetailPage() {
                         {candidates.map(s => {
                           const isPrimary = s.id === event.speaker_id
                           return (
-                            <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border text-sm ${isPrimary ? 'border-eo-blue bg-eo-blue/5' : 'border-border'}`}>
+                            <div key={s.id} className={`flex items-center justify-between p-2 rounded-lg border text-sm ${isPrimary ? 'border-primary bg-primary/5' : 'border-border'}`}>
                               <div className="flex items-center gap-2">
                                 {isPrimary ? (
-                                  <UserCheck className="h-3.5 w-3.5 text-eo-blue" />
+                                  <UserCheck className="h-3.5 w-3.5 text-primary" />
                                 ) : (
                                   <Users className="h-3.5 w-3.5 text-muted-foreground" />
                                 )}
-                                <span className={isPrimary ? 'font-semibold text-eo-blue' : ''}>{s.name}</span>
+                                <span className={isPrimary ? 'font-semibold text-primary' : ''}>{s.name}</span>
                                 {s.fee_range_low && (
                                   <span className="text-[10px] text-muted-foreground">
                                     {formatCurrency(s.fee_range_low)}–{formatCurrency(s.fee_range_high)}
                                   </span>
                                 )}
-                                {isPrimary && <Badge variant="outline" className="text-[9px] border-eo-blue text-eo-blue">Primary</Badge>}
+                                {isPrimary && <Badge variant="outline" className="text-[9px] border-primary text-primary">Primary</Badge>}
                               </div>
                               {!isSpeakerFinalized && (
                                 <div className="flex items-center gap-1">
                                   {!isPrimary && (
                                     <button
                                       onClick={() => setPrimary(s.id)}
-                                      className="text-[10px] text-eo-blue hover:underline cursor-pointer px-1"
+                                      className="text-[10px] text-primary hover:underline cursor-pointer px-1"
                                     >
                                       Set Primary
                                     </button>
                                   )}
-                                  <button onClick={() => removeCandidate(s.id)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5">
+                                  <button onClick={() => removeCandidate(s.id)} className="text-muted-foreground hover:text-destructive cursor-pointer p-0.5">
                                     <X className="h-3 w-3" />
                                   </button>
                                 </div>
@@ -375,14 +375,14 @@ export default function EventDetailPage() {
               <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Handshake className="h-4 w-4 text-eo-coral" />
+                    <Handshake className="h-4 w-4 text-warm" />
                     <h3 className="text-sm font-semibold">Strategic Alliance Partners</h3>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <span className="text-[11px] text-muted-foreground">{event.open_to_saps === false ? 'Members only' : 'Open to SAPs'}</span>
                     <button
                       onClick={() => updateEvent(id, { open_to_saps: event.open_to_saps === false ? true : false })}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${event.open_to_saps === false ? 'bg-gray-300' : 'bg-eo-blue'}`}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${event.open_to_saps === false ? 'bg-gray-300' : 'bg-primary'}`}
                     >
                       <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${event.open_to_saps === false ? 'translate-x-0.5' : 'translate-x-4.5'}`} />
                     </button>
@@ -426,7 +426,7 @@ export default function EventDetailPage() {
                             const assignedContact = contacts.find(c => c.id === eng.sap_contact_id)
                             if (!sap) return null
                             return (
-                              <div key={eng.id} className={`p-3 rounded-lg border ${eng.role === 'presenting' ? 'border-indigo-500/30 bg-indigo-500/5' : 'border-eo-coral/30 bg-eo-coral/5'}`}>
+                              <div key={eng.id} className={`p-3 rounded-lg border ${eng.role === 'presenting' ? 'border-indigo-500/30 bg-indigo-500/5' : 'border-warm/30 bg-warm/5'}`}>
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
@@ -437,7 +437,7 @@ export default function EventDetailPage() {
                                       </span>
                                     </div>
                                   </div>
-                                  <button onClick={() => handleRemoveSAP(eng)} className="text-muted-foreground hover:text-eo-pink cursor-pointer p-0.5 ml-2">
+                                  <button onClick={() => handleRemoveSAP(eng)} className="text-muted-foreground hover:text-destructive cursor-pointer p-0.5 ml-2">
                                     <X className="h-3 w-3" />
                                   </button>
                                 </div>
@@ -519,7 +519,7 @@ export default function EventDetailPage() {
                             ))}
                           </Select>
                           {selectedSapId && (
-                            <div className="pl-4 border-l-2 border-eo-coral/30 space-y-2">
+                            <div className="pl-4 border-l-2 border-warm/30 space-y-2">
                               {selectedSapContacts.length > 0 ? (
                                 <>
                                   <Select value="" onChange={e => handleAddSAP(selectedSapId, e.target.value || null, 'attending')} className="text-xs">
@@ -528,14 +528,14 @@ export default function EventDetailPage() {
                                       <option key={c.id} value={c.id}>{c.name}{c.role ? ` — ${c.role}` : ''}</option>
                                     ))}
                                   </Select>
-                                  <button onClick={() => handleAddSAP(selectedSapId, null, 'attending')} className="text-[11px] text-eo-blue hover:underline cursor-pointer">
+                                  <button onClick={() => handleAddSAP(selectedSapId, null, 'attending')} className="text-[11px] text-primary hover:underline cursor-pointer">
                                     Link without choosing a contact
                                   </button>
                                 </>
                               ) : (
                                 <div className="flex items-center gap-2">
                                   <p className="text-[11px] text-muted-foreground italic">No contacts on file.</p>
-                                  <button onClick={() => handleAddSAP(selectedSapId, null, 'attending')} className="text-[11px] text-eo-blue hover:underline cursor-pointer">
+                                  <button onClick={() => handleAddSAP(selectedSapId, null, 'attending')} className="text-[11px] text-primary hover:underline cursor-pointer">
                                     Link anyway
                                   </button>
                                 </div>
@@ -574,7 +574,7 @@ export default function EventDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Contracted</p>
-                  <p className={`text-lg font-bold ${totalContracted > totalBudget && totalBudget > 0 ? 'text-eo-pink' : ''}`}>
+                  <p className={`text-lg font-bold ${totalContracted > totalBudget && totalBudget > 0 ? 'text-destructive' : ''}`}>
                     {formatCurrency(totalContracted)}
                   </p>
                 </div>
@@ -588,12 +588,12 @@ export default function EventDetailPage() {
                   <div className="h-3 bg-secondary rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        budgetHealthPct > 100 ? 'bg-eo-pink' : budgetHealthPct > 75 ? 'bg-eo-coral' : 'bg-green-500'
+                        budgetHealthPct > 100 ? 'bg-destructive' : budgetHealthPct > 75 ? 'bg-warm' : 'bg-green-500'
                       }`}
                       style={{ width: `${Math.min(budgetHealthPct, 100)}%` }}
                     />
                   </div>
-                  <p className={`text-xs mt-1 ${budgetDelta < 0 ? 'text-eo-pink font-medium' : 'text-muted-foreground'}`}>
+                  <p className={`text-xs mt-1 ${budgetDelta < 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                     {budgetDelta >= 0 ? `${formatCurrency(budgetDelta)} remaining` : `${formatCurrency(Math.abs(budgetDelta))} over budget`}
                   </p>
                 </>
@@ -646,7 +646,7 @@ export default function EventDetailPage() {
                         </td>
                         <td className="py-2 px-2">
                           <Input
-                            className={`h-8 text-xs text-right w-28 ml-auto ${isOverBudget ? 'border-eo-pink text-eo-pink' : ''}`}
+                            className={`h-8 text-xs text-right w-28 ml-auto ${isOverBudget ? 'border-destructive text-destructive' : ''}`}
                             type="number"
                             value={contractedAmt || ''}
                             onChange={e => {
@@ -684,7 +684,7 @@ export default function EventDetailPage() {
                   <tr className="border-t font-semibold text-sm">
                     <td className="py-2">Total</td>
                     <td className="py-2 text-right">{formatCurrency(totalBudget)}</td>
-                    <td className={`py-2 text-right ${totalContracted > totalBudget && totalBudget > 0 ? 'text-eo-pink' : ''}`}>
+                    <td className={`py-2 text-right ${totalContracted > totalBudget && totalBudget > 0 ? 'text-destructive' : ''}`}>
                       {formatCurrency(totalContracted)}
                     </td>
                     <td className="py-2 text-right">{formatCurrency(totalActual)}</td>
@@ -790,7 +790,7 @@ export default function EventDetailPage() {
                         {targetDate && (
                           <p className="text-[11px] text-muted-foreground mt-1">
                             Target: {formatDate(targetDate)}
-                            {isPast && <span className="text-eo-coral ml-1">(overdue)</span>}
+                            {isPast && <span className="text-warm ml-1">(overdue)</span>}
                           </p>
                         )}
                       </div>
@@ -845,7 +845,7 @@ export default function EventDetailPage() {
               {event.nps_score && (
                 <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
                   <div className={`text-3xl font-bold ${
-                    event.nps_score >= 8 ? 'text-green-600' : event.nps_score >= 6 ? 'text-eo-coral' : 'text-eo-pink'
+                    event.nps_score >= 8 ? 'text-green-600' : event.nps_score >= 6 ? 'text-warm' : 'text-destructive'
                   }`}>
                     {event.nps_score}
                   </div>

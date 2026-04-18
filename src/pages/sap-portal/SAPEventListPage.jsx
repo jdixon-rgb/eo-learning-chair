@@ -244,7 +244,7 @@ function EventRow({ item, sapContactId, rsvps, onRsvp, expanded, onToggle, onUpd
               </span>
             )}
             {isInvited && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-eo-blue/10 text-eo-blue uppercase tracking-wider">
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
                 Invited
               </span>
             )}

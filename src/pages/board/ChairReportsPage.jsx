@@ -209,8 +209,8 @@ export default function ChairReportsPage() {
                     </div>
                   )}
                   {report.board_notes && (
-                    <div className="p-3 rounded-lg bg-eo-blue/5 border border-eo-blue/20">
-                      <h4 className="text-xs font-semibold text-eo-blue mb-1">Board Notes</h4>
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                      <h4 className="text-xs font-semibold text-primary mb-1">Board Notes</h4>
                       <p className="text-sm whitespace-pre-wrap">{report.board_notes}</p>
                     </div>
                   )}

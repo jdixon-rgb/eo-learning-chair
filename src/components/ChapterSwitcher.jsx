@@ -13,10 +13,10 @@ export default function ChapterSwitcher() {
       <select
         value={activeChapterId || ''}
         onChange={(e) => setActiveChapterId(e.target.value)}
-        className="w-full text-xs rounded-lg px-2.5 py-2 bg-white/10 text-white border border-white/10 cursor-pointer focus:outline-none focus:ring-1 focus:ring-eo-blue"
+        className="w-full text-xs rounded-lg px-2.5 py-2 bg-white/10 text-white border border-white/10 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
       >
         {allChapters.map((ch) => (
-          <option key={ch.id} value={ch.id} className="bg-eo-navy text-white">
+          <option key={ch.id} value={ch.id} className="bg-ink text-white">
             {ch.name}
           </option>
         ))}

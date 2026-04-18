@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react'
-import eoLogo from '@/assets/eo-az-gray.png'
+import Wordmark from '@/components/Wordmark'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
 
 export default function LoginPage() {
@@ -51,16 +51,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <img src={eoLogo} alt="EO Arizona" className="h-16 w-auto mx-auto mb-3" />
-          <p className="text-white/60 text-sm">Learning Chair Command Center</p>
+          <Wordmark size="xl" className="block mb-2" />
+          <p className="text-muted-foreground text-sm">A platform for chapter operations</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
           {sent ? (
             <div className="text-center py-4">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -97,7 +97,7 @@ export default function LoginPage() {
                 </div>
 
                 {error && (
-                  <p className="text-sm text-eo-pink bg-eo-pink/10 rounded-lg px-3 py-2">{error}</p>
+                  <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
                 )}
 
                 <Button type="submit" className="w-full" disabled={sending || !email.trim()}>
@@ -120,17 +120,14 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-6 space-y-1">
-          <p className="text-white/40 text-xs">
-            {APP_NAME} &middot; a platform for EO chapters
-          </p>
-          <p className="text-white/30 text-[11px]">
+        <div className="text-center mt-6">
+          <p className="text-muted-foreground/80 text-[11px]">
             Built by{' '}
             <a
               href={BUILDER.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white/50 hover:text-white transition-colors underline underline-offset-2"
+              className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
             >
               {BUILDER.name}
             </a>

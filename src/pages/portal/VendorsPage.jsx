@@ -117,7 +117,7 @@ export default function VendorsPage() {
         </div>
         <button
           onClick={() => { setEditingVendor(null); setShowAddVendor(true) }}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-eo-blue/80 hover:bg-eo-blue text-white text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary/80 hover:bg-primary text-white text-sm font-medium transition-colors"
         >
           <Plus className="h-4 w-4" /> Add Vendor
         </button>
@@ -426,7 +426,7 @@ function AddVendorModal({ vendor, searchVendors, onSave, onClose }) {
           <button
             type="submit"
             disabled={!name.trim()}
-            className="px-5 py-2 rounded-lg text-sm bg-eo-blue/80 hover:bg-eo-blue text-white font-medium disabled:opacity-40"
+            className="px-5 py-2 rounded-lg text-sm bg-primary/80 hover:bg-primary text-white font-medium disabled:opacity-40"
           >
             {vendor ? 'Save Changes' : 'Add Vendor'}
           </button>
@@ -489,7 +489,7 @@ function VendorDetailModal({
           {vendor.website && (
             <p className="flex items-center gap-2">
               <ExternalLink className="h-4 w-4 shrink-0 text-white/40" />
-              <a href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`} target="_blank" rel="noopener noreferrer" className="text-eo-blue hover:underline truncate">
+              <a href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
                 {vendor.website.replace(/^https?:\/\//, '')}
               </a>
             </p>
@@ -555,7 +555,7 @@ function VendorDetailModal({
             {currentMember && !hasReviewed && !showReviewForm && (
               <button
                 onClick={() => setShowReviewForm(true)}
-                className="flex items-center gap-1.5 text-xs text-eo-blue hover:text-eo-blue/80"
+                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80"
               >
                 <Plus className="h-3.5 w-3.5" /> Write a Review
               </button>
@@ -628,7 +628,7 @@ function ReviewForm({ memberId, vendorId, onSubmit, onCancel }) {
         <button
           type="submit"
           disabled={rating === 0}
-          className="px-5 py-2 rounded-lg text-sm bg-eo-blue/80 hover:bg-eo-blue text-white font-medium disabled:opacity-40"
+          className="px-5 py-2 rounded-lg text-sm bg-primary/80 hover:bg-primary text-white font-medium disabled:opacity-40"
         >
           Submit Review
         </button>
@@ -655,7 +655,7 @@ function ReviewCard({ review, memberName, isOwn, isAdmin, onUpdate, onDelete, on
         <div className="flex gap-2 justify-end">
           <button className="px-3 py-1.5 rounded-lg text-xs text-white/60 hover:text-white" onClick={() => setEditing(false)}>Cancel</button>
           <button
-            className="px-4 py-1.5 rounded-lg text-xs bg-eo-blue/80 hover:bg-eo-blue text-white"
+            className="px-4 py-1.5 rounded-lg text-xs bg-primary/80 hover:bg-primary text-white"
             onClick={() => { onUpdate(review.id, { rating: editRating, review_text: editText }); setEditing(false) }}
           >
             Save

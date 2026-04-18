@@ -3,8 +3,8 @@ import { useAuth } from '@/lib/auth'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store, Activity } from 'lucide-react'
 import { useState } from 'react'
-import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
+import { APP_NAME } from '@/lib/appBranding'
 
 const portalNav = [
   { to: '/portal', icon: Compass, label: 'Home', end: true },
@@ -26,15 +26,17 @@ export default function MemberPortalLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white">
+    <div className="min-h-screen bg-gradient-to-b from-ink via-[#121248] to-ink text-white">
       {/* Top Nav */}
-      <header className="border-b border-white/10 bg-eo-navy/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-ink/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Left: Brand */}
           <div className="flex items-center gap-3">
-            <img src={eoLogo} alt="EO Arizona" className="h-8 w-auto" />
+            <span className="text-base font-semibold tracking-tight text-white">
+              <span className="text-warm">Our</span>Chapter OS
+            </span>
             {isSuperAdmin && !isImpersonating && (
-              <span className="text-xs font-bold tracking-tight text-eo-coral">Super Admin</span>
+              <span className="text-xs font-bold tracking-tight text-warm">Super Admin</span>
             )}
           </div>
 
@@ -48,7 +50,7 @@ export default function MemberPortalLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-eo-blue text-white'
+                      ? 'bg-primary text-white'
                       : 'text-white/60 hover:bg-white/10 hover:text-white'
                   }`
                 }
@@ -64,7 +66,7 @@ export default function MemberPortalLayout() {
             {profile?.role && ADMIN_LAYOUT_ROLES.includes(profile.role) && (
               <NavLink
                 to="/"
-                className="text-xs text-eo-coral hover:text-eo-coral/80 font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-warm hover:text-warm/80 font-medium flex items-center gap-1 transition-colors"
               >
                 <ArrowLeft className="h-3 w-3" />
                 Admin
@@ -92,7 +94,7 @@ export default function MemberPortalLayout() {
 
         {/* Mobile nav dropdown */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-eo-navy/95 backdrop-blur-sm">
+          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-ink/95 backdrop-blur-sm">
             {portalNav.map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={to}
@@ -102,7 +104,7 @@ export default function MemberPortalLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-eo-blue text-white'
+                      ? 'bg-primary text-white'
                       : 'text-white/60 hover:bg-white/10 hover:text-white'
                   }`
                 }
@@ -115,7 +117,7 @@ export default function MemberPortalLayout() {
               <NavLink
                 to="/"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-eo-coral hover:bg-white/10 transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-warm hover:bg-white/10 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Admin Dashboard

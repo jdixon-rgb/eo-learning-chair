@@ -241,7 +241,7 @@ export default function VenuesPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-eo-navy px-3 py-1.5 flex items-center justify-between">
+          <div className="bg-ink px-3 py-1.5 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Building2 className="h-3 w-3 text-white/60" />
               <span className="text-[10px] font-medium text-white/60">{getVenueTypeLabel(venue.venue_type)}</span>
@@ -311,13 +311,13 @@ export default function VenuesPage() {
                     {candidateSpeakers.length > 0 ? (
                       <div className="flex flex-wrap gap-x-1 ml-4 text-[10px]">
                         {candidateSpeakers.map(s => (
-                          <span key={s.id} className={s.id === evt.speaker_id ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}>
+                          <span key={s.id} className={s.id === evt.speaker_id ? 'text-primary font-semibold' : 'text-muted-foreground'}>
                             {s.name}{s.id === evt.speaker_id ? ' ★' : ''}{s.id !== candidateSpeakers[candidateSpeakers.length - 1]?.id ? ',' : ''}
                           </span>
                         ))}
                       </div>
                     ) : confirmedSpeaker ? (
-                      <p className="text-[10px] text-eo-blue font-medium ml-4">{confirmedSpeaker.name} ★</p>
+                      <p className="text-[10px] text-primary font-medium ml-4">{confirmedSpeaker.name} ★</p>
                     ) : null}
                   </div>
                 )
@@ -357,19 +357,19 @@ export default function VenuesPage() {
           </div>
           <div className="flex rounded-lg border overflow-hidden">
             <button
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === 'pipeline' ? 'bg-eo-navy text-white' : 'hover:bg-muted'}`}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === 'pipeline' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
               onClick={() => setViewMode('pipeline')}
             >
               Pipeline
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium transition-colors border-x ${viewMode === 'table' ? 'bg-eo-navy text-white' : 'hover:bg-muted'}`}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors border-x ${viewMode === 'table' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
               onClick={() => setViewMode('table')}
             >
               Table
             </button>
             <button
-              className={`px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1 ${viewMode === 'library' ? 'bg-eo-navy text-white' : 'hover:bg-muted'}`}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1 ${viewMode === 'library' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
               onClick={() => setViewMode('library')}
             >
               <Library className="h-3 w-3" /> Library
@@ -441,8 +441,8 @@ export default function VenuesPage() {
                             <img src={venue.image_url} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-eo-navy/10 flex items-center justify-center shrink-0">
-                            <Building2 className="h-4 w-4 text-eo-navy/50" />
+                          <div className="w-10 h-10 rounded-lg bg-ink/10 flex items-center justify-center shrink-0">
+                            <Building2 className="h-4 w-4 text-ink/50" />
                           </div>
                         )}
                         <div>
@@ -492,7 +492,7 @@ export default function VenuesPage() {
                     <td className="px-4 py-3">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(venue) }}
-                        className="text-muted-foreground hover:text-eo-pink transition-colors cursor-pointer p-1 rounded"
+                        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer p-1 rounded"
                         title="Delete venue"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -521,7 +521,7 @@ export default function VenuesPage() {
                 onClick={() => setLibraryFilter(f.id)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
                   libraryFilter === f.id
-                    ? 'bg-eo-navy text-white'
+                    ? 'bg-ink text-white'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
@@ -570,9 +570,9 @@ export default function VenuesPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       </div>
                     ) : (
-                      <div className="h-12 bg-eo-navy/5 flex items-center px-4 gap-2">
-                        <Building2 className="h-4 w-4 text-eo-navy/40" />
-                        <span className="text-xs text-eo-navy/50 font-medium">{getVenueTypeLabel(venue.venue_type)}</span>
+                      <div className="h-12 bg-ink/5 flex items-center px-4 gap-2">
+                        <Building2 className="h-4 w-4 text-ink/40" />
+                        <span className="text-xs text-ink/50 font-medium">{getVenueTypeLabel(venue.venue_type)}</span>
                       </div>
                     )}
 
@@ -642,7 +642,7 @@ export default function VenuesPage() {
                           View Details
                         </Button>
                         {isArchived ? (
-                          <Button variant="outline" size="sm" className="h-7 text-xs text-eo-blue border-eo-blue/30 hover:bg-eo-blue/10" onClick={() => restoreVenue(venue.id)}>
+                          <Button variant="outline" size="sm" className="h-7 text-xs text-primary border-primary/30 hover:bg-primary/10" onClick={() => restoreVenue(venue.id)}>
                             <RotateCcw className="h-3 w-3 mr-1" /> Restore
                           </Button>
                         ) : (
@@ -678,7 +678,7 @@ export default function VenuesPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-eo-blue"
+              className="text-xs text-primary"
               onClick={() => setViewMode('library')}
             >
               View in Library
@@ -734,7 +734,7 @@ export default function VenuesPage() {
                       size="sm"
                       disabled={!form.name || lookupLoading}
                       onClick={handleLookup}
-                      className="shrink-0 text-eo-blue border-eo-blue/30 hover:bg-eo-blue/10"
+                      className="shrink-0 text-primary border-primary/30 hover:bg-primary/10"
                     >
                       {lookupLoading ? (
                         <><Loader2 className="h-4 w-4 animate-spin" /> Looking up...</>
@@ -744,7 +744,7 @@ export default function VenuesPage() {
                     </Button>
                   </div>
                   {lookupError && (
-                    <p className="text-[11px] text-eo-pink mt-1">{lookupError}</p>
+                    <p className="text-[11px] text-destructive mt-1">{lookupError}</p>
                   )}
                   <p className="text-[10px] text-muted-foreground mt-1">
                     Auto-Lookup uses AI to fill in address, description, and photo. Requires API keys in Vercel.
@@ -857,7 +857,7 @@ export default function VenuesPage() {
             {/* F&B Tab */}
             <TabsContent value="fb">
               <div className="space-y-3 mt-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-eo-pink">
+                <div className="flex items-center gap-2 text-sm font-medium text-destructive">
                   <Utensils className="h-4 w-4" />
                   Food & Beverage
                 </div>
@@ -942,7 +942,7 @@ export default function VenuesPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="text-eo-pink border-eo-pink hover:bg-eo-pink/10"
+                  className="text-destructive border-destructive hover:bg-destructive/10"
                   onClick={() => { handleDelete(editVenue); setShowForm(false) }}
                 >
                   <Trash2 className="h-4 w-4 mr-1" /> Delete

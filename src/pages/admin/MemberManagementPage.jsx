@@ -338,7 +338,7 @@ export default function MemberManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-6 w-6 text-eo-blue" />
+            <Users className="h-6 w-6 text-primary" />
             Members
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -397,7 +397,7 @@ export default function MemberManagementPage() {
       {/* Add Member */}
       <div className="rounded-xl border border-border p-4 bg-muted/30">
         <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
-          <UserPlus className="h-4 w-4 text-eo-blue" />
+          <UserPlus className="h-4 w-4 text-primary" />
           Add Member
         </h2>
         <form onSubmit={handleAddMember} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -421,7 +421,7 @@ export default function MemberManagementPage() {
           className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold hover:bg-muted/30 transition-colors"
         >
           <span className="flex items-center gap-2">
-            <Upload className="h-4 w-4 text-eo-blue" />
+            <Upload className="h-4 w-4 text-primary" />
             Bulk Import from Spreadsheet
           </span>
           {showBulk ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -436,7 +436,7 @@ export default function MemberManagementPage() {
             <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} className="hidden" />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-6 border-2 border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-eo-blue hover:text-eo-blue transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-6 border-2 border-dashed border-border rounded-lg text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
             >
               <FileSpreadsheet className="h-5 w-5" />
               <span>Click to upload .csv or .xlsx file</span>
@@ -490,7 +490,7 @@ export default function MemberManagementPage() {
                 </Button>
               )}
               {bulkMsg && (
-                <p className={`text-xs ${bulkMsg.includes('Error') || bulkMsg.includes('Failed') || bulkMsg.includes('Could not') ? 'text-eo-pink' : 'text-green-600'}`}>
+                <p className={`text-xs ${bulkMsg.includes('Error') || bulkMsg.includes('Failed') || bulkMsg.includes('Could not') ? 'text-destructive' : 'text-green-600'}`}>
                   {bulkMsg}
                 </p>
               )}
@@ -568,7 +568,7 @@ export default function MemberManagementPage() {
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       {member.forum ? (
-                        <Badge variant="outline" className="text-[10px] bg-eo-blue/5 border-eo-blue/30">{member.forum}</Badge>
+                        <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/30">{member.forum}</Badge>
                       ) : (
                         <span className="text-xs text-muted-foreground">-</span>
                       )}
@@ -597,7 +597,7 @@ export default function MemberManagementPage() {
                         </button>
                         <button
                           onClick={() => startEdit(member)}
-                          className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                          className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
                           title="Edit"
                         >
                           <Pencil className="h-3.5 w-3.5" />

@@ -48,7 +48,7 @@ export default function MemberCalendarPage({ embedded = false }) {
   const { chapter, events, speakers, venues, saps } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription } = useBoardStore()
   const { activeChapter } = useChapter()
-  const chapterName = activeChapter?.name || 'Our Chapter OS'
+  const chapterName = activeChapter?.name || 'OurChapter OS'
   const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const windowMonths = getMonthWindow()
@@ -62,22 +62,22 @@ export default function MemberCalendarPage({ embedded = false }) {
   const futureTeaser = sortedEvents.filter(e => !isEventInWindow(e, windowMonths))
 
   return (
-    <div className={embedded ? 'text-white' : 'min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white'}>
+    <div className={embedded ? 'text-white' : 'min-h-screen bg-gradient-to-b from-ink via-[#121248] to-ink text-white'}>
       {/* Header — standalone only */}
       {!embedded && (
         <header className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-eo-blue/20 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
           <div className="relative max-w-4xl mx-auto px-6 py-12 text-center">
             <div className="flex items-center justify-center gap-2 mb-3">
-              <div className="w-8 h-[2px] bg-eo-coral" />
-              <span className="text-xs font-bold tracking-[0.3em] text-eo-coral uppercase">{chapterName}</span>
-              <div className="w-8 h-[2px] bg-eo-coral" />
+              <div className="w-8 h-[2px] bg-warm" />
+              <span className="text-xs font-bold tracking-[0.3em] text-warm uppercase">{chapterName}</span>
+              <div className="w-8 h-[2px] bg-warm" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               Learning Calendar
             </h1>
             <div className="flex items-center justify-center gap-2 mt-4">
-              <Palette className="h-4 w-4 text-eo-coral" />
+              <Palette className="h-4 w-4 text-warm" />
               <p className="text-lg text-white/70">
                 {formatFiscalYear(activeFiscalYear)} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} className="text-white/70" />
               </p>
@@ -92,9 +92,9 @@ export default function MemberCalendarPage({ embedded = false }) {
       {/* Upcoming Events (Full Detail) */}
       <section className="max-w-4xl mx-auto px-6 pb-8">
         <div className="flex items-center gap-2 mb-6">
-          <Calendar className="h-5 w-5 text-eo-blue" />
+          <Calendar className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold">Upcoming Events</h2>
-          <Badge className="bg-eo-blue/20 text-eo-blue border-eo-blue/30 text-[10px]">FULL DETAILS</Badge>
+          <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px]">FULL DETAILS</Badge>
         </div>
 
         {upcomingDetailed.length > 0 ? (
@@ -124,7 +124,7 @@ export default function MemberCalendarPage({ embedded = false }) {
                         {/* Date */}
                         {event.event_date && (
                           <div className="flex items-center gap-2 mt-3 text-sm text-white/70">
-                            <Calendar className="h-4 w-4 text-eo-coral" />
+                            <Calendar className="h-4 w-4 text-warm" />
                             <span className="font-medium text-white">{formatDateWithDay(event.event_date)}</span>
                           </div>
                         )}
@@ -132,7 +132,7 @@ export default function MemberCalendarPage({ embedded = false }) {
                         {/* Time */}
                         {event.event_time && (
                           <div className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
-                            <Clock className="h-4 w-4 text-eo-blue" />
+                            <Clock className="h-4 w-4 text-primary" />
                             {event.event_time.slice(0, 5) === '18:00' ? '6:00 PM' :
                              event.event_time.slice(0, 5) === '18:30' ? '6:30 PM' :
                              event.event_time}

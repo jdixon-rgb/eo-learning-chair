@@ -191,7 +191,7 @@ export default function ChapterConfigPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-eo-blue" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     )
   }
@@ -210,7 +210,7 @@ export default function ChapterConfigPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-eo-blue" />
+          <Building2 className="h-6 w-6 text-primary" />
           {isNew ? 'Create Chapter' : chapter.name || 'Chapter Config'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -309,7 +309,7 @@ export default function ChapterConfigPage() {
           {!isNew && (
             <Button
               variant="outline"
-              className="text-eo-pink border-eo-pink/30 hover:bg-eo-pink/10"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
               onClick={handleDelete}
             >
               <Trash2 className="h-4 w-4" />
@@ -317,7 +317,7 @@ export default function ChapterConfigPage() {
             </Button>
           )}
           {saveMsg && (
-            <p className={`text-xs ${saveMsg.includes('Saved') || saveMsg.includes('created') ? 'text-green-600' : 'text-eo-pink'}`}>
+            <p className={`text-xs ${saveMsg.includes('Saved') || saveMsg.includes('created') ? 'text-green-600' : 'text-destructive'}`}>
               {saveMsg}
             </p>
           )}
@@ -404,7 +404,7 @@ export default function ChapterConfigPage() {
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => removeInvite(inv.id)}
-                        className="text-muted-foreground hover:text-eo-pink transition-colors"
+                        className="text-muted-foreground hover:text-destructive transition-colors"
                         title="Remove invite"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -422,7 +422,7 @@ export default function ChapterConfigPage() {
       {!isNew && (
         <div className="rounded-xl border border-border p-4 bg-muted/30">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <UserPlus className="h-4 w-4 text-eo-blue" />
+            <UserPlus className="h-4 w-4 text-primary" />
             Invite Member
           </h3>
           <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2">
@@ -455,7 +455,7 @@ export default function ChapterConfigPage() {
             </Button>
           </form>
           {inviteMsg && (
-            <p className={`text-xs mt-2 ${inviteMsg.includes('sent') ? 'text-green-600' : 'text-eo-pink'}`}>
+            <p className={`text-xs mt-2 ${inviteMsg.includes('sent') ? 'text-green-600' : 'text-destructive'}`}>
               {inviteMsg}
             </p>
           )}

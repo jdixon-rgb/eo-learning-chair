@@ -29,7 +29,7 @@ export default function AppLayout() {
         <main className="p-4 md:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-24">
-              <Loader2 className="h-8 w-8 animate-spin text-eo-blue" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
             <Outlet />

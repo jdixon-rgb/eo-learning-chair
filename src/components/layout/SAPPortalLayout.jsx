@@ -5,7 +5,6 @@ import { useSAPStore } from '@/lib/sapStore'
 import { LayoutDashboard, CalendarDays, Building2, FileText, Bell, LogOut, Menu, X, Users, Star, MessageSquare, ArrowLeft } from 'lucide-react'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { useState } from 'react'
-import eoLogo from '@/assets/eo-az-gray.png'
 import { APP_VERSION } from '@/lib/version'
 
 const sapNav = [
@@ -32,13 +31,15 @@ export default function SAPPortalLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-eo-navy via-[#121248] to-eo-navy text-white">
+    <div className="min-h-screen bg-gradient-to-b from-ink via-[#121248] to-ink text-white">
       {/* Top Nav */}
-      <header className="border-b border-white/10 bg-eo-navy/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-ink/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Left: Brand + Partner */}
           <div className="flex items-center gap-3">
-            <img src={eoLogo} alt="EO Arizona" className="h-8 w-auto" />
+            <span className="text-base font-semibold tracking-tight text-white">
+              <span className="text-warm">Our</span>Chapter OS
+            </span>
             {partner && (
               <span className="text-xs font-semibold text-indigo-300 tracking-tight hidden sm:inline">
                 {partner.name}
@@ -101,7 +102,7 @@ export default function SAPPortalLayout() {
 
         {/* Mobile nav dropdown */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-eo-navy/95 backdrop-blur-sm">
+          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 bg-ink/95 backdrop-blur-sm">
             {sapNav.map(({ to, icon: Icon, label, end }) => (
               <NavLink
                 key={to}

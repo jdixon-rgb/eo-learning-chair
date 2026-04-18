@@ -62,7 +62,7 @@ export default function CalendarPage() {
       <div>
         <h1 className="text-2xl font-bold">Year Arc Calendar</h1>
         <div className="flex items-center gap-2 mt-2">
-          <Route className="h-4 w-4 text-eo-coral" />
+          <Route className="h-4 w-4 text-warm" />
           <p className="text-sm text-muted-foreground">
             {formatFiscalYear(activeFiscalYear)}{incomingPresident ? ` \u00b7 President: ${incomingPresident}` : ''} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} />
           </p>
@@ -71,8 +71,8 @@ export default function CalendarPage() {
 
       {/* Legend */}
       <div className="flex gap-4 text-xs">
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-eo-coral" /> KICKOFF / RENEWAL / CLOSE</div>
-        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-eo-blue" /> MOMENTUM / SUSTAIN</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-warm" /> KICKOFF / RENEWAL / CLOSE</div>
+        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary" /> MOMENTUM / SUSTAIN</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-gray-400" /> NO EVENT (Holiday)</div>
       </div>
 
@@ -118,7 +118,7 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={event.id}
-                          className="rounded-lg border border-border p-3 hover:border-eo-blue hover:shadow-sm cursor-pointer transition-all"
+                          className="rounded-lg border border-border p-3 hover:border-primary hover:shadow-sm cursor-pointer transition-all"
                           onClick={() => navigate(`/events/${event.id}`)}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -148,7 +148,7 @@ export default function CalendarPage() {
                           {candidateSpeakers.length > 1 ? (
                             <div className="mt-1 space-y-0.5">
                               {candidateSpeakers.map(s => (
-                                <div key={s.id} className={`flex items-center gap-1 text-xs ${s.id === event.speaker_id ? 'text-eo-blue font-medium' : 'text-muted-foreground'}`}>
+                                <div key={s.id} className={`flex items-center gap-1 text-xs ${s.id === event.speaker_id ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                                   <MapPin className="h-3 w-3 shrink-0" />
                                   {s.name}{s.id === event.speaker_id ? ' ★' : ''}
                                 </div>
@@ -162,7 +162,7 @@ export default function CalendarPage() {
                           ) : null}
 
                           {eventSAPs.length > 0 && (
-                            <div className="flex items-center gap-1 mt-1 text-xs text-eo-coral">
+                            <div className="flex items-center gap-1 mt-1 text-xs text-warm">
                               <Handshake className="h-3 w-3" />
                               {eventSAPs.map(s => s.company || s.name).join(', ')}
                             </div>
@@ -186,7 +186,7 @@ export default function CalendarPage() {
                   </div>
                 )}
                 <button
-                  className={`w-full flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border hover:border-eo-blue hover:bg-blue-50/50 transition-colors cursor-pointer ${monthEvents.length > 0 ? 'mt-3 py-2' : 'h-full min-h-[80px] flex-col'}`}
+                  className={`w-full flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border hover:border-primary hover:bg-blue-50/50 transition-colors cursor-pointer ${monthEvents.length > 0 ? 'mt-3 py-2' : 'h-full min-h-[80px] flex-col'}`}
                   onClick={() => setCreateMonth(i)}
                 >
                   <Plus className={`text-muted-foreground ${monthEvents.length > 0 ? 'h-3.5 w-3.5' : 'h-5 w-5'}`} />

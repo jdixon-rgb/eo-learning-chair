@@ -54,7 +54,7 @@ export default function FeedbackPage() {
           <p className="text-sm text-muted-foreground">We read every submission and use your input to improve this tool.</p>
           <Link
             to="/"
-            className="inline-block px-6 py-2.5 rounded-xl font-medium text-sm bg-eo-blue text-white hover:bg-eo-blue/90 transition-colors"
+            className="inline-block px-6 py-2.5 rounded-xl font-medium text-sm bg-primary text-white hover:bg-primary/90 transition-colors"
           >
             Back to Dashboard
           </Link>
@@ -85,17 +85,17 @@ export default function FeedbackPage() {
               onClick={() => setType(ft.value)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
                 type === ft.value
-                  ? 'border-eo-blue/30 bg-eo-blue/5'
+                  ? 'border-primary/30 bg-primary/5'
                   : 'border-border bg-card hover:border-border/80'
               }`}
             >
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                type === ft.value ? 'bg-eo-blue/10 text-eo-blue' : 'bg-secondary text-muted-foreground'
+                type === ft.value ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
               }`}>
                 <Icon className="w-5 h-5" />
               </div>
               <div>
-                <p className={`text-sm font-medium ${type === ft.value ? 'text-eo-blue' : 'text-foreground'}`}>
+                <p className={`text-sm font-medium ${type === ft.value ? 'text-primary' : 'text-foreground'}`}>
                   {ft.label}
                 </p>
                 <p className="text-xs text-muted-foreground">{ft.desc}</p>
@@ -120,20 +120,20 @@ export default function FeedbackPage() {
               : 'Tell us your idea and how it would help...'
           }
           rows={5}
-          className="w-full px-4 py-3 rounded-lg border border-border focus:border-eo-blue focus:ring-2 focus:ring-eo-blue/20 outline-none transition-all text-sm resize-none bg-background text-foreground"
+          className="w-full px-4 py-3 rounded-lg border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm resize-none bg-background text-foreground"
         />
       </div>
 
       <button
         onClick={handleSubmit}
         disabled={!message.trim() || sending}
-        className="w-full py-3 rounded-xl font-medium text-sm bg-eo-blue text-white hover:bg-eo-blue/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
+        className="w-full py-3 rounded-xl font-medium text-sm bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
       >
         <Send className="w-4 h-4" />
         {sending ? 'Sending…' : 'Submit'}
       </button>
       {errorMsg && (
-        <p className="text-sm text-eo-pink text-center">{errorMsg}</p>
+        <p className="text-sm text-destructive text-center">{errorMsg}</p>
       )}
     </div>
   )

@@ -14,14 +14,14 @@ export default function ThemeInfo({ theme, description, className = '' }) {
   return (
     <>
       <span className={className}>
-        Theme: <span className="font-semibold text-eo-blue">"{theme}"</span>
+        Theme: <span className="font-semibold text-primary">"{theme}"</span>
         {description && (
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(true) }}
-            className="inline-flex items-center justify-center w-4 h-4 ml-1.5 rounded-full bg-eo-blue/10 hover:bg-eo-blue/20 transition-colors cursor-pointer align-middle"
+            className="inline-flex items-center justify-center w-4 h-4 ml-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer align-middle"
             title="About this theme"
           >
-            <Info className="h-2.5 w-2.5 text-eo-blue" />
+            <Info className="h-2.5 w-2.5 text-primary" />
           </button>
         )}
       </span>
@@ -30,7 +30,7 @@ export default function ThemeInfo({ theme, description, className = '' }) {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5 text-eo-blue" />
+              <Palette className="h-5 w-5 text-primary" />
               "{theme}"
             </DialogTitle>
           </DialogHeader>

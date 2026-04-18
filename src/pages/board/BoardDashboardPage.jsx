@@ -48,7 +48,7 @@ export default function BoardDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin h-8 w-8 border-2 border-eo-blue border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
       </div>
     )
   }
@@ -92,7 +92,7 @@ export default function BoardDashboardPage() {
 
         <Link to="/board/reports" className="rounded-xl border bg-card p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-eo-blue/10 text-eo-blue shrink-0">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -142,7 +142,7 @@ export default function BoardDashboardPage() {
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-sm">Chair Report Status</h2>
-            <Link to="/board/reports" className="text-xs text-eo-blue hover:underline">View All</Link>
+            <Link to="/board/reports" className="text-xs text-primary hover:underline">View All</Link>
           </div>
           <div className="space-y-2">
             {chairRoles.map(cr => {
@@ -219,7 +219,7 @@ export default function BoardDashboardPage() {
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-sm">Forum Health</h2>
-            <Link to="/board/forums" className="text-xs text-eo-blue hover:underline">Manage Forums</Link>
+            <Link to="/board/forums" className="text-xs text-primary hover:underline">Manage Forums</Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {activeForums.map(f => (

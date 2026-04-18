@@ -13,10 +13,10 @@ export default function FiscalYearSwitcher() {
       <select
         value={activeFiscalYear}
         onChange={(e) => setActiveFiscalYear(e.target.value)}
-        className="w-full text-xs rounded-lg px-2.5 py-2 bg-white/10 text-white border border-white/10 cursor-pointer focus:outline-none focus:ring-1 focus:ring-eo-blue"
+        className="w-full text-xs rounded-lg px-2.5 py-2 bg-white/10 text-white border border-white/10 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
       >
         {fiscalYearOptions.map((fy) => (
-          <option key={fy} value={fy} className="bg-eo-navy text-white">
+          <option key={fy} value={fy} className="bg-ink text-white">
             {fy}{fy === currentFiscalYear ? ' (current)' : ''}
           </option>
         ))}

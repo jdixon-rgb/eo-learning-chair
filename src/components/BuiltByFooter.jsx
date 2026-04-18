@@ -13,7 +13,7 @@ export default function BuiltByFooter() {
             href={BUILDER.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-foreground hover:text-eo-blue transition-colors"
+            className="font-medium text-foreground hover:text-primary transition-colors"
           >
             {BUILDER.name}
           </a>
@@ -24,7 +24,7 @@ export default function BuiltByFooter() {
           href={BUILDER.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-eo-blue transition-colors"
+          className="hover:text-primary transition-colors"
         >
           {BUILDER.tagline}
         </a>

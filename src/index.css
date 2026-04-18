@@ -3,56 +3,79 @@
 @theme {
   --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
 
-  /* EO Brand Colors */
-  --color-eo-blue: #3d46f2;
-  --color-eo-navy: #0c0c31;
-  --color-eo-pink: #ff346e;
-  --color-eo-coral: #fa653c;
-  --color-eo-white: #ffffff;
+  /* ─────────────────────────────────────────────────────────
+     OurChapter OS — Le Corbusier "Polychromie Architecturale"
+     Restrained, architectural palette. Warm ivory canvas, cream
+     surfaces, céruléen as the primary accent, ocre rouge
+     (terracotta) for warm statements, English green for positive,
+     oxblood for destructive. No pure black; "ink" is #1a1714.
+     ───────────────────────────────────────────────────────── */
 
-  /* shadcn/ui CSS variables mapped to EO brand */
-  --color-background: #ffffff;
-  --color-foreground: #0c0c31;
+  /* Transitional brand aliases — map legacy class names to the new
+     palette so existing markup renders correctly during the
+     rebrand. A follow-up pass will replace `eo-*` class names with
+     semantic tokens throughout the codebase. */
+  --color-eo-blue: #4a6d8c;   /* céruléen → primary accent */
+  --color-eo-navy: #1a1714;   /* ink → dark surfaces / headings */
+  --color-eo-pink: #7d1e1e;   /* oxblood → destructive */
+  --color-eo-coral: #c84b0c;  /* ocre rouge → warm statement */
+  --color-eo-white: #fffcf7;  /* cream white */
 
-  --color-card: #ffffff;
-  --color-card-foreground: #0c0c31;
+  /* Warm statement accent — terracotta. Used for callouts,
+     warnings, highlighted metadata. `bg-warm`, `text-warm`, etc. */
+  --color-warm: #c84b0c;
+  --color-warm-foreground: #ffffff;
 
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0c0c31;
+  /* Ink — soft warm black for dark surfaces (portal layouts, chips,
+     dark overlays). `bg-ink`, `text-ink`, etc. */
+  --color-ink: #1a1714;
 
-  --color-primary: #3d46f2;
+  /* shadcn/ui semantic tokens */
+  --color-background: #f6f1e9;        /* warm ivory canvas */
+  --color-foreground: #1a1714;        /* ink — soft warm black */
+
+  --color-card: #fffcf7;              /* cream white for raised surfaces */
+  --color-card-foreground: #1a1714;
+
+  --color-popover: #fffcf7;
+  --color-popover-foreground: #1a1714;
+
+  --color-primary: #4a6d8c;           /* céruléen pâle */
   --color-primary-foreground: #ffffff;
 
-  --color-secondary: #f0f0f8;
-  --color-secondary-foreground: #0c0c31;
+  --color-secondary: #ede8df;         /* paper-dark */
+  --color-secondary-foreground: #1a1714;
 
-  --color-muted: #f5f5fa;
-  --color-muted-foreground: #64648c;
+  --color-muted: #ede8df;
+  --color-muted-foreground: #857d74;  /* ink-muted */
 
-  --color-accent: #f0f0f8;
-  --color-accent-foreground: #0c0c31;
+  --color-accent: #ede8df;            /* subtle hover surface */
+  --color-accent-foreground: #1a1714;
 
-  --color-destructive: #ff346e;
+  --color-destructive: #7d1e1e;       /* oxblood */
   --color-destructive-foreground: #ffffff;
 
-  --color-border: #e2e2f0;
-  --color-input: #e2e2f0;
-  --color-ring: #3d46f2;
+  --color-border: #dfd8cc;            /* warm pale */
+  --color-input: #dfd8cc;
+  --color-ring: #4a6d8c;
 
-  --color-sidebar: #0c0c31;
-  --color-sidebar-foreground: #ffffff;
-  --color-sidebar-accent: #1a1a4a;
-  --color-sidebar-accent-foreground: #ffffff;
-  --color-sidebar-border: #1a1a4a;
-  --color-sidebar-ring: #3d46f2;
-  --color-sidebar-primary: #3d46f2;
+  /* Light, airy sidebar — paper-dark with ink text, not a heavy
+     navy slab. Key departure from the old palette. */
+  --color-sidebar: #ede8df;
+  --color-sidebar-foreground: #1a1714;
+  --color-sidebar-accent: #dfd8cc;
+  --color-sidebar-accent-foreground: #1a1714;
+  --color-sidebar-border: #dfd8cc;
+  --color-sidebar-ring: #4a6d8c;
+  --color-sidebar-primary: #4a6d8c;
   --color-sidebar-primary-foreground: #ffffff;
 
-  --color-chart-1: #3d46f2;
-  --color-chart-2: #ff346e;
-  --color-chart-3: #fa653c;
-  --color-chart-4: #22c55e;
-  --color-chart-5: #8b5cf6;
+  /* Chart palette — Le Corbusier architectural colors */
+  --color-chart-1: #4a6d8c;   /* céruléen */
+  --color-chart-2: #c84b0c;   /* ocre rouge */
+  --color-chart-3: #1a5c3a;   /* vert anglais */
+  --color-chart-4: #d9b470;   /* ocre jaune */
+  --color-chart-5: #7d1e1e;   /* rouge vif */
 
   /* ─────────────────────────────────────────────────────────
      Lifeline module palette (ported from lifeline.ourchapteros.com)

@@ -28,11 +28,11 @@ export default function TopBar({ onMenuToggle }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Palette className="h-5 w-5 text-eo-blue hidden sm:block" />
+        <Palette className="h-5 w-5 text-primary hidden sm:block" />
         <div>
           <p className="text-sm font-semibold text-foreground">
             <span className="hidden sm:inline">Theme: </span>
-            <span className="text-eo-blue">{theme}</span>
+            <span className="text-primary">{theme}</span>
           </p>
           {presidentName && (
             <p className="text-xs text-muted-foreground hidden sm:block">President: {presidentName}</p>
@@ -48,7 +48,7 @@ export default function TopBar({ onMenuToggle }) {
             <span className="hidden sm:inline">{formatCurrency(budgetUsed, currency)} / </span>
             <span className="sm:hidden">{formatCurrency(remaining, currency)} left</span>
             <span className="hidden sm:inline">{formatCurrency(chapterBudget, currency)}</span>
-            <span className={`ml-1 sm:ml-2 text-xs ${remaining < 50000 ? 'text-eo-pink' : 'text-green-600'}`}>
+            <span className={`ml-1 sm:ml-2 text-xs ${remaining < 50000 ? 'text-destructive' : 'text-green-600'}`}>
               ({budgetPercent}%)
             </span>
           </p>
@@ -56,7 +56,7 @@ export default function TopBar({ onMenuToggle }) {
         <div className="w-16 sm:w-24 h-2 bg-secondary rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${
-              remaining < 50000 ? 'bg-eo-pink' : remaining < 100000 ? 'bg-eo-coral' : 'bg-green-500'
+              remaining < 50000 ? 'bg-destructive' : remaining < 100000 ? 'bg-warm' : 'bg-green-500'
             }`}
             style={{ width: `${Math.min(Number(budgetPercent), 100)}%` }}
           />

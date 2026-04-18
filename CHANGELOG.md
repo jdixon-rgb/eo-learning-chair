@@ -17,6 +17,57 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.58.0 — 2026-04-17
+
+### Rebrand: strip EO branding, adopt Le Corbusier palette
+Removes all "EO Arizona" / "Entrepreneurs' Organization" visual branding
+and replaces the former brand palette (eo-blue / eo-pink / eo-coral /
+eo-navy) with a restrained Le Corbusier "Polychromie Architecturale"
+palette. Product now reads as a neutral third-party platform — not an
+EO-sanctioned product — which better supports the "tool that chapters
+choose to use" positioning.
+
+**Color palette (`src/index.css`)**
+- `--color-background`: `#f6f1e9` — warm ivory canvas
+- `--color-card`: `#fffcf7` — cream white for raised surfaces
+- `--color-foreground`: `#1a1714` — ink (warm black, not pure)
+- `--color-muted-foreground`: `#857d74` — ink-muted
+- `--color-primary`: `#4a6d8c` — céruléen pâle (architectural blue-gray)
+- `--color-warm`: `#c84b0c` — ocre rouge (terracotta statement accent)
+- `--color-destructive`: `#7d1e1e` — oxblood
+- `--color-border`: `#dfd8cc` — warm pale
+- Sidebar is now light (paper-dark) with ink text — major departure from
+  the previous dark navy slab.
+
+**Class rename**
+- `eo-blue` → `primary`
+- `eo-pink` → `destructive`
+- `eo-coral` → `warm` (new custom token)
+- `eo-navy` → `ink` (new custom token)
+- `eo-white` → `card`
+- 53 files updated in the sweep.
+
+**Logos / wordmarks**
+- New `Wordmark` component — neutral text treatment of "OurChapter OS"
+  with primary-colored prefix. Scales to any size, no image asset.
+- Deleted `src/assets/eo-az-gray.png`, `eo-circles-blue.png`,
+  `eo-circles-white.png` (all unreferenced after wordmark swap).
+- Login screen: cream background (no more dark gradient), wordmark +
+  "A platform for chapter operations" subtitle.
+- Sidebar, Member Portal header, SAP Portal header: wordmark replaces
+  the EO logo image.
+- Member Portal dashboard no longer renders the logo above the welcome
+  line.
+
+**What's still chapter-contextual** (intentionally not stripped)
+- Seed data defaults (EO Arizona in mockData.js — that IS the first
+  chapter's name, not branding)
+- Copy like "How would you rate your experience with EO Arizona?" on
+  SAP feedback — these should be dynamic to active chapter name; tracked
+  for a follow-up PR
+
+---
+
 ## v1.57.0 — 2026-04-17
 
 ### Major: Phase 1 onboarding polish — global chapter readiness

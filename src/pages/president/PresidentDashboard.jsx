@@ -20,7 +20,7 @@ export default function PresidentDashboard() {
   const isChapterStaff = effectiveRole === 'chapter_executive_director' || effectiveRole === 'chapter_experience_coordinator'
   const headingTitle = isChapterStaff ? 'Chapter Dashboard' : 'President Dashboard'
   const HeadingIcon = isChapterStaff ? Briefcase : Crown
-  const headingIconColor = isChapterStaff ? 'text-eo-blue' : 'text-amber-500'
+  const headingIconColor = isChapterStaff ? 'text-primary' : 'text-amber-500'
 
   const theme = activePresidentTheme || ''
 
@@ -123,7 +123,7 @@ export default function PresidentDashboard() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {chair.memberName || <span className="italic">Not assigned</span>}
-                  {chair.assignment?.theme && <span className="ml-2 text-eo-blue">"{chair.assignment.theme}"</span>}
+                  {chair.assignment?.theme && <span className="ml-2 text-primary">"{chair.assignment.theme}"</span>}
                 </p>
               </div>
               {chair.budget > 0 && (
@@ -137,7 +137,7 @@ export default function PresidentDashboard() {
       {/* Quick actions hint */}
       <div className="rounded-xl border bg-muted/30 p-5">
         <div className="flex items-center gap-2 mb-2">
-          <Palette className="h-4 w-4 text-eo-blue" />
+          <Palette className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">Quick Tip</span>
         </div>
         <p className="text-sm text-muted-foreground">

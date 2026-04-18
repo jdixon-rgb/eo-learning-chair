@@ -262,7 +262,7 @@ export default function EventDocuments({ eventId }) {
         <Paperclip className="w-4 h-4" />
         Documents
         {docs.length > 0 && (
-          <span className="bg-eo-blue/20 text-eo-blue text-xs px-2 py-0.5 rounded-full">
+          <span className="bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
             {docs.length}
           </span>
         )}
@@ -275,7 +275,7 @@ export default function EventDocuments({ eventId }) {
         onDragLeave={handleDragLeave}
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
           dragOver
-            ? 'border-eo-blue bg-eo-blue/10'
+            ? 'border-primary bg-primary/10'
             : 'border-border hover:border-muted-foreground/30'
         }`}
       >
@@ -284,7 +284,7 @@ export default function EventDocuments({ eventId }) {
           Drag and drop files here, or{' '}
           <button
             onClick={handleBrowse}
-            className="text-eo-blue hover:underline font-medium"
+            className="text-primary hover:underline font-medium"
           >
             browse
           </button>
@@ -358,7 +358,7 @@ export default function EventDocuments({ eventId }) {
 
                 {/* Uploading indicator */}
                 {doc._uploading && (
-                  <Loader2 className="w-4 h-4 text-eo-blue animate-spin shrink-0" />
+                  <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
                 )}
 
                 {/* Parsing indicator */}
@@ -402,7 +402,7 @@ export default function EventDocuments({ eventId }) {
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => handleDelete(doc.id)}
-                      className="text-xs text-eo-pink hover:text-eo-pink/80 px-2 py-1 rounded bg-eo-pink/10"
+                      className="text-xs text-destructive hover:text-destructive/80 px-2 py-1 rounded bg-destructive/10"
                     >
                       Confirm
                     </button>
@@ -416,7 +416,7 @@ export default function EventDocuments({ eventId }) {
                 ) : !doc._uploading && (
                   <button
                     onClick={() => setConfirmDelete(doc.id)}
-                    className="p-1.5 rounded hover:bg-eo-pink/10 text-muted-foreground hover:text-eo-pink transition-colors"
+                    className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />

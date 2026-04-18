@@ -118,14 +118,14 @@ export default function ProfileFreshnessCard({ currentMember }) {
             rows={3}
             autoFocus
             placeholder="What changed? e.g. new company name, moved to Scottsdale, got married, joined a new board…"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
           />
           <div className="flex gap-2">
             <button
               type="button"
               disabled={submitting || !note.trim()}
               onClick={handleSubmitChange}
-              className="px-4 py-2 rounded-lg bg-eo-blue text-white text-sm font-medium hover:bg-eo-blue/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Send to chapter team
             </button>

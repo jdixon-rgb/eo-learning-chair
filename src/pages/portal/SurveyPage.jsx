@@ -118,7 +118,7 @@ export default function SurveyPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-eo-blue" />
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     )
   }
@@ -135,7 +135,7 @@ export default function SurveyPage() {
         </p>
         <button
           onClick={() => { setSubmitted(false); setCurrentSection(0) }}
-          className="text-sm text-eo-blue hover:text-eo-blue/80 transition-colors cursor-pointer"
+          className="text-sm text-primary hover:text-primary/80 transition-colors cursor-pointer"
         >
           Review or update your answers →
         </button>
@@ -150,7 +150,7 @@ export default function SurveyPage() {
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-2">
-        <ClipboardList className="h-5 w-5 text-eo-coral" />
+        <ClipboardList className="h-5 w-5 text-warm" />
         <h1 className="text-xl font-bold">Learning Preferences Survey</h1>
       </div>
       <p className="text-xs text-white/40 mb-6">Help us design events you'll love. Takes about 5 minutes.</p>
@@ -163,7 +163,7 @@ export default function SurveyPage() {
         </div>
         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
-            className="h-full bg-eo-blue rounded-full transition-all duration-300"
+            className="h-full bg-primary rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -176,9 +176,9 @@ export default function SurveyPage() {
               onClick={() => setCurrentSection(idx)}
               className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
                 idx === currentSection
-                  ? 'bg-eo-blue w-6'
+                  ? 'bg-primary w-6'
                   : idx < currentSection
-                    ? 'bg-eo-blue/50'
+                    ? 'bg-primary/50'
                     : 'bg-white/15'
               }`}
             />
@@ -230,7 +230,7 @@ export default function SurveyPage() {
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-eo-blue text-white hover:bg-eo-blue/90 transition-colors cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50"
           >
             {saving ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -243,7 +243,7 @@ export default function SurveyPage() {
           <button
             type="button"
             onClick={goNext}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-eo-blue text-white hover:bg-eo-blue/90 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors cursor-pointer"
           >
             Next
             <ChevronRight className="h-4 w-4" />

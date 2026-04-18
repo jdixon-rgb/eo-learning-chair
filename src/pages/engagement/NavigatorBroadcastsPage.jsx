@@ -58,7 +58,7 @@ export default function NavigatorBroadcastsPage() {
         <button
           type="button"
           onClick={() => setShowCompose(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-eo-blue text-white text-sm font-medium hover:bg-eo-blue/90 shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 shrink-0"
         >
           <Plus className="h-4 w-4" /> New broadcast
         </button>
@@ -157,14 +157,14 @@ function ComposeBroadcastModal({ onClose, onSend, activeNavigatorCount }) {
             onChange={e => setPrompt(e.target.value)}
             rows={2}
             placeholder="e.g. How's your connection going?"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-eo-blue focus:ring-1 focus:ring-eo-blue outline-none"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Response options</label>
-            <button type="button" onClick={addOption} className="text-xs text-eo-blue hover:underline">+ Add option</button>
+            <button type="button" onClick={addOption} className="text-xs text-primary hover:underline">+ Add option</button>
           </div>
           <div className="space-y-2">
             {options.map((opt, idx) => (
@@ -174,7 +174,7 @@ function ComposeBroadcastModal({ onClose, onSend, activeNavigatorCount }) {
                   value={opt.label}
                   onChange={e => updateOption(idx, { label: e.target.value })}
                   placeholder={`Option ${idx + 1}`}
-                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-eo-blue focus:ring-1 focus:ring-eo-blue outline-none"
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                 />
                 {options.length > 2 && (
                   <button
@@ -197,7 +197,7 @@ function ComposeBroadcastModal({ onClose, onSend, activeNavigatorCount }) {
           <button
             onClick={handleSend}
             disabled={!canSend}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-eo-blue text-white text-sm font-medium hover:bg-eo-blue/90 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Send className="h-4 w-4" /> Send
           </button>
@@ -278,7 +278,7 @@ function BroadcastCard({ broadcast, responses, activeNavigators, memberById, onC
               <div className="w-24 text-xs font-medium text-gray-700 shrink-0 truncate">{opt.label}</div>
               <div className="flex-1 h-6 bg-gray-100 rounded relative overflow-hidden">
                 <div
-                  className="absolute inset-y-0 left-0 bg-eo-blue/70"
+                  className="absolute inset-y-0 left-0 bg-primary/70"
                   style={{ width: `${optionPct}%` }}
                 />
                 <div className="absolute inset-0 flex items-center px-2 text-xs font-medium text-gray-700">
@@ -293,7 +293,7 @@ function BroadcastCard({ broadcast, responses, activeNavigators, memberById, onC
       <button
         type="button"
         onClick={() => setExpanded(v => !v)}
-        className="text-xs text-eo-blue hover:underline"
+        className="text-xs text-primary hover:underline"
       >
         {expanded ? 'Hide details' : 'See who responded'}
       </button>

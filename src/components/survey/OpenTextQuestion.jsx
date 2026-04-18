@@ -12,7 +12,7 @@ export default function OpenTextQuestion({ question, value = '', onChange }) {
         onChange={(e) => onChange(e.target.value)}
         placeholder={question.placeholder || 'Type your answer...'}
         rows={4}
-        className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 resize-none focus:outline-none focus:border-eo-blue/50 focus:ring-1 focus:ring-eo-blue/30 transition-colors"
+        className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 resize-none focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-colors"
       />
     </div>
   )

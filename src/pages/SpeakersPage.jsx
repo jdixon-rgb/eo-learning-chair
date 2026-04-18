@@ -246,9 +246,9 @@ export default function SpeakersPage() {
                 onClick={e => e.stopPropagation()}
                 onDragStart={e => e.stopPropagation()}
                 title="Watch sizzle reel"
-                className="shrink-0 w-5 h-5 rounded-full bg-eo-blue/10 hover:bg-eo-blue/20 flex items-center justify-center transition-colors"
+                className="shrink-0 w-5 h-5 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
               >
-                <Play className="h-2.5 w-2.5 text-eo-blue fill-eo-blue" />
+                <Play className="h-2.5 w-2.5 text-primary fill-primary" />
               </a>
             )}
           </div>
@@ -256,7 +256,7 @@ export default function SpeakersPage() {
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`h-3 w-3 ${i < Math.ceil((speaker.fit_score || 0) / 2) ? 'text-eo-coral fill-eo-coral' : 'text-gray-200'}`}
+                className={`h-3 w-3 ${i < Math.ceil((speaker.fit_score || 0) / 2) ? 'text-warm fill-warm' : 'text-gray-200'}`}
               />
             ))}
           </div>
@@ -266,7 +266,7 @@ export default function SpeakersPage() {
             {assignedEvents.map(e => {
               const isPrimary = e.speaker_id === speaker.id
               return (
-                <div key={e.id} className={`flex items-center gap-1 text-xs ${isPrimary ? 'text-eo-blue font-semibold' : 'text-muted-foreground'}`}>
+                <div key={e.id} className={`flex items-center gap-1 text-xs ${isPrimary ? 'text-primary font-semibold' : 'text-muted-foreground'}`}>
                   <CalendarDays className="h-3 w-3 shrink-0" />
                   <span className="truncate">{e.title}</span>
                   {isPrimary && <span className="text-[9px]">★</span>}
@@ -347,7 +347,7 @@ export default function SpeakersPage() {
           onClick={() => setActiveTab('pipeline')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === 'pipeline'
-              ? 'border-eo-blue text-eo-blue'
+              ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -357,7 +357,7 @@ export default function SpeakersPage() {
           onClick={() => setActiveTab('library')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
             activeTab === 'library'
-              ? 'border-eo-blue text-eo-blue'
+              ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -420,8 +420,8 @@ export default function SpeakersPage() {
                     <tr key={speaker.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEdit(speaker)}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-eo-blue/10 flex items-center justify-center">
-                            <User className="h-4 w-4 text-eo-blue" />
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-4 w-4 text-primary" />
                           </div>
                           <span className="text-sm font-medium">{speaker.name}</span>
                         </div>
@@ -438,7 +438,7 @@ export default function SpeakersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-eo-coral fill-eo-coral" />
+                          <Star className="h-3 w-3 text-warm fill-warm" />
                           <span className="text-sm">{speaker.fit_score}/10</span>
                         </div>
                       </td>
@@ -492,14 +492,14 @@ export default function SpeakersPage() {
                   <tr key={speaker.id} className="border-b hover:bg-accent/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 cursor-pointer" onClick={() => openEditFromLibrary(speaker)}>
-                        <div className="w-8 h-8 rounded-full bg-eo-blue/10 flex items-center justify-center">
-                          <User className="h-4 w-4 text-eo-blue" />
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
                         </div>
                         <div>
-                          <span className="text-sm font-medium hover:text-eo-blue">{speaker.name}</span>
+                          <span className="text-sm font-medium hover:text-primary">{speaker.name}</span>
                           {speaker.sizzle_reel_url && (
                             <a href={speaker.sizzle_reel_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="ml-1.5">
-                              <Play className="inline h-3 w-3 text-eo-blue" />
+                              <Play className="inline h-3 w-3 text-primary" />
                             </a>
                           )}
                         </div>
@@ -642,7 +642,7 @@ export default function SpeakersPage() {
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="text-xs text-muted-foreground truncate flex-1">{editSpeaker.contract_file_name}</span>
                         <button type="button" onClick={() => handleDocDownload(editSpeaker.contract_storage_path)} className="text-indigo-500 hover:text-indigo-700 p-1 cursor-pointer"><Download className="h-3.5 w-3.5" /></button>
-                        <button type="button" onClick={() => handleDocDelete('contract')} className="text-muted-foreground hover:text-eo-pink p-1 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => handleDocDelete('contract')} className="text-muted-foreground hover:text-destructive p-1 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
                     ) : uploadingDoc === 'contract' ? (
                       <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
@@ -661,7 +661,7 @@ export default function SpeakersPage() {
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="text-xs text-muted-foreground truncate flex-1">{editSpeaker.w9_file_name}</span>
                         <button type="button" onClick={() => handleDocDownload(editSpeaker.w9_storage_path)} className="text-green-500 hover:text-green-700 p-1 cursor-pointer"><Download className="h-3.5 w-3.5" /></button>
-                        <button type="button" onClick={() => handleDocDelete('w9')} className="text-muted-foreground hover:text-eo-pink p-1 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => handleDocDelete('w9')} className="text-muted-foreground hover:text-destructive p-1 cursor-pointer"><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
                     ) : uploadingDoc === 'w9' ? (
                       <Loader2 className="h-4 w-4 animate-spin text-green-500" />
@@ -700,10 +700,10 @@ export default function SpeakersPage() {
                             }))
                           }}
                         />
-                        <span className={isPrimary ? 'font-semibold text-eo-blue' : ''}>
+                        <span className={isPrimary ? 'font-semibold text-primary' : ''}>
                           {evt.title}
                         </span>
-                        {isPrimary && <span className="text-[9px] text-eo-blue">★ primary</span>}
+                        {isPrimary && <span className="text-[9px] text-primary">★ primary</span>}
                       </label>
                     )
                   })}
@@ -729,7 +729,7 @@ export default function SpeakersPage() {
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSubmit} className="flex-1">{editSpeaker ? 'Save Changes' : 'Add Speaker'}</Button>
               {editSpeaker?._pipeline_id && (
-                <Button variant="outline" className="text-eo-pink border-eo-pink hover:bg-eo-pink/10" onClick={() => {
+                <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => {
                   if (confirm('Move this speaker to Passed?')) {
                     updatePipelineEntry(editSpeaker._pipeline_id, { pipeline_stage: 'passed' })
                     setShowForm(false)
@@ -739,7 +739,7 @@ export default function SpeakersPage() {
                 </Button>
               )}
               {editSpeaker && (
-                <Button variant="outline" className="text-eo-pink border-eo-pink/30 hover:bg-eo-pink/10" onClick={() => {
+                <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => {
                   if (confirm(`Delete ${editSpeaker.name}? This removes them from the library and any event assignments.`)) {
                     deleteSpeaker(editSpeaker.id)
                     setShowForm(false)

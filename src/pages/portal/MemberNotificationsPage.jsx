@@ -11,8 +11,8 @@ const TYPE_ICONS = {
 }
 
 const TYPE_COLORS = {
-  event_update: 'text-eo-blue',
-  announcement: 'text-eo-coral',
+  event_update: 'text-primary',
+  announcement: 'text-warm',
   general: 'text-purple-400',
 }
 
@@ -90,7 +90,7 @@ export default function MemberNotificationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-6 w-6 border-2 border-eo-blue border-t-transparent rounded-full animate-spin" />
+        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -103,7 +103,7 @@ export default function MemberNotificationsPage() {
           <Bell className="h-5 w-5 text-purple-400" />
           <h1 className="text-xl font-bold">Notifications</h1>
           {unreadCount > 0 && (
-            <Badge className="bg-eo-coral text-white text-xs">{unreadCount} new</Badge>
+            <Badge className="bg-warm text-white text-xs">{unreadCount} new</Badge>
           )}
         </div>
         {unreadCount > 0 && (
@@ -149,7 +149,7 @@ export default function MemberNotificationsPage() {
                       <h3 className={`text-sm font-semibold ${n.is_read ? 'text-white/60' : 'text-white'}`}>
                         {n.title}
                       </h3>
-                      {!n.is_read && <div className="w-2 h-2 rounded-full bg-eo-coral shrink-0" />}
+                      {!n.is_read && <div className="w-2 h-2 rounded-full bg-warm shrink-0" />}
                     </div>
                     <p className={`text-sm mt-1 leading-relaxed ${n.is_read ? 'text-white/30' : 'text-white/60'}`}>
                       {n.body}
