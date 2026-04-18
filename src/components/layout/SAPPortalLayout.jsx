@@ -138,11 +138,13 @@ export default function SAPPortalLayout() {
         )}
       </header>
 
-      {/* Admin preview bar — switch contacts or exit */}
+      {/* Admin preview bar — switch contacts or exit. Stacks vertically
+          on mobile so the contact dropdown doesn't squeeze "Exit
+          Preview" off-screen. */}
       {canSwitchRoles && (
-        <div className="bg-warm/10 border-b border-warm/30 px-4 py-2">
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="bg-warm/10 border-b border-warm/30 px-4 py-2.5">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <span className="text-[10px] font-bold text-warm uppercase tracking-wider shrink-0">Viewing as</span>
               <select
                 value={viewAsSapContactId || ''}
@@ -150,7 +152,7 @@ export default function SAPPortalLayout() {
                   setViewAsSapContactId(e.target.value || null)
                   navigate('/sap-portal')
                 }}
-                className="text-xs bg-card border border-warm/30 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-warm/50 max-w-xs"
+                className="flex-1 sm:flex-initial text-xs bg-card border border-warm/30 rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-warm/50 sm:max-w-xs min-w-0"
               >
                 <option value="">— pick a contact —</option>
                 {allContacts.map(c => {
@@ -161,7 +163,7 @@ export default function SAPPortalLayout() {
             </div>
             <button
               onClick={() => { setViewAsSapContactId(null); setViewAsRole(null); navigate('/') }}
-              className="text-xs text-warm hover:text-warm/80 underline cursor-pointer shrink-0"
+              className="text-xs text-warm hover:text-warm/80 underline cursor-pointer self-start sm:self-auto shrink-0"
             >
               Exit Preview
             </button>
