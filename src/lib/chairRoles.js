@@ -27,6 +27,7 @@ import {
   Crown,
   Briefcase,
   BarChart3,
+  ClipboardList,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -39,6 +40,7 @@ const LEARNING_CHAIR_NAV = [
   { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
   { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
   { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
+  { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
 ]
 
 export const CHAIR_ROLE_CONFIGS = {

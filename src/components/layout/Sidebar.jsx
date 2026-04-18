@@ -13,7 +13,6 @@ import {
   X,
   LogOut,
   Shield,
-  ClipboardList,
   Bell,
   MessageSquarePlus,
   Lightbulb,
@@ -33,10 +32,11 @@ const CONTEXT_EXPANDED_KEY = 'eo-sidebar-context-expanded'
 import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
 
-// Admin sub-pages
+// Admin sub-pages.
+// Survey Results moved to the Learning Chair's main nav (it's their tool,
+// not a cross-cutting admin concern).
 const adminItems = [
   { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
-  { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
   { to: '/admin/notifications', icon: Bell, label: 'Notifications', permission: 'canSendNotifications' },
   { to: '/coordinator', icon: ClipboardCheck, label: 'Coordinator', permission: 'canViewCoordinator' },
 ]

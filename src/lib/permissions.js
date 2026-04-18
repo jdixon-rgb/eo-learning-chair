@@ -31,7 +31,10 @@ export const FEATURE_PERMISSIONS = {
   canManageSettings:     SETTINGS_ROLES,
   canManageMembers:      ADMIN_ROLES,
   canSendNotifications:  ADMIN_ROLES,
-  canViewSurveyResults:  ADMIN_ROLES,
+  // Survey Results are scoped to the Learning Chair surface — they're
+  // about how learning events landed, which only the LC and their elect
+  // successor act on. Super-admin retains visibility for support.
+  canViewSurveyResults:  ['super_admin', 'learning_chair', 'learning_chair_elect'],
   // Board module
   canViewBoard:          [...BOARD_ROLES, 'learning_chair'],
   canManageChairReports: BOARD_ROLES,
