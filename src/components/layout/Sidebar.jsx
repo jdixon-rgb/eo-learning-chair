@@ -60,21 +60,16 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const navigate = useNavigate()
 
   // Collapsible context switcher block (Chapter / FY / Switch Role).
-  // Defaults collapsed so the nav items below get most of the screen real
-  // estate. User preference persists across sessions.
+  // Always defaults collapsed on page load — expansion is a temporary
+  // action, not a persistent preference. That matches the "get it out
+  // of the way during regular work" goal.
   const [contextExpanded, setContextExpanded] = useState(() => {
-    try { return localStorage.getItem(CONTEXT_EXPANDED_KEY) === '1' } catch { return false }
+    // Clear any stale flag from an older build that used to persist
+    // expansion — some users were stuck expanded across sessions.
+    try { localStorage.removeItem(CONTEXT_EXPANDED_KEY) } catch { /* ignore */ }
+    return false
   })
-  const toggleContext = () => {
-    setContextExpanded(prev => {
-      const next = !prev
-      try {
-        if (next) localStorage.setItem(CONTEXT_EXPANDED_KEY, '1')
-        else localStorage.removeItem(CONTEXT_EXPANDED_KEY)
-      } catch { /* ignore */ }
-      return next
-    })
-  }
+  const toggleContext = () => setContextExpanded(prev => !prev)
 
   // Look up the chair-role config for the *effective* role.
   // For super admins not impersonating, default to Learning Chair surface.

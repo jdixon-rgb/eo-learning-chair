@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.5 — 2026-04-17
+
+### Fix: sidebar context block always starts collapsed
+Expansion state was being persisted in localStorage, so users who
+tapped to expand once were stuck expanded forever — including after
+impersonating a different chair role. That defeated the whole
+"get it out of the way" intent.
+
+Now:
+- Always defaults to collapsed on page load (and across role switches)
+- Tap the chevron to expand temporarily while you change context
+- Next refresh / navigation → collapsed again
+- Includes a one-time `localStorage.removeItem` so users previously
+  stuck expanded get the new behavior immediately
+
+---
+
 ## v1.60.4 — 2026-04-17
 
 ### Feature: Scenarios nav added to Chapter Experience + Chapter Executive Director sidebars
