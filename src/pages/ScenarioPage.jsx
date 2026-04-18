@@ -1,5 +1,6 @@
 import { useState, useMemo, Fragment } from 'react'
 import { useStore } from '@/lib/store'
+import { useBoardStore } from '@/lib/boardStore'
 import { FISCAL_MONTHS, STRATEGIC_MAP, BUDGET_CATEGORIES } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
 import { formatCurrency } from '@/lib/utils'
@@ -24,6 +25,11 @@ export default function ScenarioPage() {
     chapter, events, speakers, pipelineSpeakers, venues, budgetItems,
     scenarios, addScenario, updateScenario, deleteScenario, updateEvent,
   } = useStore()
+  const { getChairBudget } = useBoardStore()
+
+  // Scenario Planner is a Learning Chair tool — budget anchors to the
+  // chair's FY allocation, not the chapter total.
+  const chairBudget = getChairBudget('learning')
 
   const [activeTab, setActiveTab] = useState('baseline')
   const [editingName, setEditingName] = useState(null)
@@ -101,7 +107,7 @@ export default function ScenarioPage() {
       .reduce((sum, b) => sum + (b.budget_amount || 0), 0)
 
     const totalCost = totalSpeakerFee + nonSpeakerCosts
-    const budgetRemaining = chapter.total_budget - totalCost
+    const budgetRemaining = chairBudget - totalCost
     const avgFitScore = fitScoreCount > 0 ? (fitScoreSum / fitScoreCount) : 0
     const valueIndex = totalSpeakerFee > 0 ? Math.round((totalValue / totalSpeakerFee) * 10000) : 0
 
@@ -183,7 +189,7 @@ export default function ScenarioPage() {
             Scenario Planner
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Model different speaker combinations to maximize value within your {formatCurrency(chapter.total_budget)} budget.
+            Model different speaker combinations to maximize value within your {formatCurrency(chairBudget)} budget.
           </p>
         </div>
         <Button onClick={handleCreateScenario} size="sm">
@@ -304,9 +310,9 @@ export default function ScenarioPage() {
       </div>
 
       {/* Speaker Fee Ratio vs Target */}
-      {chapter.total_budget > 0 && (() => {
+      {chairBudget > 0 && (() => {
         const targetPct = chapter.speaker_fee_target_pct ?? 50
-        const actualPct = Math.round((currentMetrics.totalSpeakerFee / chapter.total_budget) * 100)
+        const actualPct = Math.round((currentMetrics.totalSpeakerFee / chairBudget) * 100)
         const diff = actualPct - targetPct
         const isOver = diff > 0
         const isClose = Math.abs(diff) <= 5
@@ -325,7 +331,7 @@ export default function ScenarioPage() {
                   {actualPct}%
                 </span>
                 <span className="text-muted-foreground">
-                  of {formatCurrency(chapter.total_budget)} budget
+                  of {formatCurrency(chairBudget)} budget
                 </span>
               </div>
             </div>
@@ -565,11 +571,11 @@ export default function ScenarioPage() {
               scenario={activeMetrics.valueIndex}
               format="number"
             />
-            {chapter.total_budget > 0 && (
+            {chairBudget > 0 && (
               <ComparisonItem
                 label="Speaker Fee %"
-                baseline={Math.round((baselineMetrics.totalSpeakerFee / chapter.total_budget) * 100)}
-                scenario={Math.round((activeMetrics.totalSpeakerFee / chapter.total_budget) * 100)}
+                baseline={Math.round((baselineMetrics.totalSpeakerFee / chairBudget) * 100)}
+                scenario={Math.round((activeMetrics.totalSpeakerFee / chairBudget) * 100)}
                 format="pct"
                 target={chapter.speaker_fee_target_pct ?? 50}
                 inverted
