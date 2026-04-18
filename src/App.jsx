@@ -37,6 +37,7 @@ import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
 import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
 import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
+import AnalyticsPage from '@/pages/super-admin/AnalyticsPage'
 import BoardDashboardPage from '@/pages/board/BoardDashboardPage'
 import ChairReportsPage from '@/pages/board/ChairReportsPage'
 import CommunicationsPage from '@/pages/board/CommunicationsPage'
@@ -227,6 +228,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route path="/super-admin" element={<SuperAdminDashboard />} />
+                <Route path="/super-admin/analytics" element={<AnalyticsPage />} />
                 <Route path="/super-admin/chapters/:id" element={<ChapterConfigPage />} />
               </Route>
 

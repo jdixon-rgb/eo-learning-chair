@@ -377,7 +377,7 @@ export default function SAPPartnersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Strategic Alliance Partners</h1>
+          <h1 className="text-2xl font-bold">SAPs</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {activePartners.length} active partner{activePartners.length !== 1 ? 's' : ''} &middot; {contacts.length} contacts
           </p>

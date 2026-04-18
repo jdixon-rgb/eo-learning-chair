@@ -17,6 +17,51 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.0 — 2026-04-17
+
+### Feature: SAPs relabel + SAP Chair role + Super Admin sidebar + minimal TopBar
+
+**Relabel Partners → SAPs**. Sidebar nav, page titles, forum tab, tour
+content all read "SAPs" now. Route `/partners` stays for bookmark
+stability; internal permission names (`canViewPartners`) unchanged to
+avoid churn. "Strategic Alliance Partners" in page headers shortened to
+"SAPs" since that's what everyone actually calls them.
+
+**New SAP Chair role.** Migration 048 adds `sap_chair` to
+`profiles.role` + `member_invites.role` constraints and grants it
+chapter-admin status in `is_admin()` / `is_chapter_admin()`. Chair config
+has its own home (`/partners`) and nav (SAPs + Events + Year Arc).
+Other chair roles retain read-only reference access to SAPs.
+
+**Super Admin sidebar trimmed.** Nav is now just **Platform Dashboard**
+and **Analytics** (new). The Admin and Board sub-sections are suppressed
+entirely for super-admin — chapter-operational concerns belong on chair
+surfaces. Super-admin accesses them via role-switching.
+
+**Analytics stub.** New `/super-admin/analytics` page with a coming-soon
+card listing planned metrics (chapter adoption, user engagement, feature
+usage, AI cost, NPS aggregates). Dead nav-link avoided, intent is visible.
+
+**TopBar simplified.** Just the chapter name in bold — role + FY + theme
++ budget all removed. Role/context info already lives in the collapsible
+sidebar block, no duplication. On `/super-admin/*` shows the "OurChapter
+OS" wordmark + "SUPER ADMIN" chip instead.
+
+**Context block auto-collapses** on any role / fiscal year change.
+User picks a new context, the switcher panel closes itself and nav
+becomes visible again. Previously you had to tap chevron to close
+after every selection.
+
+**Chapter switcher removed from the sidebar.** Chapter name is shown
+in the TopBar already, and super-admin switches chapters via the
+Platform Dashboard (`/super-admin`). Collapsed summary line is now
+just "FY {year} · {role}" — no triple-redundant chapter name.
+
+### Migration to apply (Supabase SQL Editor)
+Run `supabase/migrations/048_sap_chair_role.sql`. Idempotent.
+
+---
+
 ## v1.60.8 — 2026-04-17
 
 ### Cleanup: remove redundant "Back to my role" button

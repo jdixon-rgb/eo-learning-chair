@@ -1,6 +1,6 @@
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 
-export default function FiscalYearSwitcher() {
+export default function FiscalYearSwitcher({ onAfterChange }) {
   const { activeFiscalYear, setActiveFiscalYear, fiscalYearOptions, currentFiscalYear } = useFiscalYear()
 
   if (fiscalYearOptions.length <= 1) return null
@@ -12,7 +12,7 @@ export default function FiscalYearSwitcher() {
       </label>
       <select
         value={activeFiscalYear}
-        onChange={(e) => setActiveFiscalYear(e.target.value)}
+        onChange={(e) => { setActiveFiscalYear(e.target.value); onAfterChange?.() }}
         className="w-full text-xs rounded-lg px-2.5 py-2 bg-card text-foreground border border-sidebar-border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
       >
         {fiscalYearOptions.map((fy) => (

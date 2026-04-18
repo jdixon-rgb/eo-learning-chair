@@ -26,6 +26,7 @@ import {
   Handshake,
   Crown,
   Briefcase,
+  BarChart3,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -34,7 +35,7 @@ const LEARNING_CHAIR_NAV = [
   { to: '/calendar', icon: Calendar, label: 'Year Arc' },
   { to: '/speakers', icon: Users, label: 'Speakers' },
   { to: '/events', icon: CalendarDays, label: 'Events' },
-  { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
+  { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
   { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
   { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
   { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
@@ -44,10 +45,21 @@ export const CHAIR_ROLE_CONFIGS = {
   super_admin: {
     title: 'Super Admin',
     homePath: '/super-admin',
+    // Platform-level only. Chapter-scoped concerns (SAPs, Settings,
+    // Admin, Board) belong to chair surfaces — super-admin accesses
+    // them by role-switching.
     navItems: [
       { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
-      { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
+      { to: '/super-admin/analytics', icon: BarChart3, label: 'Analytics' },
+    ],
+  },
+  sap_chair: {
+    title: 'SAP Chair',
+    homePath: '/partners',
+    navItems: [
+      { to: '/partners', icon: Handshake, label: 'SAPs' },
+      { to: '/events', icon: CalendarDays, label: 'Events' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
     ],
   },
   president: {
@@ -55,7 +67,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/president',
     navItems: [
       { to: '/president', icon: Crown, label: 'Dashboard' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
+      { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
@@ -92,7 +104,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/speakers', icon: Users, label: 'Speakers' },
       { to: '/events', icon: CalendarDays, label: 'Events' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
+      { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
       { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
       { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
@@ -107,7 +119,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/speakers', icon: Users, label: 'Speakers' },
       { to: '/events', icon: CalendarDays, label: 'Events' },
-      { to: '/partners', icon: Handshake, label: 'Partners', permission: 'canViewPartners' },
+      { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
       { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
       { to: '/president/budget', icon: DollarSign, label: 'Chapter Budget', permission: 'canManageFYBudget' },
