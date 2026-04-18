@@ -368,7 +368,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
           >
             <Globe className="h-3.5 w-3.5" />
-            Compass
+            Compass <span className="text-muted-foreground/70">(Member Portal)</span>
           </NavLink>
           <button
             onClick={resetTourTips}
