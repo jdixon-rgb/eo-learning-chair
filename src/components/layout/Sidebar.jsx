@@ -322,28 +322,12 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </>
           )}
 
-          {/* Super Admin section — only when viewing-as a chair role */}
-          {isSuperAdmin && isImpersonating && (
-            <>
-              <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Platform</p>
-              </div>
-              <NavLink
-                to="/super-admin"
-                onClick={onNavigate}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                  }`
-                }
-              >
-                <Shield className="h-4 w-4" />
-                Platform Admin
-              </NavLink>
-            </>
-          )}
+          {/* Platform Admin is intentionally NOT surfaced in chair-role
+              sidebars. Access to /super-admin belongs strictly to the
+              Super Admin surface (its own nav config). A super-admin who
+              has role-switched into a chair view returns to Platform
+              Admin via the "Back to Super Admin" link in the collapsible
+              context block above. */}
         </nav>
 
         {/* Bottom links */}

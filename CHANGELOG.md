@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.2 — 2026-04-17
+
+### Fix: Platform Admin nav hidden from chair-role sidebars
+A super-admin who had role-switched into a chair view saw a "Platform"
+section with a "Platform Admin" nav link in the sidebar. That link is
+now removed — Platform Admin belongs strictly to the Super Admin
+surface. Super-admins return to it via the "Back to Super Admin" link
+inside the collapsible context block, not via a persistent sidebar
+item. Non-super-admin chair users were never affected (the link was
+already gated to `isSuperAdmin`).
+
+---
+
 ## v1.60.1 — 2026-04-17
 
 ### Fix: Dashboard Year Arc readable on mobile
