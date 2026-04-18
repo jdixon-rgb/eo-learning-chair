@@ -17,6 +17,48 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.66.1 — 2026-04-18
+
+### Fix: Chapter switcher restored to the sidebar context block
+The sidebar's collapsible context block was FY + role only — chapter
+switching was supposed to go through `/super-admin` (Platform
+Dashboard → pick a chapter). In practice, super-admins were getting
+stuck inside a chapter they'd landed on (e.g. EO Shanghai) with no
+quick way back without navigating through the platform dashboard.
+
+Mounted `<ChapterSwitcher />` back above the fiscal year switcher in
+the expanded context block. The component auto-hides when
+`allChapters.length <= 1`, so regular chapter users see nothing new —
+only super-admins get the picker.
+
+`src/components/layout/Sidebar.jsx`.
+
+---
+
+## v1.66.0 — 2026-04-18
+
+### Feature: "View as Member" role switcher option
+Super admins, presidents, and chapter staff can now preview what a
+chapter member sees. Picking "Member" from the Switch role dropdown
+navigates to `/portal` and renders the Member Portal layout with the
+effective role set to `member` — so any surface gated by
+`hasPermission(effectiveRole, …)` behaves as it would for a member.
+
+- Added `member` entry to `CHAIR_ROLE_CONFIGS` with `homePath: '/portal'`
+  and empty `navItems` (the portal uses its own top-nav layout, not
+  the admin sidebar)
+- `SWITCHABLE_CHAIR_ROLES` auto-derives from `Object.keys()`, so the
+  option appears in the dropdown with no other wiring
+- The **Admin** back-link in `MemberPortalLayout` now clears
+  `viewAsRole` on click, so the user cleanly returns to their own
+  surface (otherwise they'd land in the admin sidebar still
+  impersonating `member` with an empty nav)
+
+No schema changes. `src/lib/chairRoles.js` +
+`src/components/layout/MemberPortalLayout.jsx`.
+
+---
+
 ## v1.65.2 — 2026-04-18
 
 ### Fix: Vendors page readability — white-on-ivory leftovers
