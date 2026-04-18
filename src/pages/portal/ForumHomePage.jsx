@@ -207,7 +207,7 @@ export default function ForumHomePage() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-3 text-xs font-medium flex items-center gap-1.5 border-b-2 transition-colors ${
-              tab === t.key ? 'border-primary text-white' : 'border-transparent text-muted-foreground hover:text-foreground/90'
+              tab === t.key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <t.icon className="h-3.5 w-3.5" />
@@ -898,7 +898,7 @@ function ConstitutionVersionView({
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Constitution title"
-              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-base font-semibold text-white placeholder-white/30"
+              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-base font-semibold text-foreground placeholder:text-muted-foreground"
             />
             <div>
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mb-1 block">Preamble</label>
@@ -929,7 +929,7 @@ function ConstitutionVersionView({
                       value={section.heading}
                       onChange={e => handleUpdateSection(section.id, { heading: e.target.value })}
                       placeholder="Section heading"
-                      className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-sm font-semibold text-white placeholder-white/30"
+                      className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground"
                     />
                     <button onClick={() => handleMoveSection(idx, -1)} disabled={idx === 0} className="text-muted-foreground/40 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed" title="Move up">
                       <ChevronUp className="h-3.5 w-3.5" />
@@ -1228,7 +1228,7 @@ function AgendaTab({ forum, agendas, agendaItems, isModerator, memberId, onAddAg
               <tfoot className="bg-muted/30">
                 <tr>
                   <td className="px-4 py-2 text-xs text-muted-foreground font-semibold">Total (Target: {viewing.target_minutes || 270} min)</td>
-                  <td className="text-center px-3 py-2 text-white font-bold text-xs">{totalMin}</td>
+                  <td className="text-center px-3 py-2 text-foreground font-bold text-xs">{totalMin}</td>
                   <td colSpan={2}></td>
                 </tr>
               </tfoot>
@@ -1534,13 +1534,13 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
             <p className="text-xs text-muted-foreground/70">Add item (times auto-calculate from meeting start):</p>
             <div className="flex gap-2">
               <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} placeholder="Item title"
-                className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+                className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground" />
               <input type="number" value={newItemMin} onChange={e => setNewItemMin(Number(e.target.value))} min="1"
                 className="w-20 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white text-center" />
               <span className="text-xs text-muted-foreground/60 self-center">min</span>
             </div>
             <textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Description / sub-items (optional)" rows={2}
-              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white placeholder-white/30" />
+              className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground" />
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground/60">
                 Next item starts at {formatTime(parseTime(startTime) + totalMin)}
@@ -1693,7 +1693,7 @@ function EditParkingLotForm({ entry, forumMembers, onClose, onSave }) {
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)}
-          className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
+          className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Author (forum mate)</label>
@@ -1733,7 +1733,7 @@ function ParkingLotAddModal({ onClose, onConfirm }) {
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Short name for this item"
-            className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
+            className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Importance: {importance}</label>

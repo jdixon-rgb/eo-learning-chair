@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.63.3 — 2026-04-17
+
+### Fix: Forum Home tab readability + leftover white-on-cream
+ForumHomePage had several leftover dark-theme styles invisible on the
+new cream background:
+- Active tab label was `text-white` on cream (e.g. "Parking Lot" tab
+  title was nearly unreadable). Now `text-primary font-semibold`.
+- Two text inputs in the Roles + Constitution editors had
+  `text-white placeholder-white/30` on `bg-muted/30`. Swapped to
+  `text-foreground placeholder:text-muted-foreground`.
+- Agenda totals cell on a muted footer was `text-white font-bold`.
+  Now `text-foreground`.
+
+---
+
 ## v1.63.2 — 2026-04-17
 
 ### Year Arc cards: month in banner + multiple events per card
