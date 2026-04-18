@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.61.7 — 2026-04-17
+
+### UX: Notifications moves from sidebar to a bell icon in the TopBar
+Per request — bell icon top-right (always-accessible from any page),
+removed from the sidebar Admin sub-section. Visible only to roles with
+`canSendNotifications`. Same destination (`/admin/notifications`),
+just one click closer.
+
+---
+
 ## v1.61.6 — 2026-04-17
 
 ### Fix: SAP Portal dashboard readability
