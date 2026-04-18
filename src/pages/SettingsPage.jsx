@@ -677,13 +677,13 @@ export default function SettingsPage() {
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Download className="h-4 w-4" /> Data Management
         </h3>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleExport}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="outline" className="justify-center sm:justify-start" onClick={handleExport}>
             <Download className="h-4 w-4" /> Export All Data (JSON)
           </Button>
           <Button
             variant="outline"
-            className="text-destructive border-destructive/30 hover:bg-destructive/10"
+            className="justify-center sm:justify-start text-destructive border-destructive/30 hover:bg-destructive/10"
             onClick={() => {
               if (window.confirm('Reset all data to the original sample data? Your current changes will be lost.')) {
                 resetToDefaults()
