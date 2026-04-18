@@ -29,7 +29,7 @@ export const FEATURE_PERMISSIONS = {
   canViewScenarios:      ADMIN_ROLES,
   canEditChapterConfig:  ['super_admin', 'president', 'chapter_executive_director'],
   canManageSettings:     SETTINGS_ROLES,
-  canManageMembers:      ADMIN_ROLES,
+  canManageMembers:      ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator'],
   canSendNotifications:  ADMIN_ROLES,
   // Survey Results are about how learning events landed. Owned by the
   // Learning Chair and their elect successor; the President / President
