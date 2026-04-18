@@ -17,6 +17,29 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.66.2 — 2026-04-18
+
+### Fix: "Members" nav item belongs to chapter staff only
+The Members nav item was showing in the Admin sub-section of the
+sidebar for every chair role (President, Learning Chair, SAP Chair,
+…) because `canManageMembers` was scoped to `ADMIN_ROLES`. Member
+management is a chapter-staff responsibility — chairs shouldn't see
+it as part of their nav.
+
+Tightened `canManageMembers` to:
+- `super_admin` (for cross-chapter support)
+- `chapter_executive_director`
+- `chapter_experience_coordinator`
+
+President, Learning Chair, SAP Chair, etc. no longer see the Members
+nav item. Direct-URL access to `/admin/members` still works for
+super_admin/president via the route's bypass list — this change is
+nav-level only, not a hard auth lock.
+
+`src/lib/permissions.js`.
+
+---
+
 ## v1.66.1 — 2026-04-18
 
 ### Fix: Chapter switcher restored to the sidebar context block
