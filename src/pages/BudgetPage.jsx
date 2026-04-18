@@ -42,7 +42,7 @@ function EditableCell({ value, onChange, warn, contracted, currency = 'USD' }) {
     return (
       <input
         type="number"
-        className="block w-full min-h-[2.25rem] px-2 py-1 text-right text-sm bg-white border border-eo-blue rounded focus:outline-none focus:ring-1 focus:ring-eo-blue"
+        className="block w-full min-h-[2.25rem] px-2 py-1 text-right text-sm bg-white border border-primary rounded focus:outline-none focus:ring-1 focus:ring-primary"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
@@ -56,7 +56,7 @@ function EditableCell({ value, onChange, warn, contracted, currency = 'USD' }) {
     <button
       type="button"
       className={`block w-full min-h-[2.25rem] px-2 py-1 text-right text-sm cursor-pointer hover:bg-accent/40 rounded transition-colors ${
-        warn ? 'bg-red-50 text-eo-pink font-semibold' : contracted ? 'text-green-600 font-semibold' : ''
+        warn ? 'bg-red-50 text-destructive font-semibold' : contracted ? 'text-green-600 font-semibold' : ''
       }`}
       onClick={startEditing}
     >
@@ -203,7 +203,7 @@ export default function BudgetPage() {
             <div className="h-4 bg-secondary rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
-                  budgetHealth === 'critical' ? 'bg-eo-pink' : budgetHealth === 'warning' ? 'bg-eo-coral' : 'bg-green-500'
+                  budgetHealth === 'critical' ? 'bg-destructive' : budgetHealth === 'warning' ? 'bg-warm' : 'bg-green-500'
                 }`}
                 style={{ width: `${Math.min(budgetPercent, 100)}%` }}
               />
@@ -218,13 +218,13 @@ export default function BudgetPage() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Unallocated</p>
-            <p className={`text-lg font-bold ${unallocated < 0 ? 'text-eo-pink' : 'text-green-600'}`}>
+            <p className={`text-lg font-bold ${unallocated < 0 ? 'text-destructive' : 'text-green-600'}`}>
               {formatCurrency(unallocated, currency)}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Remaining</p>
-            <p className={`text-lg font-bold ${budgetRemaining < 0 ? 'text-eo-pink' : 'text-green-600'}`}>
+            <p className={`text-lg font-bold ${budgetRemaining < 0 ? 'text-destructive' : 'text-green-600'}`}>
               {formatCurrency(budgetRemaining, currency)}
             </p>
           </div>
@@ -233,11 +233,11 @@ export default function BudgetPage() {
 
       {/* Warnings */}
       {warnings.length > 0 && (
-        <div className="rounded-xl border border-eo-coral/30 bg-orange-50 p-4 space-y-2">
+        <div className="rounded-xl border border-warm/30 bg-orange-50 p-4 space-y-2">
           {warnings.map((w, i) => (
             <div key={i} className="flex items-start gap-2 text-sm">
-              <AlertTriangle className="h-4 w-4 text-eo-coral shrink-0 mt-0.5" />
-              <span className="text-eo-navy">{w}</span>
+              <AlertTriangle className="h-4 w-4 text-warm shrink-0 mt-0.5" />
+              <span className="text-ink">{w}</span>
             </div>
           ))}
         </div>
@@ -251,7 +251,7 @@ export default function BudgetPage() {
             type="button"
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeField === opt.key
-                ? 'bg-eo-blue text-white shadow-sm'
+                ? 'bg-primary text-white shadow-sm'
                 : 'text-muted-foreground hover:bg-accent'
             }`}
             onClick={() => setActiveField(opt.key)}
@@ -295,7 +295,7 @@ export default function BudgetPage() {
                   <td className="px-3 py-2">
                     <button
                       type="button"
-                      className="text-eo-blue hover:underline font-medium text-left"
+                      className="text-primary hover:underline font-medium text-left"
                       onClick={() => navigate(`/events/${event.id}`)}
                     >
                       {event.title}

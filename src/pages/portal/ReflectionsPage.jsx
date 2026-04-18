@@ -297,7 +297,7 @@ function TabButton({ active, onClick, icon: Icon, children }) {
     <button
       onClick={onClick}
       className={`px-5 py-3 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
-        active ? 'border-eo-blue text-white' : 'border-transparent text-white/50 hover:text-white/80'
+        active ? 'border-primary text-white' : 'border-transparent text-white/50 hover:text-white/80'
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -342,7 +342,7 @@ function TemplatePicker({ templates, onPick, onBack }) {
           <button
             key={t.slug}
             onClick={() => onPick(t)}
-            className="text-left rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-eo-blue/50 hover:bg-white/[0.07] transition-all"
+            className="text-left rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-primary/50 hover:bg-white/[0.07] transition-all"
           >
             <h3 className="font-semibold text-white mb-2">{t.name}</h3>
             <p className="text-xs text-white/50 leading-relaxed">{t.description}</p>
@@ -365,7 +365,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
       <div className="flex items-center justify-between">
         <button
           onClick={onNew}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-eo-blue/90 hover:bg-eo-blue text-white text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/90 hover:bg-primary text-white text-sm font-medium"
         >
           <Plus className="h-4 w-4" /> New reflection
         </button>
@@ -480,7 +480,7 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
           </span>
           <button
             onClick={onDeclare}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-eo-coral/90 hover:bg-eo-coral text-white text-xs font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warm/90 hover:bg-warm text-white text-xs font-medium"
           >
             <Pin className="h-3.5 w-3.5" /> Declare to parking lot
           </button>
@@ -558,7 +558,7 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
                       type="text"
                       value={content.meps?.[m.key] || ''}
                       onChange={(e) => updateMeps(m.key, e.target.value)}
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
                       placeholder="one word"
                     />
                   </div>
@@ -620,7 +620,7 @@ function CategoryChip({ label, active, onClick }) {
     <button
       onClick={onClick}
       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-        active ? 'bg-eo-blue/20 border-eo-blue text-white' : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
+        active ? 'bg-primary/20 border-primary text-white' : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
       }`}
     >
       {label}
@@ -645,7 +645,7 @@ function FieldBody({ field, value, onChange, feelings, onAddFeeling, compact }) 
         type="text"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+        className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
       />
     )
   }
@@ -655,7 +655,7 @@ function FieldBody({ field, value, onChange, feelings, onAddFeeling, compact }) 
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         rows={compact ? 3 : 5}
-        className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none resize-y"
+        className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none resize-y"
       />
     )
   }
@@ -713,7 +713,7 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
         {value.map(word => (
           <span
             key={word}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-eo-blue/20 border border-eo-blue/40 text-xs text-white"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/40 text-xs text-white"
           >
             {word}
             <button onClick={() => remove(word)} className="hover:text-red-300">
@@ -737,7 +737,7 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
             }
           }}
           placeholder="Type a feeling…"
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
         />
         {open && query.trim() && (
           <div className="absolute z-10 mt-1 w-full rounded-lg bg-[#0f1724] border border-white/10 shadow-xl max-h-64 overflow-y-auto">
@@ -754,7 +754,7 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
             {!exactMatch && query.trim() && (
               <button
                 onClick={handleAddNew}
-                className="w-full text-left px-3 py-2 text-sm text-eo-blue hover:bg-white/5 flex items-center gap-1 border-t border-white/5"
+                className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-white/5 flex items-center gap-1 border-t border-white/5"
               >
                 <Plus className="h-3 w-3" /> Add "{query.trim()}"
               </button>
@@ -810,7 +810,7 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
         </p>
         <button
           onClick={onAddNew}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white"
         >
           <Pin className="h-4 w-4" />
           Add to parking lot
@@ -827,11 +827,11 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
           <select
             value={filterMemberId}
             onChange={(e) => setFilterMemberId(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 hover:border-white/30 focus:border-eo-blue focus:outline-none cursor-pointer"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 hover:border-white/30 focus:border-primary focus:outline-none cursor-pointer"
           >
-            <option value="all" className="bg-eo-navy">Everyone</option>
+            <option value="all" className="bg-ink">Everyone</option>
             {authors.map(a => (
-              <option key={a.id} value={a.id} className="bg-eo-navy">{a.name}</option>
+              <option key={a.id} value={a.id} className="bg-ink">{a.name}</option>
             ))}
           </select>
         </div>
@@ -935,7 +935,7 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Short name for this item"
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
           />
         </div>
         <div>
@@ -943,11 +943,11 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
           <select
             value={authorId}
             onChange={(e) => setAuthorId(e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-eo-blue focus:outline-none cursor-pointer"
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-primary focus:outline-none cursor-pointer"
           >
-            <option value="" className="bg-eo-navy">Unknown</option>
+            <option value="" className="bg-ink">Unknown</option>
             {forumMembers.map(m => (
-              <option key={m.id} value={m.id} className="bg-eo-navy">{m.name}</option>
+              <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>
             ))}
           </select>
         </div>
@@ -962,7 +962,7 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
         <div className="flex gap-2 justify-end pt-2">
           <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onClose}>Cancel</button>
           <button
-            className="px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white disabled:opacity-40"
+            className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
             disabled={!name.trim()}
             onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
           >
@@ -980,10 +980,10 @@ function ScoreSelect({ value, onChange }) {
     <select
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 hover:border-white/30 focus:border-eo-blue focus:outline-none cursor-pointer"
+      className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 hover:border-white/30 focus:border-primary focus:outline-none cursor-pointer"
     >
       {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-        <option key={n} value={n} className="bg-eo-navy">{n}</option>
+        <option key={n} value={n} className="bg-ink">{n}</option>
       ))}
     </select>
   )
@@ -1025,7 +1025,7 @@ function ScoreForm({ initial, onCancel, onConfirm, confirmLabel = 'Save' }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Short name for this parking lot item"
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
         />
       </div>
       <div>
@@ -1039,7 +1039,7 @@ function ScoreForm({ initial, onCancel, onConfirm, confirmLabel = 'Save' }) {
       <div className="flex gap-2 justify-end pt-2">
         <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onCancel}>Cancel</button>
         <button
-          className="px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white disabled:opacity-40"
+          className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
           disabled={!name.trim()}
           onClick={() => onConfirm({ name: name.trim(), importance, urgency })}
         >

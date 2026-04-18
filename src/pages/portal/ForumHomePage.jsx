@@ -207,7 +207,7 @@ export default function ForumHomePage() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-3 text-xs font-medium flex items-center gap-1.5 border-b-2 transition-colors ${
-              tab === t.key ? 'border-eo-blue text-white' : 'border-transparent text-white/50 hover:text-white/80'
+              tab === t.key ? 'border-primary text-white' : 'border-transparent text-white/50 hover:text-white/80'
             }`}
           >
             <t.icon className="h-3.5 w-3.5" />
@@ -331,7 +331,7 @@ export default function ForumHomePage() {
               className="block rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:bg-white/[0.06] transition-colors"
             >
               <div className="flex items-center gap-3">
-                <History className="h-5 w-5 text-eo-blue shrink-0" />
+                <History className="h-5 w-5 text-primary shrink-0" />
                 <div>
                   <h3 className="text-sm font-semibold text-white/90">Lifeline</h3>
                   <p className="text-xs text-white/50 mt-0.5">Chart your journey — plot the highs and lows that shaped who you are.</p>
@@ -440,11 +440,11 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <select value={addRole} onChange={e => setAddRole(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-              {FORUM_ROLE_ORDER.map(r => <option key={r} value={r} className="bg-eo-navy">{FORUM_ROLE_LABELS[r]}</option>)}
+              {FORUM_ROLE_ORDER.map(r => <option key={r} value={r} className="bg-ink">{FORUM_ROLE_LABELS[r]}</option>)}
             </select>
             <select value={addMember} onChange={e => setAddMember(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-              <option value="" className="bg-eo-navy">Select member…</option>
-              {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-eo-navy">{m.name}</option>)}
+              <option value="" className="bg-ink">Select member…</option>
+              {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
             </select>
             <input
               type="text"
@@ -456,7 +456,7 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
           </div>
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
-            <button onClick={handleAdd} disabled={!addMember || !addFY} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Assign</button>
+            <button onClick={handleAdd} disabled={!addMember || !addFY} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Assign</button>
           </div>
         </div>
       )}
@@ -516,7 +516,7 @@ function MembersTab({ forumMembers, currentMemberId }) {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-white/90 truncate">{m.name || 'Unknown'}</span>
                   {isMe && (
-                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-eo-blue/20 text-eo-blue">You</span>
+                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">You</span>
                   )}
                 </div>
                 {m.company && (
@@ -587,14 +587,14 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
             <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-              {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-eo-navy">{v}</option>)}
+              {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-ink">{v}</option>)}
             </select>
           </div>
           <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
           <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
-            <button onClick={handleAdd} disabled={!form.title || !form.event_date} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add</button>
+            <button onClick={handleAdd} disabled={!form.title || !form.event_date} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
           </div>
         </div>
       )}
@@ -659,7 +659,7 @@ function ConstitutionTab({
         <FileText className="h-10 w-10 text-white/20 mx-auto mb-3" />
         <p className="text-white/50 text-sm mb-4">No constitution yet for this forum.</p>
         {isModerator ? (
-          <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white">
+          <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
             <Plus className="h-4 w-4" /> Create draft
           </button>
         ) : (
@@ -855,7 +855,7 @@ function ConstitutionVersionView({
             </button>
           ) : (
             <>
-              <button onClick={handleSave} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-eo-blue hover:bg-eo-blue/90 text-white">
+              <button onClick={handleSave} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-primary hover:bg-primary/90 text-white">
                 <Save className="h-3.5 w-3.5" /> Save draft
               </button>
               <button onClick={() => { setTitle(version.title || ''); setPreamble(version.preamble || ''); setSections(Array.isArray(version.sections) ? version.sections : []); setEditing(false) }} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/70">
@@ -913,7 +913,7 @@ function ConstitutionVersionView({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Sections</label>
-                <button onClick={handleAddSection} className="inline-flex items-center gap-1 text-xs text-eo-blue hover:underline">
+                <button onClick={handleAddSection} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                   <Plus className="h-3 w-3" /> Add section
                 </button>
               </div>
@@ -1137,7 +1137,7 @@ function HistoryTab({ forum, history, roles, memberById, isModerator, onAddHisto
             </label>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-white/50">Cancel</button>
-              <button onClick={handleAdd} disabled={!form.member_name} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add</button>
+              <button onClick={handleAdd} disabled={!form.member_name} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
             </div>
           </div>
         )}
@@ -1458,11 +1458,11 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
         </div>
         <div className="flex items-center gap-3">
           <select value={status} onChange={e => setStatus(e.target.value)} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-            <option value="draft" className="bg-eo-navy">Draft</option>
-            <option value="published" className="bg-eo-navy">Published</option>
-            <option value="archived" className="bg-eo-navy">Archived</option>
+            <option value="draft" className="bg-ink">Draft</option>
+            <option value="published" className="bg-ink">Published</option>
+            <option value="archived" className="bg-ink">Archived</option>
           </select>
-          <button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm bg-eo-blue text-white hover:bg-eo-blue/90">
+          <button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary/90">
             {agenda ? 'Save changes' : 'Create agenda'}
           </button>
         </div>
@@ -1545,7 +1545,7 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
               <span className="text-[10px] text-white/30">
                 Next item starts at {formatTime(parseTime(startTime) + totalMin)}
               </span>
-              <button onClick={handleAddItem} disabled={!newItemTitle} className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add item</button>
+              <button onClick={handleAddItem} disabled={!newItemTitle} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add item</button>
             </div>
           </div>
         </div>
@@ -1597,7 +1597,7 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
     return (
       <div className="text-center py-16">
         <p className="text-white/40 text-sm mb-4">Nothing on the parking lot yet.</p>
-        <button onClick={onAddNew} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-eo-blue hover:bg-eo-blue/90 text-white">
+        <button onClick={onAddNew} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
           <Pin className="h-4 w-4" /> Add to parking lot
         </button>
       </div>
@@ -1610,9 +1610,9 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
         <div className="flex items-center gap-2">
           <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Show:</label>
           <select value={filterMemberId} onChange={e => setFilterMemberId(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 focus:border-eo-blue focus:outline-none cursor-pointer">
-            <option value="all" className="bg-eo-navy">Everyone</option>
-            {authors.map(a => <option key={a.id} value={a.id} className="bg-eo-navy">{a.name}</option>)}
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 focus:border-primary focus:outline-none cursor-pointer">
+            <option value="all" className="bg-ink">Everyone</option>
+            {authors.map(a => <option key={a.id} value={a.id} className="bg-ink">{a.name}</option>)}
           </select>
         </div>
         <button onClick={onAddNew} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
@@ -1639,13 +1639,13 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
                 <td className="text-center px-3 py-3 text-white/70">
                   <select value={e.importance} onChange={ev => onUpdate(e.id, { importance: Number(ev.target.value) })}
                     className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 cursor-pointer">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-eo-navy">{n}</option>)}
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-ink">{n}</option>)}
                   </select>
                 </td>
                 <td className="text-center px-3 py-3 text-white/70">
                   <select value={e.urgency} onChange={ev => onUpdate(e.id, { urgency: Number(ev.target.value) })}
                     className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 cursor-pointer">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-eo-navy">{n}</option>)}
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-ink">{n}</option>)}
                   </select>
                 </td>
                 <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
@@ -1667,7 +1667,7 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditing(null)}>
-          <div className="bg-eo-navy border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
+          <div className="bg-ink border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
             <h3 className="text-base font-semibold">Edit parking lot entry</h3>
             <EditParkingLotForm
               entry={editing}
@@ -1693,14 +1693,14 @@ function EditParkingLotForm({ entry, forumMembers, onClose, onSave }) {
       <div>
         <label className="text-xs text-white/50 mb-1 block">Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)}
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none" />
+          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
       </div>
       <div>
         <label className="text-xs text-white/50 mb-1 block">Author (forum mate)</label>
         <select value={authorId} onChange={e => setAuthorId(e.target.value)}
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-eo-blue focus:outline-none cursor-pointer">
-          <option value="" className="bg-eo-navy">Unknown</option>
-          {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-eo-navy">{m.name}</option>)}
+          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-primary focus:outline-none cursor-pointer">
+          <option value="" className="bg-ink">Unknown</option>
+          {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
         </select>
       </div>
       <div>
@@ -1714,7 +1714,7 @@ function EditParkingLotForm({ entry, forumMembers, onClose, onSave }) {
       <div className="flex gap-2 justify-end pt-2">
         <button onClick={onClose} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
         <button disabled={!name.trim()} onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
-          className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Save</button>
+          className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Save</button>
       </div>
     </div>
   )
@@ -1727,13 +1727,13 @@ function ParkingLotAddModal({ onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-eo-navy border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="bg-ink border border-white/10 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <h3 className="text-base font-semibold">Add to parking lot</h3>
         <p className="text-xs text-white/50">Your forum will see the name and scores. Nothing else.</p>
         <div>
           <label className="text-xs text-white/50 mb-1 block">Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Short name for this item"
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none" />
+            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none" />
         </div>
         <div>
           <label className="text-xs text-white/50 mb-1 block">Importance: {importance}</label>
@@ -1746,7 +1746,7 @@ function ParkingLotAddModal({ onClose, onConfirm }) {
         <div className="flex gap-2 justify-end pt-2">
           <button onClick={onClose} className="px-3 py-1.5 text-xs text-white/50 hover:text-white">Cancel</button>
           <button disabled={!name.trim()} onClick={() => onConfirm({ name: name.trim(), importance, urgency })}
-            className="px-3 py-1.5 rounded-lg text-xs bg-eo-blue text-white disabled:opacity-40">Add</button>
+            className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
         </div>
       </div>
     </div>

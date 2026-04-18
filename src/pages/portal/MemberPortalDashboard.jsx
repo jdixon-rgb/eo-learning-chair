@@ -3,7 +3,6 @@ import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus, Activity } from 'lucide-react'
-import eoLogo from '@/assets/eo-az-gray.png'
 import { formatDateWithDay } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
 import NavigatorBroadcastCard from './NavigatorBroadcastCard'
@@ -34,7 +33,6 @@ export default function MemberPortalDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div className="text-center py-6">
-        <img src={eoLogo} alt="EO Arizona" className="h-10 w-auto mx-auto mb-4 brightness-0 invert opacity-60" />
         <h1 className="text-2xl md:text-3xl font-bold">Welcome, {firstName}</h1>
         <p className="text-white/50 text-sm mt-1">Your Compass</p>
       </div>
@@ -50,10 +48,10 @@ export default function MemberPortalDashboard() {
         {/* Forum */}
         <Link
           to="/portal/forum"
-          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-eo-blue/50 hover:bg-white/[0.07] transition-all group"
+          className="rounded-2xl border border-white/10 bg-white/5 p-6 hover:border-primary/50 hover:bg-white/[0.07] transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
-            <Users className="h-6 w-6 text-eo-blue" />
+            <Users className="h-6 w-6 text-primary" />
             <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
           </div>
           <h3 className="text-base font-semibold mb-1">Forum</h3>
@@ -147,8 +145,8 @@ export default function MemberPortalDashboard() {
           <div className="space-y-2">
             {upcomingEvents.slice(0, 3).map(event => (
               <div key={event.id} className="rounded-xl border border-white/5 bg-white/[0.03] p-4 flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-eo-blue/20 flex items-center justify-center shrink-0">
-                  <GraduationCap className="h-4 w-4 text-eo-blue" />
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                  <GraduationCap className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold truncate">{event.title}</h4>
@@ -159,7 +157,7 @@ export default function MemberPortalDashboard() {
           </div>
           <Link
             to="/portal/calendar"
-            className="block text-center text-xs text-eo-blue hover:text-eo-blue/80 mt-3 transition-colors"
+            className="block text-center text-xs text-primary hover:text-primary/80 mt-3 transition-colors"
           >
             View full calendar →
           </Link>

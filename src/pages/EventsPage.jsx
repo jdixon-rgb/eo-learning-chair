@@ -90,7 +90,7 @@ export default function EventsPage() {
                   {candidateSpeakers.length > 1 ? (
                     <div className="space-y-0.5">
                       {candidateSpeakers.map(s => (
-                        <div key={s.id} className={`flex items-center gap-2 text-xs ${s.id === event.speaker_id ? 'text-eo-blue font-medium' : 'text-muted-foreground'}`}>
+                        <div key={s.id} className={`flex items-center gap-2 text-xs ${s.id === event.speaker_id ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
                           <Users className="h-3 w-3 shrink-0" />
                           {s.name}{s.id === event.speaker_id ? ' ★' : ''}
                         </div>
@@ -103,7 +103,7 @@ export default function EventsPage() {
                     </div>
                   ) : null}
                   {eventSAPs.length > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-eo-coral">
+                    <div className="flex items-center gap-2 text-xs text-warm">
                       <Handshake className="h-3 w-3" />
                       {eventSAPs.map(s => s.company || s.name).join(', ')}
                     </div>
@@ -136,7 +136,7 @@ export default function EventsPage() {
                           deleteEvent(event.id)
                         }
                       }}
-                      className="text-muted-foreground hover:text-eo-pink transition-colors cursor-pointer p-1 rounded"
+                      className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer p-1 rounded"
                       title="Delete event"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

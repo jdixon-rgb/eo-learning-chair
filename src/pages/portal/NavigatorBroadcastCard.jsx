@@ -106,13 +106,13 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
   }
 
   return (
-    <div className="rounded-2xl border border-eo-blue/30 bg-eo-blue/5 p-5">
+    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
       <div className="flex items-start gap-3 mb-4">
-        <div className="h-8 w-8 rounded-full bg-eo-blue/20 flex items-center justify-center shrink-0 mt-0.5">
-          <Send className="h-4 w-4 text-eo-blue" />
+        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+          <Send className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] uppercase tracking-wider text-eo-blue font-semibold mb-1">Navigator check-in</p>
+          <p className="text-[10px] uppercase tracking-wider text-primary font-semibold mb-1">Navigator check-in</p>
           <p className="text-base text-white/90 font-medium whitespace-pre-line">{broadcast.prompt}</p>
         </div>
       </div>
@@ -124,7 +124,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
             type="button"
             disabled={submitting}
             onClick={() => handlePick(opt.value)}
-            className="px-4 py-2 rounded-lg bg-eo-blue text-white text-sm font-medium hover:bg-eo-blue/90 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
           >
             {opt.label}
           </button>
@@ -145,7 +145,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
           onChange={e => setNote(e.target.value)}
           rows={2}
           placeholder="Optional context for the chair…"
-          className="mt-2 w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-eo-blue focus:outline-none"
+          className="mt-2 w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
         />
       )}
     </div>

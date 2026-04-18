@@ -24,10 +24,10 @@ export default function EngagementDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link
           to="/engagement/navigators"
-          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-eo-blue hover:shadow-sm transition-all group"
+          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-primary hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
-            <Compass className="h-6 w-6 text-eo-blue" />
+            <Compass className="h-6 w-6 text-primary" />
             <span className="text-2xl font-bold text-gray-900">{activeNavigators}</span>
           </div>
           <h3 className="text-sm font-semibold text-gray-900">Navigators</h3>
@@ -36,7 +36,7 @@ export default function EngagementDashboard() {
 
         <Link
           to="/engagement/pairings"
-          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-eo-blue hover:shadow-sm transition-all group"
+          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-primary hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
             <UserCheck className="h-6 w-6 text-emerald-600" />
@@ -48,7 +48,7 @@ export default function EngagementDashboard() {
 
         <Link
           to="/engagement/library"
-          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-eo-blue hover:shadow-sm transition-all group"
+          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-primary hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
             <BookOpen className="h-6 w-6 text-amber-600" />
@@ -60,7 +60,7 @@ export default function EngagementDashboard() {
 
         <Link
           to="/engagement/broadcasts"
-          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-eo-blue hover:shadow-sm transition-all group"
+          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-primary hover:shadow-sm transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
             <Send className="h-6 w-6 text-sky-600" />

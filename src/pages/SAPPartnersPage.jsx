@@ -251,7 +251,7 @@ export default function SAPPartnersPage() {
               <a
                 href={partner.website.startsWith('http') ? partner.website : `https://${partner.website}`}
                 target="_blank" rel="noopener noreferrer"
-                className="text-xs text-eo-blue hover:underline flex items-center gap-1 mb-2"
+                className="text-xs text-primary hover:underline flex items-center gap-1 mb-2"
                 onClick={e => e.stopPropagation()}
               >
                 <Globe className="h-3 w-3" /> {partner.website}
@@ -298,7 +298,7 @@ export default function SAPPartnersPage() {
                           <a
                             href={`mailto:${c.email}`}
                             onClick={e => e.stopPropagation()}
-                            className="hover:text-eo-blue"
+                            className="hover:text-primary"
                           >
                             <Mail className="h-3.5 w-3.5" />
                           </a>
@@ -307,7 +307,7 @@ export default function SAPPartnersPage() {
                           <a
                             href={`tel:${c.phone}`}
                             onClick={e => e.stopPropagation()}
-                            className="hover:text-eo-blue"
+                            className="hover:text-primary"
                           >
                             <Phone className="h-3.5 w-3.5" />
                           </a>
@@ -338,7 +338,7 @@ export default function SAPPartnersPage() {
                           <span className="text-[9px] text-green-600 font-medium">Invited</span>
                         ) : null}
                         <button
-                          className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-eo-pink cursor-pointer"
+                          className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-destructive cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation()
                             if (confirm(`Delete contact ${c.name}?`)) deleteContact(c.id)
@@ -575,7 +575,7 @@ export default function SAPPartnersPage() {
             <div className="flex gap-2 pt-2">
               <Button onClick={handlePartnerSubmit} className="flex-1">{editPartner ? 'Save Changes' : 'Add Partner'}</Button>
               {editPartner && (
-                <Button variant="outline" className="text-eo-pink border-eo-pink hover:bg-eo-pink/10" onClick={() => {
+                <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => {
                   if (confirm(`Delete ${editPartner.name}? This will also remove all their contacts and vendor listing.`)) {
                     // Also remove linked vendor
                     const linkedVendor = vendorForSAP(editPartner.id)
@@ -640,7 +640,7 @@ export default function SAPPartnersPage() {
             <div className="flex gap-2 pt-2">
               <Button onClick={handleContactSubmit} className="flex-1">{editContact ? 'Save Changes' : 'Add Contact'}</Button>
               {editContact && (
-                <Button variant="outline" className="text-eo-pink border-eo-pink hover:bg-eo-pink/10" onClick={() => {
+                <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => {
                   if (confirm(`Delete contact ${editContact.name}?`)) {
                     deleteContact(editContact.id)
                     setShowContactForm(false)

@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 
 const NOTIFICATION_TYPES = [
-  { id: 'announcement', label: 'Announcement', icon: Bell, color: 'text-eo-coral' },
-  { id: 'event_update', label: 'Event Update', icon: Calendar, color: 'text-eo-blue' },
+  { id: 'announcement', label: 'Announcement', icon: Bell, color: 'text-warm' },
+  { id: 'event_update', label: 'Event Update', icon: Calendar, color: 'text-primary' },
 ]
 
 export default function NotificationComposePage() {
@@ -52,7 +52,7 @@ export default function NotificationComposePage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Bell className="h-6 w-6 text-eo-coral" />
+          <Bell className="h-6 w-6 text-warm" />
           Send Notification
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -76,7 +76,7 @@ export default function NotificationComposePage() {
                 onClick={() => setType(t.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer ${
                   type === t.id
-                    ? 'bg-eo-blue/10 border-eo-blue/30 text-eo-blue'
+                    ? 'bg-primary/10 border-primary/30 text-primary'
                     : 'border-border hover:bg-muted/50'
                 }`}
               >
@@ -125,7 +125,7 @@ export default function NotificationComposePage() {
           onChange={(e) => setBody(e.target.value)}
           placeholder="Write the notification message..."
           rows={5}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-eo-blue/30 focus:border-eo-blue/50 transition-colors"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
         />
       </div>
 
@@ -135,7 +135,7 @@ export default function NotificationComposePage() {
           <label className="text-sm font-medium mb-2 block text-muted-foreground">Preview</label>
           <div className="rounded-xl border border-border bg-muted/30 p-4">
             <div className="flex items-start gap-3">
-              <Bell className="h-4 w-4 text-eo-coral mt-0.5" />
+              <Bell className="h-4 w-4 text-warm mt-0.5" />
               <div>
                 <h4 className="text-sm font-semibold">{title || 'Title'}</h4>
                 <p className="text-sm text-muted-foreground mt-1">{body || 'Message body'}</p>
@@ -154,7 +154,7 @@ export default function NotificationComposePage() {
           className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
             sent
               ? 'bg-green-500 text-white'
-              : 'bg-eo-blue text-white hover:bg-eo-blue/90 disabled:opacity-50 disabled:cursor-not-allowed'
+              : 'bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
           }`}
         >
           {sent ? (

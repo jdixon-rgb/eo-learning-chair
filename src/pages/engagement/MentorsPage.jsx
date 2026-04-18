@@ -91,7 +91,7 @@ export default function MentorsPage() {
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Heart className="h-6 w-6 text-eo-blue" />
+            <Heart className="h-6 w-6 text-primary" />
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Mentors</h1>
           </div>
           <p className="text-sm text-gray-500 mt-1">
@@ -100,7 +100,7 @@ export default function MentorsPage() {
         </div>
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-2 rounded-lg bg-eo-blue text-white text-sm font-semibold px-4 py-2 hover:bg-eo-blue/90 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold px-4 py-2 hover:bg-primary/90 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add Mentor
@@ -116,7 +116,7 @@ export default function MentorsPage() {
           </p>
           <button
             onClick={openAdd}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-eo-blue text-white text-sm font-semibold px-4 py-2 hover:bg-eo-blue/90 transition-colors"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold px-4 py-2 hover:bg-primary/90 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add the first mentor
@@ -220,7 +220,7 @@ export default function MentorsPage() {
                   onChange={e => setForm(f => ({ ...f, chapter_member_id: e.target.value }))}
                   required
                   disabled={!!editing}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eo-blue/30 disabled:bg-gray-50"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-gray-50"
                 >
                   <option value="">Select a member…</option>
                   {eligibleMembers.map(m => (
@@ -241,7 +241,7 @@ export default function MentorsPage() {
                   onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                   rows={4}
                   placeholder="Hi, I'm Reggie. I joined EO in 2018…"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eo-blue/30"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
 
@@ -255,7 +255,7 @@ export default function MentorsPage() {
                   value={form.max_concurrent_pairings}
                   onChange={e => setForm(f => ({ ...f, max_concurrent_pairings: e.target.value }))}
                   placeholder="e.g. 3"
-                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-eo-blue/30"
+                  className="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 <p className="text-xs text-gray-500 mt-1">Soft hint, not a hard limit. Helps with assignment decisions.</p>
               </div>
@@ -270,7 +270,7 @@ export default function MentorsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-eo-blue text-white hover:bg-eo-blue/90"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90"
                 >
                   {editing ? 'Save changes' : 'Add mentor'}
                 </button>

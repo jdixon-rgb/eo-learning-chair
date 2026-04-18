@@ -66,7 +66,7 @@ import SAPFeedbackPage from '@/pages/sap-portal/SAPFeedbackPage'
 function DocumentTitle() {
   const { activeChapter } = useChapter()
   useEffect(() => {
-    document.title = activeChapter?.name || 'Our Chapter OS'
+    document.title = activeChapter?.name || 'OurChapter OS'
   }, [activeChapter?.name])
   return null
 }

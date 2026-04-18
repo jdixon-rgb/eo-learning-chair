@@ -112,7 +112,7 @@ export default function SurveyResultsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-6 w-6 border-2 border-eo-blue border-t-transparent rounded-full animate-spin" />
+        <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -122,7 +122,7 @@ export default function SurveyResultsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ClipboardList className="h-6 w-6 text-eo-coral" />
+          <ClipboardList className="h-6 w-6 text-warm" />
           Survey Results
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -147,7 +147,7 @@ export default function SurveyResultsPage() {
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <BarChart3 className="h-4 w-4 text-eo-blue" />
+                    <BarChart3 className="h-4 w-4 text-primary" />
                     <span className="font-semibold">{section.title}</span>
                     <Badge variant="outline" className="text-[10px]">{section.questions.length} questions</Badge>
                   </div>
@@ -171,7 +171,7 @@ export default function SurveyResultsPage() {
                                 <div key={label} className="flex items-center gap-3">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <div className="h-5 bg-eo-blue/20 rounded" style={{ width: `${(count / maxCount) * 100}%`, minWidth: count > 0 ? '4px' : 0 }} />
+                                      <div className="h-5 bg-primary/20 rounded" style={{ width: `${(count / maxCount) * 100}%`, minWidth: count > 0 ? '4px' : 0 }} />
                                       <span className="text-xs text-muted-foreground shrink-0">{count}</span>
                                     </div>
                                   </div>
@@ -194,7 +194,7 @@ export default function SurveyResultsPage() {
                                 <div key={label} className="flex items-center gap-3">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <div className="h-5 bg-eo-coral/20 rounded" style={{ width: `${(count / maxCount) * 100}%`, minWidth: count > 0 ? '4px' : 0 }} />
+                                      <div className="h-5 bg-warm/20 rounded" style={{ width: `${(count / maxCount) * 100}%`, minWidth: count > 0 ? '4px' : 0 }} />
                                       <span className="text-xs text-muted-foreground shrink-0">{count}</span>
                                     </div>
                                   </div>
@@ -211,11 +211,11 @@ export default function SurveyResultsPage() {
                         return (
                           <div key={question.id}>
                             <h4 className="text-sm font-medium mb-2">{question.label}</h4>
-                            <p className="text-2xl font-bold text-eo-blue mb-2">{avg} <span className="text-xs font-normal text-muted-foreground">avg</span></p>
+                            <p className="text-2xl font-bold text-primary mb-2">{avg} <span className="text-xs font-normal text-muted-foreground">avg</span></p>
                             <div className="flex items-end gap-2 h-12">
                               {distribution.map(d => (
                                 <div key={d.value} className="flex-1 flex flex-col items-center gap-1">
-                                  <div className="w-full bg-eo-blue/20 rounded-t" style={{ height: `${(d.count / Math.max(...distribution.map(x => x.count), 1)) * 40}px`, minHeight: d.count > 0 ? '4px' : 0 }} />
+                                  <div className="w-full bg-primary/20 rounded-t" style={{ height: `${(d.count / Math.max(...distribution.map(x => x.count), 1)) * 40}px`, minHeight: d.count > 0 ? '4px' : 0 }} />
                                   <span className="text-[10px] text-muted-foreground">{d.value}</span>
                                 </div>
                               ))}
@@ -242,7 +242,7 @@ export default function SurveyResultsPage() {
                             <div className="space-y-1">
                               {avgRanks.map((item, idx) => (
                                 <div key={item.label} className="flex items-center gap-3 text-xs">
-                                  <span className="w-5 h-5 rounded-full bg-eo-blue/20 text-eo-blue flex items-center justify-center font-bold shrink-0">{idx + 1}</span>
+                                  <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold shrink-0">{idx + 1}</span>
                                   <span className="flex-1">{item.label}</span>
                                   <span className="text-muted-foreground">avg #{item.avgRank.toFixed(1)}</span>
                                 </div>

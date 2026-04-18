@@ -47,7 +47,7 @@ export default function DashboardPage() {
   // Budget health
   const budgetPercent = learningBudget > 0 ? (totalBudgeted / learningBudget) * 100 : 0
   const budgetHealth = budgetPercent > 90 ? 'critical' : budgetPercent > 75 ? 'warning' : 'healthy'
-  const budgetColor = { critical: 'bg-eo-pink', warning: 'bg-eo-coral', healthy: 'bg-green-500' }[budgetHealth]
+  const budgetColor = { critical: 'bg-destructive', warning: 'bg-warm', healthy: 'bg-green-500' }[budgetHealth]
 
   // Events by month for mini arc
   const eventsByMonth = {}
@@ -157,7 +157,7 @@ export default function DashboardPage() {
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Route className="h-4 w-4 text-eo-coral" />
+            <Route className="h-4 w-4 text-warm" />
             <h2 className="text-sm font-semibold">Year Arc — "{theme}"</h2>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')}>
@@ -175,13 +175,13 @@ export default function DashboardPage() {
                 </div>
                 <div
                   className={`border rounded-b px-1 py-2 text-xs cursor-pointer hover:bg-accent transition-colors ${
-                    event ? 'border-eo-blue bg-blue-50' : 'border-border'
+                    event ? 'border-primary bg-blue-50' : 'border-border'
                   }`}
                   onClick={() => event ? navigate(`/events/${event.id}`) : navigate('/calendar')}
                 >
                   <div className="font-medium">{month.shortName}</div>
                   {event ? (
-                    <div className="mt-1 text-[10px] text-eo-blue font-medium truncate">{event.title.split(':')[0]}</div>
+                    <div className="mt-1 text-[10px] text-primary font-medium truncate">{event.title.split(':')[0]}</div>
                   ) : (
                     <div className="mt-1 text-[10px] text-muted-foreground">—</div>
                   )}
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                 const total = catItems.reduce((s, b) => s + (b.budget_amount || 0), 0)
                 const pct = totalBudgeted > 0 ? (total / totalBudgeted) * 100 : 0
                 const labels = { speaker_fee: 'Speaker Fees', food_beverage: 'F&B', venue_rental: 'Venue', av_production: 'AV Production' }
-                const colors = { speaker_fee: 'bg-eo-blue', food_beverage: 'bg-eo-pink', venue_rental: 'bg-eo-coral', av_production: 'bg-purple-500' }
+                const colors = { speaker_fee: 'bg-primary', food_beverage: 'bg-destructive', venue_rental: 'bg-warm', av_production: 'bg-purple-500' }
                 return (
                   <div key={cat}>
                     <div className="flex justify-between text-xs mb-1">

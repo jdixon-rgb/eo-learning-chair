@@ -15,16 +15,16 @@ export const FISCAL_MONTHS = [
 
 // Strategic importance for each month (Aug=0 through May=9)
 export const STRATEGIC_MAP = {
-  0: { label: 'KICKOFF', color: 'bg-eo-coral', textColor: 'text-white', description: 'Marquee name. Set the tone. Get members excited.' },
-  1: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Build on kickoff energy.' },
-  2: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Sustain engagement.' },
-  3: { label: 'MOMENTUM', color: 'bg-eo-blue', textColor: 'text-white', description: 'Keep the arc rising.' },
+  0: { label: 'KICKOFF', color: 'bg-warm', textColor: 'text-white', description: 'Marquee name. Set the tone. Get members excited.' },
+  1: { label: 'MOMENTUM', color: 'bg-primary', textColor: 'text-white', description: 'Build on kickoff energy.' },
+  2: { label: 'MOMENTUM', color: 'bg-primary', textColor: 'text-white', description: 'Sustain engagement.' },
+  3: { label: 'MOMENTUM', color: 'bg-primary', textColor: 'text-white', description: 'Keep the arc rising.' },
   4: { label: 'NO EVENT', color: 'bg-gray-400', textColor: 'text-white', description: 'December — Holiday party handled separately. No Learning Chair event.' },
-  5: { label: 'RENEWAL', color: 'bg-eo-coral', textColor: 'text-white', description: 'Members decide on renewal. Must be strong.' },
-  6: { label: 'RENEWAL', color: 'bg-eo-coral', textColor: 'text-white', description: 'Critical retention period. Deliver value.' },
-  7: { label: 'SUSTAIN', color: 'bg-eo-blue', textColor: 'text-white', description: 'Maintain energy post-renewal.' },
-  8: { label: 'SUSTAIN', color: 'bg-eo-blue', textColor: 'text-white', description: 'Spring momentum.' },
-  9: { label: 'GRATITUDE GALA', color: 'bg-eo-coral', textColor: 'text-white', description: 'Final event. Celebrate the year. Leave them grateful.' },
+  5: { label: 'RENEWAL', color: 'bg-warm', textColor: 'text-white', description: 'Members decide on renewal. Must be strong.' },
+  6: { label: 'RENEWAL', color: 'bg-warm', textColor: 'text-white', description: 'Critical retention period. Deliver value.' },
+  7: { label: 'SUSTAIN', color: 'bg-primary', textColor: 'text-white', description: 'Maintain energy post-renewal.' },
+  8: { label: 'SUSTAIN', color: 'bg-primary', textColor: 'text-white', description: 'Spring momentum.' },
+  9: { label: 'GRATITUDE GALA', color: 'bg-warm', textColor: 'text-white', description: 'Final event. Celebrate the year. Leave them grateful.' },
 }
 
 // SAP partner tiers

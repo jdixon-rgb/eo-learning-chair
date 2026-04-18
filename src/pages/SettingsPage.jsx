@@ -250,7 +250,7 @@ export default function SettingsPage() {
             <span className="text-sm text-muted-foreground">%</span>
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-eo-blue rounded-full transition-all"
+                className="h-full bg-primary rounded-full transition-all"
                 style={{ width: `${chapter.speaker_fee_target_pct ?? 50}%` }}
               />
             </div>
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                         />
                       ) : (
                         <span
-                          className="text-sm font-medium cursor-pointer hover:text-eo-blue truncate block"
+                          className="text-sm font-medium cursor-pointer hover:text-primary truncate block"
                           onClick={() => { setEditingId(role.id); setEditLabel(role.label) }}
                           title="Click to edit"
                         >
@@ -334,7 +334,7 @@ export default function SettingsPage() {
 
                     <button
                       onClick={() => setAssigningRoleId(assigningRoleId === role.id ? null : role.id)}
-                      className="text-muted-foreground hover:text-eo-blue p-1"
+                      className="text-muted-foreground hover:text-primary p-1"
                       title="Assign member"
                     >
                       <UserPlus className="h-3.5 w-3.5" />
@@ -427,7 +427,7 @@ export default function SettingsPage() {
                                   {a.status}
                                 </Badge>
                                 <span
-                                  className="font-medium cursor-pointer hover:text-eo-blue"
+                                  className="font-medium cursor-pointer hover:text-primary"
                                   onClick={() => startEditAssignment(a)}
                                   title="Click to edit"
                                 >
@@ -436,7 +436,7 @@ export default function SettingsPage() {
                                 {getMemberEmail(a) && <span className="text-muted-foreground text-xs">{getMemberEmail(a)}</span>}
                                 <button
                                   onClick={() => startEditAssignment(a)}
-                                  className="text-muted-foreground hover:text-eo-blue opacity-0 group-hover/assignment:opacity-100 transition-opacity p-0.5"
+                                  className="text-muted-foreground hover:text-primary opacity-0 group-hover/assignment:opacity-100 transition-opacity p-0.5"
                                   title="Edit"
                                 >
                                   <Pencil className="h-3 w-3" />
@@ -647,7 +647,7 @@ export default function SettingsPage() {
             </>
           ) : (
             <>
-              <Badge className="bg-eo-blue/10 text-eo-blue border-eo-blue/30">Saved Locally</Badge>
+              <Badge className="bg-primary/10 text-primary border-primary/30">Saved Locally</Badge>
               <span className="text-sm text-muted-foreground">All changes auto-save to your browser. Configure Supabase in .env.local for cloud sync.</span>
             </>
           )}
@@ -683,7 +683,7 @@ export default function SettingsPage() {
           </Button>
           <Button
             variant="outline"
-            className="text-eo-pink border-eo-pink/30 hover:bg-eo-pink/10"
+            className="text-destructive border-destructive/30 hover:bg-destructive/10"
             onClick={() => {
               if (window.confirm('Reset all data to the original sample data? Your current changes will be lost.')) {
                 resetToDefaults()
@@ -699,7 +699,7 @@ export default function SettingsPage() {
       {/* About the Builder */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-eo-blue/10 text-eo-blue shrink-0">
+          <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
             <Sparkles className="h-5 w-5" />
           </div>
           <div className="flex-1">
@@ -710,7 +710,7 @@ export default function SettingsPage() {
                 href={BUILDER.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-eo-blue hover:underline"
+                className="text-primary hover:underline"
               >
                 {BUILDER.name}
               </a>{' '}
@@ -722,7 +722,7 @@ export default function SettingsPage() {
                 href={BUILDER.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-eo-blue font-medium hover:underline"
+                className="text-primary font-medium hover:underline"
               >
                 Visit {BUILDER.company} &rarr;
               </a>

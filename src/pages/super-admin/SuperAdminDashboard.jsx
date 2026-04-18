@@ -36,11 +36,11 @@ export default function SuperAdminDashboard() {
             className="rounded-xl border bg-card p-5 shadow-sm hover:shadow-md transition-shadow group"
           >
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-eo-blue/10 text-eo-blue shrink-0">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-sm group-hover:text-eo-blue transition-colors truncate">
+                <h3 className="font-semibold text-sm group-hover:text-primary transition-colors truncate">
                   {chapter.name}
                 </h3>
                 {chapter.president_theme && (

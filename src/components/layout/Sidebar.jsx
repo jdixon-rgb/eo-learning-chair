@@ -24,7 +24,7 @@ import {
   ClipboardCheck,
   Eye,
 } from 'lucide-react'
-import eoLogo from '@/assets/eo-az-gray.png'
+import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
 
 // Admin sub-pages
@@ -85,19 +85,19 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed left-0 top-0 bottom-0 w-64 bg-eo-navy text-white flex flex-col z-50
+          fixed left-0 top-0 bottom-0 w-64 bg-sidebar text-sidebar-foreground flex flex-col z-50
           transition-transform duration-200 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0
         `}
       >
         {/* Logo / Title + Close button */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
-            <img src={eoLogo} alt="EO Arizona" className="h-10 w-auto brightness-0 invert opacity-80" />
+            <Wordmark size="lg" />
             <button
               onClick={onClose}
-              className="md:hidden text-white/50 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              className="md:hidden text-muted-foreground hover:text-sidebar-foreground p-1 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -106,17 +106,17 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             {isSuperAdmin && !isImpersonating ? (
               <>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-bold tracking-tight text-white/90">Super Admin</h1>
+                  <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">Super Admin</h1>
                   <span className="text-[9px] font-bold bg-amber-500/90 text-black px-1.5 py-0.5 rounded uppercase tracking-wider">SA</span>
                 </div>
-                <p className="text-[10px] text-white/40">
+                <p className="text-[10px] text-muted-foreground/70">
                   {activeChapter ? activeChapter.name : 'Platform'}
                 </p>
               </>
             ) : (
               <>
-                <h1 className="text-sm font-bold tracking-tight text-white/90">{chairConfig.title}</h1>
-                <p className="text-[10px] text-white/40">
+                <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">{chairConfig.title}</h1>
+                <p className="text-[10px] text-muted-foreground/70">
                   {activeChapter ? activeChapter.name : 'Command Center'}
                 </p>
               </>
@@ -137,7 +137,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
         {/* Role switcher — super admin + president */}
         {canSwitchRoles && (
           <div className="px-4 pt-2">
-            <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/30 uppercase mb-1">
+            <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase mb-1">
               <Eye className="h-3 w-3" />
               Switch role
             </label>
@@ -151,7 +151,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   : fallbackConfig
                 if (config?.homePath) navigate(config.homePath)
               }}
-              className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-eo-blue/50"
+              className="w-full text-xs bg-sidebar-accent/40 border border-sidebar-border rounded-lg px-2 py-1.5 text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
             >
               <option value="">{isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}</option>
               {SWITCHABLE_CHAIR_ROLES.filter(r => r !== profile?.role).map(r => (
@@ -161,14 +161,14 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             {/* SAP contact picker — when viewing as SAP Partner */}
             {viewAsRole === 'sap_contact' && (
               <div className="mt-2">
-                <label className="text-[10px] text-white/30 mb-0.5 block">as contact</label>
+                <label className="text-[10px] text-muted-foreground/70 mb-0.5 block">as contact</label>
                 <select
                   value={viewAsSapContactId || ''}
                   onChange={e => {
                     setViewAsSapContactId(e.target.value || null)
                     navigate('/sap-portal')
                   }}
-                  className="w-full text-xs bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-white/80 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                  className="w-full text-xs bg-sidebar-accent/40 border border-sidebar-border rounded-lg px-2 py-1.5 text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                 >
                   <option value="">— pick a contact —</option>
                   {sapContacts.map(c => {
@@ -204,8 +204,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-eo-blue text-white'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                 }`
               }
             >
@@ -218,7 +218,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {visibleAdmin.length > 0 && (
             <>
               <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Admin</p>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">Admin</p>
               </div>
               {visibleAdmin.map(({ to, icon: Icon, label }) => (
                 <NavLink
@@ -228,8 +228,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-eo-blue text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                     }`
                   }
                 >
@@ -244,7 +244,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {visibleBoard.length > 0 && (
             <>
               <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Board</p>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">Board</p>
               </div>
               {visibleBoard.map(({ to, icon: Icon, label }) => (
                 <NavLink
@@ -255,8 +255,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-eo-blue text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                     }`
                   }
                 >
@@ -271,7 +271,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {isSuperAdmin && isImpersonating && (
             <>
               <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-white/30 uppercase">Platform</p>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">Platform</p>
               </div>
               <NavLink
                 to="/super-admin"
@@ -279,8 +279,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-eo-blue text-white'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                   }`
                 }
               >
@@ -299,8 +299,8 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             className={({ isActive }) =>
               `flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
                 isActive
-                  ? 'bg-eo-blue text-white'
-                  : 'text-white/50 hover:bg-white/10 hover:text-white'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground'
               }`
             }
           >
@@ -310,14 +310,14 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           <NavLink
             to="/portal"
             onClick={onNavigate}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
           >
             <Globe className="h-3.5 w-3.5" />
             Compass
           </NavLink>
           <button
             onClick={resetTourTips}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-white/50 hover:bg-white/10 hover:text-white transition-colors cursor-pointer w-full"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors cursor-pointer w-full"
             title="Reshow all tour tips"
           >
             <Lightbulb className="h-3.5 w-3.5" />
@@ -326,26 +326,26 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
         </div>
 
         {/* Footer: User info + Sign out */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-sidebar-border">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-white/80 truncate">
+              <p className="text-xs font-medium text-sidebar-foreground truncate">
                 {profile?.full_name || 'User'}
               </p>
-              <p className="text-[10px] text-white/40 truncate">
-                {profile?.email || role || 'EO Arizona'}
+              <p className="text-[10px] text-muted-foreground/80 truncate">
+                {profile?.email || role || ''}
               </p>
             </div>
             <button
               onClick={handleSignOut}
               title="Sign out"
-              className="text-white/30 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+              className="text-muted-foreground/70 hover:text-sidebar-foreground p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="h-4 w-4" />
             </button>
           </div>
-          <div className="mt-3 border-t border-white/10 pt-2 text-center">
-            <span className="text-[10px] text-white/50">v{APP_VERSION}</span>
+          <div className="mt-3 border-t border-sidebar-border pt-2 text-center">
+            <span className="text-[10px] text-muted-foreground">v{APP_VERSION}</span>
           </div>
         </div>
       </aside>

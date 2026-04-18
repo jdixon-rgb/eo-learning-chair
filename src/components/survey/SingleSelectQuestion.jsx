@@ -17,16 +17,16 @@ export default function SingleSelectQuestion({ question, value, onChange }) {
               onClick={() => onChange(option)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-eo-blue/20 border-eo-blue/50 text-white border'
+                  ? 'bg-primary/20 border-primary/50 text-white border'
                   : 'bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] hover:border-white/20'
               }`}
             >
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                 isSelected
-                  ? 'border-eo-blue'
+                  ? 'border-primary'
                   : 'border-white/20'
               }`}>
-                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-eo-blue" />}
+                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
               </div>
               <span>{option}</span>
             </button>
