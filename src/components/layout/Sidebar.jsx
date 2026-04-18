@@ -7,6 +7,7 @@ import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/li
 import { useSAPStore } from '@/lib/sapStore'
 import { useTourTips } from '@/lib/useTourTips'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
+import ChapterSwitcher from '@/components/ChapterSwitcher'
 import { useState } from 'react'
 import {
   Globe,
@@ -170,11 +171,13 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
 
           {contextExpanded && (
             <div className="pb-3">
-              {/* Chapter switching for super-admin happens via
-                  /super-admin (Platform Dashboard → pick a chapter),
-                  so the sidebar only surfaces FY + role here. The
-                  chevron is the single control for expand/collapse —
-                  no auto-close on selection. */}
+              {/* Chapter switcher (super-admin only — auto-hides for
+                  single-chapter users). FY switcher sits below it.
+                  The chevron is the single control for expand/collapse
+                  — no auto-close on selection. */}
+              <div className="pt-2">
+                <ChapterSwitcher />
+              </div>
               <div className="pt-2">
                 <FiscalYearSwitcher />
               </div>

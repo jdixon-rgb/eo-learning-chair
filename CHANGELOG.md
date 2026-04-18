@@ -17,6 +17,24 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.66.1 — 2026-04-18
+
+### Fix: Chapter switcher restored to the sidebar context block
+The sidebar's collapsible context block was FY + role only — chapter
+switching was supposed to go through `/super-admin` (Platform
+Dashboard → pick a chapter). In practice, super-admins were getting
+stuck inside a chapter they'd landed on (e.g. EO Shanghai) with no
+quick way back without navigating through the platform dashboard.
+
+Mounted `<ChapterSwitcher />` back above the fiscal year switcher in
+the expanded context block. The component auto-hides when
+`allChapters.length <= 1`, so regular chapter users see nothing new —
+only super-admins get the picker.
+
+`src/components/layout/Sidebar.jsx`.
+
+---
+
 ## v1.66.0 — 2026-04-18
 
 ### Feature: "View as Member" role switcher option
