@@ -439,10 +439,10 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
       {showAdd && (
         <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <select value={addRole} onChange={e => setAddRole(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
+            <select value={addRole} onChange={e => setAddRole(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
               {FORUM_ROLE_ORDER.map(r => <option key={r} value={r} className="bg-ink">{FORUM_ROLE_LABELS[r]}</option>)}
             </select>
-            <select value={addMember} onChange={e => setAddMember(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
+            <select value={addMember} onChange={e => setAddMember(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
               <option value="" className="bg-ink">Select member…</option>
               {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
             </select>
@@ -451,7 +451,7 @@ function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, 
               value={addFY}
               onChange={e => setAddFY(e.target.value)}
               placeholder="FY2028"
-              className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+              className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30"
             />
           </div>
           <div className="flex gap-2 justify-end">
@@ -583,15 +583,15 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
 
       {showAdd && (
         <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-          <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Event title" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+          <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Event title" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
           <div className="grid grid-cols-2 gap-3">
-            <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
-            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
+            <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
               {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-ink">{v}</option>)}
             </select>
           </div>
-          <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
-          <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+          <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
             <button onClick={handleAdd} disabled={!form.title || !form.event_date} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
@@ -802,8 +802,8 @@ function ConstitutionVersionView({
         <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-semibold text-amber-200">Ratification required</p>
-              <p className="text-xs text-amber-200/70 mt-1">
+              <p className="text-sm font-semibold text-warm">Ratification required</p>
+              <p className="text-xs text-warm/80 mt-1">
                 {ratifiedCount} of {total} members have ratified. Unanimous ratification adopts this version.
               </p>
             </div>
@@ -870,7 +870,7 @@ function ConstitutionVersionView({
                   onPropose(version.id)
                 }
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-warm"
             >
               Propose to forum
             </button>
@@ -907,7 +907,7 @@ function ConstitutionVersionView({
                 onChange={e => setPreamble(e.target.value)}
                 rows={3}
                 placeholder="Opening statement (optional)"
-                className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+                className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30"
               />
             </div>
             <div className="space-y-3">
@@ -946,7 +946,7 @@ function ConstitutionVersionView({
                     onChange={e => handleUpdateSection(section.id, { body: e.target.value })}
                     rows={4}
                     placeholder="Section text..."
-                    className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30"
+                    className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30"
                   />
                 </div>
               ))}
@@ -954,7 +954,7 @@ function ConstitutionVersionView({
           </>
         ) : (
           <>
-            <h2 className="text-xl font-semibold text-white">{version.title || 'Forum Constitution'}</h2>
+            <h2 className="text-xl font-semibold text-foreground">{version.title || 'Forum Constitution'}</h2>
             {version.preamble && (
               <p className="text-sm text-foreground/80 whitespace-pre-wrap italic">{version.preamble}</p>
             )}
@@ -1126,10 +1126,10 @@ function HistoryTab({ forum, history, roles, memberById, isModerator, onAddHisto
 
         {showAdd && (
           <div className="rounded-xl border border-border bg-muted/30 p-4 mb-3 space-y-3">
-            <input type="text" value={form.member_name} onChange={e => setForm(f => ({ ...f, member_name: e.target.value }))} placeholder="Member name" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+            <input type="text" value={form.member_name} onChange={e => setForm(f => ({ ...f, member_name: e.target.value }))} placeholder="Member name" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
             <div className="grid grid-cols-2 gap-3">
-              <input type="text" value={form.joined_year} onChange={e => setForm(f => ({ ...f, joined_year: e.target.value }))} placeholder="Joined year" className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
-              <input type="text" value={form.left_year} onChange={e => setForm(f => ({ ...f, left_year: e.target.value }))} placeholder="Left year" className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30" />
+              <input type="text" value={form.joined_year} onChange={e => setForm(f => ({ ...f, joined_year: e.target.value }))} placeholder="Joined year" className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+              <input type="text" value={form.left_year} onChange={e => setForm(f => ({ ...f, left_year: e.target.value }))} placeholder="Left year" className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
             </div>
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={form.is_founding_member} onChange={e => setForm(f => ({ ...f, is_founding_member: e.target.checked }))} />
@@ -1425,39 +1425,39 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
             <label className="text-xs text-muted-foreground mb-1 block">Title</label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Date</label>
-            <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Meeting start time</label>
-            <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="12:00 PM" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Host</label>
-            <input type="text" value={host} onChange={e => setHost(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="text" value={host} onChange={e => setHost(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Location</label>
-            <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div className="sm:col-span-2">
             <label className="text-xs text-muted-foreground mb-1 block">Mission</label>
-            <textarea value={mission} onChange={e => setMission(e.target.value)} rows={2} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <textarea value={mission} onChange={e => setMission(e.target.value)} rows={2} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Values</label>
-            <input type="text" value={forumValues} onChange={e => setForumValues(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="text" value={forumValues} onChange={e => setForumValues(e.target.value)} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Target minutes</label>
-            <input type="number" value={targetMinutes} onChange={e => setTargetMinutes(Number(e.target.value))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white" />
+            <input type="number" value={targetMinutes} onChange={e => setTargetMinutes(Number(e.target.value))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <select value={status} onChange={e => setStatus(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white">
+          <select value={status} onChange={e => setStatus(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
             <option value="draft" className="bg-ink">Draft</option>
             <option value="published" className="bg-ink">Published</option>
             <option value="archived" className="bg-ink">Archived</option>
