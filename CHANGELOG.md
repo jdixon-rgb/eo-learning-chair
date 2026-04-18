@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.4 — 2026-04-17
+
+### Feature: Scenarios nav added to Chapter Experience + Chapter Executive Director sidebars
+Both chapter-staff roles can now see and edit Scenarios. The underlying
+permission (`canViewScenarios`) + route guard already granted access —
+only the sidebar link was missing. Added `{ to: '/scenarios', label: 'Scenarios' }`
+to both `chapter_experience_coordinator` and `chapter_executive_director`
+nav configs in `chairRoles.js`. Edit access follows automatically
+because ScenarioPage mutations go through the store and both roles pass
+the `is_chapter_admin()` RLS check.
+
+---
+
 ## v1.60.3 — 2026-04-17
 
 ### Fix: Scenario Planner anchored to Learning Chair budget, not chapter total
