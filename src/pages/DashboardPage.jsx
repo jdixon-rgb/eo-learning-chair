@@ -164,13 +164,13 @@ export default function DashboardPage() {
             View Full Calendar <ArrowRight className="h-3 w-3 ml-1" />
           </Button>
         </div>
-        <div className="grid grid-cols-12 gap-1">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1.5">
           {FISCAL_MONTHS.map((month, i) => {
             const strategic = STRATEGIC_MAP[i]
             const event = eventsByMonth[i]
             return (
               <div key={i} className="text-center">
-                <div className={`text-[9px] font-bold px-1 py-0.5 rounded-t ${strategic.color} ${strategic.textColor}`}>
+                <div className={`text-[10px] md:text-[9px] font-bold px-1 py-0.5 rounded-t truncate ${strategic.color} ${strategic.textColor}`}>
                   {strategic.label}
                 </div>
                 <div
