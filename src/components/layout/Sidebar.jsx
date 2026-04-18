@@ -1,12 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import { useSAPStore } from '@/lib/sapStore'
 import { useTourTips } from '@/lib/useTourTips'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
+import { useState } from 'react'
 import {
   Globe,
   X,
@@ -23,7 +25,12 @@ import {
   BarChart3,
   ClipboardCheck,
   Eye,
+  ChevronDown,
+  ChevronUp,
+  Settings as SettingsIcon,
 } from 'lucide-react'
+
+const CONTEXT_EXPANDED_KEY = 'eo-sidebar-context-expanded'
 import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
 
@@ -47,9 +54,27 @@ const boardItems = [
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId } = useAuth()
   const { activeChapter } = useChapter()
+  const { activeFiscalYear } = useFiscalYear()
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
   const { resetAll: resetTourTips } = useTourTips()
   const navigate = useNavigate()
+
+  // Collapsible context switcher block (Chapter / FY / Switch Role).
+  // Defaults collapsed so the nav items below get most of the screen real
+  // estate. User preference persists across sessions.
+  const [contextExpanded, setContextExpanded] = useState(() => {
+    try { return localStorage.getItem(CONTEXT_EXPANDED_KEY) === '1' } catch { return false }
+  })
+  const toggleContext = () => {
+    setContextExpanded(prev => {
+      const next = !prev
+      try {
+        if (next) localStorage.setItem(CONTEXT_EXPANDED_KEY, '1')
+        else localStorage.removeItem(CONTEXT_EXPANDED_KEY)
+      } catch { /* ignore */ }
+      return next
+    })
+  }
 
   // Look up the chair-role config for the *effective* role.
   // For super admins not impersonating, default to Learning Chair surface.
@@ -124,19 +149,46 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           </div>
         </div>
 
-        {/* Chapter Switcher (super admin only) */}
-        <div className="pt-3">
-          <ChapterSwitcher />
-        </div>
+        {/* Collapsible context block — compact summary when closed,
+            full switchers when expanded. Keeps the sidebar usable as a
+            nav surface once context is set. */}
+        <div className="border-b border-sidebar-border">
+          <button
+            type="button"
+            onClick={toggleContext}
+            className="w-full px-4 py-2 flex items-center gap-2 hover:bg-sidebar-accent/50 transition-colors"
+            aria-expanded={contextExpanded}
+          >
+            <SettingsIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="flex-1 text-left text-[11px] text-muted-foreground truncate">
+              {[
+                activeChapter?.name,
+                activeFiscalYear ? `FY ${activeFiscalYear}` : null,
+                viewAsRole
+                  ? CHAIR_ROLE_CONFIGS[viewAsRole]?.title
+                  : (isSuperAdmin ? 'Super Admin' : chairConfig.title),
+              ].filter(Boolean).join(' · ')}
+            </span>
+            {contextExpanded
+              ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+          </button>
 
-        {/* Fiscal Year Switcher */}
-        <div className="pt-2">
-          <FiscalYearSwitcher />
-        </div>
+          {contextExpanded && (
+            <div className="pb-3">
+              {/* Chapter Switcher (super admin only) */}
+              <div className="pt-2">
+                <ChapterSwitcher />
+              </div>
 
-        {/* Role switcher — super admin + president */}
-        {canSwitchRoles && (
-          <div className="px-4 pt-2">
+              {/* Fiscal Year Switcher */}
+              <div className="pt-2">
+                <FiscalYearSwitcher />
+              </div>
+
+              {/* Role switcher — super admin + president */}
+              {canSwitchRoles && (
+                <div className="px-4 pt-2">
             <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
               <Eye className="h-3 w-3" />
               Switch role
@@ -190,8 +242,11 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 Back to {isSuperAdmin ? 'Super Admin' : (CHAIR_ROLE_CONFIGS[profile?.role]?.title || 'My Role')}
               </button>
             )}
-          </div>
-        )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
