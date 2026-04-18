@@ -747,7 +747,7 @@ export default function VenuesPage() {
                     <p className="text-[11px] text-destructive mt-1">{lookupError}</p>
                   )}
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Auto-Lookup uses AI to fill in address, description, and photo. Requires API keys in Vercel.
+                    Auto-Lookup uses AI to fill in address, description, and photo. Requires AI integration to be configured.
                   </p>
                 </div>
 
