@@ -105,7 +105,7 @@ export default function ProfileFreshnessCard({ currentMember }) {
             type="button"
             disabled={submitting}
             onClick={() => setShowChangeForm(true)}
-            className="px-4 py-2 rounded-lg bg-muted/50 border border-border text-white text-sm font-medium hover:bg-muted/70 disabled:opacity-50 inline-flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-card border border-border text-foreground text-sm font-medium hover:bg-muted disabled:opacity-50 inline-flex items-center gap-2"
           >
             <ChevronDown className="h-4 w-4" /> Something changed
           </button>

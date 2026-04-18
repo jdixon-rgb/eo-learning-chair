@@ -143,7 +143,7 @@ export default function SAPPortalLayout() {
         <div className="bg-warm/10 border-b border-warm/30 px-4 py-2">
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-warm/80 uppercase tracking-wider shrink-0">Viewing as</span>
+              <span className="text-[10px] font-bold text-warm uppercase tracking-wider shrink-0">Viewing as</span>
               <select
                 value={viewAsSapContactId || ''}
                 onChange={e => {

@@ -62,7 +62,7 @@ export default function MemberCalendarPage({ embedded = false }) {
   const futureTeaser = sortedEvents.filter(e => !isEventInWindow(e, windowMonths))
 
   return (
-    <div className={embedded ? 'text-white' : 'min-h-screen bg-gradient-to-b from-ink via-[#121248] to-ink text-white'}>
+    <div className={embedded ? '' : 'min-h-screen bg-background text-foreground'}>
       {/* Header — standalone only */}
       {!embedded && (
         <header className="relative overflow-hidden">
@@ -78,11 +78,11 @@ export default function MemberCalendarPage({ embedded = false }) {
             </h1>
             <div className="flex items-center justify-center gap-2 mt-4">
               <Palette className="h-4 w-4 text-warm" />
-              <p className="text-lg text-white/70">
-                {formatFiscalYear(activeFiscalYear)} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} className="text-white/70" />
+              <p className="text-lg text-foreground/80">
+                {formatFiscalYear(activeFiscalYear)} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} className="text-foreground/80" />
               </p>
             </div>
-            <p className="mt-3 text-sm text-white/40">
+            <p className="mt-3 text-sm text-muted-foreground/70">
               All events are included with your membership — no additional fees.
             </p>
           </div>
@@ -108,11 +108,11 @@ export default function MemberCalendarPage({ embedded = false }) {
               const strategic = event.month_index != null ? STRATEGIC_MAP[event.month_index] : null
 
               return (
-                <div key={event.id} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden hover:border-white/20 transition-colors">
+                <div key={event.id} className="rounded-2xl border border-border bg-muted/30 backdrop-blur-sm overflow-hidden hover:border-border transition-colors">
                   {/* Strategic banner */}
                   {strategic && (
                     <div className={`${strategic.color} px-5 py-1.5`}>
-                      <span className="text-[11px] font-bold tracking-wider text-white">{strategic.label}</span>
+                      <span className="text-[11px] font-bold tracking-wider text-foreground">{strategic.label}</span>
                     </div>
                   )}
 
@@ -123,15 +123,15 @@ export default function MemberCalendarPage({ embedded = false }) {
 
                         {/* Date */}
                         {event.event_date && (
-                          <div className="flex items-center gap-2 mt-3 text-sm text-white/70">
+                          <div className="flex items-center gap-2 mt-3 text-sm text-foreground/80">
                             <Calendar className="h-4 w-4 text-warm" />
-                            <span className="font-medium text-white">{formatDateWithDay(event.event_date)}</span>
+                            <span className="font-medium text-foreground">{formatDateWithDay(event.event_date)}</span>
                           </div>
                         )}
 
                         {/* Time */}
                         {event.event_time && (
-                          <div className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
+                          <div className="flex items-center gap-2 mt-1.5 text-sm text-foreground/80">
                             <Clock className="h-4 w-4 text-primary" />
                             {event.event_time.slice(0, 5) === '18:00' ? '6:00 PM' :
                              event.event_time.slice(0, 5) === '18:30' ? '6:30 PM' :
@@ -141,33 +141,33 @@ export default function MemberCalendarPage({ embedded = false }) {
 
                         {/* Speaker */}
                         {speaker && (
-                          <div className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
+                          <div className="flex items-center gap-2 mt-1.5 text-sm text-foreground/80">
                             <Users className="h-4 w-4 text-purple-400" />
-                            <span className="font-medium text-white">{speaker.name}</span>
-                            {speaker.topic && <span className="text-white/50">&middot; {speaker.topic.split('—')[0].trim()}</span>}
+                            <span className="font-medium text-foreground">{speaker.name}</span>
+                            {speaker.topic && <span className="text-muted-foreground">&middot; {speaker.topic.split('—')[0].trim()}</span>}
                           </div>
                         )}
                         {/* SAP partner(s) */}
                         {eventSAPs.map(sap => (
-                          <div key={sap.id} className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
+                          <div key={sap.id} className="flex items-center gap-2 mt-1.5 text-sm text-foreground/80">
                             <Users className="h-4 w-4 text-amber-400" />
-                            <span className="font-medium text-white">{sap.company || sap.name}</span>
-                            <span className="text-white/40">&middot; SAP Partner</span>
+                            <span className="font-medium text-foreground">{sap.company || sap.name}</span>
+                            <span className="text-muted-foreground/70">&middot; SAP Partner</span>
                           </div>
                         ))}
 
                         {/* Venue */}
                         {venue && (
-                          <div className="flex items-center gap-2 mt-1.5 text-sm text-white/70">
+                          <div className="flex items-center gap-2 mt-1.5 text-sm text-foreground/80">
                             <MapPin className="h-4 w-4 text-green-400" />
                             <span>{venue.name}</span>
-                            {venue.address && <span className="text-white/40">&middot; {venue.address}</span>}
+                            {venue.address && <span className="text-muted-foreground/70">&middot; {venue.address}</span>}
                           </div>
                         )}
 
                         {/* Theme Connection */}
                         {event.theme_connection && (
-                          <p className="mt-4 text-sm text-white/60 italic border-t border-white/10 pt-3 leading-relaxed">
+                          <p className="mt-4 text-sm text-muted-foreground italic border-t border-border pt-3 leading-relaxed">
                             "{event.theme_connection}"
                           </p>
                         )}
@@ -176,7 +176,7 @@ export default function MemberCalendarPage({ embedded = false }) {
                       {/* Event Type Badge */}
                       {eventType && (
                         <Badge
-                          className="text-[10px] shrink-0 bg-white/10 border-white/20"
+                          className="text-[10px] shrink-0 bg-muted/50 border-border"
                           variant="outline"
                         >
                           {eventType.label}
@@ -186,7 +186,7 @@ export default function MemberCalendarPage({ embedded = false }) {
 
                     {/* Attendance info */}
                     {event.expected_attendance && (
-                      <div className="mt-3 text-[11px] text-white/30">
+                      <div className="mt-3 text-[11px] text-muted-foreground/60">
                         Expected: {event.expected_attendance} members
                       </div>
                     )}
@@ -196,9 +196,9 @@ export default function MemberCalendarPage({ embedded = false }) {
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-            <Calendar className="h-8 w-8 text-white/20 mx-auto mb-3" />
-            <p className="text-white/50">No events in the next two months. Check back soon!</p>
+          <div className="rounded-2xl border border-border bg-muted/30 p-8 text-center">
+            <Calendar className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-muted-foreground">No events in the next two months. Check back soon!</p>
           </div>
         )}
       </section>
@@ -207,9 +207,9 @@ export default function MemberCalendarPage({ embedded = false }) {
       {futureTeaser.length > 0 && (
         <section className="max-w-4xl mx-auto px-6 pb-16">
           <div className="flex items-center gap-2 mb-6">
-            <Lock className="h-4 w-4 text-white/40" />
-            <h2 className="text-lg font-bold text-white/70">Coming Later This Year</h2>
-            <span className="text-xs text-white/30">Full details revealed 2 months before</span>
+            <Lock className="h-4 w-4 text-muted-foreground/70" />
+            <h2 className="text-lg font-bold text-foreground/80">Coming Later This Year</h2>
+            <span className="text-xs text-muted-foreground/60">Full details revealed 2 months before</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -221,26 +221,26 @@ export default function MemberCalendarPage({ embedded = false }) {
               return (
                 <div
                   key={event.id}
-                  className="rounded-xl border border-white/5 bg-white/[0.03] p-4 flex items-center gap-3"
+                  className="rounded-xl border border-border bg-muted/30 p-4 flex items-center gap-3"
                 >
                   {/* Month indicator */}
-                  <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center shrink-0 ${strategic?.color || 'bg-white/10'}`}>
+                  <div className={`w-12 h-12 rounded-lg flex flex-col items-center justify-center shrink-0 ${strategic?.color || 'bg-muted/50'}`}>
                     <span className="text-[10px] font-bold leading-none">{month?.shortName || '?'}</span>
                     <span className="text-[9px] opacity-70">{yearForMonth}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-semibold text-white/80 truncate">{event.title}</h4>
+                    <h4 className="text-sm font-semibold text-foreground/90 truncate">{event.title}</h4>
                     {strategic && (
-                      <span className="text-[10px] text-white/30">{strategic.label}</span>
+                      <span className="text-[10px] text-muted-foreground/60">{strategic.label}</span>
                     )}
                   </div>
-                  <ChevronRight className="h-4 w-4 text-white/20 shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                 </div>
               )
             })}
           </div>
 
-          <p className="text-center mt-8 text-xs text-white/30">
+          <p className="text-center mt-8 text-xs text-muted-foreground/60">
             Event details are revealed as they get closer. This keeps the surprise alive and ensures every event gets the attendance it deserves.
           </p>
         </section>
@@ -248,8 +248,8 @@ export default function MemberCalendarPage({ embedded = false }) {
 
       {/* Footer — standalone only */}
       {!embedded && (
-        <footer className="border-t border-white/5 py-8">
-          <div className="max-w-4xl mx-auto px-6 text-center text-xs text-white/30">
+        <footer className="border-t border-border py-8">
+          <div className="max-w-4xl mx-auto px-6 text-center text-xs text-muted-foreground/60">
             <p>{chapterName} &middot; Learning Calendar &middot; {formatFiscalYear(activeFiscalYear)}</p>
             <p className="mt-1">All learning events are included with your EO membership. No additional fees.</p>
           </div>

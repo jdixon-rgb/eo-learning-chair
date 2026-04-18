@@ -131,8 +131,8 @@ export default function SAPPortalDashboard() {
       </div>
 
       {!partner && (
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 text-center">
-          <p className="text-sm text-amber-300/80">
+        <div className="rounded-2xl border border-warm/30 bg-warm/10 p-5 text-center">
+          <p className="text-sm text-warm">
             Your account hasn't been linked to a partner yet. Contact your EO chapter to complete setup.
           </p>
         </div>
