@@ -17,6 +17,35 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.0 — 2026-04-17
+
+### Catch-up: several fixes shipped without a version bump
+Five PRs merged since v1.59.0 without individual version tags. Rolled up
+here for the changelog record. Going forward, every PR bumps the
+version so the changelog stays honest.
+
+- **Portal readability round 2** — `MemberCalendarPage` dark-gradient
+  wrapper + 28 leftover `text-white` instances flipped to light theme;
+  ForumHomePage form inputs; ProfileFreshnessCard "Something changed"
+  button; SAP Portal "Account not linked" warning and "Viewing as"
+  label given readable contrast; ForumHomePage constitution badges
+  moved off amber to on-palette terracotta.
+- **Data Management card** — Settings page Export/Reset buttons now
+  stack vertically on mobile, side-by-side at ≥sm.
+- **Collapsible context block** in sidebar — Chapter / Fiscal Year /
+  Switch Role switchers collapse to a compact one-line summary by
+  default (persists in localStorage). Recovers ~230px of sidebar
+  real estate for nav items.
+- **Compass nav item** labeled "(Member Portal)" parenthetically so
+  it's self-explanatory.
+- **Cross-chapter budget bleed fix** — `budget_items` +
+  `contract_checklists` were fetched via `fetchAll()` (no chapter
+  filter). Shanghai's dashboard showed `-$330K remaining of $0`
+  because it was summing EO Arizona's budget. Now joined through
+  `events` and filtered on `events.chapter_id`.
+
+---
+
 ## v1.59.0 — 2026-04-17
 
 ### Portals rebrand: Member + SAP flip to light palette with distinct accents
