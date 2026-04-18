@@ -137,7 +137,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
         {/* Role switcher — super admin + president */}
         {canSwitchRoles && (
           <div className="px-4 pt-2">
-            <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase mb-1">
+            <label className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">
               <Eye className="h-3 w-3" />
               Switch role
             </label>
@@ -218,7 +218,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {visibleAdmin.length > 0 && (
             <>
               <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">Admin</p>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Admin</p>
               </div>
               {visibleAdmin.map(({ to, icon: Icon, label }) => (
                 <NavLink
@@ -244,7 +244,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {visibleBoard.length > 0 && (
             <>
               <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">Board</p>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Board</p>
               </div>
               {visibleBoard.map(({ to, icon: Icon, label }) => (
                 <NavLink
@@ -271,7 +271,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {isSuperAdmin && isImpersonating && (
             <>
               <div className="pt-4 pb-2 px-3">
-                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">Platform</p>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Platform</p>
               </div>
               <NavLink
                 to="/super-admin"
