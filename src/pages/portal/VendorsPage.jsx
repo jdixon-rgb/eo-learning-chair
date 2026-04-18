@@ -103,6 +103,25 @@ export default function VendorsPage() {
     return list
   }, [vendors, categoryFilter, search, averageRating])
 
+  // When the "All" filter is active we want each category to render as
+  // its own section so the list isn't a wall of mixed industries. We
+  // preserve the sort order `filtered` already computed (SAPs first,
+  // then rating, then name) — we just bucket by category. Categories
+  // render in the order defined by VENDOR_CATEGORIES, with any unknown
+  // ones appended alphabetically so nothing falls off.
+  const groupedByCategory = useMemo(() => {
+    if (categoryFilter !== 'All') return null
+    const buckets = new Map()
+    filtered.forEach(v => {
+      const key = v.category || 'Other'
+      if (!buckets.has(key)) buckets.set(key, [])
+      buckets.get(key).push(v)
+    })
+    const known = VENDOR_CATEGORIES.filter(c => buckets.has(c))
+    const extras = [...buckets.keys()].filter(c => !VENDOR_CATEGORIES.includes(c)).sort()
+    return [...known, ...extras].map(c => ({ category: c, vendors: buckets.get(c) }))
+  }, [filtered, categoryFilter])
+
   if (loading) {
     return <div className="text-muted-foreground text-center py-12">Loading vendors...</div>
   }
@@ -163,6 +182,32 @@ export default function VendorsPage() {
               ? 'Be the first to add a vendor your chapter uses.'
               : 'Try adjusting your search or filter.'}
           </p>
+        </div>
+      ) : groupedByCategory ? (
+        <div className="space-y-8">
+          {groupedByCategory.map(({ category, vendors: catVendors }) => (
+            <section key={category}>
+              <div className="flex items-baseline justify-between mb-3 pb-2 border-b border-border">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  {category}
+                </h2>
+                <span className="text-xs text-muted-foreground/70">
+                  {catVendors.length} {catVendors.length === 1 ? 'vendor' : 'vendors'}
+                </span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {catVendors.map(vendor => (
+                  <VendorCard
+                    key={vendor.id}
+                    vendor={vendor}
+                    avgRating={averageRating(vendor.id)}
+                    numReviews={reviewCount(vendor.id)}
+                    onClick={() => setSelectedVendor(vendor)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
