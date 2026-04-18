@@ -7,16 +7,16 @@ export default function FiscalYearSwitcher() {
 
   return (
     <div className="px-3">
-      <label className="text-[10px] font-bold tracking-widest text-white/30 uppercase block mb-1.5">
+      <label className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase block mb-1.5">
         Fiscal Year
       </label>
       <select
         value={activeFiscalYear}
         onChange={(e) => setActiveFiscalYear(e.target.value)}
-        className="w-full text-xs rounded-lg px-2.5 py-2 bg-white/10 text-white border border-white/10 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full text-xs rounded-lg px-2.5 py-2 bg-card text-foreground border border-sidebar-border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
       >
         {fiscalYearOptions.map((fy) => (
-          <option key={fy} value={fy} className="bg-ink text-white">
+          <option key={fy} value={fy} className="bg-card text-foreground">
             {fy}{fy === currentFiscalYear ? ' (current)' : ''}
           </option>
         ))}
