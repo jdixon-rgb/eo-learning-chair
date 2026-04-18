@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { DollarSign, AlertTriangle } from 'lucide-react'
 
 // ── Inline editable cell ──────────────────────────────────────────────
-function EditableCell({ value, onChange, warn, contracted }) {
+function EditableCell({ value, onChange, warn, contracted, currency = 'USD' }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
 
@@ -60,7 +60,7 @@ function EditableCell({ value, onChange, warn, contracted }) {
       }`}
       onClick={startEditing}
     >
-      {value ? formatCurrency(value) : '\u2014'}
+      {value ? formatCurrency(value, currency) : '\u2014'}
     </button>
   )
 }
@@ -76,10 +76,11 @@ const VIEW_OPTIONS = [
 export default function BudgetPage() {
   const navigate = useNavigate()
   const {
-    events, speakers, saps, budgetItems,
+    chapter, events, speakers, saps, budgetItems,
     totalBudgeted, totalContracted, totalActualSpent,
     upsertBudgetItem,
   } = useStore()
+  const currency = chapter?.currency || 'USD'
   const { getChairBudget } = useBoardStore()
   const { contacts: sapContacts, primaryContact } = useSAPStore()
   const { activeFiscalYear } = useFiscalYear()
@@ -146,10 +147,10 @@ export default function BudgetPage() {
     warnings.push(`${eventsWithoutBudget.length} event(s) have no budget items.`)
   }
   if (budgetHealth === 'critical') {
-    warnings.push(`Budget is ${budgetPercent.toFixed(0)}% allocated — only ${formatCurrency(budgetRemaining)} remaining.`)
+    warnings.push(`Budget is ${budgetPercent.toFixed(0)}% allocated — only ${formatCurrency(budgetRemaining, currency)} remaining.`)
   }
   if (totalBudgeted > chairBudget) {
-    warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chairBudget)}. Total budgeted exceeds the ${formatCurrency(chairBudget)} chair budget.`)
+    warnings.push(`Over-allocated by ${formatCurrency(totalBudgeted - chairBudget, currency)}. Total budgeted exceeds the ${formatCurrency(chairBudget, currency)} chair budget.`)
   }
 
   // Build display name(s) for speaker + SAP partners on an event
@@ -185,7 +186,7 @@ export default function BudgetPage() {
       <div>
         <h1 className="text-2xl font-bold">Budget</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {formatCurrency(chairBudget)} chair budget &middot; {formatFiscalYear(activeFiscalYear)}
+          {formatCurrency(chairBudget, currency)} chair budget &middot; {formatFiscalYear(activeFiscalYear)}
         </p>
       </div>
 
@@ -213,18 +214,18 @@ export default function BudgetPage() {
         <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
           <div>
             <p className="text-xs text-muted-foreground">Budgeted</p>
-            <p className="text-lg font-bold">{formatCurrency(totalBudgeted)}</p>
+            <p className="text-lg font-bold">{formatCurrency(totalBudgeted, currency)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Unallocated</p>
             <p className={`text-lg font-bold ${unallocated < 0 ? 'text-eo-pink' : 'text-green-600'}`}>
-              {formatCurrency(unallocated)}
+              {formatCurrency(unallocated, currency)}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Remaining</p>
             <p className={`text-lg font-bold ${budgetRemaining < 0 ? 'text-eo-pink' : 'text-green-600'}`}>
-              {formatCurrency(budgetRemaining)}
+              {formatCurrency(budgetRemaining, currency)}
             </p>
           </div>
         </div>
@@ -315,12 +316,13 @@ export default function BudgetPage() {
                           onChange={(val) => upsertBudgetItem(event.id, cat.id, activeField, val)}
                           warn={warn}
                           contracted={activeField !== 'contracted_amount' && hasContracted(event.id, cat.id)}
+                          currency={currency}
                         />
                       </td>
                     )
                   })}
                   <td className="px-3 py-2 text-right font-semibold">
-                    {rowTotal ? formatCurrency(rowTotal) : '\u2014'}
+                    {rowTotal ? formatCurrency(rowTotal, currency) : '\u2014'}
                   </td>
                 </tr>
               )
@@ -344,11 +346,11 @@ export default function BudgetPage() {
                 </td>
                 {BUDGET_CATEGORIES.map(cat => (
                   <td key={cat.id} className="px-2 py-2.5 text-right">
-                    {getColTotal(cat.id) ? formatCurrency(getColTotal(cat.id)) : '\u2014'}
+                    {getColTotal(cat.id) ? formatCurrency(getColTotal(cat.id), currency) : '\u2014'}
                   </td>
                 ))}
                 <td className="px-3 py-2.5 text-right">
-                  {grandTotal ? formatCurrency(grandTotal) : '\u2014'}
+                  {grandTotal ? formatCurrency(grandTotal, currency) : '\u2014'}
                 </td>
               </tr>
             </tfoot>

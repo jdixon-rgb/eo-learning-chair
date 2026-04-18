@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import FloatingFeedback from '@/components/ui/FloatingFeedback'
-import MockModeBanner from '@/components/MockModeBanner'
+import BuiltByFooter from '@/components/BuiltByFooter'
 import { useStore } from '@/lib/store'
 import { Loader2 } from 'lucide-react'
 
@@ -17,7 +17,6 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MockModeBanner />
       <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} onNavigate={handleNavigate} />
       <div className="md:ml-64">
         <TopBar onMenuToggle={() => setMobileMenuOpen(true)} />
@@ -36,6 +35,7 @@ export default function AppLayout() {
             <Outlet />
           )}
         </main>
+        <BuiltByFooter />
       </div>
       <FloatingFeedback />
     </div>

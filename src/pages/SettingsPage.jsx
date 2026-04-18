@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import { BUILDER, APP_NAME } from '@/lib/appBranding'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import { formatCurrency } from '@/lib/utils'
@@ -693,6 +694,41 @@ export default function SettingsPage() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">Export a complete backup, or reset all data to the original sample data.</p>
+      </div>
+
+      {/* About the Builder */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-eo-blue/10 text-eo-blue shrink-0">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold">About the Builder</h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
+              <strong>{APP_NAME}</strong> is designed and built by{' '}
+              <a
+                href={BUILDER.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-eo-blue hover:underline"
+              >
+                {BUILDER.name}
+              </a>{' '}
+              at <span className="font-medium">{BUILDER.company}</span>. It started as a tool for one chapter and is now used by learning chairs, presidents, and regional leadership across multiple chapters and countries.
+            </p>
+            <p className="text-xs mt-3 leading-relaxed">
+              {BUILDER.tagline}{' '}
+              <a
+                href={BUILDER.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-eo-blue font-medium hover:underline"
+              >
+                Visit {BUILDER.company} &rarr;
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

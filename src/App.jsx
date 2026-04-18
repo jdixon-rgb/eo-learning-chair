@@ -37,10 +37,6 @@ import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
 import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
 import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
-import DemoUsersPage from '@/pages/super-admin/DemoUsersPage'
-import DemoLayout from '@/components/layout/DemoLayout'
-import DemoLanding from '@/pages/demo/DemoLanding'
-import { MOCK_PERSONAS } from '@/lib/mockFixtures'
 import BoardDashboardPage from '@/pages/board/BoardDashboardPage'
 import ChairReportsPage from '@/pages/board/ChairReportsPage'
 import CommunicationsPage from '@/pages/board/CommunicationsPage'
@@ -78,36 +74,13 @@ function DocumentTitle() {
 // Sends each user to their chair role's home page when they hit "/".
 // Learning Chair → DashboardPage at "/"; Engagement Chair → "/engagement"; etc.
 function ChairHome() {
-  const { effectiveRole, isMockMode, mockPersonaId } = useAuth()
-  // Mock Mode branches:
-  //   - No persona selected (or a regional/global persona) → /demo landing
-  //   - Chapter-tier persona selected → render the real Learning Chair
-  //     Dashboard, which now has mock Phoenix data injected by the store
-  if (isMockMode) {
-    const persona = mockPersonaId ? MOCK_PERSONAS.find(p => p.id === mockPersonaId) : null
-    if (!persona || persona.tier !== 'chapter') {
-      return <Navigate to="/demo" replace />
-    }
-    // Chapter-tier personas fall through to DashboardPage
-    return <DashboardPage />
-  }
+  const { effectiveRole } = useAuth()
   if (effectiveRole === 'sap_contact') return <Navigate to="/sap-portal" replace />
   const config = getChairConfig(effectiveRole)
   if (config.homePath && config.homePath !== '/') {
     return <Navigate to={config.homePath} replace />
   }
   return <DashboardPage />
-}
-
-// Gates the /demo routes: only accessible while Mock Mode is active for the
-// current session (super-admin with toggle on, or any demo_user). Otherwise
-// bounces to a sensible home.
-function DemoGate({ children }) {
-  const { isMockMode, isSuperAdmin, session, profile, loading } = useAuth()
-  if (loading) return null
-  if (!session && !profile) return <Navigate to="/login" replace />
-  if (!isMockMode) return <Navigate to={isSuperAdmin ? '/super-admin' : '/'} replace />
-  return children
 }
 
 function App() {
@@ -255,13 +228,6 @@ function App() {
               }>
                 <Route path="/super-admin" element={<SuperAdminDashboard />} />
                 <Route path="/super-admin/chapters/:id" element={<ChapterConfigPage />} />
-                <Route path="/super-admin/demo-users" element={<DemoUsersPage />} />
-              </Route>
-
-              {/* Demo Mode routes — gated on isMockMode (super-admin-with-toggle OR demo_user) */}
-              <Route element={<DemoGate><DemoLayout /></DemoGate>}>
-                <Route path="/demo" element={<DemoLanding />} />
-                <Route path="/demo/:personaId" element={<DemoLanding />} />
               </Route>
 
               {/* Catch-all */}

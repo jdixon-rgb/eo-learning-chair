@@ -17,6 +17,44 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.57.0 — 2026-04-17
+
+### Major: Phase 1 onboarding polish — global chapter readiness
+Removed demo-mode scaffolding, shipped chapter-level currency + timezone,
+plus Built-by attribution, auto-magic-link on invite, and a real feedback
+inbox. Platform ready for international chapter pilots.
+
+**Removed**
+- **Demo Mode** fully deleted (toggle, banner, `/demo` routes, persona
+  switcher, Demo Users management, mock fixtures, `DemoLayout`, Mock Mode
+  auth state). Narrative demo is a separate artifact we'll build
+  externally; this removes ~1,000 lines of internal-only scaffolding that
+  was cluttering the product surface.
+
+**Added**
+- **Migration 045** — `is_admin()` and `is_chapter_admin()` now include
+  `super_admin`. Fixed a latent RLS bug that blocked super-admins from
+  directly inserting into `member_invites` from the Chapter Config page.
+- **Migration 046** — `chapters.currency` + `chapters.timezone` columns
+  (defaults `USD` / `America/Phoenix`). Chapter Config page has dropdowns
+  for both. `formatCurrency(amount, currency)` accepts an ISO code;
+  Dashboard, TopBar, and BudgetPage pass the active chapter's currency.
+- **Migration 047** — `platform_feedback` table. Every "Send Feedback" /
+  "Report Bug" submission persists here. RLS: any authenticated user can
+  insert; only super-admins can read/update the inbox.
+- **Auto magic-link on invite** — Chapter Config page's Invite button
+  now fires `signInWithOtp` after successfully allowlisting the email,
+  so invitees receive a real magic link immediately instead of JSD
+  sending a manual follow-up.
+- **Built-by attribution** — new `src/lib/appBranding.js` with
+  builder identity + URL. Rendered in a quiet footer on every
+  authenticated page (`BuiltByFooter`), on the login screen, and as
+  an "About the Builder" card in Settings. The Trojan-horse layer —
+  every entrepreneur who touches this app sees who built it.
+- **Floating Feedback button** now visible on desktop (was mobile-only).
+
+---
+
 ## v1.56.0 — 2026-04-17
 
 ### Feature: Chapter-surface mock injection — Karl/Sarah can now walk the full app

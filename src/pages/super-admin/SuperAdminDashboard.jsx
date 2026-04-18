@@ -1,7 +1,6 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useChapter } from '@/lib/chapter'
-import { useAuth } from '@/lib/auth'
-import { Building2, Plus, Sparkles, ArrowRight } from 'lucide-react'
+import { Building2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const MONTH_NAMES = [
@@ -11,14 +10,6 @@ const MONTH_NAMES = [
 
 export default function SuperAdminDashboard() {
   const { allChapters } = useChapter()
-  const { isMockMode, setMockMode } = useAuth()
-  const navigate = useNavigate()
-
-  const handleToggleMock = () => {
-    const next = !isMockMode
-    setMockMode(next)
-    if (next) navigate('/demo')
-  }
 
   return (
     <div className="space-y-6">
@@ -35,58 +26,6 @@ export default function SuperAdminDashboard() {
             Create Chapter
           </Button>
         </Link>
-      </div>
-
-      {/* Demo Mode toggle — super-admin only */}
-      <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-eo-pink/10 text-eo-pink shrink-0">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold">Demo Mode</h3>
-              <p className="text-xs text-muted-foreground mt-1 max-w-xl">
-                When enabled, this browser session sees a fully mocked world — regions, chapters,
-                members, events, NPS, budgets — instead of real data. Nothing you do while in
-                demo mode persists. Scope is per-browser; other users are unaffected.
-              </p>
-              <div className="flex items-center gap-4 mt-2">
-                {isMockMode && (
-                  <Button
-                    size="sm"
-                    onClick={() => navigate('/demo')}
-                    className="bg-eo-pink hover:bg-eo-pink/90 text-white"
-                  >
-                    Go to Demo
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-                <Link
-                  to="/super-admin/demo-users"
-                  className="text-xs text-eo-blue hover:underline"
-                >
-                  Manage demo user accounts →
-                </Link>
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleToggleMock}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-eo-blue focus:ring-offset-2 ${
-              isMockMode ? 'bg-eo-pink' : 'bg-muted'
-            }`}
-            aria-pressed={isMockMode}
-            aria-label="Toggle demo mode"
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition-transform ${
-                isMockMode ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
