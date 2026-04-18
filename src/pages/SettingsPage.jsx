@@ -643,12 +643,12 @@ export default function SettingsPage() {
           {isSupabaseConfigured() ? (
             <>
               <Badge variant="success">Connected</Badge>
-              <span className="text-sm text-muted-foreground">Supabase database connected</span>
+              <span className="text-sm text-muted-foreground">Cloud database connected</span>
             </>
           ) : (
             <>
               <Badge className="bg-primary/10 text-primary border-primary/30">Saved Locally</Badge>
-              <span className="text-sm text-muted-foreground">All changes auto-save to your browser. Configure Supabase in .env.local for cloud sync.</span>
+              <span className="text-sm text-muted-foreground">All changes auto-save to your browser. Cloud database not yet configured.</span>
             </>
           )}
         </div>
@@ -667,7 +667,7 @@ export default function SettingsPage() {
           </div>
           <div className="text-center p-3 rounded-lg bg-muted">
             <p className="text-lg font-bold">{budgetItems.length}</p>
-            <p className="text-[11px] text-muted-foreground">Budget Items</p>
+            <p className="text-[11px] text-muted-foreground">Budgets</p>
           </div>
         </div>
       </div>
@@ -705,7 +705,7 @@ export default function SettingsPage() {
           <div className="flex-1">
             <h3 className="text-sm font-semibold">About This Platform</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
-              <strong>{APP_NAME}</strong> is {BUILDER.framing.toLowerCase()}, shipped by{' '}
+              <strong>{APP_NAME}</strong> — {BUILDER.framing}. Shipped by{' '}
               <a
                 href={BUILDER.url}
                 target="_blank"
@@ -714,7 +714,7 @@ export default function SettingsPage() {
               >
                 {BUILDER.company}
               </a>
-              . It started as a tool for one chapter and is now used by learning chairs, presidents, and regional leadership across multiple chapters and countries.
+              . It started as a tool for one chapter and is now used by learning chairs, current and incoming presidents, and regional leadership across multiple chapters and countries.
             </p>
           </div>
         </div>

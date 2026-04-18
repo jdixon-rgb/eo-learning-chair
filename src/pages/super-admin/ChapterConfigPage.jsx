@@ -77,7 +77,7 @@ export default function ChapterConfigPage() {
     setSaveMsg('')
 
     if (!isSupabaseConfigured()) {
-      setSaveMsg('Supabase not configured - cannot save.')
+      setSaveMsg('Database not configured — cannot save.')
       setSaving(false)
       return
     }
@@ -168,7 +168,7 @@ export default function ChapterConfigPage() {
         setInviteMsg(`Invite sent! ${targetEmail} will receive a magic link.`)
       }
     } else {
-      setInviteMsg('Invite recorded (Supabase not configured — offline).')
+      setInviteMsg('Invite recorded (offline mode).')
     }
 
     setInviteEmail('')
