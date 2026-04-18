@@ -65,6 +65,7 @@ import SAPAnnouncementsPage from '@/pages/sap-portal/SAPAnnouncementsPage'
 import SAPLeadsPage from '@/pages/sap-portal/SAPLeadsPage'
 import SAPReviewsPage from '@/pages/sap-portal/SAPReviewsPage'
 import SAPFeedbackPage from '@/pages/sap-portal/SAPFeedbackPage'
+import ScalingCoachPage from '@/pages/ScalingCoachPage'
 
 // Updates the browser tab title to the active chapter's name.
 function DocumentTitle() {
@@ -126,6 +127,7 @@ function App() {
               <Routes>
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/scaling-coach" element={<ScalingCoachPage />} />
 
               {/* Legacy member calendar redirect */}
               <Route path="/member-calendar" element={<Navigate to="/portal/calendar" replace />} />
