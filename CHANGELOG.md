@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.60.1 — 2026-04-17
+
+### Fix: Dashboard Year Arc readable on mobile
+The 12-month mini calendar used `grid-cols-12` at every breakpoint,
+which on a 360px-wide phone gave each card ~30px — all labels were
+truncating to "KICKO", "MOM", "RENE", etc. Now responsive:
+- Mobile: 4 columns × 3 rows (each card ~80px, full labels fit)
+- Tablet (≥sm): 6 columns × 2 rows
+- Desktop (≥md): 12 columns × 1 row (original behavior)
+Also bumped strategic-label font from 9px to 10px on smaller breakpoints
+and added `gap-1.5` for a touch more breathing room.
+
+---
+
 ## v1.60.0 — 2026-04-17
 
 ### Catch-up: several fixes shipped without a version bump
