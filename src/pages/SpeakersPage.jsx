@@ -8,6 +8,7 @@ import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import PageHeader from '@/lib/pageHeader'
+import { downloadSpeakersBackup } from '@/lib/backupExport'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -27,7 +28,7 @@ const emptyForm = {
 
 export default function SpeakersPage() {
   const {
-    speakers, pipelineSpeakers, events,
+    chapter, speakers, pipelineSpeakers, events,
     addSpeaker, updateSpeaker, deleteSpeaker,
     addToPipeline, updatePipelineEntry, removePipelineEntry,
     updateEvent,
@@ -335,6 +336,19 @@ export default function SpeakersPage() {
               {viewMode === 'kanban' ? 'List View' : 'Kanban View'}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            title="Download a chapter-scoped XLSX backup of your speaker library + current FY pipeline"
+            onClick={() => downloadSpeakersBackup({
+              chapterName: chapter?.name,
+              speakers,
+              pipelineSpeakers,
+              fiscalYear: formatFiscalYear(activeFiscalYear),
+            })}
+          >
+            <Download className="h-4 w-4" /> Backup
+          </Button>
           <Button size="sm" onClick={() => { setEditSpeaker(null); setForm(emptyForm); setShowForm(true) }}>
             <Plus className="h-4 w-4" /> Add Speaker
           </Button>

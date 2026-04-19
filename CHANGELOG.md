@@ -17,6 +17,32 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.69.0 — 2026-04-19
+
+### Feature: Chapter-scoped Download Backup on Speakers / Events / Venues
+Fulfills the Beta Terms promise that users can download their own data
+at any time. Each Learning Chair surface — Speakers, Events, Venues —
+now has a "Backup" button next to its primary actions. Clicking it
+produces a multi-sheet `.xlsx` workbook of everything chapter-scoped
+on that surface, named like `EOArizona-Speakers-Backup-2026-04-19.xlsx`.
+
+- **Speakers backup** — Library sheet (cross-FY persistent) + Pipeline
+  sheet (current FY, with library fields denormalized).
+- **Events backup** — Events sheet + Budget Items + Contract Checklists
+  (exploded one row per event/item) + Event Documents metadata. Filename
+  includes the active fiscal year.
+- **Venues backup** — single Venues sheet (cross-FY persistent).
+- xlsx is lazy-loaded (`import('xlsx')`) so the ~430 KB library only
+  hits the network when a user actually clicks Backup, matching the
+  existing convention from `MemberManagementPage`.
+- jsonb columns (e.g. `events.sap_ids`, `events.candidate_speaker_ids`)
+  are JSON-stringified into cells so the audit trail survives the trip.
+
+`src/lib/backupExport.js` (new), `src/pages/SpeakersPage.jsx`,
+`src/pages/EventsPage.jsx`, `src/pages/VenuesPage.jsx`.
+
+---
+
 ## v1.68.0 — 2026-04-19
 
 ### Feature: Page title + subtitle elevated into the desktop TopBar
