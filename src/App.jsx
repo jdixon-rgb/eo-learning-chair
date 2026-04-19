@@ -12,6 +12,7 @@ import { ForumStoreProvider } from '@/lib/forumStore'
 import { VendorStoreProvider } from '@/lib/vendorStore'
 import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import BetaTermsAckGate from '@/components/BetaTermsAckGate'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
 import CalendarPage from '@/pages/CalendarPage'
@@ -99,6 +100,7 @@ function App() {
             <ForumStoreProvider>
             <VendorStoreProvider>
             <BrowserRouter>
+              <BetaTermsAckGate>
               <Routes>
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
@@ -243,6 +245,7 @@ function App() {
               {/* Catch-all */}
               <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              </BetaTermsAckGate>
             </BrowserRouter>
             </VendorStoreProvider>
             </ForumStoreProvider>

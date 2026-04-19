@@ -17,6 +17,47 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.67.0 — 2026-04-19
+
+### Feature: Beta Terms acknowledgment gate
+With chapters from 30+ countries requesting beta access, this establishes
+the legal foundation for opening access: every user must actively
+acknowledge the Beta Terms — an assumption of risk and indemnification of
+John-Scott Dixon personally, Aidan Taylor LLC, and EO Arizona — before
+using the product. The terms frame Our Chapter OS as an **independent
+project**, explicitly not a product of, sponsored by, or affiliated with
+Entrepreneurs' Organization or any EO chapter.
+
+- **LoginPage**: a single-line checkbox "I acknowledge this is beta
+  software and accept the Beta Terms" is required to enable the Send
+  Magic Link button. Clicking "Beta Terms" opens a read-only modal with
+  the full v1.0 text. Visual focus stays on the magic-link input.
+- **BetaTermsAckGate**: after sign-in, if the user has not acknowledged
+  the currently in-effect terms version, a blocking modal overlays the
+  app. The "I Acknowledge" button is enabled only after the user scrolls
+  to the bottom of the terms. A small "Sign out instead" link is the
+  only alternative.
+- **Re-acknowledgment on version bump**: when a new terms version
+  (e.g. v1.1 adding Chair Chat AI disclaimers) is published with an
+  effective_date `<= today`, the gate reappears for all returning users
+  until they accept the new version. Existing acknowledgments for older
+  versions remain on record.
+- **Schema**: `beta_terms_versions` (immutable history) +
+  `beta_terms_acknowledgments` (unique per user + version, with
+  user_agent for audit). RLS allows anyone to read terms (so the
+  login-page modal works without auth), users to insert/read their own
+  acks, and super_admin to read all. Helpers
+  `current_beta_terms_version()` and `has_acked_current_beta_terms()`.
+- v1.0 terms seeded inline in the migration with effective_date
+  2026-04-19. Includes an explicit AI-content carve-out anticipating
+  Chair Chat and AI contract review.
+
+Migration 051. New: `src/lib/betaTerms.js`,
+`src/components/BetaTermsModal.jsx`, `src/components/BetaTermsAckGate.jsx`.
+Modified: `src/lib/auth.jsx`, `src/pages/LoginPage.jsx`, `src/App.jsx`.
+
+---
+
 ## v1.66.3 — 2026-04-18
 
 ### Fix: Budget items now scoped to active fiscal year
