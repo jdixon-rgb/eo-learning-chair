@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth'
+import { useChapter } from '@/lib/chapter'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { SURVEY_SECTIONS } from '@/lib/surveyConfig'
 import MultiSelectQuestion from '@/components/survey/MultiSelectQuestion'
@@ -21,6 +22,7 @@ const QUESTION_COMPONENTS = {
 
 export default function SurveyPage() {
   const { user, profile } = useAuth()
+  const { activeChapterId } = useChapter()
   const [currentSection, setCurrentSection] = useState(0)
   const [answers, setAnswers] = useState({})
   const [loading, setLoading] = useState(true)
@@ -68,7 +70,12 @@ export default function SurveyPage() {
   // Save answers (debounced on section change)
   const saveProgress = useCallback(async (newAnswers, sectionIdx, isComplete = false) => {
     if (isSupabaseConfigured() && user) {
-      const row = { user_id: user.id, current_section: sectionIdx + 1, is_complete: isComplete }
+      const row = {
+        user_id: user.id,
+        chapter_id: activeChapterId || profile?.chapter_id || null,
+        current_section: sectionIdx + 1,
+        is_complete: isComplete,
+      }
       SURVEY_SECTIONS.forEach(section => {
         section.questions.forEach(q => {
           if (newAnswers[q.id] !== undefined) row[q.column] = newAnswers[q.id]
@@ -82,7 +89,7 @@ export default function SurveyPage() {
         submitted: isComplete,
       }))
     }
-  }, [user])
+  }, [user, activeChapterId, profile])
 
   const setAnswer = (questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }))

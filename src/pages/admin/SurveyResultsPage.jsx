@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { useChapter } from '@/lib/chapter'
 import { SURVEY_SECTIONS } from '@/lib/surveyConfig'
 import { ClipboardList, BarChart3, User, ChevronDown, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -49,6 +50,7 @@ const MOCK_RESPONSES = [
 ]
 
 export default function SurveyResultsPage() {
+  const { activeChapterId } = useChapter()
   const [responses, setResponses] = useState([])
   const [loading, setLoading] = useState(true)
   const [expandedSection, setExpandedSection] = useState(null)
@@ -60,13 +62,20 @@ export default function SurveyResultsPage() {
       setLoading(false)
       return
     }
+    if (!activeChapterId) {
+      setResponses([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
     const { data } = await supabase
       .from('survey_responses')
       .select('*, profiles(full_name, email)')
       .eq('is_complete', true)
-    if (data) setResponses(data)
+      .eq('chapter_id', activeChapterId)
+    setResponses(data || [])
     setLoading(false)
-  }, [])
+  }, [activeChapterId])
 
   useEffect(() => { fetchResponses() }, [fetchResponses])
 

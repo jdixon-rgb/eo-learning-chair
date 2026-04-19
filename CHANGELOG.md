@@ -17,6 +17,41 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.71.1 — 2026-04-19
+
+### Fix: Survey responses cross-tenant leak
+**Bug**: opening Survey Results from any chapter showed survey
+responses from members of OTHER chapters. A super_admin viewing as a
+chair in EO Shanghai saw their own EO Arizona response listed under
+"Individual Responses." Other chapter admins likewise saw out-of-chapter
+responses.
+
+**Root cause**: `survey_responses` had no `chapter_id` column. The only
+read gate was the broad RLS policy "Admins can read all surveys" which
+used `is_admin()` with no chapter scope. The client query was bare
+`select('*')` with no chapter filter either. Both layers needed.
+
+**Fix** (migration 054 + client changes):
+- Added `chapter_id` column to `survey_responses`, backfilled from
+  `profiles.chapter_id` for existing rows.
+- Replaced RLS read policy with chapter-scoped equivalent: super_admin
+  sees all (cross-chapter support), regular chapter admins see only
+  responses where `chapter_id = user_chapter_id()`.
+- `SurveyPage` (member-portal submit) now includes `chapter_id` from
+  the active chapter context in every upsert.
+- `SurveyResultsPage` (admin read) now filters by `activeChapterId`
+  and shows an empty state until the chapter context loads.
+
+This restores the multi-tenant isolation guarantee that v1.48.0 /
+migration 032 established for the rest of the schema. Survey responses
+were missed in that pass because they're per-user not per-chapter in
+schema, even though they're effectively chapter-scoped in usage.
+
+Migration 054. `src/pages/portal/SurveyPage.jsx`,
+`src/pages/admin/SurveyResultsPage.jsx`.
+
+---
+
 ## v1.71.0 — 2026-04-19
 
 ### Feature: Recommendations module (Learning Chair scope)
