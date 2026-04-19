@@ -5,9 +5,11 @@ import { hasPermission } from '@/lib/permissions'
 import { APP_NAME } from '@/lib/appBranding'
 import { Menu, Shield, Bell } from 'lucide-react'
 
-// Minimal TopBar — just identifies which chapter you're in (or "Super
-// Admin" at the platform level). Role + FY live in the collapsible
-// context block inside the sidebar, so we don't duplicate that here.
+// Minimal TopBar.
+// On mobile (sidebar collapsed): identifies which chapter you're in,
+// since the sidebar's chapter name is hidden behind the hamburger.
+// On desktop: the chapter name is hidden — the sidebar's context block
+// already shows it, and rendering it twice looked silly.
 // Bell icon on the right gives admins one-click access to the
 // notifications composer (used to live as a sidebar nav item).
 export default function TopBar({ onMenuToggle }) {
@@ -30,11 +32,11 @@ export default function TopBar({ onMenuToggle }) {
           <Menu className="h-5 w-5" />
         </button>
         {isPlatformSurface ? (
-          <span className="text-base font-bold tracking-tight truncate">
+          <span className="md:hidden text-base font-bold tracking-tight truncate">
             <span className="text-primary">Our</span>Chapter OS
           </span>
         ) : (
-          <h1 className="text-base font-bold tracking-tight truncate">
+          <h1 className="md:hidden text-base font-bold tracking-tight truncate">
             {chapter?.name || APP_NAME}
           </h1>
         )}

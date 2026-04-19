@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.67.1 — 2026-04-19
+
+### Fix: TopBar no longer duplicates the chapter name on desktop
+On desktop the sidebar context block already shows the chapter name
+("EO Arizona") right under the OurChapter OS wordmark, so rendering it
+again in the white TopBar to the right was duplicate noise. Now hidden
+on `md:` and up. On mobile the sidebar collapses behind the hamburger,
+so the TopBar keeps showing the chapter name as the only place users
+see it. `src/components/layout/TopBar.jsx`.
+
+---
+
 ## v1.67.0 — 2026-04-19
 
 ### Feature: Beta Terms acknowledgment gate
