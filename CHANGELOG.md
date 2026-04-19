@@ -17,6 +17,37 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.72.1 — 2026-04-19
+
+### Fix: Stale CHECK constraint blocked events in February / May / December
+**Bug**: creating any event in a month tagged RENEWAL (Feb), GRATITUDE
+GALA (May), or NO EVENT (Dec) failed silently against
+`events_strategic_importance_check`. The optimistic local insert showed
+the event in the UI, but the DB row was never created. Any later
+operation on that "zombie event" then silently failed too.
+
+**Root cause**: the original CHECK from migration 001 allowed
+`kickoff` / `momentum` / `renewal_critical` / `sustain` /
+`strong_close`. Over time the client vocabulary in `STRATEGIC_MAP`
+evolved to `kickoff` / `momentum` / `no_event` / `renewal` /
+`sustain` / `gratitude_gala` — the labels diverged but the constraint
+was never updated.
+
+**Fix** (migration 057): drop the CHECK. `strategic_importance` is
+informational metadata derived from `month_index`; DB-level
+enumeration buys nothing. If revalidation becomes useful, a
+non-breaking text-based check can be reintroduced later.
+
+**Recovery for existing zombie events**: their data is in localStorage
+but absent from Supabase. Easiest path is to delete them from the
+Events page (the delete will silently no-op against the missing DB
+row, then they're gone from the cache too) and re-create. New events
+will persist correctly going forward.
+
+Migration 057.
+
+---
+
 ## v1.72.0 — 2026-04-19
 
 ### Feature: Cross-chapter speaker library sharing (forked-copy model) — V1
