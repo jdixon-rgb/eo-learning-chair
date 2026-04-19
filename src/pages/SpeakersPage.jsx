@@ -7,6 +7,7 @@ import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
+import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -311,16 +312,15 @@ export default function SpeakersPage() {
       <TourTip />
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Speakers</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {activeTab === 'pipeline'
+        <PageHeader
+          title="Speakers"
+          subtitle={
+            activeTab === 'pipeline'
               ? `${pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').length} in pipeline · ${formatFiscalYear(activeFiscalYear)}`
               : `${speakers.length} speakers in library`
-            }
-          </p>
-        </div>
-        <div className="flex gap-2">
+          }
+        />
+        <div className="flex gap-2 ml-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

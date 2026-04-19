@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2, Handshake } from 'lucide-react'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 
 export default function EventsPage() {
   const navigate = useNavigate()
@@ -20,11 +21,11 @@ export default function EventsPage() {
     <div className="space-y-6">
       <TourTip />
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Events</h1>
-          <p className="text-sm text-muted-foreground mt-1">{events.length} events planned</p>
-        </div>
-        <Button size="sm" onClick={() => navigate('/calendar')}>
+        <PageHeader
+          title="Events"
+          subtitle={`${events.length} events planned`}
+        />
+        <Button size="sm" className="ml-auto" onClick={() => navigate('/calendar')}>
           View Calendar
         </Button>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '@/lib/store'
 import { VENUE_PIPELINE_STAGES, AV_QUALITY, ARCHIVE_REASONS } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
@@ -339,13 +340,11 @@ export default function VenuesPage() {
       <TourTip />
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Venue Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {filteredVenues.length} active &middot; {archivedVenues.length} archived &middot; {venues.length} total
-          </p>
-        </div>
-        <div className="flex gap-2">
+        <PageHeader
+          title="Venue Pipeline"
+          subtitle={`${filteredVenues.length} active \u00b7 ${archivedVenues.length} archived \u00b7 ${venues.length} total`}
+        />
+        <div className="flex gap-2 ml-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

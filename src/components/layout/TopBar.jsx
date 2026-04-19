@@ -2,19 +2,22 @@ import { useLocation, NavLink } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
+import { usePageHeader } from '@/lib/pageHeader'
 import { APP_NAME } from '@/lib/appBranding'
 import { Menu, Shield, Bell } from 'lucide-react'
 
-// Minimal TopBar.
-// On mobile (sidebar collapsed): identifies which chapter you're in,
-// since the sidebar's chapter name is hidden behind the hamburger.
-// On desktop: the chapter name is hidden — the sidebar's context block
-// already shows it, and rendering it twice looked silly.
+// TopBar shows different content per breakpoint:
+//   Mobile (<md): chapter name (sidebar is collapsed, this is the only
+//     place users see what chapter they're in)
+//   Desktop (md+): page title + subtitle from PageHeader context
+//     (sidebar already shows the chapter name; this reuses the white
+//     space to elevate the current page identity)
 // Bell icon on the right gives admins one-click access to the
-// notifications composer (used to live as a sidebar nav item).
+// notifications composer.
 export default function TopBar({ onMenuToggle }) {
   const { chapter } = useStore()
   const { effectiveRole, isSuperAdmin, isImpersonating } = useAuth()
+  const { title: pageTitle, subtitle: pageSubtitle } = usePageHeader()
   const location = useLocation()
 
   const isPlatformSurface =
@@ -31,6 +34,7 @@ export default function TopBar({ onMenuToggle }) {
         >
           <Menu className="h-5 w-5" />
         </button>
+        {/* Mobile: chapter name */}
         {isPlatformSurface ? (
           <span className="md:hidden text-base font-bold tracking-tight truncate">
             <span className="text-primary">Our</span>Chapter OS
@@ -39,6 +43,15 @@ export default function TopBar({ onMenuToggle }) {
           <h1 className="md:hidden text-base font-bold tracking-tight truncate">
             {chapter?.name || APP_NAME}
           </h1>
+        )}
+        {/* Desktop: page title + subtitle from PageHeader context */}
+        {pageTitle && (
+          <div className="hidden md:flex flex-col min-w-0 leading-tight">
+            <h1 className="text-lg font-bold tracking-tight truncate">{pageTitle}</h1>
+            {pageSubtitle && (
+              <div className="text-xs text-muted-foreground truncate">{pageSubtitle}</div>
+            )}
+          </div>
         )}
       </div>
 

@@ -4,6 +4,7 @@ import { useBoardStore } from '@/lib/boardStore'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, PIPELINE_STAGES, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
@@ -70,13 +71,13 @@ export default function DashboardPage() {
       <TourTip />
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {formatFiscalYear(activeFiscalYear)} &middot; <ThemeInfo theme={theme} description={activePresidentThemeDescription} />
-          </p>
-        </div>
-        <div className="flex gap-2">
+        <PageHeader
+          title="Dashboard"
+          subtitle={
+            <>{formatFiscalYear(activeFiscalYear)} &middot; <ThemeInfo theme={theme} description={activePresidentThemeDescription} /></>
+          }
+        />
+        <div className="flex gap-2 ml-auto">
           <Button size="sm" variant="outline" onClick={() => navigate('/speakers')}>
             <Plus className="h-4 w-4" /> Add Speaker
           </Button>

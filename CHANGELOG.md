@@ -17,6 +17,36 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.68.0 — 2026-04-19
+
+### Feature: Page title + subtitle elevated into the desktop TopBar
+With the chapter name removed from the desktop TopBar in v1.67.1 the
+white space sat empty. This reuses it: the current page's identity
+(title + supporting metrics) now lives in the TopBar on desktop,
+freeing the body for content.
+
+- New `PageHeaderProvider` + `usePageHeader()` hook + drop-in
+  `<PageHeader title=... subtitle=... />` component
+  (`src/lib/pageHeader.jsx`).
+- Each page calls `<PageHeader>` once at the top of its render. On
+  desktop the component renders nothing in-body and pushes title +
+  subtitle to TopBar via context. On mobile the chapter name stays in
+  TopBar and the title block renders in-body where it always was.
+- `useSetPageHeader(title, subtitle)` hook variant for pages whose
+  in-body title is interactive (e.g. `EventDetailPage` where the h1 is
+  click-to-edit and lock-toggle) — registers context without touching
+  the body.
+- Converted all Learning Chair surfaces in this PR: Dashboard, Year Arc
+  Calendar, Speakers, Events, Event Detail, Venues, Budget, Scenarios,
+  SAPs, Settings. Other chair surfaces (Engagement, President, Finance,
+  Board, Super Admin, Member Portal, SAP Portal) keep their in-body
+  headers for now and will be converted in follow-up PRs.
+
+`src/lib/pageHeader.jsx` (new), `src/components/layout/TopBar.jsx`,
+`src/App.jsx`, plus the 10 page files.
+
+---
+
 ## v1.67.1 — 2026-04-19
 
 ### Fix: TopBar no longer duplicates the chapter name on desktop

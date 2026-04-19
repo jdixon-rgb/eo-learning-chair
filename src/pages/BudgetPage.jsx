@@ -4,6 +4,7 @@ import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { useSAPStore } from '@/lib/sapStore'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import { BUDGET_CATEGORIES, FISCAL_MONTHS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -183,12 +184,10 @@ export default function BudgetPage() {
     <div className="space-y-6">
       <TourTip />
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Budget</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {formatCurrency(chairBudget, currency)} chair budget &middot; {formatFiscalYear(activeFiscalYear)}
-        </p>
-      </div>
+      <PageHeader
+        title="Budget"
+        subtitle={`${formatCurrency(chairBudget, currency)} chair budget \u00b7 ${formatFiscalYear(activeFiscalYear)}`}
+      />
 
       {/* Budget Health Bar */}
       <div className="rounded-xl border bg-card p-6 shadow-sm">

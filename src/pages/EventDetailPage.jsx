@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import EventDocuments from '@/components/EventDocuments'
 import { useSAPStore } from '@/lib/sapStore'
+import { useSetPageHeader } from '@/lib/pageHeader'
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -37,6 +38,9 @@ export default function EventDetailPage() {
   const [selectedSapId, setSelectedSapId] = useState('')
 
   const event = events.find(e => e.id === id)
+  const eventDate = event?.event_date ? formatDate(event.event_date) : null
+  useSetPageHeader(event?.title || 'Event', eventDate)
+
   if (!event) {
     return (
       <div className="text-center py-20">
