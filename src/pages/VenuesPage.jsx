@@ -17,8 +17,9 @@ import {
   Plus, Search, MapPin, Users, DollarSign, Volume2, Utensils,
   Phone, Mail, Trash2, Building2, GripVertical, Star,
   Sparkles, Loader2, CalendarDays, Image as ImageIcon,
-  Archive, RotateCcw, Library,
+  Archive, RotateCcw, Library, Download,
 } from 'lucide-react'
+import { downloadVenuesBackup } from '@/lib/backupExport'
 
 const VENUE_TYPES = [
   { id: 'hotel', label: 'Hotel / Ballroom' },
@@ -69,7 +70,7 @@ function StarRating({ value, onChange, size = 'sm', readonly = false }) {
 }
 
 export default function VenuesPage() {
-  const { venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent, archiveVenue, restoreVenue } = useStore()
+  const { chapter, venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent, archiveVenue, restoreVenue } = useStore()
   const { activeFiscalYear } = useFiscalYear()
   const [showForm, setShowForm] = useState(false)
   const [editVenue, setEditVenue] = useState(null)
@@ -374,6 +375,14 @@ export default function VenuesPage() {
               <Library className="h-3 w-3" /> Library
             </button>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            title="Download a chapter-scoped XLSX backup of all venues"
+            onClick={() => downloadVenuesBackup({ chapterName: chapter?.name, venues })}
+          >
+            <Download className="h-4 w-4" /> Backup
+          </Button>
           <Button size="sm" onClick={() => { setEditVenue(null); setForm(emptyForm); setLookupError(null); setShowForm(true) }}>
             <Plus className="h-4 w-4" /> Add Venue
           </Button>

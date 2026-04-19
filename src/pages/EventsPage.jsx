@@ -4,13 +4,17 @@ import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES, EVENT_FORMAT
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2, Handshake } from 'lucide-react'
+import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2, Handshake, Download } from 'lucide-react'
 import TourTip from '@/components/TourTip'
 import PageHeader from '@/lib/pageHeader'
+import { downloadEventsBackup } from '@/lib/backupExport'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { formatFiscalYear } from '@/lib/fiscalYear'
 
 export default function EventsPage() {
   const navigate = useNavigate()
-  const { events, speakers, venues, budgetItems, saps, deleteEvent } = useStore()
+  const { chapter, events, speakers, venues, budgetItems, contractChecklists, eventDocuments, saps, deleteEvent } = useStore()
+  const { activeFiscalYear } = useFiscalYear()
 
   const sortedEvents = [...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99))
 
@@ -25,9 +29,26 @@ export default function EventsPage() {
           title="Events"
           subtitle={`${events.length} events planned`}
         />
-        <Button size="sm" className="ml-auto" onClick={() => navigate('/calendar')}>
-          View Calendar
-        </Button>
+        <div className="flex gap-2 ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            title="Download a chapter-scoped XLSX backup: events, budget items, contract checklists, document metadata"
+            onClick={() => downloadEventsBackup({
+              chapterName: chapter?.name,
+              events,
+              budgetItems,
+              contractChecklists,
+              eventDocuments,
+              fiscalYear: formatFiscalYear(activeFiscalYear),
+            })}
+          >
+            <Download className="h-4 w-4" /> Backup
+          </Button>
+          <Button size="sm" onClick={() => navigate('/calendar')}>
+            View Calendar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
