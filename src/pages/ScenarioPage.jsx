@@ -3,6 +3,7 @@ import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { FISCAL_MONTHS, STRATEGIC_MAP, BUDGET_CATEGORIES } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -183,16 +184,11 @@ export default function ScenarioPage() {
       <TourTip />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Shuffle className="h-6 w-6 text-primary" />
-            Scenario Planner
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Model different speaker combinations to maximize value within your {formatCurrency(chairBudget)} budget.
-          </p>
-        </div>
-        <Button onClick={handleCreateScenario} size="sm">
+        <PageHeader
+          title="Scenario Planner"
+          subtitle={`Model different speaker combinations to maximize value within your ${formatCurrency(chairBudget)} budget.`}
+        />
+        <Button onClick={handleCreateScenario} size="sm" className="sm:ml-auto">
           <Plus className="h-4 w-4 mr-1" /> New Scenario
         </Button>
       </div>

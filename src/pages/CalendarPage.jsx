@@ -8,6 +8,7 @@ import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDateWithDay } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
+import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -59,15 +60,15 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <TourTip />
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Year Arc Calendar</h1>
-        <div className="flex items-center gap-2 mt-2">
-          <Route className="h-4 w-4 text-warm" />
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        title="Year Arc Calendar"
+        subtitle={
+          <span className="inline-flex items-center gap-2">
+            <Route className="h-3.5 w-3.5 text-warm" />
             {formatFiscalYear(activeFiscalYear)}{incomingPresident ? ` \u00b7 President: ${incomingPresident}` : ''} &middot; <ThemeInfo theme={incomingTheme} description={activePresidentThemeDescription} />
-          </p>
-        </div>
-      </div>
+          </span>
+        }
+      />
 
       {/* Legend */}
       <div className="flex gap-4 text-xs">

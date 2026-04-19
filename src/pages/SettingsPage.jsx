@@ -3,6 +3,7 @@ import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { CHAIR_ROLES } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -199,10 +200,10 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <TourTip />
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Chapter configuration and data management</p>
-      </div>
+      <PageHeader
+        title="Settings"
+        subtitle="Chapter configuration and data management"
+      />
 
       {/* Chapter Config */}
       <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">

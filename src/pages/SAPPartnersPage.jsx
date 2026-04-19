@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { insertRow } from '@/lib/db'
 import { SAP_TIERS, SAP_CONTRIBUTION_TYPES } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -376,13 +377,11 @@ export default function SAPPartnersPage() {
       <TourTip />
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">SAPs</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {activePartners.length} active partner{activePartners.length !== 1 ? 's' : ''} &middot; {contacts.length} contacts
-          </p>
-        </div>
-        <div className="flex gap-2">
+        <PageHeader
+          title="SAPs"
+          subtitle={`${activePartners.length} active partner${activePartners.length !== 1 ? 's' : ''} \u00b7 ${contacts.length} contacts`}
+        />
+        <div className="flex gap-2 ml-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
