@@ -15,11 +15,12 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight } from 'lucide-react'
+import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight, Lock, LockOpen } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
   fee_estimated: '', fee_actual: '',
+  fee_estimated_private: false, fee_actual_private: false,
   contact_email: '', contact_phone: '', agency_name: '', agency_contact: '',
   contact_method: 'direct', fit_score: 7, notes: '', sizzle_reel_url: '',
   routing_flexibility: false, multi_chapter_interest: false,
@@ -48,6 +49,7 @@ export default function SpeakersPage() {
 
   // Pipeline-specific fields that live on speaker_pipeline, not speakers
   const PIPELINE_FIELDS = ['pipeline_stage', 'fit_score', 'fee_estimated', 'fee_actual',
+    'fee_estimated_private', 'fee_actual_private',
     'contract_storage_path', 'contract_file_name', 'w9_storage_path', 'w9_file_name', 'notes']
 
   const handleDocUpload = useCallback(async (file, docType) => {
@@ -197,6 +199,8 @@ export default function SpeakersPage() {
       fee_range_high: speaker.fee_range_high || '',
       fee_estimated: speaker.fee_estimated || '',
       fee_actual: speaker.fee_actual || '',
+      fee_estimated_private: !!speaker.fee_estimated_private,
+      fee_actual_private: !!speaker.fee_actual_private,
       contact_email: speaker.contact_email || '',
       contact_phone: speaker.contact_phone || '',
       agency_name: speaker.agency_name || '',
@@ -291,12 +295,12 @@ export default function SpeakersPage() {
         {/* Inline estimated / actual fee inputs */}
         <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t" onClick={e => e.stopPropagation()} onDragStart={e => e.stopPropagation()}>
           <InlineFeeInput
-            label="Estimated"
+            label={<>Estimated{speaker.fee_estimated_private && <Lock className="inline h-2.5 w-2.5 ml-1 text-warm" />}</>}
             value={speaker.fee_estimated}
             onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_estimated: val })}
           />
           <InlineFeeInput
-            label="Actual"
+            label={<>Actual{speaker.fee_actual_private && <Lock className="inline h-2.5 w-2.5 ml-1 text-warm" />}</>}
             value={speaker.fee_actual}
             onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_actual: val })}
           />
@@ -445,10 +449,16 @@ export default function SpeakersPage() {
                         {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
-                        {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
+                        <span className="inline-flex items-center gap-1">
+                          {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
+                          {speaker.fee_estimated_private && <Lock className="h-3 w-3 text-warm" title="Private — speaker requested confidentiality" />}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
-                        {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
+                        <span className="inline-flex items-center gap-1">
+                          {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
+                          {speaker.fee_actual_private && <Lock className="h-3 w-3 text-warm" title="Private — speaker requested confidentiality" />}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
@@ -595,11 +605,33 @@ export default function SpeakersPage() {
               {(editSpeaker?._pipeline_id || !editSpeaker) && (
                 <>
                   <div>
-                    <label className="text-xs font-medium">Estimated Fee ($)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium">Estimated Fee ($)</label>
+                      <button
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, fee_estimated_private: !p.fee_estimated_private }))}
+                        title={form.fee_estimated_private ? 'Estimated fee is private — click to make visible' : 'Estimated fee is visible — click to mark private (e.g. speaker requested confidentiality)'}
+                        className={`flex items-center gap-1 text-[10px] cursor-pointer rounded px-1.5 py-0.5 ${form.fee_estimated_private ? 'bg-warm/15 text-warm' : 'text-muted-foreground hover:bg-accent'}`}
+                      >
+                        {form.fee_estimated_private ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
+                        {form.fee_estimated_private ? 'Private' : 'Public'}
+                      </button>
+                    </div>
                     <Input type="number" value={form.fee_estimated} onChange={e => setForm(p => ({ ...p, fee_estimated: e.target.value }))} placeholder="Negotiated estimate" />
                   </div>
                   <div>
-                    <label className="text-xs font-medium">Actual Fee ($)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium">Actual Fee ($)</label>
+                      <button
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, fee_actual_private: !p.fee_actual_private }))}
+                        title={form.fee_actual_private ? 'Actual fee is private — click to make visible' : 'Actual fee is visible — click to mark private (e.g. speaker requested confidentiality)'}
+                        className={`flex items-center gap-1 text-[10px] cursor-pointer rounded px-1.5 py-0.5 ${form.fee_actual_private ? 'bg-warm/15 text-warm' : 'text-muted-foreground hover:bg-accent'}`}
+                      >
+                        {form.fee_actual_private ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
+                        {form.fee_actual_private ? 'Private' : 'Public'}
+                      </button>
+                    </div>
                     <Input type="number" value={form.fee_actual} onChange={e => setForm(p => ({ ...p, fee_actual: e.target.value }))} placeholder="Final amount paid" />
                   </div>
                 </>

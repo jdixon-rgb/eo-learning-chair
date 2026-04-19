@@ -17,6 +17,31 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.70.0 — 2026-04-19
+
+### Feature: Per-speaker fee privacy toggle (estimated + actual)
+Speakers sometimes give a chapter a discounted rate with a request not
+to share the number with other chapters. This adds a per-pipeline-entry
+privacy flag for each fee value so chapter staff can honor that.
+
+- **Two new boolean columns** on `speaker_pipeline`:
+  `fee_estimated_private` and `fee_actual_private` (both default false).
+- **Speaker edit form**: a small Lock toggle sits next to each fee
+  input. Click to flip between Public (visible) and Private (warm-tinted
+  Lock). Tooltip explains the use case.
+- **Visual indicator everywhere fees render**: in the pipeline kanban
+  card's inline fee inputs and in the library list's fee columns, a
+  small Lock icon sits next to private values as a reminder not to
+  share externally.
+- **Within-chapter behavior**: fees stay fully visible to chapter
+  admins (they need to see what they're paying). The Lock is just an
+  indicator. Cross-chapter enforcement will arrive with the speaker
+  library sharing feature (#5 on the roadmap).
+
+Migration 052. `src/pages/SpeakersPage.jsx`.
+
+---
+
 ## v1.69.1 — 2026-04-19
 
 ### Fix: Contract checklist FK race when opening a freshly-created event
