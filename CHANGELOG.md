@@ -17,6 +17,36 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.69.1 — 2026-04-19
+
+### Fix: Contract checklist FK race when opening a freshly-created event
+"Save failed (insert:contract_checklists): violates foreign key constraint
+contract_checklists_event_id_fkey" surfaced when a user created an event
+and immediately opened it. Two bugs converged:
+
+1. `getOrCreateChecklist(id)` was called during EventDetailPage render
+   and side-effected an `INSERT` into `contract_checklists`. State
+   mutation during render is a React anti-pattern.
+2. The events row from `addEvent` is optimistically inserted into local
+   state then asynchronously written to Supabase. Opening the event
+   detail page immediately fired the checklist insert before the events
+   insert had completed in the database — FK violation.
+
+Fix: split into two operations.
+- `getChecklist(eventId)` — read-only; returns existing or default
+  in-memory object. Safe during render.
+- `setChecklistField(eventId, field, value)` — called when the user
+  toggles a checkbox or types a note. Updates the existing row, or
+  inserts a new one if none exists. On FK 23503 it waits 800ms and
+  retries once (covering the optimistic-insert race).
+
+EventDetailPage now uses both. The DB row is created only on first
+user interaction with the checklist, not on page mount.
+
+`src/lib/store.js`, `src/pages/EventDetailPage.jsx`.
+
+---
+
 ## v1.69.0 — 2026-04-19
 
 ### Feature: Chapter-scoped Download Backup on Speakers / Events / Venues
