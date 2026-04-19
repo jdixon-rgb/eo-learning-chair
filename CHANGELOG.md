@@ -17,6 +17,40 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.71.0 — 2026-04-19
+
+### Feature: Recommendations module (Learning Chair scope)
+Cross-chapter feedback queue. Any Learning Chair (or LC-Elect, or
+super_admin) can submit a feature recommendation; everyone with access
+can upvote; super_admin sets effort, marks status, records the version
+each item shipped in.
+
+- **New page** at `/recommendations` with a Lightbulb icon in the
+  Learning Chair sidebar (under Survey Results). Visible to LCs +
+  super_admin.
+- **Submit form**: title + body. As you type the title, similar
+  existing recommendations surface inline so you can upvote one of
+  those instead of creating a near-duplicate (Jaccard word similarity,
+  threshold 0.35).
+- **List view**: sorted by upvotes, status-grouped (open/in-progress
+  first, then shipped, then closed/duplicate). Each row shows the
+  status badge, effort badge (if set by admin), shipped-in-version
+  badge (if shipped), submitter name + chapter, and date.
+- **Voting**: one toggle per user (DB unique constraint).
+  Optimistic-on-client.
+- **Super-admin controls** inline on each row: status dropdown
+  (open / in_progress / shipped / closed / duplicate), effort
+  dropdown (easy / medium / difficult), shipped-in-version text input.
+  Setting status to `shipped` auto-stamps `shipped_at`.
+- **Cross-chapter visibility**: anyone authenticated can read; only
+  LCs + super_admin can submit/vote. RLS enforces both.
+
+Migration 053. New: `src/lib/recommendationsStore.js`,
+`src/pages/RecommendationsPage.jsx`. Modified: `src/lib/chairRoles.js`,
+`src/App.jsx`.
+
+---
+
 ## v1.70.0 — 2026-04-19
 
 ### Feature: Per-speaker fee privacy toggle (estimated + actual)

@@ -38,6 +38,7 @@ import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
+import RecommendationsPage from '@/pages/RecommendationsPage'
 import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
 import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
 import AnalyticsPage from '@/pages/super-admin/AnalyticsPage'
@@ -142,6 +143,9 @@ function App() {
                 } />
                 <Route path="/admin/surveys" element={
                   <ProtectedRoute allowedRoles={['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect']}><SurveyResultsPage /></ProtectedRoute>
+                } />
+                <Route path="/recommendations" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'learning_chair', 'learning_chair_elect']}><RecommendationsPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/notifications" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><NotificationComposePage /></ProtectedRoute>
