@@ -417,11 +417,41 @@ export function StoreProvider({ children }) {
 
   // ── Contract checklist operations ──
 
-  const getOrCreateChecklist = useCallback((eventId) => {
+  // Read-only lookup. Returns the existing checklist for an event or a
+  // default in-memory object that has NOT been persisted. Safe to call
+  // during render. The DB row is only created when the user actually
+  // toggles a checkbox or types a note (see setChecklistField).
+  const getChecklist = useCallback((eventId) => {
     const existing = contractChecklists.find(c => c.event_id === eventId)
     if (existing) return existing
-    const id = crypto.randomUUID()
+    return {
+      id: null,
+      event_id: eventId,
+      jurisdiction_local: false,
+      indemnification_clause: false,
+      mfn_clause: false,
+      run_of_show_included: false,
+      av_requirements_specified: false,
+      cancellation_terms: false,
+      recording_rights: false,
+      contract_signed: false,
+      contract_notes: '',
+    }
+  }, [contractChecklists])
+
+  // Lazy upsert. Called when the user touches a checklist field. If a
+  // row exists, updates it. If not, creates it — with a single retry on
+  // FK 23503 (events row may still be persisting from an optimistic
+  // addEvent that hasn't completed in Supabase yet).
+  const setChecklistField = useCallback((eventId, field, value) => {
     const now = new Date().toISOString()
+    const existing = contractChecklists.find(c => c.event_id === eventId)
+    if (existing) {
+      setContractChecklists(prev => prev.map(c => c.id === existing.id ? { ...c, [field]: value, updated_at: now } : c))
+      dbWrite(() => updateRow('contract_checklists', existing.id, { [field]: value }), 'update:contract_checklists')
+      return
+    }
+    const id = crypto.randomUUID()
     const newChecklist = {
       id,
       event_id: eventId,
@@ -434,13 +464,22 @@ export function StoreProvider({ children }) {
       recording_rights: false,
       contract_signed: false,
       contract_notes: '',
+      [field]: value,
       created_at: now,
       updated_at: now,
     }
     setContractChecklists(prev => [...prev, newChecklist])
-    dbWrite(() => insertRow('contract_checklists', newChecklist), 'insert:contract_checklists')
-    return newChecklist
-  }, [activeChapterId, contractChecklists, dbWrite])
+    dbWrite(async () => {
+      const res = await insertRow('contract_checklists', newChecklist)
+      // FK race: the events row from an optimistic addEvent may still be
+      // mid-flight to Supabase. Retry once after a short delay.
+      if (res?.error?.code === '23503') {
+        await new Promise(r => setTimeout(r, 800))
+        return insertRow('contract_checklists', newChecklist)
+      }
+      return res
+    }, 'insert:contract_checklists')
+  }, [contractChecklists, dbWrite])
 
   const updateChecklist = useCallback((id, updates) => {
     const now = new Date().toISOString()
@@ -638,7 +677,8 @@ export function StoreProvider({ children }) {
     upsertBudgetItem,
 
     // Contract ops
-    getOrCreateChecklist,
+    getChecklist,
+    setChecklistField,
     updateChecklist,
 
     // Document ops

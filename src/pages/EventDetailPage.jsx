@@ -29,7 +29,7 @@ export default function EventDetailPage() {
     events, speakers, pipelineSpeakers, venues, budgetItems, contractChecklists, saps,
     updateEvent, deleteEvent,
     addBudgetItem, updateBudgetItem,
-    getOrCreateChecklist, updateChecklist,
+    getChecklist, setChecklistField,
   } = useStore()
 
   const { partners: sapPartners, contactsForPartner, engagementsForEvent, addEngagement, updateEngagement, deleteEngagement } = useSAPStore()
@@ -63,7 +63,7 @@ export default function EventDetailPage() {
   const totalActual = eventBudget.reduce((s, b) => s + (b.actual_amount || 0), 0)
   const budgetDelta = totalBudget - totalContracted
   const budgetHealthPct = totalBudget > 0 ? (totalContracted / totalBudget) * 100 : 0
-  const checklist = getOrCreateChecklist(id)
+  const checklist = getChecklist(id)
 
   return (
     <div className="space-y-6">
@@ -711,7 +711,7 @@ export default function EventDetailPage() {
                   <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/30 transition-colors">
                     <Checkbox
                       checked={checklist[item.id] || false}
-                      onCheckedChange={(val) => updateChecklist(checklist.id, { [item.id]: val })}
+                      onCheckedChange={(val) => setChecklistField(id, item.id, val)}
                       className="mt-0.5"
                     />
                     <div className="flex-1">
@@ -727,7 +727,7 @@ export default function EventDetailPage() {
                 <label className="text-xs font-medium">Contract Notes</label>
                 <Textarea
                   value={checklist.contract_notes || ''}
-                  onChange={e => updateChecklist(checklist.id, { contract_notes: e.target.value })}
+                  onChange={e => setChecklistField(id, 'contract_notes', e.target.value)}
                   placeholder="Additional notes about the contract..."
                   rows={3}
                 />
