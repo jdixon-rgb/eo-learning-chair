@@ -4,8 +4,10 @@ import { useAuth } from '@/lib/auth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Mail, Loader2, CheckCircle2 } from 'lucide-react'
 import Wordmark from '@/components/Wordmark'
+import BetaTermsModal from '@/components/BetaTermsModal'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
 
 export default function LoginPage() {
@@ -14,6 +16,8 @@ export default function LoginPage() {
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [termsOpen, setTermsOpen] = useState(false)
 
   // Already authenticated (or dev mode) — redirect to appropriate home
   if (!loading && profile) {
@@ -100,7 +104,26 @@ export default function LoginPage() {
                   <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
                 )}
 
-                <Button type="submit" className="w-full" disabled={sending || !email.trim()}>
+                <div className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                  <Checkbox
+                    checked={acceptedTerms}
+                    onCheckedChange={setAcceptedTerms}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    I acknowledge this is beta software and accept the{' '}
+                    <button
+                      type="button"
+                      onClick={() => setTermsOpen(true)}
+                      className="underline underline-offset-2 text-foreground hover:text-primary cursor-pointer"
+                    >
+                      Beta Terms
+                    </button>
+                    .
+                  </span>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={sending || !email.trim() || !acceptedTerms}>
                   {sending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -139,6 +162,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+      <BetaTermsModal open={termsOpen} onOpenChange={setTermsOpen} />
     </div>
   )
 }

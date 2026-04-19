@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, createElement } from 'react'
 import { supabase, isSupabaseConfigured } from './supabase'
+import { fetchCurrentBetaTerms, hasAckedCurrentBetaTerms, acknowledgeBetaTerms } from './betaTerms'
 
 const AuthContext = createContext(null)
 
@@ -18,6 +19,8 @@ export function AuthProvider({ children }) {
   const [viewAsSapContactId, setViewAsSapContactIdState] = useState(() => {
     try { return localStorage.getItem(VIEW_AS_SAP_CONTACT_KEY) || null } catch { return null }
   })
+  const [currentTerms, setCurrentTerms] = useState(null)
+  const [requiresTermsAck, setRequiresTermsAck] = useState(false)
 
   const fetchProfile = useCallback(async (userId) => {
     if (!supabase) return
@@ -27,8 +30,23 @@ export function AuthProvider({ children }) {
       .eq('id', userId)
       .single()
     if (!error && data) setProfile(data)
+    // After profile loads, check whether this user has acked the current beta terms.
+    const [terms, acked] = await Promise.all([
+      fetchCurrentBetaTerms(),
+      hasAckedCurrentBetaTerms(),
+    ])
+    setCurrentTerms(terms)
+    setRequiresTermsAck(!!terms && !acked)
     setLoading(false)
   }, [])
+
+  // Acknowledge the current terms version. Clears the gate on success.
+  const acknowledgeTerms = useCallback(async () => {
+    if (!currentTerms) return { error: { message: 'No current terms loaded' } }
+    const { error } = await acknowledgeBetaTerms(currentTerms.id)
+    if (!error) setRequiresTermsAck(false)
+    return { error }
+  }, [currentTerms])
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -139,6 +157,9 @@ export function AuthProvider({ children }) {
     viewAsSapContactId,
     setViewAsSapContactId,
     isPreviewingOtherUser,
+    currentTerms,
+    requiresTermsAck,
+    acknowledgeTerms,
   }
 
   return createElement(AuthContext.Provider, { value }, children)
