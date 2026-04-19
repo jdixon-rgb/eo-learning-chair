@@ -17,6 +17,53 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.72.0 — 2026-04-19
+
+### Feature: Cross-chapter speaker library sharing (forked-copy model) — V1
+The fifth and final piece of the original five-piece beta plan. Lets a
+chapter mark a speaker in their library as "Globally Shared" so other
+chapters can discover that speaker in a new Shared Library tab and fork
+a copy into their own chapter's pipeline.
+
+- **Per-speaker share toggle** in the speaker edit form: Chapter Only
+  (default) vs Globally Shared. Shows a warm-tinted explainer card
+  describing what each setting does. The chapter name is denormalized
+  onto the speaker row at share time so other chapters can attribute
+  it without opening up cross-chapter `chapters.*` reads.
+- **New Shared Library tab** on the Speakers page. Lists all globally-
+  shared speakers from OTHER chapters, sorted by name. Each card shows
+  name, topic, bio, fee range, and source chapter. Empty state when no
+  one's sharing yet.
+- **Fork-into-pipeline** flow: clicking "Add to my pipeline" on a
+  shared card creates a fresh `speakers` row in the importing chapter
+  (bio / topic / contact / fee_range copied) plus a blank
+  `speaker_pipeline` entry for the active fiscal year. The new row's
+  `imported_from_speaker_id` points back at the source for attribution.
+  Importer has full sovereignty: can edit, re-share, or delete.
+- **Already-forked indicator**: cards for speakers the chapter has
+  already imported show "Already in your library" instead of an Add
+  button.
+
+### Schema (migration 056)
+- `speakers.share_scope text` (CHECK in chapter_only / global, default
+  chapter_only)
+- `speakers.shared_chapter_name text` (denormalized at share time)
+- `speakers.imported_from_speaker_id uuid` (provenance)
+- SELECT policy on speakers updated to allow cross-chapter reads when
+  `share_scope = 'global'`. Chapter-scoped admin reads still work for
+  non-shared speakers.
+
+### Out of scope (v1)
+- Cross-chapter aggregation of pipeline data (historical fees, who's
+  spoken at which chapters, etc.) — that's where the v1.70.0 fee
+  privacy flags would kick in. Follow-up PR.
+- Region-level sharing (US-West, etc.) — global-only for v1.
+- "Check for updates" UI to pull latest bio changes from the source.
+
+`src/pages/SpeakersPage.jsx`. Migration 056.
+
+---
+
 ## v1.71.1 — 2026-04-19
 
 ### Fix: Survey responses cross-tenant leak

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
 import TourTip from '@/components/TourTip'
 import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB } from '@/lib/constants'
@@ -15,7 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight, Lock, LockOpen } from 'lucide-react'
+import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight, Lock, LockOpen, Globe } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
@@ -24,6 +25,7 @@ const emptyForm = {
   contact_email: '', contact_phone: '', agency_name: '', agency_contact: '',
   contact_method: 'direct', fit_score: 7, notes: '', sizzle_reel_url: '',
   routing_flexibility: false, multi_chapter_interest: false,
+  share_scope: 'chapter_only',
   assigned_event_ids: [],
 }
 
@@ -140,6 +142,12 @@ export default function SpeakersPage() {
     pipelineData.fee_actual = pipelineData.fee_actual ? parseFloat(pipelineData.fee_actual) : null
     pipelineData.fit_score = parseInt(pipelineData.fit_score)
 
+    // Denormalize source chapter name when sharing globally so other
+    // chapters can attribute it without opening up cross-chapter chapters.* reads.
+    libraryData.shared_chapter_name = libraryData.share_scope === 'global'
+      ? (chapter?.name || null)
+      : null
+
     let speakerId
     if (editSpeaker) {
       updateSpeaker(editSpeaker.id, libraryData)
@@ -201,6 +209,7 @@ export default function SpeakersPage() {
       fee_actual: speaker.fee_actual || '',
       fee_estimated_private: !!speaker.fee_estimated_private,
       fee_actual_private: !!speaker.fee_actual_private,
+      share_scope: speaker.share_scope || 'chapter_only',
       contact_email: speaker.contact_email || '',
       contact_phone: speaker.contact_phone || '',
       agency_name: speaker.agency_name || '',
@@ -382,6 +391,17 @@ export default function SpeakersPage() {
           <BookOpen className="h-3.5 w-3.5" />
           Library
         </button>
+        <button
+          onClick={() => setActiveTab('shared')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+            activeTab === 'shared'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Globe className="h-3.5 w-3.5" />
+          Shared Library
+        </button>
       </div>
 
       {activeTab === 'pipeline' ? (
@@ -495,7 +515,7 @@ export default function SpeakersPage() {
             </div>
           )}
         </>
-      ) : (
+      ) : activeTab === 'library' ? (
         /* Library Tab */
         <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
           <table className="w-full">
@@ -574,6 +594,23 @@ export default function SpeakersPage() {
             </tbody>
           </table>
         </div>
+      ) : (
+        /* Shared Library Tab */
+        <SharedLibraryTab
+          activeChapterId={activeChapterId}
+          ownSpeakers={speakers}
+          onFork={async (sharedSpeaker) => {
+            // Strip metadata fields and copy library-eligible fields into our chapter
+            const { id, chapter_id, share_scope, shared_chapter_name, imported_from_speaker_id, created_at, updated_at, ...copyable } = sharedSpeaker
+            await addSpeaker({
+              ...copyable,
+              imported_from_speaker_id: sharedSpeaker.id,
+              share_scope: 'chapter_only',
+              shared_chapter_name: null,
+              pipeline_stage: 'researching',
+            })
+          }}
+        />
       )}
 
       {/* Add/Edit Speaker Dialog */}
@@ -674,6 +711,23 @@ export default function SpeakersPage() {
               <div className="col-span-2">
                 <label className="text-xs font-medium">Sizzle Reel URL</label>
                 <Input value={form.sizzle_reel_url} onChange={e => setForm(p => ({ ...p, sizzle_reel_url: e.target.value }))} placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..." />
+              </div>
+              <div className="col-span-2 rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForm(p => ({ ...p, share_scope: p.share_scope === 'global' ? 'chapter_only' : 'global' }))}
+                    className={`shrink-0 mt-0.5 px-2 py-1 rounded text-xs font-medium cursor-pointer flex items-center gap-1 ${form.share_scope === 'global' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-white text-muted-foreground border border-border hover:bg-accent'}`}
+                  >
+                    {form.share_scope === 'global' ? <BookOpen className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                    {form.share_scope === 'global' ? 'Globally Shared' : 'Chapter Only'}
+                  </button>
+                  <div className="text-xs text-muted-foreground leading-relaxed">
+                    {form.share_scope === 'global'
+                      ? 'Other chapters can see this speaker in their Shared Library and fork a copy into their own pipeline. Your pipeline data (fees, notes, status) stays private to your chapter.'
+                      : 'Only your chapter sees this speaker. Toggle on to let other chapters discover and fork them.'}
+                  </div>
+                </div>
               </div>
 
               {/* Speaker Documents — only when pipeline entry exists */}
@@ -799,6 +853,124 @@ export default function SpeakersPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+// ── Shared Library Tab — globally-shared speakers from other chapters ──
+function SharedLibraryTab({ activeChapterId, ownSpeakers, onFork }) {
+  const [speakers, setSpeakers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [forking, setForking] = useState(null)         // speaker id being forked
+
+  const ownImportedIds = new Set(
+    ownSpeakers.filter(s => s.imported_from_speaker_id).map(s => s.imported_from_speaker_id),
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      if (!isSupabaseConfigured()) {
+        setLoading(false)
+        return
+      }
+      setError(null)
+      const { data, error: err } = await supabase
+        .from('speakers')
+        .select('*')
+        .eq('share_scope', 'global')
+        .neq('chapter_id', activeChapterId)
+        .order('name', { ascending: true })
+      if (cancelled) return
+      if (err) {
+        setError(err.message)
+        setLoading(false)
+        return
+      }
+      setSpeakers(data || [])
+      setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [activeChapterId])
+
+  const handleFork = async (speaker) => {
+    setForking(speaker.id)
+    try {
+      await onFork(speaker)
+    } finally {
+      setForking(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading shared library…
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg border bg-destructive/10 text-destructive px-4 py-3 text-sm">{error}</div>
+    )
+  }
+
+  if (speakers.length === 0) {
+    return (
+      <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
+        No shared speakers from other chapters yet. When a chapter toggles a speaker to "Globally Shared," they'll appear here.
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {speakers.map(speaker => {
+        const alreadyForked = ownImportedIds.has(speaker.id)
+        return (
+          <div key={speaker.id} className="rounded-xl border bg-card p-4 shadow-sm flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold truncate">{speaker.name}</h3>
+                {speaker.topic && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{speaker.topic}</p>}
+              </div>
+              <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <Globe className="h-3 w-3" />
+                Shared
+              </span>
+            </div>
+            {speaker.bio && <p className="text-xs text-muted-foreground line-clamp-3">{speaker.bio}</p>}
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium">
+                {speaker.fee_range_low
+                  ? `$${(speaker.fee_range_low / 1000).toFixed(0)}K–$${(speaker.fee_range_high / 1000).toFixed(0)}K`
+                  : 'Fee TBD'}
+              </span>
+              <span className="text-muted-foreground italic">
+                {speaker.shared_chapter_name || 'EO Chapter'}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant={alreadyForked ? 'outline' : 'default'}
+              disabled={alreadyForked || forking === speaker.id}
+              onClick={() => handleFork(speaker)}
+              className="w-full"
+            >
+              {forking === speaker.id ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Forking…</>
+              ) : alreadyForked ? (
+                'Already in your library'
+              ) : (
+                <><Plus className="h-3.5 w-3.5 mr-1" /> Add to my pipeline</>
+              )}
+            </Button>
+          </div>
+        )
+      })}
     </div>
   )
 }
