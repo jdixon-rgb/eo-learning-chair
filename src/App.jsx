@@ -25,6 +25,8 @@ import BudgetPage from '@/pages/BudgetPage'
 import ScenarioPage from '@/pages/ScenarioPage'
 import SettingsPage from '@/pages/SettingsPage'
 import LoginPage from '@/pages/LoginPage'
+import PrivacyPolicy from '@/pages/PrivacyPolicy'
+import TermsOfService from '@/pages/TermsOfService'
 import MemberCalendarPage from '@/pages/MemberCalendarPage'
 import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
 import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
@@ -107,6 +109,8 @@ function App() {
               <Routes>
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
 
               {/* Legacy member calendar redirect */}
               <Route path="/member-calendar" element={<Navigate to="/portal/calendar" replace />} />
