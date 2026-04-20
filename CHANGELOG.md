@@ -17,6 +17,39 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.73.0 — 2026-04-19
+
+### Feature: Admin "Generate Sign-In Link" — bypass email delivery
+For users whose corporate email gateway is silently dropping our
+magic-link emails (delivered to MX with 250 OK but never reaching the
+inbox — Celia Waddington's case), super_admin can now mint a real,
+single-use sign-in link **without going through the email channel**
+and share it via WhatsApp / SMS / Signal / in-person.
+
+- **New Vercel serverless function** `api/admin/generate-magic-link.js`:
+  verifies the caller's JWT belongs to a `super_admin`, then uses the
+  service-role key to call `auth.admin.generateLink({ type: 'magiclink' })`.
+  Returns the action_link plus issuance metadata.
+- **Admin UI**: small Link icon next to each member row in Member
+  Management (super_admin only, on hover). Click → modal opens with
+  the generated URL + Copy button + warning about treating it like a
+  password (anyone who clicks it signs in as that user).
+- **Single-use**: link is consumed on first click and expires per
+  Supabase Auth's link-expiry setting (default 1 hour).
+- **Audit metadata** displayed in modal: who issued, when, for which
+  email. Not yet persisted to a server-side audit log (consider
+  follow-up if usage grows).
+
+### Required env var (must add in Vercel before this works)
+`SUPABASE_SERVICE_ROLE_KEY` — get it from Supabase Dashboard →
+Settings → API → `service_role` key. Add in Vercel → Settings →
+Environment Variables. **Never expose this in client-side code or
+prefix with VITE_** — it bypasses RLS entirely.
+
+`api/admin/generate-magic-link.js` (new), `src/pages/admin/MemberManagementPage.jsx`.
+
+---
+
 ## v1.72.1 — 2026-04-19
 
 ### Fix: Stale CHECK constraint blocked events in February / May / December

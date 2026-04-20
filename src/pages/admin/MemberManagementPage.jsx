@@ -2,25 +2,78 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useChapter } from '@/lib/chapter'
 import { useBoardStore } from '@/lib/boardStore'
+import { useAuth } from '@/lib/auth'
 import { USER_ROLES } from '@/lib/constants'
 import {
   Users, Search, Mail, UserPlus, Trash2, Loader2, Upload,
   ChevronDown, ChevronUp, FileSpreadsheet, Pencil, Check, X,
-  Star, Building2, Phone, UserCircle,
+  Star, Building2, Phone, UserCircle, Link2, Copy,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 // Lazy-load xlsx to avoid bloating the main bundle
 const loadXLSX = () => import('xlsx')
 
 export default function MemberManagementPage() {
   const { activeChapterId } = useChapter()
+  const { isSuperAdmin } = useAuth()
   const {
     chapterMembers, addChapterMember, updateChapterMember, deleteChapterMember,
     syncMemberInvites, pendingProfileChangeRequests, resolveProfileCheckin,
   } = useBoardStore()
+
+  // Generate-magic-link admin tool
+  const [linkModalOpen, setLinkModalOpen] = useState(false)
+  const [linkLoading, setLinkLoading] = useState(false)
+  const [linkResult, setLinkResult] = useState(null)
+  const [linkError, setLinkError] = useState(null)
+  const [linkCopied, setLinkCopied] = useState(false)
+
+  const generateMagicLink = useCallback(async (email) => {
+    setLinkModalOpen(true)
+    setLinkLoading(true)
+    setLinkResult(null)
+    setLinkError(null)
+    setLinkCopied(false)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const jwt = session?.access_token
+      if (!jwt) {
+        setLinkError('Not authenticated.')
+        return
+      }
+      const res = await fetch('/api/admin/generate-magic-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({ email, redirectTo: window.location.origin }),
+      })
+      const body = await res.json()
+      if (!res.ok) {
+        setLinkError(body.error || `Request failed (HTTP ${res.status})`)
+        return
+      }
+      setLinkResult(body)
+    } catch (err) {
+      setLinkError(err.message || String(err))
+    } finally {
+      setLinkLoading(false)
+    }
+  }, [])
+
+  const copyLink = async () => {
+    if (!linkResult?.url) return
+    try {
+      await navigator.clipboard.writeText(linkResult.url)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2500)
+    } catch { /* clipboard blocked */ }
+  }
 
   // Profile / invite status (for showing who has signed up)
   const [profiles, setProfiles] = useState([])
@@ -602,6 +655,15 @@ export default function MemberManagementPage() {
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
+                        {isSuperAdmin && member.email && (
+                          <button
+                            onClick={() => generateMagicLink(member.email)}
+                            className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                            title="Generate sign-in link (no email) — share OOB"
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(member)}
                           className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
@@ -625,6 +687,49 @@ export default function MemberManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Generate-magic-link result modal (super_admin only) */}
+      <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-4 w-4" /> Sign-in link
+            </DialogTitle>
+          </DialogHeader>
+          {linkLoading ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Generating…
+            </div>
+          ) : linkError ? (
+            <div className="rounded-lg border bg-destructive/10 text-destructive px-4 py-3 text-sm">
+              {linkError}
+            </div>
+          ) : linkResult ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                One-time sign-in link for <strong className="text-foreground">{linkResult.target_email}</strong>.
+                Share via a secure channel (WhatsApp, SMS, Signal). Anyone who clicks
+                this link will be signed in as that user — treat it like a password.
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={linkResult.url || ''}
+                  className="text-xs font-mono"
+                  onFocus={e => e.target.select()}
+                />
+                <Button size="sm" onClick={copyLink} variant={linkCopied ? 'outline' : 'default'}>
+                  {linkCopied ? <><Check className="h-3.5 w-3.5 mr-1" /> Copied</> : <><Copy className="h-3.5 w-3.5 mr-1" /> Copy</>}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Issued by {linkResult.issued_by} at {new Date(linkResult.issued_at).toLocaleString()}.
+                Single-use; expires per Supabase Auth's link-expiry setting (default 1 hour).
+              </p>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
