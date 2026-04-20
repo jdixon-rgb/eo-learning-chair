@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.3 — 2026-04-20
+
+### Tweak: surface version on the login page
+
+The version string was previously visible only in the in-app sidebar
+footer — useless when the user can't sign in (the most common moment
+to need to know what version is deployed). Now rendered in the
+LoginPage footer alongside the Privacy / Terms links: `Privacy · Terms · v1.74.3`.
+
+---
+
 ## v1.74.2 — 2026-04-20
 
 ### Fix: phone-OTP "Database error saving new user"

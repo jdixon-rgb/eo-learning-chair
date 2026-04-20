@@ -9,6 +9,7 @@ import { Mail, Phone, Loader2, CheckCircle2 } from 'lucide-react'
 import Wordmark from '@/components/Wordmark'
 import BetaTermsModal from '@/components/BetaTermsModal'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
+import { APP_VERSION } from '@/lib/version'
 
 // Normalize a user-entered phone string to E.164.
 // Returns null if input cannot be confidently parsed.
@@ -346,6 +347,8 @@ export default function LoginPage() {
             <Link to="/privacy" className="hover:text-foreground underline underline-offset-2">Privacy</Link>
             <span className="mx-2">·</span>
             <Link to="/terms" className="hover:text-foreground underline underline-offset-2">Terms</Link>
+            <span className="mx-2">·</span>
+            <span>v{APP_VERSION}</span>
           </div>
           <p className="text-muted-foreground/80 text-[11px]">
             {BUILDER.framing}
