@@ -17,6 +17,43 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.1 — 2026-04-19
+
+### Fix: sign-in lockout introduced by v1.74.0
+
+Two defects in migration 058 combined to lock members out of both
+email *and* phone sign-in paths:
+
+1. **Function overload collision.** Migration 058 redefined
+   `is_invited_member` with two default args. Because PostgreSQL
+   determines function signatures by argument types only (defaults
+   are ignored), the new `is_invited_member(text, text)` was created
+   *alongside* the original `is_invited_member(text)` rather than
+   replacing it. PostgREST couldn't resolve which overload to call
+   when the client passed a single named arg, and the RPC failed.
+   Migration 059 drops the old single-arg signature.
+
+2. **NANP country-code mismatch.** `chapter_members.phone` stores a
+   mix of 10-digit (`6027411075`) and 11-digit-with-leading-1
+   (`16268402799`) values for US/Canada numbers. Migration 058's
+   backfill preserved whatever was in `chapter_members` verbatim.
+   But the SMS-OTP path delivers phone in E.164 (`+16027411075`),
+   which digit-strips to 11 digits with a leading `1`. Comparing
+   that to a 10-digit stored value failed. Migration 060 adds a
+   NANP-aware normalization helper (`_normalize_phone`) that strips
+   a leading `1` when the digit-only length is 11, so all US/Canada
+   formats converge to the same 10-digit comparison form while
+   international numbers pass through unchanged.
+
+Verified against the super_admin account post-fix: all four of
+`jdixon@aidantaylor.com` (email), `+16027411075` (E.164),
+`6027411075` (10-digit), and `(602) 741-1075` (formatted) resolve
+correctly.
+
+Migrations 059 and 060.
+
+---
+
 ## v1.74.0 — 2026-04-19
 
 ### Feature: SMS one-time-passcode sign-in (Twilio-backed) + Privacy/Terms pages
