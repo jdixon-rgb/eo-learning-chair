@@ -17,6 +17,32 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.2 — 2026-04-20
+
+### Fix: phone-OTP "Database error saving new user"
+
+Trigger bug introduced by 058 and not caught by 060: when a phone-only
+signup arrived (`new.email` null, `new.phone` populated), the email
+SELECT INTO inside `handle_new_user` was skipped, leaving the `invite`
+record unassigned. The next line — `IF invite.id IS NULL` — then
+raised `record "invite" is not assigned yet` (SQLSTATE 55000), which
+GoTrue surfaced to the client as the generic "Database error saving
+new user." The auth.users row got rolled back; nothing landed in
+profiles.
+
+Migration 061 rewrites `handle_new_user` to track lookup success with
+a boolean (`invite_found`) instead of dereferencing `invite.id`, and
+splits the INSERT into matched / unmatched branches so we never read
+`invite.email` / `invite.role` / etc. when no SELECT INTO has run.
+
+Verified by simulating a phone-only auth.users INSERT in a transaction:
+profile lands with `email=jdixon@aidantaylor.com`, `role=super_admin`,
+`phone=+16027411075` — all linked correctly from the invite row.
+
+Migration 061.
+
+---
+
 ## v1.74.1 — 2026-04-19
 
 ### Fix: sign-in lockout introduced by v1.74.0
