@@ -17,6 +17,61 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.0 — 2026-04-19
+
+### Feature: SMS one-time-passcode sign-in (Twilio-backed) + Privacy/Terms pages
+
+A second self-serve sign-in path that does not depend on email delivery —
+solves the same class of failure as v1.73 (corporate inbox filtering)
+without requiring admin intervention. Members enter their phone number,
+receive a 6-digit code via SMS, and sign in.
+
+- **LoginPage UI**: toggle link beneath the form swaps between email
+  magic-link and phone OTP modes. Phone form normalizes US 10-digit
+  input to E.164, accepts international numbers prefixed with `+`,
+  shows the in-product opt-in disclosure required for Twilio toll-free
+  verification, and routes to a 6-digit code-entry view after send.
+- **Allowlist gate**: `is_invited_member` RPC now accepts `check_email`
+  *or* `check_phone` (named arg, backwards-compatible). Phone matching
+  strips non-digits on both sides, so input format on the client is
+  forgiving.
+- **Profile linking**: `handle_new_user` trigger tries email match
+  first (preserves prior behavior), then falls back to digits-only
+  phone match against `member_invites.phone`. New `auth.users` rows
+  created via SMS path land in `profiles` with role + chapter context
+  copied from the invite, exactly like the email path.
+- **Backfill**: existing `member_invites` rows get phone numbers
+  populated from `chapter_members.phone` (where email matches), so
+  every directory entry with a phone on file can sign in via SMS
+  immediately. `syncMemberInvites` (admin add/import) now also
+  writes phone going forward.
+- **Privacy Policy** at `/privacy` — public route, covers data
+  collection, SMS-specific terms, service providers (Supabase / Vercel
+  / Twilio / Resend), retention, user rights.
+- **Terms of Service** at `/terms` — public route, covers eligibility,
+  beta status, sign-in mechanics, SMS terms, acceptable use, content
+  ownership, disclaimers.
+- **LoginPage footer** links to both. Beta-Terms checkbox copy on the
+  login form now references the Privacy Policy and Terms of Service
+  alongside the Beta Terms.
+
+### Operational notes
+
+- Requires Twilio Phone provider configured in Supabase Dashboard
+  (Authentication → Sign In / Providers → Phone) with a Messaging
+  Service SID. Toll-free number recommended for US delivery — pre-
+  approved for A2P, no 10DLC registration. Per-SMS cost ~$0.008 US,
+  more for international.
+- SMS template: `Your Our Chapter OS sign-in code is {{ .Code }}. Don't share this code.`
+- Toll-free verification submitted with use case "Verify users";
+  policy URLs `https://app.ourchapteros.com/privacy` and `/terms`.
+
+Migration 058. New files: `src/pages/PrivacyPolicy.jsx`,
+`src/pages/TermsOfService.jsx`. Modified: `src/pages/LoginPage.jsx`,
+`src/lib/auth.jsx`, `src/lib/boardStore.js`, `src/App.jsx`.
+
+---
+
 ## v1.73.0 — 2026-04-19
 
 ### Feature: Admin "Generate Sign-In Link" — bypass email delivery

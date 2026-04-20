@@ -81,6 +81,21 @@ export function AuthProvider({ children }) {
     return supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
   }
 
+  // Phone-based sign-in: send a 6-digit SMS OTP to the given E.164 phone.
+  // Caller must already have gated on is_invited_member to avoid Twilio costs
+  // for non-allowlisted numbers.
+  const signInWithPhone = async (phone) => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } }
+    return supabase.auth.signInWithOtp({ phone })
+  }
+
+  // Verify the SMS OTP. On success, Supabase Auth creates the auth.users row
+  // (which fires handle_new_user → links profile from member_invites by phone).
+  const verifyPhoneOtp = async (phone, token) => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } }
+    return supabase.auth.verifyOtp({ phone, token, type: 'sms' })
+  }
+
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut()
     setSession(null)
@@ -141,6 +156,8 @@ export function AuthProvider({ children }) {
     isImpersonating,
     loading,
     signIn,
+    signInWithPhone,
+    verifyPhoneOtp,
     signOut,
     isAdmin,
     isSuperAdmin,

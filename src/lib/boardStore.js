@@ -294,6 +294,8 @@ export function BoardStoreProvider({ children }) {
   }, [activeChapterId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Sync member_invites (auth whitelist) ──
+  // Phone is included so members can also use the SMS-OTP sign-in path.
+  // Stored digits-only to match chapter_members.phone format.
   const syncMemberInvites = useCallback(async (members) => {
     if (!isSupabaseConfigured() || !activeChapterId) return
     const rows = members
@@ -303,6 +305,7 @@ export function BoardStoreProvider({ children }) {
         full_name: m.name || `${m.first_name || ''} ${m.last_name || ''}`.trim(),
         role: 'member',
         chapter_id: activeChapterId,
+        phone: m.phone ? String(m.phone).replace(/\D/g, '') || null : null,
       }))
     if (rows.length === 0) return
     for (let i = 0; i < rows.length; i += 50) {
