@@ -47,6 +47,19 @@ export function formatDateWithDay(dateStr) {
   })
 }
 
+// Format a "HH:MM" or "HH:MM:SS" 24-hour time string as "h:MM AM/PM".
+// Returns '' for null/empty/unparseable input.
+export function formatTime(timeStr) {
+  if (!timeStr) return ''
+  const [hStr, mStr] = timeStr.split(':')
+  const h = Number(hStr)
+  const m = Number(mStr)
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return ''
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 === 0 ? 12 : h % 12
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`
+}
+
 export function daysUntil(dateStr) {
   if (!dateStr) return null
   const diff = new Date(dateStr) - new Date()
