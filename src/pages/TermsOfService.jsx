@@ -149,7 +149,21 @@ export default function TermsOfService() {
         </Section>
 
         <footer className="mt-12 pt-6 border-t border-border text-xs text-muted-foreground">
-          <p>{APP_NAME} · Built by {BUILDER.company}</p>
+          <p>
+            {APP_NAME} · Built by{' '}
+            {BUILDER.url ? (
+              <a
+                href={BUILDER.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+              >
+                {BUILDER.company}
+              </a>
+            ) : (
+              BUILDER.company
+            )}
+          </p>
         </footer>
       </main>
     </div>

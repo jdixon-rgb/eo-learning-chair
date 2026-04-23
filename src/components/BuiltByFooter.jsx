@@ -2,7 +2,7 @@ import { BUILDER } from '@/lib/appBranding'
 
 // Subtle attribution strip pinned to the bottom of authenticated layouts.
 // Factual and peer-framed. Company name renders as a link when BUILDER.url
-// is set, plain text otherwise (site not live yet).
+// is set, plain text otherwise.
 export default function BuiltByFooter() {
   const company = BUILDER.url ? (
     <a
