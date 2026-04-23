@@ -17,6 +17,29 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.77.3 — 2026-04-23
+
+### Fix: OAuth sign-in silently failing (hash race)
+
+v1.77.1's AuthCallbackPage stripped the URL hash in a `useEffect`
+under the (wrong) assumption that Supabase-JS parses the token hash
+synchronously on client construction. It doesn't — v2 does it
+asynchronously during its own `initialize()`. So the effect ran
+first, destroyed the `#access_token=…&refresh_token=…` payload, and
+Supabase had nothing to parse → no session → AuthCallbackPage's
+"no session + no profile" branch fired → user bounced back to
+`/login` with no error message (because `fetchProfile` never ran,
+so no `oauth_rejected` was set).
+
+Fix: delete the manual `history.replaceState`. Supabase cleans the
+URL itself after it saves the session, which is what we wanted the
+hash gone for in the first place.
+
+Surfaced during the custom-domain cutover (v1.77.2) — the race was
+always there, but timing on the new domain made it reliably reproduce.
+
+---
+
 ## v1.77.2 — 2026-04-23
 
 ### Infra: Supabase custom domain (auth.ourchapteros.com)

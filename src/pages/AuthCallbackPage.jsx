@@ -16,28 +16,20 @@ export default function AuthCallbackPage() {
   const [providerError, setProviderError] = useState(null)
 
   useEffect(() => {
-    // Capture any OAuth provider error (?error=access_denied&error_description=…)
-    // before we clear the URL. Supabase itself also surfaces errors this way.
-    let errMsg = null
+    // Capture any OAuth provider error (?error=access_denied&error_description=…).
+    // Supabase-JS v2 parses the token hash asynchronously during its own init
+    // and cleans the URL itself once tokens are saved — we must NOT strip the
+    // hash here, or we race Supabase and destroy the tokens before they're read.
     try {
       const params = new URLSearchParams(window.location.search)
       const err = params.get('error')
       const desc = params.get('error_description')
-      if (err) errMsg = humanizeOAuthError(err, desc)
+      if (err) {
+        const msg = humanizeOAuthError(err, desc)
+        try { sessionStorage.setItem('oauth_rejected', msg) } catch { /* no-op */ }
+        setProviderError(msg)
+      }
     } catch { /* no-op */ }
-
-    // Scrub the token hash and any OAuth query params from the address bar.
-    // Supabase parses the hash synchronously when its client is constructed,
-    // so by the time this effect runs the session is already captured —
-    // safe to replace the URL.
-    try {
-      window.history.replaceState(null, '', window.location.pathname)
-    } catch { /* no-op */ }
-
-    if (errMsg) {
-      try { sessionStorage.setItem('oauth_rejected', errMsg) } catch { /* no-op */ }
-      setProviderError(errMsg)
-    }
   }, [])
 
   if (providerError) return <Navigate to="/login" replace />
