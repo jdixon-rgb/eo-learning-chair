@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.4 — 2026-04-23
+
+### Tweak: link the builder attribution
+
+`Aidan Taylor App Works` now renders as a link to
+`https://AidanTaylorAppWorks.com` everywhere it appears at the bottom of
+the app — the authenticated `BuiltByFooter`, the LoginPage footer, the
+Settings "About the Builder" card, and the Privacy / Terms page footers.
+Set via `BUILDER.url` in `src/lib/appBranding.js`; the Privacy and Terms
+footers were updated to honor that field (previously rendered the company
+as plain text regardless).
+
+---
+
 ## v1.74.3 — 2026-04-20
 
 ### Tweak: surface version on the login page
