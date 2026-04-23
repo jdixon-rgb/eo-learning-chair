@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.5 — 2026-04-23
+
+### Tweak: show event time on Year Arc cards
+
+Each event card on the Year Arc Calendar now shows the event's
+time-of-day next to the date — e.g. `Monday, Aug 13, 2026 · 6:30 PM`.
+Time pulled from `events.event_time` (24h `HH:MM`) and rendered via a
+new `formatTime()` helper in `src/lib/utils.js`. Renders nothing when
+`event_time` is null, so events without a set time keep the old
+date-only line.
+
+---
+
 ## v1.74.4 — 2026-04-23
 
 ### Tweak: link the builder attribution

@@ -6,7 +6,7 @@ import { useBoardStore } from '@/lib/boardStore'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
-import { formatCurrency, formatDateWithDay } from '@/lib/utils'
+import { formatCurrency, formatDateWithDay, formatTime } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
 import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
@@ -142,6 +142,7 @@ export default function CalendarPage() {
                             <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
                               <Calendar className="h-3 w-3" />
                               {formatDateWithDay(event.event_date)}
+                              {event.event_time && ` · ${formatTime(event.event_time)}`}
                             </div>
                           )}
 
