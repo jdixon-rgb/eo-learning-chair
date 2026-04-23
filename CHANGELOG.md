@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.77.2 — 2026-04-23
+
+### Infra: Supabase custom domain (auth.ourchapteros.com)
+
+Activated `auth.ourchapteros.com` as the Supabase project's custom
+domain and retargeted `VITE_SUPABASE_URL` at it. User-visible change:
+the Google OAuth consent screen now reads "Continue to
+**auth.ourchapteros.com**" instead of "Continue to
+**pnrbvaehjbabjckixoxt.supabase.co**" — cleaner branding, less
+"what is this cryptic third party" friction for first-time sign-ins.
+
+Backend is otherwise unchanged: same project, same database, same
+auth tables. The old project-ref hostname still resolves for a grace
+period, so cached bundles in users' browsers keep working.
+
+---
+
 ## v1.77.1 — 2026-04-23
 
 ### Polish: clean Google OAuth landing
