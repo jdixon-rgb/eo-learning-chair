@@ -17,6 +17,42 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.76.0 — 2026-04-23
+
+### Fix: restore missing `slps` table in production
+
+Migration 050 (Significant Life Partners table) was marked applied in
+Supabase's migration tracker but the actual table, indexes, RLS, and
+`is_slp_admin()` function were never created in production — part of
+the known schema drift (035, 037–040, 050). Members hit
+`Could not find the table 'public.slps' in the schema cache` when
+trying to save partner info from their profile.
+
+Migration 063 re-runs 050's DDL verbatim. 050 was already fully
+idempotent (`create table if not exists`, `create or replace
+function`, `drop policy if exists` + `create policy`), so re-running
+it is safe everywhere. Production pushed via
+`supabase db push --linked --yes`.
+
+### Feature: SLPs + SAPs admin surfaces
+
+The admin sidebar gains two new entries under Members and Staff:
+
+- **SLPs** (`/admin/slps`): read-only list of every SLP in the
+  active chapter — member, partner name, relationship, DOB,
+  anniversary, kids, dietary, allergies. Admins can delete a
+  record; edits happen via each member's profile (members are the
+  source of truth for their own partner info).
+- **SAPs** (`/partners`): links to the existing SAP Partners page,
+  now exposed from the admin section as well as chair navs so it
+  shows up next to the other "people data the chapter tracks"
+  surfaces.
+
+Minor version bump (`1.75.x` → `1.76.0`) for the new admin page
+and the prod-schema fix.
+
+---
+
 ## v1.75.4 — 2026-04-23
 
 ### Tweak: merge Roles into Members inside Forum

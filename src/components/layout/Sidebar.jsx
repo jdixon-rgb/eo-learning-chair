@@ -15,6 +15,8 @@ import {
   LogOut,
   Shield,
   UserCog,
+  Heart,
+  Handshake,
   MessageSquarePlus,
   Lightbulb,
   Briefcase,
@@ -39,6 +41,8 @@ import { APP_VERSION } from '@/lib/version'
 const adminItems = [
   { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
   { to: '/admin/staff', icon: UserCog, label: 'Staff', permission: 'canManageMembers' },
+  { to: '/admin/slps', icon: Heart, label: 'SLPs', permission: 'canManageMembers' },
+  { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canManageMembers' },
   { to: '/coordinator', icon: ClipboardCheck, label: 'Coordinator', permission: 'canViewCoordinator' },
 ]
 
