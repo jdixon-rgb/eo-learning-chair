@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.75.3 — 2026-04-23
+
+### Tweak: declutter Member Portal top nav (hamburger + Lifeline moves)
+
+Two changes to the Compass / Member Portal top bar:
+
+- **Hamburger at all breakpoints.** The horizontal desktop nav was
+  crowded — at common laptop widths the wordmark ("OurChapter OS")
+  was wrapping onto two lines because the six nav items plus Admin
+  link plus user name plus sign-out button were fighting for
+  horizontal space. Now the top bar shows just the wordmark,
+  Member badge, user name, and a menu icon; clicking the icon
+  opens the full navigation panel (including Admin Dashboard and
+  Sign Out).
+- **Lifeline moved out of primary nav.** Lifeline now lives only
+  under Forum → Tools (where it was already accessible via the
+  tools grid). Rationale: Lifeline is a forum tool, not a
+  top-level destination, so it doesn't earn a primary-nav slot.
+
+---
+
 ## v1.75.2 — 2026-04-23
 
 ### Fix: replace EO-branded favicon
