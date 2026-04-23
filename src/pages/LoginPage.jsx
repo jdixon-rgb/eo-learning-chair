@@ -167,7 +167,9 @@ export default function LoginPage() {
     const { error: err } = await signInWithGoogle()
     if (err) {
       setGoogleLoading(false)
-      setError(err.message || 'Google sign-in failed. Please try again.')
+      // Never surface raw Supabase error text here — it reads like debug
+      // output. Provider-side errors are handled on /auth/callback.
+      setError("We couldn't start Google sign-in. Please try again.")
     }
     // On success the browser redirects to Google; no further handling here.
   }

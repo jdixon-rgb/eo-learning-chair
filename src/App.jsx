@@ -25,6 +25,7 @@ import BudgetPage from '@/pages/BudgetPage'
 import ScenarioPage from '@/pages/ScenarioPage'
 import SettingsPage from '@/pages/SettingsPage'
 import LoginPage from '@/pages/LoginPage'
+import AuthCallbackPage from '@/pages/AuthCallbackPage'
 import PrivacyPolicy from '@/pages/PrivacyPolicy'
 import TermsOfService from '@/pages/TermsOfService'
 import MemberCalendarPage from '@/pages/MemberCalendarPage'
@@ -111,6 +112,7 @@ function App() {
               <Routes>
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
 
