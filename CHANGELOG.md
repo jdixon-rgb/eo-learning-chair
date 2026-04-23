@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.75.4 — 2026-04-23
+
+### Tweak: merge Roles into Members inside Forum
+
+The Forum tab strip had both a **Members** view (names + email/call
+affordances) and a separate **Roles** view (assign/remove forum
+roles). You had to switch tabs to assign a role, then switch back to
+call the person. Now it's one view: each member row shows assigned
+forum roles as inline badges, and moderators see a `+ Role` button
+to assign and an `×` on each badge to remove. The Call / Email
+affordances are preserved. `Roles` tab is removed from the strip.
+
+---
+
 ## v1.75.3 — 2026-04-23
 
 ### Tweak: declutter Member Portal top nav (hamburger + Lifeline moves)
