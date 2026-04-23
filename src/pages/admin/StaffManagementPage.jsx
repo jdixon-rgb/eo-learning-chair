@@ -4,13 +4,14 @@ import { useChapter } from '@/lib/chapter'
 import { useBoardStore } from '@/lib/boardStore'
 import { useAuth } from '@/lib/auth'
 import {
-  UserCog, UserPlus, Trash2, Loader2, Link2, Copy, Check, Mail,
+  UserPlus, Trash2, Loader2, Link2, Copy, Check,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import PageHeader from '@/lib/pageHeader'
 
 // Staff are people who act on the chapter's behalf but aren't dues-paying
 // members — Executive Director, Experience Coordinator, etc. They live in
@@ -131,15 +132,10 @@ export default function StaffManagementPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center gap-3">
-        <UserCog className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Staff</h1>
-          <p className="text-sm text-muted-foreground">
-            Executive Directors, Experience Coordinators, and other non-member chapter staff. Staff can sign in and act on the chapter's behalf but aren't part of the membership roster.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Staff"
+        subtitle="Executive Directors, Experience Coordinators, and other non-member chapter staff."
+      />
 
       {/* Add staff form */}
       <div className="rounded-xl border bg-card shadow-sm p-4">

@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import PageHeader from '@/lib/pageHeader'
 
 // Lazy-load xlsx to avoid bloating the main bundle
 const loadXLSX = () => import('xlsx')
@@ -387,17 +388,12 @@ export default function MemberManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" />
-            Members
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalMembers} members &middot; {signedUpCount} signed up &middot; {forumCount} forums
-          </p>
-        </div>
+      {/* Header — title surfaces in TopBar on desktop, inline on mobile */}
+      <PageHeader
+        title="Members"
+        subtitle={`${totalMembers} members · ${signedUpCount} signed up · ${forumCount} forums`}
+      />
+      <div className="flex justify-end">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input

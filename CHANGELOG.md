@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.75.1 — 2026-04-23
+
+### Tweak: Members and Staff admin titles render in TopBar
+
+`MemberManagementPage` used an inline `<h1>` block (renders in the
+cream content area), which broke the app's convention of surfacing
+the page title + subtitle in the white TopBar strip on desktop. The
+new `StaffManagementPage` had the same issue. Both now use the
+shared `PageHeader` component, so `Members` / `Staff` titles and
+their counts appear in the TopBar on desktop and inline on mobile
+— matching every other page.
+
+---
+
 ## v1.75.0 — 2026-04-23
 
 ### Feature: Staff admin section
