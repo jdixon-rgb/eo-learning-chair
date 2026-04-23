@@ -38,6 +38,7 @@ import LifelinePage from '@/pages/portal/LifelinePage'
 import ForumHomePage from '@/pages/portal/ForumHomePage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import StaffManagementPage from '@/pages/admin/StaffManagementPage'
+import SLPManagementPage from '@/pages/admin/SLPManagementPage'
 import SurveyResultsPage from '@/pages/admin/SurveyResultsPage'
 import NotificationComposePage from '@/pages/admin/NotificationComposePage'
 import FeedbackPage from '@/pages/FeedbackPage'
@@ -148,6 +149,9 @@ function App() {
                 } />
                 <Route path="/admin/staff" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><StaffManagementPage /></ProtectedRoute>
+                } />
+                <Route path="/admin/slps" element={
+                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><SLPManagementPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/surveys" element={
                   <ProtectedRoute allowedRoles={['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect']}><SurveyResultsPage /></ProtectedRoute>
