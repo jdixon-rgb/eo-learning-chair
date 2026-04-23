@@ -14,6 +14,7 @@ import {
   X,
   LogOut,
   Shield,
+  UserCog,
   MessageSquarePlus,
   Lightbulb,
   Briefcase,
@@ -37,6 +38,7 @@ import { APP_VERSION } from '@/lib/version'
 // moved to a bell icon in the TopBar (upper right).
 const adminItems = [
   { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
+  { to: '/admin/staff', icon: UserCog, label: 'Staff', permission: 'canManageMembers' },
   { to: '/coordinator', icon: ClipboardCheck, label: 'Coordinator', permission: 'canViewCoordinator' },
 ]
 

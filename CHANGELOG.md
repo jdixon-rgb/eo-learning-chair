@@ -17,6 +17,36 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.75.0 — 2026-04-23
+
+### Feature: Staff admin section
+
+New **Staff** page under admin (`/admin/staff`) alongside Members.
+Staff — Executive Directors, Experience Coordinators, and other
+non-member chapter employees — live in `member_invites` with a staff
+app-role but never in `chapter_members`, so they were previously
+invisible to the admin UI and could only be added via Settings →
+Chapter Roles. The new page gives admins a direct surface:
+
+- Lists all staff for the active chapter (from `member_invites`
+  where role ∈ {`chapter_executive_director`,
+  `chapter_experience_coordinator`})
+- Add staff form (name, email, role) — writes via the existing
+  `upsert_staff_invite` RPC
+- Remove staff (deletes the whitelist row)
+- Per-row **Generate sign-in link** (super_admin only) — reuses
+  the existing `/api/admin/generate-magic-link` endpoint, so staff
+  whose corporate email gateways drop magic-link emails can be
+  unblocked out-of-band
+
+Sidebar nav gains a **Staff** link under Members (same
+`canManageMembers` gate).
+
+Minor-version bump (`1.74.x` → `1.75.0`) because this adds a new
+top-level admin surface.
+
+---
+
 ## v1.74.6 — 2026-04-23
 
 ### Tweak: expose expected audience on Scenarios table
