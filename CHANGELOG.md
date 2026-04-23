@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.75.2 — 2026-04-23
+
+### Fix: replace EO-branded favicon
+
+The previous `public/favicon.svg` was three concentric broken rings —
+the EO (Entrepreneurs' Organization) globe-wireframe mark, which is
+EO's trademark. Replaced with an original "OC" monogram tile in the
+app's primary cerulean (#4a6d8c), mirroring the in-app Wordmark so the
+browser-tab icon matches the product's own identity.
+
+---
+
 ## v1.75.1 — 2026-04-23
 
 ### Tweak: Members and Staff admin titles render in TopBar
