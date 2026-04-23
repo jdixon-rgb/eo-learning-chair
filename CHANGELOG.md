@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.77.0 — 2026-04-23
+
+### Feature: Google OAuth sign-in
+
+Adds "Continue with Google" to the login page. Rationale: magic-link
+emails get silently dropped by corporate email gateways (Melissa at
+arizonaeo.com was the tipping point) and SMS-OTP is still gated on
+Twilio toll-free verification. OAuth sidesteps email delivery
+entirely — the user's Google / Workspace identity handles auth, so
+the mail gateway is out of the loop. EO members are business owners;
+most already authenticate to their domain via Google Workspace, so
+"Sign in with Google" is one click and "just works".
+
+**Allowlist safety:** magic-link and phone-OTP flows check
+`is_invited_member` BEFORE sending the link/code. OAuth bypasses
+that pre-check because the provider hands us a proven identity out
+of band. To keep the allowlist as the single source of truth, the
+check now also runs in `fetchProfile` after every sign-in — if the
+signed-in user's email/phone isn't on the chapter allowlist, they're
+signed out immediately and redirected to the login page with
+"This account isn't on the chapter allowlist…"
+
+Requires Supabase Auth + Google Cloud Console setup (not a code
+concern — documented in the PR).
+
+---
+
 ## v1.76.0 — 2026-04-23
 
 ### Fix: restore missing `slps` table in production

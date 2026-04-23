@@ -29,8 +29,34 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single()
+
+    // Allowlist gate — single source of truth for "is this user authorized to
+    // use the app?" Magic-link and phone-OTP flows check is_invited_member
+    // BEFORE sending the link/code; OAuth (Google, Microsoft, etc.) bypasses
+    // that pre-check because the provider hands us a proven identity out of
+    // band. So we re-check after every sign-in. Cheap (one RPC) and catches
+    // every non-whitelisted path uniformly.
+    if (data?.email || data?.phone) {
+      const { data: invited } = await supabase.rpc('is_invited_member', {
+        check_email: data.email || null,
+        check_phone: data.phone || null,
+      })
+      if (invited === false) {
+        await supabase.auth.signOut()
+        try {
+          sessionStorage.setItem(
+            'oauth_rejected',
+            "This account isn't on the chapter allowlist. Contact your Learning Chair to request access."
+          )
+        } catch { /* storage blocked — error just won't surface on next render */ }
+        setSession(null)
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+    }
+
     if (!error && data) setProfile(data)
-    // After profile loads, check whether this user has acked the current beta terms.
     const [terms, acked] = await Promise.all([
       fetchCurrentBetaTerms(),
       hasAckedCurrentBetaTerms(),
@@ -96,6 +122,18 @@ export function AuthProvider({ children }) {
     return supabase.auth.verifyOtp({ phone, token, type: 'sms' })
   }
 
+  // OAuth sign-in (Google). Sidesteps email deliverability entirely —
+  // corporate gateways that drop our magic-link emails don't interfere with
+  // OAuth because the provider handles auth directly. Whitelist check
+  // happens post-auth in fetchProfile above.
+  const signInWithGoogle = async () => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } }
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+  }
+
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut()
     setSession(null)
@@ -158,6 +196,7 @@ export function AuthProvider({ children }) {
     signIn,
     signInWithPhone,
     verifyPhoneOtp,
+    signInWithGoogle,
     signOut,
     isAdmin,
     isSuperAdmin,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
@@ -34,7 +34,7 @@ function toE164(input) {
 }
 
 export default function LoginPage() {
-  const { profile, loading, signIn, signInWithPhone, verifyPhoneOtp } = useAuth()
+  const { profile, loading, signIn, signInWithPhone, verifyPhoneOtp, signInWithGoogle } = useAuth()
   const [method, setMethod] = useState('email') // 'email' | 'phone'
 
   // Email path
@@ -50,9 +50,22 @@ export default function LoginPage() {
   // Shared
   const [sending, setSending] = useState(false)
   const [verifying, setVerifying] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
+
+  // Surface rejection from the post-OAuth allowlist check (set in auth.jsx
+  // when a signed-in user's email/phone isn't in member_invites).
+  useEffect(() => {
+    try {
+      const msg = sessionStorage.getItem('oauth_rejected')
+      if (msg) {
+        setError(msg)
+        sessionStorage.removeItem('oauth_rejected')
+      }
+    } catch { /* storage blocked — nothing to do */ }
+  }, [])
 
   if (!loading && profile) {
     const home = profile.role === 'member' ? '/portal'
@@ -141,6 +154,22 @@ export default function LoginPage() {
     }
     // On success, useAuth picks up the session and the redirect at the top of
     // this component fires automatically.
+  }
+
+  // ── Google OAuth ──────────────────────────────────────────────────
+  const handleGoogle = async () => {
+    if (!acceptedTerms) {
+      setError('Please agree to the Terms and Privacy Policy before continuing.')
+      return
+    }
+    setError('')
+    setGoogleLoading(true)
+    const { error: err } = await signInWithGoogle()
+    if (err) {
+      setGoogleLoading(false)
+      setError(err.message || 'Google sign-in failed. Please try again.')
+    }
+    // On success the browser redirects to Google; no further handling here.
   }
 
   const handleResendCode = async () => {
@@ -238,6 +267,40 @@ export default function LoginPage() {
                   : 'Sign in with a code sent to your phone'}
               </p>
 
+              {/* Google OAuth — fastest and most reliable path. Sidesteps
+                  corporate email gateways that drop magic-link emails. */}
+              <div className="mb-5">
+                <TermsCheckbox
+                  accepted={acceptedTerms}
+                  onChange={setAcceptedTerms}
+                  onOpenTerms={() => setTermsOpen(true)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGoogle}
+                  disabled={googleLoading || !acceptedTerms}
+                  className="w-full mt-3"
+                >
+                  {googleLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Redirecting to Google…</>
+                  ) : (
+                    <>
+                      <GoogleIcon className="h-4 w-4 mr-2" />
+                      Continue with Google
+                    </>
+                  )}
+                </Button>
+                {error && (
+                  <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2 mt-3">{error}</p>
+                )}
+              </div>
+
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center"><span className="bg-card px-2 text-[11px] uppercase tracking-wider text-muted-foreground">or</span></div>
+              </div>
+
               {method === 'email' ? (
                 <form onSubmit={handleEmailSubmit} className="space-y-4">
                   <div>
@@ -251,20 +314,9 @@ export default function LoginPage() {
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         required
-                        autoFocus
                       />
                     </div>
                   </div>
-
-                  {error && (
-                    <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
-                  )}
-
-                  <TermsCheckbox
-                    accepted={acceptedTerms}
-                    onChange={setAcceptedTerms}
-                    onOpenTerms={() => setTermsOpen(true)}
-                  />
 
                   <Button type="submit" className="w-full" disabled={sending || !email.trim() || !acceptedTerms}>
                     {sending ? (
@@ -293,23 +345,12 @@ export default function LoginPage() {
                         value={phone}
                         onChange={e => setPhone(e.target.value)}
                         required
-                        autoFocus
                       />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">
                       US numbers may omit +1. International numbers must start with +.
                     </p>
                   </div>
-
-                  {error && (
-                    <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
-                  )}
-
-                  <TermsCheckbox
-                    accepted={acceptedTerms}
-                    onChange={setAcceptedTerms}
-                    onOpenTerms={() => setTermsOpen(true)}
-                  />
 
                   <Button type="submit" className="w-full" disabled={sending || !phone.trim() || !acceptedTerms}>
                     {sending ? (
@@ -370,6 +411,18 @@ export default function LoginPage() {
       </div>
       <BetaTermsModal open={termsOpen} onOpenChange={setTermsOpen} />
     </div>
+  )
+}
+
+// Official Google "G" mark — plain SVG so we don't add a dep.
+function GoogleIcon({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+      <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+      <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+      <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+    </svg>
   )
 }
 
