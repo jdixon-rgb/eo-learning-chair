@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { DollarSign, Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
 
 // Finance Chair stub. The role currently has no dedicated dashboard —
 // the chair's primary surface is the Chapter Budget page. This stub
@@ -8,15 +9,10 @@ import { DollarSign, Sparkles, ArrowRight } from 'lucide-react'
 export default function FinanceDashboard() {
   return (
     <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <DollarSign className="h-6 w-6 text-primary" />
-          Finance Chair
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Multi-FY chapter budget oversight, allocation across chairs, variance reporting.
-        </p>
-      </div>
+      <PageHeader
+        title="Finance Chair"
+        subtitle="Multi-FY chapter budget oversight, allocation across chairs, variance reporting."
+      />
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <div className="flex items-start gap-3">

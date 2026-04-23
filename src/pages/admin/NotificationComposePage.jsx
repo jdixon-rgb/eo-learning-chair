@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { Bell, Send, Check, Calendar } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import PageHeader from '@/lib/pageHeader'
 
 const NOTIFICATION_TYPES = [
   { id: 'announcement', label: 'Announcement', icon: Bell, color: 'text-warm' },
@@ -49,19 +50,17 @@ export default function NotificationComposePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Bell className="h-6 w-6 text-warm" />
-          Send Notification
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Compose and send a notification to all members
-          {!isSupabaseConfigured() && (
-            <Badge variant="outline" className="ml-2 text-[10px]">Dev mode — notifications will be simulated</Badge>
-          )}
-        </p>
-      </div>
+      <PageHeader
+        title="Send Notification"
+        subtitle={
+          <>
+            Compose and send a notification to all members
+            {!isSupabaseConfigured() && (
+              <Badge variant="outline" className="ml-2 text-[10px]">Dev mode — notifications will be simulated</Badge>
+            )}
+          </>
+        }
+      />
 
       {/* Type selector */}
       <div>

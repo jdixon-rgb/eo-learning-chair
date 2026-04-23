@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useChapter } from '@/lib/chapter'
 import { Building2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import PageHeader from '@/lib/pageHeader'
 
 const MONTH_NAMES = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -13,14 +14,12 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Platform Administration</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {allChapters.length} chapter{allChapters.length !== 1 ? 's' : ''} on the platform
-          </p>
-        </div>
-        <Link to="/super-admin/chapters/new">
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader
+          title="Platform Administration"
+          subtitle={`${allChapters.length} chapter${allChapters.length !== 1 ? 's' : ''} on the platform`}
+        />
+        <Link to="/super-admin/chapters/new" className="ml-auto">
           <Button>
             <Plus className="h-4 w-4" />
             Create Chapter

@@ -17,6 +17,35 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.77.4 — 2026-04-23
+
+### Polish: page titles in the TopBar slot, not the content body
+
+Ten chair / admin / super-admin pages were rendering their
+`<h1>` + subtitle in the content area instead of pushing them into
+the TopBar's white header slot via the `PageHeader` component. Now
+they match the pattern Learning Chair / Board pages have been using
+all along: title + subtitle up in the white strip on desktop,
+in-body on mobile (which the PageHeader component handles itself).
+
+Pages cleaned up:
+
+- `super-admin/SuperAdminDashboard` (the page that surfaced this)
+- `super-admin/AnalyticsPage`
+- `super-admin/ChapterConfigPage`
+- `admin/NotificationComposePage`
+- `board/BoardDashboardPage`
+- `board/ChairReportsPage`
+- `board/ForumsPage`
+- `engagement/EngagementDashboard`
+- `finance/FinanceDashboard`
+- `president/PresidentDashboard`
+
+Icons that used to decorate the in-body `<h1>` were dropped — the
+TopBar slot is text-only by design. Unused imports pruned.
+
+---
+
 ## v1.77.3 — 2026-04-23
 
 ### Fix: OAuth sign-in silently failing (hash race)

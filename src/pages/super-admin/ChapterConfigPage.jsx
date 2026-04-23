@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Building2, Save, Trash2, Loader2, UserPlus, Mail, ArrowLeft,
 } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
 
 const MONTH_OPTIONS = [
   { value: 1, label: 'January' },
@@ -207,16 +208,10 @@ export default function ChapterConfigPage() {
         Back to chapters
       </button>
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-primary" />
-          {isNew ? 'Create Chapter' : chapter.name || 'Chapter Config'}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isNew ? 'Set up a new chapter on the platform' : 'Edit chapter details, members, and invites'}
-        </p>
-      </div>
+      <PageHeader
+        title={isNew ? 'Create Chapter' : chapter.name || 'Chapter Config'}
+        subtitle={isNew ? 'Set up a new chapter on the platform' : 'Edit chapter details, members, and invites'}
+      />
 
       {/* Chapter Details */}
       <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">

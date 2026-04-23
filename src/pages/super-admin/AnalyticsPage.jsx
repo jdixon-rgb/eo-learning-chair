@@ -1,4 +1,5 @@
 import { BarChart3, TrendingUp, Users2, Building2, DollarSign, Sparkles } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
 
 // Super-admin analytics stub. The real page will surface platform-wide
 // metrics — chapter adoption, active users per chapter, feature usage,
@@ -15,15 +16,10 @@ const PLANNED_METRICS = [
 export default function AnalyticsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-primary" />
-          Analytics
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Platform-wide metrics across every chapter on OurChapter OS.
-        </p>
-      </div>
+      <PageHeader
+        title="Analytics"
+        subtitle="Platform-wide metrics across every chapter on OurChapter OS."
+      />
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <div className="flex items-start gap-3 mb-4">

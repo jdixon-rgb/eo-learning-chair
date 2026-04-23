@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Users2, Edit2, Trash2, X, ChevronDown, ChevronUp, Star } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
 
 function getHealthColor(score) {
   const level = FORUM_HEALTH.find(h => score >= h.min && score <= h.max)
@@ -73,14 +74,12 @@ export default function ForumsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Forums</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {active.length} active forum{active.length !== 1 ? 's' : ''} &middot; {totalMembers} total members
-          </p>
-        </div>
-        <Button onClick={() => setShowForm(!showForm)}>
+      <div className="flex items-center justify-between gap-4">
+        <PageHeader
+          title="Forums"
+          subtitle={`${active.length} active forum${active.length !== 1 ? 's' : ''} · ${totalMembers} total members`}
+        />
+        <Button onClick={() => setShowForm(!showForm)} className="ml-auto">
           <Plus className="h-4 w-4" />
           Add Forum
         </Button>

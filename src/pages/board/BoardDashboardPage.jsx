@@ -3,6 +3,7 @@ import { useBoardStore } from '@/lib/boardStore'
 import { useStore } from '@/lib/store'
 import { FISCAL_MONTHS, REPORT_STATUSES, FORUM_HEALTH } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 import {
   Briefcase,
   FileText,
@@ -56,14 +57,15 @@ export default function BoardDashboardPage() {
   return (
     <div className="space-y-6">
       <TourTip />
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Board Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Chapter health overview
-          {currentFM && <> - {currentFM.name} (FY Month {currentFM.index + 1})</>}
-        </p>
-      </div>
+      <PageHeader
+        title="Board Dashboard"
+        subtitle={
+          <>
+            Chapter health overview
+            {currentFM && <> — {currentFM.name} (FY Month {currentFM.index + 1})</>}
+          </>
+        }
+      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

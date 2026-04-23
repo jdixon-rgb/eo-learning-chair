@@ -8,7 +8,8 @@ import { formatFiscalYear } from '@/lib/fiscalYear'
 import { formatCurrency } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
-import { Crown, Briefcase, DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
+import { DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
 
 export default function PresidentDashboard() {
   const { chapter, events, pipelineSpeakers } = useStore()
@@ -19,8 +20,6 @@ export default function PresidentDashboard() {
   // Heading adapts to viewer's role — CED/CEC see "Chapter Dashboard", President sees "President Dashboard"
   const isChapterStaff = effectiveRole === 'chapter_executive_director' || effectiveRole === 'chapter_experience_coordinator'
   const headingTitle = isChapterStaff ? 'Chapter Dashboard' : 'President Dashboard'
-  const HeadingIcon = isChapterStaff ? Briefcase : Crown
-  const headingIconColor = isChapterStaff ? 'text-primary' : 'text-amber-500'
 
   const theme = activePresidentTheme || ''
 
@@ -56,17 +55,15 @@ export default function PresidentDashboard() {
   return (
     <div className="space-y-6">
       <TourTip />
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <HeadingIcon className={`h-6 w-6 ${headingIconColor}`} />
-          {headingTitle}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {formatFiscalYear(activeFiscalYear)}
-          {theme && <> &middot; <ThemeInfo theme={theme} description={activePresidentThemeDescription} /></>}
-        </p>
-      </div>
+      <PageHeader
+        title={headingTitle}
+        subtitle={
+          <>
+            {formatFiscalYear(activeFiscalYear)}
+            {theme && <> · <ThemeInfo theme={theme} description={activePresidentThemeDescription} /></>}
+          </>
+        }
+      />
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

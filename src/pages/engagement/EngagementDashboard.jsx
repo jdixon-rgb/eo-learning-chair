@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Compass, UserCheck, BookOpen, Send } from 'lucide-react'
 import { useEngagementStore } from '@/lib/engagementStore'
 import TourTip from '@/components/TourTip'
+import PageHeader from '@/lib/pageHeader'
 
 export default function EngagementDashboard() {
   const { navigators, pairings, resources, broadcasts } = useEngagementStore()
@@ -12,14 +13,12 @@ export default function EngagementDashboard() {
   const openBroadcasts = broadcasts.filter(b => b.status === 'open').length
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl">
       <TourTip />
-      <header className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Member Engagement</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Welcome new members. Train Navigators. Build the conversation that helps every member find their version of EO.
-        </p>
-      </header>
+      <PageHeader
+        title="Member Engagement"
+        subtitle="Welcome new members. Train Navigators. Build the conversation that helps every member find their version of EO."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link
