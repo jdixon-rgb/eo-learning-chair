@@ -367,6 +367,7 @@ export default function ScenarioPage() {
               <tr className="border-b bg-muted/30">
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground">Month</th>
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground">Event</th>
+                <th className="p-3 text-right text-xs font-medium text-muted-foreground">Audience</th>
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[200px]">Speaker</th>
                 <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[180px]">Venue</th>
                 <th className="p-3 text-right text-xs font-medium text-muted-foreground">Est. Cost</th>
@@ -399,6 +400,11 @@ export default function ScenarioPage() {
                     </td>
                     <td className="p-3">
                       <span className="text-sm truncate block max-w-[180px]">{event.title}</span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <span className={`text-sm ${event.expected_attendance ? '' : 'text-muted-foreground'}`}>
+                        {event.expected_attendance ?? '—'}
+                      </span>
                     </td>
                     <td className="p-3">
                       {activeScenario ? (
@@ -469,7 +475,7 @@ export default function ScenarioPage() {
                   </tr>
                   {isExpanded && eventTotalCost > 0 && (
                     <tr key={`${event.id}-details`} className="border-b bg-muted/20">
-                      <td colSpan={8} className="px-6 py-3">
+                      <td colSpan={9} className="px-6 py-3">
                         <div className="space-y-1.5">
                           {fee > 0 && (
                             <div className="flex items-center justify-between text-xs">
@@ -506,7 +512,7 @@ export default function ScenarioPage() {
             </tbody>
             <tfoot>
               <tr className="border-t bg-muted/30 font-semibold">
-                <td colSpan={4} className="p-3 text-sm">
+                <td colSpan={5} className="p-3 text-sm">
                   Totals
                   <span className="font-normal text-xs text-muted-foreground ml-2">
                     ({currentMetrics.perEvent.filter(e => e.speaker).length} speakers across {sortedEvents.length} events)

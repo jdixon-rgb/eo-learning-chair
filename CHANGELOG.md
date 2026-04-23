@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.74.6 — 2026-04-23
+
+### Tweak: expose expected audience on Scenarios table
+
+The Scenarios page's event table now has an **Audience** column
+between Event and Speaker, rendering `event.expected_attendance` (or
+`—` when unset). Gives a quick read on scenario impact — e.g. a
+star-speaker slot that's also the highest-attendance event of the
+year carries different weight than a small breakout. Table detail row
+and Totals row colspans updated to account for the new column.
+
+---
+
 ## v1.74.5 — 2026-04-23
 
 ### Tweak: show event time on Year Arc cards
