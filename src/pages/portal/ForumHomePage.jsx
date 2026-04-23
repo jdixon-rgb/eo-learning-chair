@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
 import { useStore } from '@/lib/store'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParkingLotEntry, deleteParkingLotEntry } from '@/lib/reflectionsStore'
 import { lazy, Suspense } from 'react'
 import {
@@ -51,6 +52,7 @@ export default function ForumHomePage() {
     ratifyConstitutionVersion,
   } = useForumStore()
   const { events: chapterEvents, saps } = useStore()
+  const { activeFiscalYear } = useFiscalYear()
 
   const email = user?.email || profile?.email
   const [member, setMember] = useState(null)
@@ -170,7 +172,6 @@ export default function ForumHomePage() {
     { key: 'constitution', label: 'Constitution', icon: FileText },
     { key: 'partners', label: 'SAPs', icon: Handshake },
     { key: 'members', label: 'Members', icon: Users },
-    { key: 'roles', label: 'Roles', icon: Users },
     { key: 'history', label: 'History', icon: History },
   ]
 
@@ -217,19 +218,6 @@ export default function ForumHomePage() {
       </div>
 
       {/* Tab content */}
-      {tab === 'roles' && (
-        <RolesTab
-          forum={effectiveForum}
-          roles={myForumRoles}
-          forumMembers={forumMembers}
-          memberById={memberById}
-          isModerator={isModerator}
-          onAdd={addForumRole}
-          onUpdate={updateForumRole}
-          onDelete={deleteForumRole}
-        />
-      )}
-
       {tab === 'calendar' && (
         <CalendarTab
           forum={effectiveForum}
@@ -377,6 +365,12 @@ export default function ForumHomePage() {
         <MembersTab
           forumMembers={forumMembers}
           currentMemberId={member.id}
+          forumId={effectiveForum.id}
+          roles={myForumRoles}
+          isModerator={isModerator}
+          onAddRole={addForumRole}
+          onDeleteRole={deleteForumRole}
+          activeFiscalYear={activeFiscalYear}
         />
       )}
 
@@ -396,106 +390,43 @@ export default function ForumHomePage() {
 }
 
 // ────────────────────────────────────────────────────────────
-// Roles Tab
+// Members Tab — visible to every forum mate; moderators can assign
+// and remove forum roles inline per member.
 // ────────────────────────────────────────────────────────────
-function RolesTab({ forum, roles, forumMembers, memberById, isModerator, onAdd, onUpdate, onDelete }) {
-  const [showAdd, setShowAdd] = useState(false)
+function MembersTab({ forumMembers, currentMemberId, forumId, roles, isModerator, onAddRole, onDeleteRole, activeFiscalYear }) {
+  const [addingFor, setAddingFor] = useState(null)
   const [addRole, setAddRole] = useState('timer')
-  const [addMember, setAddMember] = useState('')
-  const [addFY, setAddFY] = useState('')
+  const [addFY, setAddFY] = useState(activeFiscalYear || '')
 
-  // Group by fiscal year, then by role order
-  const byYear = useMemo(() => {
-    const map = {}
-    roles.forEach(r => {
-      if (!map[r.fiscal_year]) map[r.fiscal_year] = []
-      map[r.fiscal_year].push(r)
+  const rolesByMember = useMemo(() => {
+    const map = new Map()
+    ;(roles || []).forEach(r => {
+      const arr = map.get(r.chapter_member_id) || []
+      arr.push(r)
+      map.set(r.chapter_member_id, arr)
     })
-    return Object.entries(map)
-      .sort(([a], [b]) => b.localeCompare(a)) // newest first
-      .map(([fy, rs]) => ({
-        fy,
-        roles: rs.sort((a, b) => FORUM_ROLE_ORDER.indexOf(a.role) - FORUM_ROLE_ORDER.indexOf(b.role)),
-      }))
+    map.forEach(arr => {
+      arr.sort((a, b) => {
+        const fy = (b.fiscal_year || '').localeCompare(a.fiscal_year || '')
+        if (fy !== 0) return fy
+        return FORUM_ROLE_ORDER.indexOf(a.role) - FORUM_ROLE_ORDER.indexOf(b.role)
+      })
+    })
+    return map
   }, [roles])
 
-  const handleAdd = () => {
-    if (!addMember || !addFY || !addRole) return
-    onAdd({ forum_id: forum.id, chapter_member_id: addMember, role: addRole, fiscal_year: addFY })
-    setShowAdd(false)
-    setAddMember('')
+  const startAdd = (memberId) => {
+    setAddingFor(memberId)
+    setAddRole('timer')
+    setAddFY(activeFiscalYear || '')
   }
 
-  return (
-    <div className="space-y-4">
-      {isModerator && (
-        <div className="flex justify-end">
-          <button onClick={() => setShowAdd(!showAdd)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
-            <Plus className="h-3.5 w-3.5" /> Assign role
-          </button>
-        </div>
-      )}
+  const handleAdd = () => {
+    if (!addingFor || !addRole || !addFY) return
+    onAddRole({ forum_id: forumId, chapter_member_id: addingFor, role: addRole, fiscal_year: addFY })
+    setAddingFor(null)
+  }
 
-      {showAdd && (
-        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <select value={addRole} onChange={e => setAddRole(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-              {FORUM_ROLE_ORDER.map(r => <option key={r} value={r} className="bg-ink">{FORUM_ROLE_LABELS[r]}</option>)}
-            </select>
-            <select value={addMember} onChange={e => setAddMember(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-              <option value="" className="bg-ink">Select member…</option>
-              {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
-            </select>
-            <input
-              type="text"
-              value={addFY}
-              onChange={e => setAddFY(e.target.value)}
-              placeholder="FY2028"
-              className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30"
-            />
-          </div>
-          <div className="flex gap-2 justify-end">
-            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
-            <button onClick={handleAdd} disabled={!addMember || !addFY} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Assign</button>
-          </div>
-        </div>
-      )}
-
-      {byYear.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground/70 text-sm">No roles assigned yet.</div>
-      ) : (
-        byYear.map(({ fy, roles: yearRoles }) => (
-          <div key={fy} className="rounded-xl border border-border overflow-hidden">
-            <div className="bg-muted/30 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{fy}</div>
-            <div className="divide-y divide-white/5">
-              {yearRoles.map(r => {
-                const m = memberById.get(r.chapter_member_id)
-                return (
-                  <div key={r.id} className="px-4 py-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-sm text-foreground font-medium">{m?.name || 'Unknown'}</span>
-                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground/70 bg-muted/30 px-2 py-0.5 rounded-full">{FORUM_ROLE_LABELS[r.role]}</span>
-                    </div>
-                    {isModerator && (
-                      <button onClick={() => onDelete(r.id)} className="text-muted-foreground/60 hover:text-red-400" title="Remove">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ))
-      )}
-    </div>
-  )
-}
-
-// ────────────────────────────────────────────────────────────
-// Members Tab — visible to every forum mate
-// ────────────────────────────────────────────────────────────
-function MembersTab({ forumMembers, currentMemberId }) {
   if (!forumMembers || forumMembers.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground/70 text-sm">
@@ -506,43 +437,111 @@ function MembersTab({ forumMembers, currentMemberId }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground/70 px-1">Your forum mates. Tap a name to see the contact details your chapter has on file.</p>
+      <p className="text-xs text-muted-foreground/70 px-1">
+        Your forum mates{isModerator ? ' — tap + Role to assign, × to remove' : ''}.
+      </p>
       <div className="rounded-xl border border-border overflow-hidden divide-y divide-white/5">
         {forumMembers.map(m => {
           const isMe = m.id === currentMemberId
+          const memberRoles = rolesByMember.get(m.id) || []
           return (
-            <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">{m.name || 'Unknown'}</span>
-                  {isMe && (
-                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">You</span>
+            <div key={m.id} className="px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground truncate">{m.name || 'Unknown'}</span>
+                    {isMe && (
+                      <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">You</span>
+                    )}
+                  </div>
+                  {m.company && (
+                    <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">{m.company}</p>
                   )}
                 </div>
-                {m.company && (
-                  <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">{m.company}</p>
-                )}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground/70 shrink-0">
+                  {m.email && (
+                    <a
+                      href={`mailto:${m.email}`}
+                      className="hover:text-foreground/90 transition-colors hidden sm:inline"
+                      title={m.email}
+                    >
+                      Email
+                    </a>
+                  )}
+                  {m.phone && (
+                    <a
+                      href={`tel:${m.phone}`}
+                      className="hover:text-foreground/90 transition-colors"
+                      title={m.phone}
+                    >
+                      Call
+                    </a>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground/70 shrink-0">
-                {m.email && (
-                  <a
-                    href={`mailto:${m.email}`}
-                    className="hover:text-foreground/90 transition-colors hidden sm:inline"
-                    title={m.email}
+
+              {(memberRoles.length > 0 || isModerator) && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {memberRoles.map(r => (
+                    <span
+                      key={r.id}
+                      className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/80 bg-muted/30 px-2 py-0.5 rounded-full"
+                    >
+                      {FORUM_ROLE_LABELS[r.role] || r.role}
+                      {r.fiscal_year && <span className="text-muted-foreground/50">· {r.fiscal_year}</span>}
+                      {isModerator && (
+                        <button
+                          onClick={() => onDeleteRole(r.id)}
+                          className="text-muted-foreground/60 hover:text-red-400"
+                          title="Remove role"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                  {isModerator && addingFor !== m.id && (
+                    <button
+                      onClick={() => startAdd(m.id)}
+                      className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/70 hover:text-foreground bg-muted/20 hover:bg-muted/30 px-2 py-0.5 rounded-full transition-colors"
+                    >
+                      <Plus className="h-3 w-3" /> Role
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {isModerator && addingFor === m.id && (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <select
+                    value={addRole}
+                    onChange={e => setAddRole(e.target.value)}
+                    className="bg-muted/30 border border-border rounded px-2 py-1 text-xs text-foreground"
                   >
-                    Email
-                  </a>
-                )}
-                {m.phone && (
-                  <a
-                    href={`tel:${m.phone}`}
-                    className="hover:text-foreground/90 transition-colors"
-                    title={m.phone}
+                    {FORUM_ROLE_ORDER.map(r => <option key={r} value={r}>{FORUM_ROLE_LABELS[r]}</option>)}
+                  </select>
+                  <input
+                    type="text"
+                    value={addFY}
+                    onChange={e => setAddFY(e.target.value)}
+                    placeholder="2025-2026"
+                    className="bg-muted/30 border border-border rounded px-2 py-1 text-xs text-foreground placeholder-white/30 w-28"
+                  />
+                  <button
+                    onClick={handleAdd}
+                    disabled={!addRole || !addFY}
+                    className="px-2 py-1 rounded text-xs bg-primary text-white disabled:opacity-40"
                   >
-                    Call
-                  </a>
-                )}
-              </div>
+                    Add
+                  </button>
+                  <button
+                    onClick={() => setAddingFor(null)}
+                    className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
           )
         })}
