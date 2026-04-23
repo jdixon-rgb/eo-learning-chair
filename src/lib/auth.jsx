@@ -126,11 +126,15 @@ export function AuthProvider({ children }) {
   // corporate gateways that drop our magic-link emails don't interfere with
   // OAuth because the provider handles auth directly. Whitelist check
   // happens post-auth in fetchProfile above.
+  //
+  // redirectTo lands on a dedicated callback page (/auth/callback) rather
+  // than "/", so the raw Supabase token hash and any ?error=… from the
+  // provider never flash in front of the authenticated app shell.
   const signInWithGoogle = async () => {
     if (!supabase) return { error: { message: 'Supabase not configured' } }
     return supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
   }
 

@@ -17,6 +17,29 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.77.1 — 2026-04-23
+
+### Polish: clean Google OAuth landing
+
+The Google OAuth round-trip previously dropped users back on "/" with
+the raw Supabase token hash in the address bar
+(`#access_token=eyJ…&refresh_token=…`) and the generic ProtectedRoute
+spinner — it looked like debug output, not a product. Now:
+
+- New public route `/auth/callback` receives the redirect. It scrubs
+  the token hash from the URL and shows a branded "Signing you in…"
+  screen with the wordmark while Supabase establishes the session.
+- OAuth provider errors (`?error=access_denied`, cancellations,
+  network failures) are translated into human-readable messages before
+  being surfaced on the login page — no raw provider strings.
+- The login page no longer passes raw Supabase error text into the
+  red error box when OAuth fails to start.
+
+Files: `src/pages/AuthCallbackPage.jsx` (new), `src/lib/auth.jsx`,
+`src/App.jsx`, `src/pages/LoginPage.jsx`.
+
+---
+
 ## v1.77.0 — 2026-04-23
 
 ### Feature: Google OAuth sign-in
