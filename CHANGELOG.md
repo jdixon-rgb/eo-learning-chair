@@ -17,6 +17,44 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.82.0 — 2026-04-24
+
+### Feature: Regional Learning Chair Expert can drill into chapters (read-only)
+
+Clicking any chapter card on the Regional Learning Dashboard now
+takes the regional expert *into* that chapter's Learning Chair
+surfaces — Year Arc, Speakers, Events, Venues, Budget, SAPs,
+Survey Results — with full read access and zero write access.
+
+**How the scoping works:**
+- `ChapterProvider` now treats regional roles the same as super-admin
+  for chapter-switching, but filters `allChapters` to those tagged
+  with the user's (or impersonated) region. The sidebar Chapter
+  Switcher appears automatically and only lists in-region chapters.
+- Clicking a card on the Regional Dashboard calls `setActiveChapterId`
+  then navigates to `/calendar` (Year Arc).
+- `CHAIR_ROLE_CONFIGS.regional_learning_chair_expert` now includes
+  the full set of Learning Chair nav items. Permission-gated items
+  (SAPs, Venues, Budget, Survey Results) resolve against her role.
+
+**Read-only enforcement:**
+- Added to all `canView*` permissions; never to any `canEdit*` list,
+  so every edit/create/delete button is hidden by the existing
+  `hasPermission(...)` checks throughout the app.
+- New `canViewSpeakerFees` permission gates `fee_estimated` /
+  `fee_actual` columns on SpeakersPage. She sees the public
+  `fee_range` but "Private" + lock icon in place of negotiated
+  amounts.
+- Explicitly excluded from `PORTAL_ROLES` so forum, reflections,
+  and lifeline routes remain inaccessible.
+
+**Read-only banner:** thin primary-tinted strip below the TopBar
+when a regional role is viewing a chapter. Names the chapter and
+the role, reminds her editing is disabled and member-private areas
+are not accessible.
+
+---
+
 ## v1.81.1 — 2026-04-24
 
 ### Feature: super-admin can impersonate Regional Learning Chair Expert by region

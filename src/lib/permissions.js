@@ -19,24 +19,28 @@ export const ENGAGEMENT_ROLES = ['super_admin', 'engagement_chair', 'chapter_exe
 // Finance Chair scope — chapter staff also have access
 export const FINANCE_ROLES = ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator']
 
-// Feature-level permissions
+// Feature-level permissions.
+// regional_learning_chair_expert is added to *view* permissions on Learning-
+// Chair surfaces (events, speakers, venues, budget, scenarios, survey
+// results, partners) but NEVER to any canEdit* list — she's strictly
+// read-only. Private fee amounts are gated by canViewSpeakerFees below.
 export const FEATURE_PERMISSIONS = {
   canEditEvents:         [...ADMIN_ROLES, 'committee_member'],
   canEditSpeakers:       [...ADMIN_ROLES, 'committee_member'],
-  canViewBudget:         [...ADMIN_ROLES, 'finance_chair'],
+  canViewBudget:         [...ADMIN_ROLES, 'finance_chair', 'regional_learning_chair_expert'],
   canEditBudget:         ADMIN_ROLES,
-  canViewVenues:         ADMIN_ROLES,
-  canViewScenarios:      ADMIN_ROLES,
+  canViewVenues:         [...ADMIN_ROLES, 'regional_learning_chair_expert'],
+  canViewScenarios:      [...ADMIN_ROLES, 'regional_learning_chair_expert'],
   canEditChapterConfig:  ['super_admin', 'president', 'chapter_executive_director'],
   canManageSettings:     SETTINGS_ROLES,
   canManageMembers:      ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator'],
   canSendNotifications:  ADMIN_ROLES,
-  // Survey Results are about how learning events landed. Owned by the
-  // Learning Chair and their elect successor; the President / President
-  // Elect / Elect-Elect also have visibility (they care about chapter
-  // health). Super-admin sees nothing here by default — if they need
-  // it for support, they impersonate Learning Chair.
-  canViewSurveyResults:  ['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect'],
+  // Survey Results are aggregate (no member-identifying data), so Regional
+  // Learning Chair Expert can see how events landed across her region.
+  canViewSurveyResults:  ['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'regional_learning_chair_expert'],
+  // Speaker fee amounts (fee_estimated, fee_actual). Regional expert sees
+  // ranges but not specific amounts — those are often privately negotiated.
+  canViewSpeakerFees:    [...ADMIN_ROLES, 'finance_chair', 'committee_member'],
   // Board module
   canViewBoard:          [...BOARD_ROLES, 'learning_chair'],
   canManageChairReports: BOARD_ROLES,
@@ -48,8 +52,8 @@ export const FEATURE_PERMISSIONS = {
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance
   canManageFYBudget:     ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
-  // Partners (SAP) — visible to leadership, learning chairs, and staff
-  canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  // Partners (SAP) — visible to leadership, learning chairs, staff, and regional expert
+  canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'regional_learning_chair_expert'],
 }
 
 export function hasPermission(role, feature) {
@@ -62,8 +66,11 @@ export const REGIONAL_ROLES = ['regional_learning_chair_expert']
 // All roles that can access the admin layout (sidebar)
 export const ADMIN_LAYOUT_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison']
 
-// All roles that can access the member portal
-export const PORTAL_ROLES = ['member', ...ADMIN_LAYOUT_ROLES]
+// All roles that can access the member portal.
+// Regional oversight roles are explicitly excluded — forum / reflections /
+// lifeline are member-private and a regional expert shouldn't be able to
+// view them even for chapters in her own region.
+export const PORTAL_ROLES = ['member', ...ADMIN_LAYOUT_ROLES.filter(r => !REGIONAL_ROLES.includes(r))]
 
 // SAP Partner Portal — external partner contacts only
 export const SAP_PORTAL_ROLES = ['sap_contact']

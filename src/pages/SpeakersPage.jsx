@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
+import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import TourTip from '@/components/TourTip'
 import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
@@ -37,6 +39,8 @@ export default function SpeakersPage() {
     updateEvent,
   } = useStore()
   const { activeChapterId } = useChapter()
+  const { effectiveRole } = useAuth()
+  const canViewFees = hasPermission(effectiveRole, 'canViewSpeakerFees')
   const { activeFiscalYear } = useFiscalYear()
   const [activeTab, setActiveTab] = useState('pipeline')
   const [showForm, setShowForm] = useState(false)
@@ -301,19 +305,23 @@ export default function SpeakersPage() {
             {CONTACT_METHODS.find(m => m.id === speaker.contact_method)?.label || 'Direct'}
           </Badge>
         </div>
-        {/* Inline estimated / actual fee inputs */}
-        <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t" onClick={e => e.stopPropagation()} onDragStart={e => e.stopPropagation()}>
-          <InlineFeeInput
-            label={<>Estimated{speaker.fee_estimated_private && <Lock className="inline h-2.5 w-2.5 ml-1 text-warm" />}</>}
-            value={speaker.fee_estimated}
-            onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_estimated: val })}
-          />
-          <InlineFeeInput
-            label={<>Actual{speaker.fee_actual_private && <Lock className="inline h-2.5 w-2.5 ml-1 text-warm" />}</>}
-            value={speaker.fee_actual}
-            onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_actual: val })}
-          />
-        </div>
+        {/* Inline estimated / actual fee inputs — hidden from roles that
+            shouldn't see specific negotiated amounts (e.g. regional expert).
+            Those viewers still see the public fee_range above. */}
+        {canViewFees && (
+          <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t" onClick={e => e.stopPropagation()} onDragStart={e => e.stopPropagation()}>
+            <InlineFeeInput
+              label={<>Estimated{speaker.fee_estimated_private && <Lock className="inline h-2.5 w-2.5 ml-1 text-warm" />}</>}
+              value={speaker.fee_estimated}
+              onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_estimated: val })}
+            />
+            <InlineFeeInput
+              label={<>Actual{speaker.fee_actual_private && <Lock className="inline h-2.5 w-2.5 ml-1 text-warm" />}</>}
+              value={speaker.fee_actual}
+              onSave={val => speaker._pipeline_id && updatePipelineEntry(speaker._pipeline_id, { fee_actual: val })}
+            />
+          </div>
+        )}
         {speaker.notes && (
           <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2 border-t pt-2">{speaker.notes}</p>
         )}
@@ -469,16 +477,30 @@ export default function SpeakersPage() {
                         {speaker.fee_range_low ? `${formatCurrency(speaker.fee_range_low)}–${formatCurrency(speaker.fee_range_high)}` : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
-                        <span className="inline-flex items-center gap-1">
-                          {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
-                          {speaker.fee_estimated_private && <Lock className="h-3 w-3 text-warm" title="Private — speaker requested confidentiality" />}
-                        </span>
+                        {canViewFees ? (
+                          <span className="inline-flex items-center gap-1">
+                            {speaker.fee_estimated ? formatCurrency(speaker.fee_estimated) : '—'}
+                            {speaker.fee_estimated_private && <Lock className="h-3 w-3 text-warm" title="Private — speaker requested confidentiality" />}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <Lock className="h-3 w-3" />
+                            <span className="text-xs">Private</span>
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
-                        <span className="inline-flex items-center gap-1">
-                          {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
-                          {speaker.fee_actual_private && <Lock className="h-3 w-3 text-warm" title="Private — speaker requested confidentiality" />}
-                        </span>
+                        {canViewFees ? (
+                          <span className="inline-flex items-center gap-1">
+                            {speaker.fee_actual ? formatCurrency(speaker.fee_actual) : '—'}
+                            {speaker.fee_actual_private && <Lock className="h-3 w-3 text-warm" title="Private — speaker requested confidentiality" />}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <Lock className="h-3 w-3" />
+                            <span className="text-xs">Private</span>
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Globe2, Calendar, Users, Mic, Sparkles, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
+import { useChapter } from '@/lib/chapter'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import PageHeader from '@/lib/pageHeader'
@@ -18,7 +19,18 @@ import ActivityIndicator from '@/components/ActivityIndicator'
 // comparison overlays, and broadcasts.
 export default function RegionalLearningDashboard() {
   const { effectiveRegion, isImpersonating } = useAuth()
+  const { setActiveChapterId } = useChapter()
+  const navigate = useNavigate()
   const region = effectiveRegion || null
+
+  // Drill into a specific chapter: make it the active chapter and navigate
+  // to its Year Arc. From there the regional expert has read-only access
+  // to Speakers / Events / Venues / Budget / Survey Results via the
+  // sidebar nav items defined on her chair role config.
+  const drillIntoChapter = (chapterId) => {
+    setActiveChapterId(chapterId)
+    navigate('/calendar')
+  }
 
   const [chapters, setChapters] = useState([])
   const [loading, setLoading] = useState(true)
@@ -164,19 +176,22 @@ export default function RegionalLearningDashboard() {
       {!loading && chapters.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {chapters.map(ch => (
-            <div key={ch.id} className="rounded-xl border bg-card p-5 shadow-sm">
+            <button
+              key={ch.id}
+              type="button"
+              onClick={() => drillIntoChapter(ch.id)}
+              className="rounded-xl border bg-card p-5 shadow-sm hover:shadow-md hover:border-primary transition-all text-left cursor-pointer group"
+            >
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="min-w-0">
-                  <h3 className="font-semibold">{ch.name}</h3>
+                  <h3 className="font-semibold group-hover:text-primary transition-colors">{ch.name}</h3>
                   {ch.president_theme && (
                     <p className="text-xs text-muted-foreground mt-0.5 italic truncate">
                       "{ch.president_theme}"
                     </p>
                   )}
                 </div>
-                <div className="p-1.5 rounded-md bg-primary/10 text-primary shrink-0">
-                  <Globe2 className="h-4 w-4" />
-                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               </div>
 
               {/* Learning Chair */}
@@ -222,7 +237,7 @@ export default function RegionalLearningDashboard() {
                   <p className="text-xs text-muted-foreground italic pl-6">Nothing on the calendar yet</p>
                 )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

@@ -7,17 +7,27 @@ const ChapterContext = createContext(null)
 const STORAGE_KEY = 'eo-active-chapter'
 
 export function ChapterProvider({ children }) {
-  const { profile, isSuperAdmin } = useAuth()
+  const { profile, isSuperAdmin, effectiveRegion } = useAuth()
+  const isRegionalRole = profile?.role === 'regional_learning_chair_expert'
 
   const [allChapters, setAllChapters] = useState([])
   const [activeChapterId, setActiveChapterIdRaw] = useState(null)
   const [isChapterReady, setIsChapterReady] = useState(false)
 
-  // Fetch chapters for super admins, or set the single chapter for regular users
+  // Chapter-switching access is granted to:
+  //   - Super admins (full platform view)
+  //   - Regional-role users (scoped to their region via a post-fetch filter)
+  //
+  // Regular chair/member users stay scoped to a single chapter_id. The
+  // region filter is applied client-side on the super-set returned by
+  // Supabase; RLS on the chapters table already permits authenticated
+  // reads, so this doesn't expose anything new.
   useEffect(() => {
     if (!profile) return
 
-    if (isSuperAdmin) {
+    const canSwitchChapters = isSuperAdmin || isRegionalRole
+
+    if (canSwitchChapters) {
       if (!isSupabaseConfigured()) {
         setIsChapterReady(true)
         return
@@ -30,12 +40,19 @@ export function ChapterProvider({ children }) {
             setIsChapterReady(true)
             return
           }
-          setAllChapters(data)
+          // For regional roles, filter to chapters tagged with their region.
+          // effectiveRegion handles both real regional users and super-admin
+          // impersonation. If no region selected (impersonation with nothing
+          // picked yet), leave the list empty rather than show all chapters.
+          const scoped = isRegionalRole && !isSuperAdmin
+            ? data.filter(c => c.region && c.region === effectiveRegion)
+            : data
+          setAllChapters(scoped)
 
           // Restore saved preference or default to first chapter
           const saved = localStorage.getItem(STORAGE_KEY)
-          const savedExists = saved && data.some((c) => c.id === saved)
-          setActiveChapterIdRaw(savedExists ? saved : data[0]?.id ?? null)
+          const savedExists = saved && scoped.some((c) => c.id === saved)
+          setActiveChapterIdRaw(savedExists ? saved : scoped[0]?.id ?? null)
           setIsChapterReady(true)
         })
     } else {
@@ -44,11 +61,11 @@ export function ChapterProvider({ children }) {
       setAllChapters([])
       setIsChapterReady(true)
     }
-  }, [profile, isSuperAdmin])
+  }, [profile, isSuperAdmin, isRegionalRole, effectiveRegion])
 
   const setActiveChapterId = (id) => {
     setActiveChapterIdRaw(id)
-    if (isSuperAdmin) {
+    if (isSuperAdmin || isRegionalRole) {
       localStorage.setItem(STORAGE_KEY, id)
     }
   }

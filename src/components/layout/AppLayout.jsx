@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import FloatingFeedback from '@/components/ui/FloatingFeedback'
 import BuiltByFooter from '@/components/BuiltByFooter'
+import ReadOnlyBanner from '@/components/ReadOnlyBanner'
 import { useStore } from '@/lib/store'
 import { Loader2 } from 'lucide-react'
 
@@ -20,6 +21,7 @@ export default function AppLayout() {
       <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} onNavigate={handleNavigate} />
       <div className="md:ml-64">
         <TopBar onMenuToggle={() => setMobileMenuOpen(true)} />
+        <ReadOnlyBanner />
         {dbError && (
           <div className="mx-4 mt-2 md:mx-6 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
             <span>{dbError}</span>

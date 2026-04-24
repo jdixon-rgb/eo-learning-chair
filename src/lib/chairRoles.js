@@ -61,11 +61,21 @@ export const CHAIR_ROLE_CONFIGS = {
   regional_learning_chair_expert: {
     title: 'Regional Learning Chair Expert',
     homePath: '/regional/learning',
-    // Spans multiple chapters within a region. No chapter-scoped nav
-    // (events, speakers, budget) — she sees those aggregated on her
-    // dashboard, not as separate top-level items.
+    // Spans multiple chapters within a region. The Regional Dashboard is
+    // her home. From there she drills into any chapter's Year Arc /
+    // Speakers / Events etc. in read-only mode. All nav items below
+    // resolve against whichever chapter she's selected as active — she
+    // switches chapters via the sidebar Chapter Switcher (limited to
+    // chapters in her region by ChapterProvider).
     navItems: [
       { to: '/regional/learning', icon: Globe2, label: 'Regional Dashboard' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/speakers', icon: Users, label: 'Speakers' },
+      { to: '/events', icon: CalendarDays, label: 'Events' },
+      { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
+      { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
+      { to: '/budget', icon: DollarSign, label: 'Budget', permission: 'canViewBudget' },
+      { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
     ],
   },
   sap_chair: {
