@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import PageHeader from '@/lib/pageHeader'
+import ActivityIndicator from '@/components/ActivityIndicator'
 
 // Dashboard for a Regional Learning Chair Expert. She oversees every
 // Learning Chair in chapters tagged with her region — her "feed" is
@@ -53,7 +54,7 @@ export default function RegionalLearningDashboard() {
       // Learning Chairs in those chapters (one per chapter, usually).
       const { data: chairs } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role, chapter_id')
+        .select('id, full_name, email, role, chapter_id, last_sign_in_at')
         .in('chapter_id', chapterIds)
         .eq('role', 'learning_chair')
 
@@ -174,8 +175,11 @@ export default function RegionalLearningDashboard() {
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Learning Chair</p>
                 {ch.learningChair ? (
                   <div>
-                    <p className="text-sm font-medium">{ch.learningChair.full_name || '—'}</p>
-                    <p className="text-xs text-muted-foreground">{ch.learningChair.email}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium truncate">{ch.learningChair.full_name || '—'}</p>
+                      <ActivityIndicator lastSignInAt={ch.learningChair.last_sign_in_at} />
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{ch.learningChair.email}</p>
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground italic">No Learning Chair assigned yet</p>

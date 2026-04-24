@@ -17,6 +17,41 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.81.0 — 2026-04-24
+
+### Feature: chair activity signals + region-grouped dashboard + freeform region
+
+Three linked upgrades so the Regional Learning Chair Expert demo
+feels *alive*, not static.
+
+**1. Chair activity signals.** New `ActivityIndicator` component —
+colored dot (green <7d, amber 7–30d, gray >30d or never) plus a
+relative-time label ("2h ago", "yesterday", "3mo ago", "never
+signed in"). Appears on:
+- Super Admin Dashboard chapter cards (one line per chair role)
+- Regional Learning Dashboard chapter cards (next to the LC)
+- Chapter Config Members table (replaced the generic "Active" badge)
+
+Backed by a new `profiles.last_sign_in_at` column synced from
+`auth.users` via a trigger (migration 067). Historical data
+backfilled so signals are accurate immediately.
+
+**2. Region-grouped Super Admin Dashboard.** Chapters now cluster
+under a region header, alphabetical within each region. Untagged
+chapters fall into a "No region set" group at the bottom so it's
+obvious which ones still need tagging. Each chapter card also now
+lists its chairs (up to 7 role types) with live activity dots and
+a chair count tile beside FY start.
+
+**3. Freeform region entry.** The Region field on ChapterConfigPage
+is now an input + HTML `<datalist>` combobox. Suggestions come from
+a union of `EO_REGIONS` + `DISTINCT chapters.region` fetched live
+from the DB. Type any new region name (e.g. "U.S. Central") and
+save — next time you edit a chapter, that region appears as a
+suggestion. No code change needed to grow the list.
+
+---
+
 ## v1.80.0 — 2026-04-24
 
 ### Feature: Regional Learning Chair Expert

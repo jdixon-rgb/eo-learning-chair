@@ -9,6 +9,7 @@ import {
   Building2, Save, Trash2, Loader2, UserPlus, Mail, ArrowLeft,
 } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
+import ActivityIndicator from '@/components/ActivityIndicator'
 
 const MONTH_OPTIONS = [
   { value: 1, label: 'January' },
@@ -41,6 +42,7 @@ export default function ChapterConfigPage() {
   })
   const [members, setMembers] = useState([])
   const [invites, setInvites] = useState([])
+  const [knownRegions, setKnownRegions] = useState([])
   const [loading, setLoading] = useState(!isNew)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
@@ -53,7 +55,21 @@ export default function ChapterConfigPage() {
   const [inviteMsg, setInviteMsg] = useState('')
 
   const fetchData = useCallback(async () => {
-    if (!isSupabaseConfigured() || isNew) {
+    if (!isSupabaseConfigured()) {
+      setLoading(false)
+      return
+    }
+
+    // Always load known regions — applies to both new and existing chapters
+    // so the combobox autocomplete has something to offer.
+    const { data: regionsData } = await supabase
+      .from('chapters')
+      .select('region')
+      .not('region', 'is', null)
+    const unique = [...new Set((regionsData || []).map(r => r.region).filter(Boolean))]
+    setKnownRegions(unique)
+
+    if (isNew) {
       setLoading(false)
       return
     }
@@ -241,18 +257,29 @@ export default function ChapterConfigPage() {
           </div>
           <div>
             <label className="text-xs font-medium">Region</label>
-            <select
+            <Input
               value={chapter.region || ''}
               onChange={(e) => setChapter({ ...chapter, region: e.target.value })}
-              className="w-full text-sm rounded-lg px-3 py-2 border border-border bg-background cursor-pointer"
-            >
-              <option value="">— Select a region —</option>
-              {EO_REGIONS.map((r) => (
-                <option key={r.id} value={r.label}>{r.label}</option>
-              ))}
-            </select>
+              placeholder="e.g., U.S. West"
+              list="chapter-region-suggestions"
+            />
+            {/* Combined suggestion pool: canonical EO_REGIONS + any region
+                strings that already exist in the DB. Deduped. As you type
+                a new region name here, the next chapter you edit will see
+                that new region as a suggestion. Grows organically. */}
+            <datalist id="chapter-region-suggestions">
+              {[...new Set([
+                ...EO_REGIONS.map(r => r.label),
+                ...knownRegions,
+              ])]
+                .filter(label => label !== 'Other (not yet classified)')
+                .sort((a, b) => a.localeCompare(b))
+                .map((label) => (
+                  <option key={label} value={label} />
+                ))}
+            </datalist>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Used to group chapters under regional oversight roles.
+              Pick from suggestions or type a new region. New values are remembered for future chapters.
             </p>
           </div>
           <div>
@@ -374,7 +401,7 @@ export default function ChapterConfigPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <Badge className="bg-green-500/10 text-green-600 text-[10px]">Active</Badge>
+                      <ActivityIndicator lastSignInAt={member.last_sign_in_at} />
                     </td>
                   </tr>
                 ))}
