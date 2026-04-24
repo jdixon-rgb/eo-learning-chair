@@ -71,7 +71,7 @@ function humanizeOAuthError(code, description) {
     return 'Sign-in was cancelled. You can try again whenever you’re ready.'
   }
   if (d.includes('network') || d.includes('timeout')) {
-    return 'We couldn’t reach Google. Check your connection and try again.'
+    return 'We couldn’t reach your sign-in provider. Check your connection and try again.'
   }
-  return 'Google sign-in didn’t complete. Please try again.'
+  return 'Sign-in didn’t complete. Please try again.'
 }

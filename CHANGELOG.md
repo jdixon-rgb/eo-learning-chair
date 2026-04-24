@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.78.1 — 2026-04-24
+
+### Fix: OAuth error messages were provider-specific
+
+`humanizeOAuthError` in AuthCallbackPage hardcoded "Google" in its
+fallback messages, which made a Microsoft sign-in failure surface
+as "Google sign-in didn't complete" — misleading when you just
+clicked the Microsoft button. Made the copy provider-neutral.
+
+---
+
 ## v1.78.0 — 2026-04-24
 
 ### Feature: Microsoft OAuth sign-in
