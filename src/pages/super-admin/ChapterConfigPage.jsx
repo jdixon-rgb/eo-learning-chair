@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { USER_ROLES } from '@/lib/constants'
+import { USER_ROLES, EO_REGIONS } from '@/lib/constants'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +37,7 @@ export default function ChapterConfigPage() {
     president_name: '',
     currency: 'USD',
     timezone: 'America/Phoenix',
+    region: '',
   })
   const [members, setMembers] = useState([])
   const [invites, setInvites] = useState([])
@@ -90,6 +91,7 @@ export default function ChapterConfigPage() {
       president_name: chapter.president_name,
       currency: chapter.currency || 'USD',
       timezone: chapter.timezone || 'America/Phoenix',
+      region: chapter.region || null,
     }
 
     if (isNew) {
@@ -236,6 +238,22 @@ export default function ChapterConfigPage() {
                 <option key={m.value} value={m.value}>{m.label}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium">Region</label>
+            <select
+              value={chapter.region || ''}
+              onChange={(e) => setChapter({ ...chapter, region: e.target.value })}
+              className="w-full text-sm rounded-lg px-3 py-2 border border-border bg-background cursor-pointer"
+            >
+              <option value="">— Select a region —</option>
+              {EO_REGIONS.map((r) => (
+                <option key={r.id} value={r.label}>{r.label}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Used to group chapters under regional oversight roles.
+            </p>
           </div>
           <div>
             <label className="text-xs font-medium">President's Theme</label>

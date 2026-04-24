@@ -29,6 +29,7 @@ import {
   BarChart3,
   ClipboardList,
   Lightbulb,
+  Globe2,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -55,6 +56,16 @@ export const CHAIR_ROLE_CONFIGS = {
     navItems: [
       { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
       { to: '/super-admin/analytics', icon: BarChart3, label: 'Analytics' },
+    ],
+  },
+  regional_learning_chair_expert: {
+    title: 'Regional Learning Chair Expert',
+    homePath: '/regional/learning',
+    // Spans multiple chapters within a region. No chapter-scoped nav
+    // (events, speakers, budget) — she sees those aggregated on her
+    // dashboard, not as separate top-level items.
+    navItems: [
+      { to: '/regional/learning', icon: Globe2, label: 'Regional Dashboard' },
     ],
   },
   sap_chair: {

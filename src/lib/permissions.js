@@ -56,8 +56,11 @@ export function hasPermission(role, feature) {
   return FEATURE_PERMISSIONS[feature]?.includes(role) ?? false
 }
 
+// Regional oversight roles (span multiple chapters, no chapter_id)
+export const REGIONAL_ROLES = ['regional_learning_chair_expert']
+
 // All roles that can access the admin layout (sidebar)
-export const ADMIN_LAYOUT_ROLES = ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison']
+export const ADMIN_LAYOUT_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison']
 
 // All roles that can access the member portal
 export const PORTAL_ROLES = ['member', ...ADMIN_LAYOUT_ROLES]

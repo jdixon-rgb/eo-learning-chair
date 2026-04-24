@@ -17,6 +17,50 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.80.0 — 2026-04-24
+
+### Feature: Regional Learning Chair Expert
+
+First regional-scoped role on the platform. A Regional Learning Chair
+Expert oversees every chapter-level Learning Chair in a given region
+(e.g. "U.S. West"). She has no `chapter_id` — she spans multiple —
+and her dashboard aggregates across every chapter tagged with her
+region.
+
+**What she sees** at `/regional/learning`:
+- One card per chapter in her region
+- Each card shows: chapter name + theme, the Learning Chair's name
+  and email, upcoming events (next 3), and total speakers in pipeline
+- Empty state preview when no chapters are tagged yet — shows her
+  what the surface will look like once chapters come online, so she
+  can evangelize the feature even as the first adopter
+
+**Data layer (migration 066):**
+- `chapters.region`, `profiles.region`, `member_invites.region`
+  (all text, nullable) — tag any chapter with a region; regional-
+  role profiles carry their own region
+- `regional_learning_chair_expert` added to the role check
+  constraints on both profiles and member_invites
+- `handle_new_user` updated to carry `invite.region` into the new
+  profile alongside `chapter_id`
+- Helper function `is_regional_learning_chair_expert_for(chapter_id)`
+  for future cross-chapter RLS (not wired into existing policies
+  this pass — existing SELECT permissiveness already covers V1)
+
+**Frontend plumbing:**
+- New `CHAIR_ROLE_CONFIGS` entry with homePath `/regional/learning`
+  so `ChairHome` routes her correctly after sign-in
+- New `REGIONAL_ROLES` permissions list; added to
+  `ADMIN_LAYOUT_ROLES` so she gets the admin sidebar
+- Region dropdown added to ChapterConfigPage (EO_REGIONS constant
+  starts with "U.S. West" and "Other" — add entries as the real
+  EO region list surfaces)
+
+Only Learning-side for V1. Regional roles for Engagement, President,
+etc. can follow the same pattern when needed.
+
+---
+
 ## v1.79.0 — 2026-04-24
 
 ### Feature: Welcome guide for brand-new chapters

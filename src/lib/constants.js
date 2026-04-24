@@ -222,10 +222,21 @@ export const ALLOWED_FILE_TYPES = [
 // User roles
 export const USER_ROLES = [
   { id: 'super_admin', label: 'Super Admin', access: 'full' },
+  { id: 'regional_learning_chair_expert', label: 'Regional Learning Chair Expert', access: 'regional' },
   { id: 'learning_chair', label: 'Learning Chair', access: 'full' },
   { id: 'chapter_experience_coordinator', label: 'Chapter Experience Coordinator', access: 'full' },
   { id: 'chapter_executive_director', label: 'Chapter Executive Director', access: 'full' },
   { id: 'committee_member', label: 'Committee Member', access: 'edit_limited' },
   { id: 'board_liaison', label: 'Board Liaison', access: 'view' },
   { id: 'member', label: 'Member', access: 'portal_only' },
+]
+
+// EO regions. Intentionally a flexible freeform list for V1 — John-Scott
+// doesn't have the authoritative EO region list yet, but we need "U.S. West"
+// in prod today so the Regional Learning Chair Expert demo can go live.
+// Add more entries as the real list surfaces; keep 'Other' as a release
+// valve so chapters can still be tagged while the list is incomplete.
+export const EO_REGIONS = [
+  { id: 'us_west', label: 'U.S. West' },
+  { id: 'other', label: 'Other (not yet classified)' },
 ]
