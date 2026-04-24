@@ -138,6 +138,18 @@ export function AuthProvider({ children }) {
     })
   }
 
+  // OAuth sign-in (Microsoft / Azure AD). Same motivation as Google —
+  // covers Microsoft 365 / Outlook / Hotmail / Live users whose corporate
+  // mail filters eat magic links. Tenant breadth (personal vs. work+school
+  // vs. both) is configured in the Supabase Azure provider, not here.
+  const signInWithMicrosoft = async () => {
+    if (!supabase) return { error: { message: 'Supabase not configured' } }
+    return supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
+  }
+
   const signOut = async () => {
     if (supabase) await supabase.auth.signOut()
     setSession(null)
@@ -201,6 +213,7 @@ export function AuthProvider({ children }) {
     signInWithPhone,
     verifyPhoneOtp,
     signInWithGoogle,
+    signInWithMicrosoft,
     signOut,
     isAdmin,
     isSuperAdmin,

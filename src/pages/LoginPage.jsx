@@ -34,7 +34,7 @@ function toE164(input) {
 }
 
 export default function LoginPage() {
-  const { profile, loading, signIn, signInWithPhone, verifyPhoneOtp, signInWithGoogle } = useAuth()
+  const { profile, loading, signIn, signInWithPhone, verifyPhoneOtp, signInWithGoogle, signInWithMicrosoft } = useAuth()
   const [method, setMethod] = useState('email') // 'email' | 'phone'
 
   // Email path
@@ -51,6 +51,7 @@ export default function LoginPage() {
   const [sending, setSending] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [microsoftLoading, setMicrosoftLoading] = useState(false)
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
@@ -174,6 +175,21 @@ export default function LoginPage() {
     // On success the browser redirects to Google; no further handling here.
   }
 
+  // ── Microsoft OAuth ───────────────────────────────────────────────
+  const handleMicrosoft = async () => {
+    if (!acceptedTerms) {
+      setError('Please agree to the Terms and Privacy Policy before continuing.')
+      return
+    }
+    setError('')
+    setMicrosoftLoading(true)
+    const { error: err } = await signInWithMicrosoft()
+    if (err) {
+      setMicrosoftLoading(false)
+      setError("We couldn't start Microsoft sign-in. Please try again.")
+    }
+  }
+
   const handleResendCode = async () => {
     if (!phoneE164) return
     setSending(true)
@@ -269,9 +285,9 @@ export default function LoginPage() {
                   : 'Sign in with a code sent to your phone'}
               </p>
 
-              {/* Google OAuth — fastest and most reliable path. Sidesteps
+              {/* OAuth buttons — fastest and most reliable path. Sidesteps
                   corporate email gateways that drop magic-link emails. */}
-              <div className="mb-5">
+              <div className="mb-5 space-y-2">
                 <TermsCheckbox
                   accepted={acceptedTerms}
                   onChange={setAcceptedTerms}
@@ -281,7 +297,7 @@ export default function LoginPage() {
                   type="button"
                   variant="outline"
                   onClick={handleGoogle}
-                  disabled={googleLoading || !acceptedTerms}
+                  disabled={googleLoading || microsoftLoading || !acceptedTerms}
                   className="w-full mt-3"
                 >
                   {googleLoading ? (
@@ -290,6 +306,22 @@ export default function LoginPage() {
                     <>
                       <GoogleIcon className="h-4 w-4 mr-2" />
                       Continue with Google
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleMicrosoft}
+                  disabled={googleLoading || microsoftLoading || !acceptedTerms}
+                  className="w-full"
+                >
+                  {microsoftLoading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Redirecting to Microsoft…</>
+                  ) : (
+                    <>
+                      <MicrosoftIcon className="h-4 w-4 mr-2" />
+                      Continue with Microsoft
                     </>
                   )}
                 </Button>
@@ -424,6 +456,18 @@ function GoogleIcon({ className = '' }) {
       <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
       <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
       <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+    </svg>
+  )
+}
+
+// Official Microsoft four-square logo — plain SVG so we don't add a dep.
+function MicrosoftIcon({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 23 23" aria-hidden="true">
+      <path fill="#F35325" d="M1 1h10v10H1z"/>
+      <path fill="#81BC06" d="M12 1h10v10H12z"/>
+      <path fill="#05A6F0" d="M1 12h10v10H1z"/>
+      <path fill="#FFBA08" d="M12 12h10v10H12z"/>
     </svg>
   )
 }

@@ -17,6 +17,34 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.78.0 — 2026-04-24
+
+### Feature: Microsoft OAuth sign-in
+
+Adds "Continue with Microsoft" alongside "Continue with Google" on
+the login page. Same motivation: corporate email gateways drop
+magic-link emails, and Microsoft 365 is the other half of the
+business-user world we weren't covering. Supabase's Azure provider
+handles Microsoft Entra ID (work + school accounts) and personal
+Microsoft accounts (Outlook, Hotmail, Live) under one button —
+tenant breadth is configured on the Supabase provider, not in code.
+
+Code lands live; button will surface a friendly "We couldn't start
+Microsoft sign-in" message until the Azure app is registered and
+the Supabase Azure provider is enabled. No user impact in the
+interim because sign-in is still possible via Google, magic link,
+or SMS.
+
+### Infra setup required (out of band)
+
+- Register a multi-tenant app in the Azure portal under a stable
+  account (not role-based — OAuth registrations outlive roles).
+- Add redirect URI `https://auth.ourchapteros.com/auth/v1/callback`.
+- Enable the Azure provider in Supabase → Authentication → Providers
+  with the Azure client ID + secret.
+
+---
+
 ## v1.77.4 — 2026-04-23
 
 ### Polish: page titles in the TopBar slot, not the content body
