@@ -56,8 +56,8 @@ const boardItems = [
 ]
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
-  const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId } = useAuth()
-  const { activeChapter } = useChapter()
+  const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId, viewAsRegion, setViewAsRegion } = useAuth()
+  const { activeChapter, allChapters } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
   const { resetAll: resetTourTips } = useTourTips()
@@ -238,6 +238,30 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                     const p = sapPartners.find(sp => sp.id === c.sap_id)
                     return <option key={c.id} value={c.id}>{c.name}{p ? ` (${p.name})` : ''}</option>
                   })}
+                </select>
+              </div>
+            )}
+            {/* Region picker — when viewing as a regional chair/expert.
+                Source: DISTINCT chapter.region values currently in the
+                platform. Picking "U.S. West" here makes the regional
+                dashboard show chapters tagged U.S. West. */}
+            {viewAsRole === 'regional_learning_chair_expert' && (
+              <div className="mt-2">
+                <label className="text-[10px] text-muted-foreground/70 mb-0.5 block">as region</label>
+                <select
+                  value={viewAsRegion || ''}
+                  onChange={e => {
+                    setViewAsRegion(e.target.value || null)
+                    navigate('/regional/learning')
+                  }}
+                  className="w-full text-xs bg-sidebar-accent/40 border border-sidebar-border rounded-lg px-2 py-1.5 text-sidebar-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                >
+                  <option value="">— pick a region —</option>
+                  {[...new Set((allChapters || []).map(c => c.region).filter(Boolean))]
+                    .sort((a, b) => a.localeCompare(b))
+                    .map(region => (
+                      <option key={region} value={region}>{region}</option>
+                    ))}
                 </select>
               </div>
             )}

@@ -17,6 +17,26 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.81.1 — 2026-04-24
+
+### Feature: super-admin can impersonate Regional Learning Chair Expert by region
+
+Mirrors the SAP contact impersonation pattern. When a super-admin
+switches into `regional_learning_chair_expert` via the sidebar's
+Switch Role dropdown, a second dropdown appears labeled "as region"
+listing every region currently in use across chapters. Picking one
+makes the Regional Learning Dashboard render as if you were the
+expert for that region.
+
+New `effectiveRegion` in the auth context — when impersonating,
+it's the picked region; otherwise it's `profile.region`. Dashboards
+should read this, not `profile.region` directly.
+
+Persists in localStorage under `eo-view-as-region`; cleared when
+switching back to the super-admin's own role.
+
+---
+
 ## v1.81.0 — 2026-04-24
 
 ### Feature: chair activity signals + region-grouped dashboard + freeform region

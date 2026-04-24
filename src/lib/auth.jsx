@@ -8,6 +8,7 @@ const DEV_PROFILE = { role: 'learning_chair', full_name: 'Dev Mode', email: 'dev
 
 const VIEW_AS_STORAGE_KEY = 'eo-view-as-role'
 const VIEW_AS_SAP_CONTACT_KEY = 'eo-view-as-sap-contact'
+const VIEW_AS_REGION_KEY = 'eo-view-as-region'
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
@@ -18,6 +19,9 @@ export function AuthProvider({ children }) {
   })
   const [viewAsSapContactId, setViewAsSapContactIdState] = useState(() => {
     try { return localStorage.getItem(VIEW_AS_SAP_CONTACT_KEY) || null } catch { return null }
+  })
+  const [viewAsRegion, setViewAsRegionState] = useState(() => {
+    try { return localStorage.getItem(VIEW_AS_REGION_KEY) || null } catch { return null }
   })
   const [currentTerms, setCurrentTerms] = useState(null)
   const [requiresTermsAck, setRequiresTermsAck] = useState(false)
@@ -178,6 +182,11 @@ export function AuthProvider({ children }) {
       try { localStorage.removeItem(VIEW_AS_SAP_CONTACT_KEY) } catch { /* ignore */ }
       setViewAsSapContactIdState(null)
     }
+    // Clear region impersonation when switching away from regional roles
+    if (nextRole !== 'regional_learning_chair_expert') {
+      try { localStorage.removeItem(VIEW_AS_REGION_KEY) } catch { /* ignore */ }
+      setViewAsRegionState(null)
+    }
   }, [])
 
   const setViewAsSapContactId = useCallback((id) => {
@@ -188,10 +197,26 @@ export function AuthProvider({ children }) {
     setViewAsSapContactIdState(id || null)
   }, [])
 
+  const setViewAsRegion = useCallback((region) => {
+    try {
+      if (region) localStorage.setItem(VIEW_AS_REGION_KEY, region)
+      else localStorage.removeItem(VIEW_AS_REGION_KEY)
+    } catch { /* ignore */ }
+    setViewAsRegionState(region || null)
+  }, [])
+
   // Effective SAP contact ID: impersonation takes priority
   const effectiveSapContactId = canSwitchRoles && viewAsSapContactId
     ? viewAsSapContactId
     : profile?.sap_contact_id ?? null
+
+  // Effective region: when a super-admin is impersonating a regional role,
+  // their picked region wins; otherwise fall back to the profile's region.
+  // Any dashboard that groups data by region (e.g. RegionalLearningDashboard)
+  // should read this — never profile.region directly.
+  const effectiveRegion = canSwitchRoles && viewAsRole === 'regional_learning_chair_expert' && viewAsRegion
+    ? viewAsRegion
+    : profile?.region ?? null
 
   // PRIVACY GUARD: true when viewing another user's role context.
   // Any hook that accesses personal data (reflections, lifeline, forum
@@ -229,6 +254,9 @@ export function AuthProvider({ children }) {
     sapContactId: effectiveSapContactId,
     viewAsSapContactId,
     setViewAsSapContactId,
+    effectiveRegion,
+    viewAsRegion,
+    setViewAsRegion,
     isPreviewingOtherUser,
     currentTerms,
     requiresTermsAck,

@@ -17,8 +17,8 @@ import ActivityIndicator from '@/components/ActivityIndicator'
 // a region in motion. Later versions can add comment threads, peer
 // comparison overlays, and broadcasts.
 export default function RegionalLearningDashboard() {
-  const { profile } = useAuth()
-  const region = profile?.region || null
+  const { effectiveRegion, isImpersonating } = useAuth()
+  const region = effectiveRegion || null
 
   const [chapters, setChapters] = useState([])
   const [loading, setLoading] = useState(true)
@@ -98,9 +98,18 @@ export default function RegionalLearningDashboard() {
         <PageHeader title="Regional Learning" subtitle="Setup pending" />
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <p className="text-sm text-muted-foreground">
-            Your account hasn't been assigned a region yet. Ask a super-admin
-            to set your <code className="text-xs bg-muted px-1 rounded">region</code> field
-            so your peer chapters can appear here.
+            {isImpersonating ? (
+              <>
+                No region selected. Use the <strong>"as region"</strong> picker in the
+                sidebar (under Switch Role) to preview a specific region's view.
+              </>
+            ) : (
+              <>
+                Your account hasn't been assigned a region yet. Ask a super-admin
+                to set your <code className="text-xs bg-muted px-1 rounded">region</code> field
+                so your peer chapters can appear here.
+              </>
+            )}
           </p>
         </div>
       </div>
