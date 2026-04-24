@@ -1,20 +1,61 @@
 import { Link } from 'react-router-dom'
 import { Compass, UserCheck, BookOpen, Send } from 'lucide-react'
 import { useEngagementStore } from '@/lib/engagementStore'
+import { useStore } from '@/lib/store'
 import TourTip from '@/components/TourTip'
+import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
 import PageHeader from '@/lib/pageHeader'
 
 export default function EngagementDashboard() {
   const { navigators, pairings, resources, broadcasts } = useEngagementStore()
+  const { chapter } = useStore()
 
   const activeNavigators = navigators.filter(n => n.status === 'active').length
   const activePairings = pairings.filter(p => p.status === 'active').length
   const publishedResources = resources.filter(r => r.status === 'published').length
   const openBroadcasts = broadcasts.filter(b => b.status === 'open').length
 
+  // Brand-new chapter signal for the Engagement Chair's welcome guide.
+  const isEmptyChapter =
+    navigators.length === 0
+    && pairings.length === 0
+    && resources.length === 0
+    && broadcasts.length === 0
+
   return (
     <div className="space-y-6 max-w-6xl">
       <TourTip />
+      <ChapterWelcomeGuide
+        chapterId={chapter?.id}
+        chapterName={chapter?.name || 'your chapter'}
+        empty={isEmptyChapter}
+        actions={[
+          {
+            icon: Compass,
+            label: 'Recruit your first Navigators',
+            description: 'Navigators are the seasoned members who welcome new ones. Start with 3–5.',
+            to: '/engagement/navigators',
+          },
+          {
+            icon: BookOpen,
+            label: 'Stock the Conversation Library',
+            description: 'Add prompts, articles, or playbooks Navigators can share with new members.',
+            to: '/engagement/library',
+          },
+          {
+            icon: UserCheck,
+            label: 'Set up pairings',
+            description: 'Match Navigators with new members once you have both on the roster.',
+            to: '/engagement/pairings',
+          },
+          {
+            icon: Send,
+            label: 'Send your first broadcast',
+            description: 'A one-tap check-in to every active Navigator — great for monthly rhythm.',
+            to: '/engagement/broadcasts',
+          },
+        ]}
+      />
       <PageHeader
         title="Member Engagement"
         subtitle="Welcome new members. Train Navigators. Build the conversation that helps every member find their version of EO."

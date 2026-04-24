@@ -4,6 +4,7 @@ import { useBoardStore } from '@/lib/boardStore'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
 import TourTip from '@/components/TourTip'
+import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
 import PageHeader from '@/lib/pageHeader'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
@@ -19,6 +20,8 @@ import {
   TrendingUp,
   Clock,
   Route,
+  UserPlus,
+  Mic,
 } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -66,9 +69,45 @@ export default function DashboardPage() {
     arr.sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''))
   )
 
+  // Brand-new chapter signal for the Learning Chair's welcome guide.
+  // Strict zero-state: if there's literally nothing on the two surfaces
+  // they own (events, speakers), assume this is a fresh chapter.
+  const isEmptyChapter = events.length === 0 && speakers.length === 0
+
   return (
     <div className="space-y-6">
       <TourTip />
+      <ChapterWelcomeGuide
+        chapterId={chapter?.id}
+        chapterName={chapter?.name || 'your chapter'}
+        empty={isEmptyChapter}
+        actions={[
+          {
+            icon: Mic,
+            label: 'Add your first speaker',
+            description: 'Build the pipeline — a shortlist of members or outside voices you might bring in.',
+            to: '/speakers',
+          },
+          {
+            icon: Calendar,
+            label: 'Plan your first learning event',
+            description: 'Create an event to anchor a month on the calendar.',
+            to: '/events',
+          },
+          {
+            icon: DollarSign,
+            label: 'Review the learning budget',
+            description: 'See what\'s been allocated to learning for this fiscal year.',
+            to: '/budget',
+          },
+          {
+            icon: UserPlus,
+            label: 'Invite other members',
+            description: 'Pull in your co-chairs, committee, and members so they\'re ready to engage.',
+            to: '/admin/members',
+          },
+        ]}
+      />
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <PageHeader

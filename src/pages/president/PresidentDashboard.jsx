@@ -8,8 +8,9 @@ import { formatFiscalYear } from '@/lib/fiscalYear'
 import { formatCurrency } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
+import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
 import PageHeader from '@/lib/pageHeader'
-import { DollarSign, Users, CalendarDays, Palette, TrendingUp } from 'lucide-react'
+import { DollarSign, Users, CalendarDays, Palette, TrendingUp, UserPlus, Briefcase, Sparkles } from 'lucide-react'
 
 export default function PresidentDashboard() {
   const { chapter, events, pipelineSpeakers } = useStore()
@@ -52,9 +53,47 @@ export default function PresidentDashboard() {
   const plannedEvents = events.filter(e => e.status !== 'cancelled').length
   const activeSpeakers = pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').length
 
+  // Brand-new chapter signal for the President's welcome guide.
+  // Strict zero-state: no chair assignments, no active members, no events.
+  const isEmptyChapter =
+    fyAssignments.length === 0
+    && activeMembers === 0
+    && events.length === 0
+
   return (
     <div className="space-y-6">
       <TourTip />
+      <ChapterWelcomeGuide
+        chapterId={chapter?.id}
+        chapterName={chapter?.name || 'your chapter'}
+        empty={isEmptyChapter}
+        actions={[
+          {
+            icon: Sparkles,
+            label: 'Set your theme for the year',
+            description: 'Announce your vision — every chair\'s dashboard will echo it back.',
+            to: '/settings',
+          },
+          {
+            icon: Briefcase,
+            label: 'Assign your chairs',
+            description: 'Learning, Engagement, Finance — line up who owns what for the year.',
+            to: '/president',
+          },
+          {
+            icon: DollarSign,
+            label: 'Allocate the chapter budget',
+            description: 'Split the FY budget across chair roles so each has something to spend.',
+            to: '/budget',
+          },
+          {
+            icon: UserPlus,
+            label: 'Invite your chapter',
+            description: 'Get members and staff into the system so the rest of the flywheel can turn.',
+            to: '/admin/members',
+          },
+        ]}
+      />
       <PageHeader
         title={headingTitle}
         subtitle={

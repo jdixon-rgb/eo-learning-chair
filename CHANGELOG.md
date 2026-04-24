@@ -17,6 +17,50 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.79.0 — 2026-04-24
+
+### Feature: Welcome guide for brand-new chapters
+
+First chair to sign into a freshly created chapter used to land on an
+empty dashboard with no orientation — events empty, speakers empty,
+members empty, with no signal that this was expected for a new
+chapter. Felt broken.
+
+Now: a `ChapterWelcomeGuide` panel appears at the top of the
+role-specific dashboard when the chapter has no data yet. Panel
+includes:
+
+- Welcome headline with chapter name
+- Short explainer framing the blank state as expected
+- 3–5 role-specific quick-win action cards (icons + copy + links to
+  the surfaces where the first chair would seed data)
+- Dismissible via an X; choice persists per-chapter in localStorage
+  so it doesn't nag once the chair is oriented
+
+Wired into: Learning Chair `DashboardPage`, `PresidentDashboard`,
+`EngagementDashboard`. Each surface picks its own "empty chapter"
+signal and passes role-appropriate actions into the component.
+
+### Supabase migration 064: restore super_admin in is_admin()
+
+Migration 045 was supposed to add `super_admin` to the `is_admin()`
+Postgres function but didn't stick in production — same schema-drift
+pattern as 035/037–040. Result: every RLS policy using `is_admin()`
+silently rejected super-admin reads, making freshly-created invites
+invisible on the chapter config page. Migration 064 re-declares the
+function with super_admin included; idempotent, safe to re-run.
+
+### Supabase migration 065: restore chapter_id in handle_new_user
+
+Migration 060's phone-OTP rewrite of `handle_new_user` dropped the
+`chapter_id` column from the INSERT into profiles. Migration 061
+inherited the omission. Result: a new user matched to an invite got
+a profile with `chapter_id = NULL`, which meant they never appeared
+in the chapter's Members table. Migration 065 restores the column
+and backfills orphaned profiles whose invite had a chapter_id.
+
+---
+
 ## v1.78.1 — 2026-04-24
 
 ### Fix: OAuth error messages were provider-specific
