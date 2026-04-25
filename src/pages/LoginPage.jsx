@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
@@ -55,18 +55,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
-
-  // Surface rejection from the post-OAuth allowlist check (set in auth.jsx
-  // when a signed-in user's email/phone isn't in member_invites).
-  useEffect(() => {
-    try {
-      const msg = sessionStorage.getItem('oauth_rejected')
-      if (msg) {
-        setError(msg)
-        sessionStorage.removeItem('oauth_rejected')
-      }
-    } catch { /* storage blocked — nothing to do */ }
-  }, [])
 
   if (!loading && profile) {
     const home = profile.role === 'member' ? '/portal'

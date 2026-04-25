@@ -46,16 +46,17 @@ export function AuthProvider({ children }) {
         check_phone: data.phone || null,
       })
       if (invited === false) {
+        // Capture identifier before signing out so we can show it on the
+        // access-needed page; helps the visitor see which account got rejected.
+        const rejectedEmail = data.email || data.phone || ''
         await supabase.auth.signOut()
-        try {
-          sessionStorage.setItem(
-            'oauth_rejected',
-            "This account isn't on the chapter allowlist. Contact your Learning Chair to request access."
-          )
-        } catch { /* storage blocked — error just won't surface on next render */ }
         setSession(null)
         setProfile(null)
         setLoading(false)
+        const qs = rejectedEmail ? `?email=${encodeURIComponent(rejectedEmail)}` : ''
+        // Full-page navigation (not React Router) — auth.jsx is outside the
+        // router context and we want a clean session-cleared landing.
+        window.location.assign('/access-needed' + qs)
         return
       }
     }
