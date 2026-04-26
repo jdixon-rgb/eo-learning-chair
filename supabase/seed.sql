@@ -57,7 +57,7 @@ insert into public.events (id, chapter_id, title, event_date, event_time, month_
 on conflict (id) do nothing;
 
 -- ── Budget Items ──
-insert into public.budget_items (event_id, category, description, estimated_amount, actual_amount) values
+insert into public.budget_items (event_id, category, description, budget_amount, actual_amount) values
   -- August - Salim Ismail
   ('40000000-0000-4000-a000-000000000001', 'speaker_fee', 'Salim Ismail keynote', 40000, null),
   ('40000000-0000-4000-a000-000000000001', 'food_beverage', 'Kickoff dinner', 15000, null),
