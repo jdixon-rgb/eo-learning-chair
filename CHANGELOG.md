@@ -17,6 +17,32 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.85.1 — 2026-04-25
+
+### Fix: own-chapter shared speakers now visible in the Shared Library
+
+When a chapter toggled a speaker to "Globally Shared," the speaker
+correctly persisted with `share_scope='global'` — but the Shared
+Library tab filtered it out via `.neq('chapter_id', activeChapterId)`.
+The original intent was "don't show speakers you can't fork," but the
+side effect was that users had no way to confirm their share was live
+or manage their contributions from this view, making it look broken.
+
+**Behavior now:**
+- Own-chapter shared speakers appear in the Shared Library alongside
+  other chapters' contributions.
+- They're tagged "Your chapter" instead of the source chapter name.
+- The fork button is replaced with a disabled "Your contribution —
+  visible to other chapters" pill so the action is unambiguous.
+
+Also removed the hardcoded `$` prefix from fee-range display in the
+Shared Library cards (held over from before currency support was
+added). The amount is shown as `30K–50K` for now; surfacing the source
+chapter's currency in cross-chapter views needs a denormalization on
+the speaker row and is tracked separately.
+
+---
+
 ## v1.85.0 — 2026-04-25
 
 ### Visual: dollar-sign icon → wallet icon, app-wide

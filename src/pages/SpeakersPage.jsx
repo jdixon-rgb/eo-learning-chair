@@ -898,11 +898,14 @@ function SharedLibraryTab({ activeChapterId, ownSpeakers, onFork }) {
         return
       }
       setError(null)
+      // Include own-chapter shared speakers so the user can confirm their
+      // contribution is live and manage it from this view. We tag them
+      // visually below ("Your chapter shared this") and suppress the
+      // fork action since it's already in their own library.
       const { data, error: err } = await supabase
         .from('speakers')
         .select('*')
         .eq('share_scope', 'global')
-        .neq('chapter_id', activeChapterId)
         .order('name', { ascending: true })
       if (cancelled) return
       if (err) {
@@ -943,7 +946,7 @@ function SharedLibraryTab({ activeChapterId, ownSpeakers, onFork }) {
   if (speakers.length === 0) {
     return (
       <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
-        No shared speakers from other chapters yet. When a chapter toggles a speaker to "Globally Shared," they'll appear here.
+        No globally-shared speakers yet. Toggle a speaker in your library to "Globally Shared" — they'll appear here for every chapter to discover and fork.
       </div>
     )
   }
@@ -951,6 +954,7 @@ function SharedLibraryTab({ activeChapterId, ownSpeakers, onFork }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {speakers.map(speaker => {
+        const isOwnContribution = speaker.chapter_id === activeChapterId
         const alreadyForked = ownImportedIds.has(speaker.id)
         return (
           <div key={speaker.id} className="rounded-xl border bg-card p-4 shadow-sm flex flex-col gap-3">
@@ -968,28 +972,36 @@ function SharedLibraryTab({ activeChapterId, ownSpeakers, onFork }) {
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium">
                 {speaker.fee_range_low
-                  ? `$${(speaker.fee_range_low / 1000).toFixed(0)}K–$${(speaker.fee_range_high / 1000).toFixed(0)}K`
+                  ? `${(speaker.fee_range_low / 1000).toFixed(0)}K–${(speaker.fee_range_high / 1000).toFixed(0)}K`
                   : 'Fee TBD'}
               </span>
               <span className="text-muted-foreground italic">
-                {speaker.shared_chapter_name || 'EO Chapter'}
+                {isOwnContribution
+                  ? 'Your chapter'
+                  : (speaker.shared_chapter_name || 'EO Chapter')}
               </span>
             </div>
-            <Button
-              size="sm"
-              variant={alreadyForked ? 'outline' : 'default'}
-              disabled={alreadyForked || forking === speaker.id}
-              onClick={() => handleFork(speaker)}
-              className="w-full"
-            >
-              {forking === speaker.id ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Forking…</>
-              ) : alreadyForked ? (
-                'Already in your library'
-              ) : (
-                <><Plus className="h-3.5 w-3.5 mr-1" /> Add to my pipeline</>
-              )}
-            </Button>
+            {isOwnContribution ? (
+              <Button size="sm" variant="outline" disabled className="w-full">
+                Your contribution — visible to other chapters
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant={alreadyForked ? 'outline' : 'default'}
+                disabled={alreadyForked || forking === speaker.id}
+                onClick={() => handleFork(speaker)}
+                className="w-full"
+              >
+                {forking === speaker.id ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> Forking…</>
+                ) : alreadyForked ? (
+                  'Already in your library'
+                ) : (
+                  <><Plus className="h-3.5 w-3.5 mr-1" /> Add to my pipeline</>
+                )}
+              </Button>
+            )}
           </div>
         )
       })}
