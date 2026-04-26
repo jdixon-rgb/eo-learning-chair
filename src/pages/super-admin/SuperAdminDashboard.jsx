@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useChapter } from '@/lib/chapter'
-import { Building2, Plus, Users, Pencil, Check, X, Loader2, Map } from 'lucide-react'
+import { Building2, Plus, Users, Pencil, Check, X, Loader2, Map as MapIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import PageHeader from '@/lib/pageHeader'
@@ -175,7 +175,7 @@ export default function SuperAdminDashboard() {
       {regionsInUse.length > 0 && (
         <details className="rounded-xl border bg-card shadow-sm">
           <summary className="flex items-center gap-2 px-5 py-3 cursor-pointer list-none">
-            <Map className="h-4 w-4 text-primary" />
+            <MapIcon className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold">Regions ({regionsInUse.length})</span>
             <span className="text-xs text-muted-foreground">— rename to unify inconsistent labels</span>
           </summary>

@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.84.1 — 2026-04-25
+
+### Hotfix: white screen of death on super-admin dashboard
+
+`Map` was imported from `lucide-react` (the icon) without an alias,
+which shadowed the global `Map` constructor. The very next line —
+`new Map()` in the regions-in-use memo — then tried to instantiate a
+React component, failing with `wh is not a constructor` after
+minification and white-screening the entire app.
+
+Aliased the import to `MapIcon`. Also reverted the `chapter.jsx`
+refactor to a pure additive `refreshChapters` (the original
+`useEffect` is untouched) so the on-mount load behavior is exactly
+what it was before v1.84.0.
+
+---
+
 ## v1.84.0 — 2026-04-25
 
 ### Feature: Super-admin can rename/merge regions; broader currency & timezone coverage
