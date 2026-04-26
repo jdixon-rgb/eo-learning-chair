@@ -17,6 +17,37 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.84.0 — 2026-04-25
+
+### Feature: Super-admin can rename/merge regions; broader currency & timezone coverage
+
+**Region management on the Super-Admin Dashboard:**
+A new collapsible "Regions" card lists every distinct region currently
+in use across chapters, with chapter counts. Click "Rename" on any
+row to edit inline — typing a new name and saving runs a bulk
+`UPDATE chapters SET region = <new> WHERE region = <old>`. Typing
+an *existing* region name effectively merges the two. The autocomplete
+draws from canonical `EO_REGIONS` plus values already in the DB.
+
+This fixes the "U.S.W vs U.S. East vs U.S. West" inconsistency
+without needing a migration or a SQL console.
+
+**ChapterProvider** now exposes `refreshChapters()` so the dashboard
+can re-pull after a rename without a full page reload. The active
+chapter selection is preserved across refreshes (previously the
+provider would reset to the first chapter on every effect run, which
+would have yanked a super-admin out of context after every save).
+
+**Currencies added:** PHP (Philippine Peso), KES (Kenyan Shilling),
+INR (Indian Rupee), NZD (New Zealand Dollar). Greece uses EUR
+(already supported).
+
+**Timezones added:** Europe/Athens (Greece), Africa/Nairobi (Kenya),
+Asia/Manila (Philippines), Asia/Kolkata (New Delhi), Pacific/Auckland
+(New Zealand).
+
+---
+
 ## v1.82.0 — 2026-04-24
 
 ### Feature: Regional Learning Chair Expert can drill into chapters (read-only)

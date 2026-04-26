@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, createElement } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, createElement } from 'react'
 import { useAuth } from './auth'
 import { supabase, isSupabaseConfigured } from './supabase'
 
@@ -22,7 +22,7 @@ export function ChapterProvider({ children }) {
   // region filter is applied client-side on the super-set returned by
   // Supabase; RLS on the chapters table already permits authenticated
   // reads, so this doesn't expose anything new.
-  useEffect(() => {
+  const loadChapters = useCallback(async () => {
     if (!profile) return
 
     const canSwitchChapters = isSuperAdmin || isRegionalRole
@@ -32,29 +32,30 @@ export function ChapterProvider({ children }) {
         setIsChapterReady(true)
         return
       }
-      supabase
-        .from('chapters')
-        .select('*')
-        .then(({ data, error }) => {
-          if (error || !data) {
-            setIsChapterReady(true)
-            return
-          }
-          // For regional roles, filter to chapters tagged with their region.
-          // effectiveRegion handles both real regional users and super-admin
-          // impersonation. If no region selected (impersonation with nothing
-          // picked yet), leave the list empty rather than show all chapters.
-          const scoped = isRegionalRole && !isSuperAdmin
-            ? data.filter(c => c.region && c.region === effectiveRegion)
-            : data
-          setAllChapters(scoped)
+      const { data, error } = await supabase.from('chapters').select('*')
+      if (error || !data) {
+        setIsChapterReady(true)
+        return
+      }
+      // For regional roles, filter to chapters tagged with their region.
+      // effectiveRegion handles both real regional users and super-admin
+      // impersonation. If no region selected (impersonation with nothing
+      // picked yet), leave the list empty rather than show all chapters.
+      const scoped = isRegionalRole && !isSuperAdmin
+        ? data.filter(c => c.region && c.region === effectiveRegion)
+        : data
+      setAllChapters(scoped)
 
-          // Restore saved preference or default to first chapter
-          const saved = localStorage.getItem(STORAGE_KEY)
-          const savedExists = saved && scoped.some((c) => c.id === saved)
-          setActiveChapterIdRaw(savedExists ? saved : scoped[0]?.id ?? null)
-          setIsChapterReady(true)
-        })
+      // Restore saved preference or default to first chapter. On a refresh
+      // (e.g., after a region rename) preserve the current selection if the
+      // chapter still exists, so we don't yank the super-admin out of context.
+      setActiveChapterIdRaw((prev) => {
+        if (prev && scoped.some((c) => c.id === prev)) return prev
+        const saved = localStorage.getItem(STORAGE_KEY)
+        const savedExists = saved && scoped.some((c) => c.id === saved)
+        return savedExists ? saved : scoped[0]?.id ?? null
+      })
+      setIsChapterReady(true)
     } else {
       // Regular user - scoped to their own chapter
       setActiveChapterIdRaw(profile.chapter_id ?? null)
@@ -62,6 +63,8 @@ export function ChapterProvider({ children }) {
       setIsChapterReady(true)
     }
   }, [profile, isSuperAdmin, isRegionalRole, effectiveRegion])
+
+  useEffect(() => { loadChapters() }, [loadChapters])
 
   const setActiveChapterId = (id) => {
     setActiveChapterIdRaw(id)
@@ -78,6 +81,7 @@ export function ChapterProvider({ children }) {
     allChapters,
     activeChapter,
     isChapterReady,
+    refreshChapters: loadChapters,
   }
 
   return createElement(ChapterContext.Provider, { value }, children)

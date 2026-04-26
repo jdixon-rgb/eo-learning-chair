@@ -311,7 +311,11 @@ export default function ChapterConfigPage() {
               <option value="CNY">CNY — Chinese Yuan</option>
               <option value="JPY">JPY — Japanese Yen</option>
               <option value="AUD">AUD — Australian Dollar</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
               <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="PHP">PHP — Philippine Peso</option>
+              <option value="KES">KES — Kenyan Shilling</option>
             </select>
           </div>
           <div>
@@ -331,12 +335,17 @@ export default function ChapterConfigPage() {
               <option value="Europe/Madrid">Europe/Madrid (Barcelona)</option>
               <option value="Europe/Berlin">Europe/Berlin</option>
               <option value="Europe/Paris">Europe/Paris</option>
+              <option value="Europe/Athens">Europe/Athens (Greece)</option>
+              <option value="Africa/Nairobi">Africa/Nairobi (Kenya)</option>
+              <option value="Asia/Kolkata">Asia/Kolkata (New Delhi)</option>
               <option value="Asia/Shanghai">Asia/Shanghai</option>
               <option value="Asia/Hong_Kong">Asia/Hong Kong</option>
               <option value="Asia/Singapore">Asia/Singapore</option>
+              <option value="Asia/Manila">Asia/Manila (Philippines)</option>
               <option value="Asia/Tokyo">Asia/Tokyo</option>
               <option value="Asia/Dubai">Asia/Dubai</option>
               <option value="Australia/Sydney">Australia/Sydney</option>
+              <option value="Pacific/Auckland">Pacific/Auckland (New Zealand)</option>
             </select>
           </div>
         </div>
