@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  ArrowLeft, Calendar, MapPin, Users, DollarSign, FileText, Megaphone,
+  ArrowLeft, Calendar, MapPin, Users, Wallet, FileText, Megaphone,
   Star, Trash2, CheckCircle2, Circle, Clock, UserCheck, UserPlus, X, Shield,
   Handshake, Building2, Lock, LockOpen, Pencil,
 } from 'lucide-react'

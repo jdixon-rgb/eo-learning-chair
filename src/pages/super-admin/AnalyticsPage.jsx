@@ -1,4 +1,4 @@
-import { BarChart3, TrendingUp, Users2, Building2, DollarSign, Sparkles } from 'lucide-react'
+import { BarChart3, TrendingUp, Users2, Building2, Wallet, Sparkles } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
 
 // Super-admin analytics stub. The real page will surface platform-wide
@@ -9,7 +9,7 @@ const PLANNED_METRICS = [
   { icon: Building2, label: 'Chapter adoption', note: 'Active vs. dormant chapters; new chapters over time.' },
   { icon: Users2, label: 'User engagement', note: 'DAU / MAU per chapter; chair vs. member activity split.' },
   { icon: TrendingUp, label: 'Feature usage', note: 'Which surfaces see the most action across the platform.' },
-  { icon: DollarSign, label: 'AI cost tracking', note: 'Anthropic + Google Places spend per chapter and per feature.' },
+  { icon: Wallet, label: 'AI cost tracking', note: 'Anthropic + Google Places spend per chapter and per feature.' },
   { icon: Sparkles, label: 'NPS aggregates', note: 'Rolled-up event NPS across all chapters and regions.' },
 ]
 

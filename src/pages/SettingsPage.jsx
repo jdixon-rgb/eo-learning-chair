@@ -15,7 +15,7 @@ import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { getFiscalYearOptions } from '@/lib/fiscalYear'
 import { useChapter } from '@/lib/chapter'
-import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, DollarSign, Palette, Pencil, Check, Percent } from 'lucide-react'
+import { Settings, Database, Download, RotateCcw, Users2, Plus, Trash2, ArrowUp, ArrowDown, Sparkles, UserPlus, X, Wallet, Palette, Pencil, Check, Percent } from 'lucide-react'
 
 const STATUS_COLORS = {
   active: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -465,7 +465,7 @@ export default function SettingsPage() {
                             {/* Budget field for non-president chairs */}
                             {showBudget && (
                               <div className="flex items-center gap-2 pl-6">
-                                <DollarSign className="h-3 w-3 text-muted-foreground" />
+                                <Wallet className="h-3 w-3 text-muted-foreground" />
                                 <Input
                                   type="number"
                                   placeholder="Chair budget"

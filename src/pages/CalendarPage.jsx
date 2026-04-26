@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Calendar, MapPin, DollarSign, Handshake, Route } from 'lucide-react'
+import { Plus, Calendar, MapPin, Wallet, Handshake, Route } from 'lucide-react'
 
 export default function CalendarPage() {
   const navigate = useNavigate()
@@ -172,7 +172,7 @@ export default function CalendarPage() {
 
                           {budget > 0 && (
                             <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                              <DollarSign className="h-3 w-3" />
+                              <Wallet className="h-3 w-3" />
                               {formatCurrency(budget)}
                             </div>
                           )}

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
 import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
 import PageHeader from '@/lib/pageHeader'
-import { DollarSign, Users, CalendarDays, Palette, TrendingUp, UserPlus, Briefcase, Sparkles } from 'lucide-react'
+import { Wallet, Users, CalendarDays, Palette, TrendingUp, UserPlus, Briefcase, Sparkles } from 'lucide-react'
 
 export default function PresidentDashboard() {
   const { chapter, events, pipelineSpeakers } = useStore()
@@ -81,7 +81,7 @@ export default function PresidentDashboard() {
             to: '/president',
           },
           {
-            icon: DollarSign,
+            icon: Wallet,
             label: 'Allocate the chapter budget',
             description: 'Split the FY budget across chair roles so each has something to spend.',
             to: '/budget',
@@ -108,7 +108,7 @@ export default function PresidentDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <DollarSign className="h-4 w-4" />
+            <Wallet className="h-4 w-4" />
             <span className="text-xs font-medium">Budget Allocated</span>
           </div>
           <p className="text-2xl font-bold">{formatCurrency(totalAllocated)}<span className="text-base font-normal text-muted-foreground"> / {formatCurrency(totalBudget)}</span></p>

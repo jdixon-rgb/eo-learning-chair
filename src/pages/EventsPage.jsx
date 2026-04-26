@@ -4,7 +4,7 @@ import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES, EVENT_FORMAT
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CalendarDays, MapPin, Users, DollarSign, ArrowRight, Trash2, Handshake, Download } from 'lucide-react'
+import { CalendarDays, MapPin, Users, Wallet, ArrowRight, Trash2, Handshake, Download } from 'lucide-react'
 import TourTip from '@/components/TourTip'
 import PageHeader from '@/lib/pageHeader'
 import { downloadEventsBackup } from '@/lib/backupExport'
@@ -138,7 +138,7 @@ export default function EventsPage() {
                   )}
                   {budget > 0 && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <DollarSign className="h-3 w-3" />
+                      <Wallet className="h-3 w-3" />
                       {formatCurrency(budget)}
                     </div>
                   )}

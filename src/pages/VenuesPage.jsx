@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
-  Plus, Search, MapPin, Users, DollarSign, Volume2, Utensils,
+  Plus, Search, MapPin, Users, Wallet, Volume2, Utensils,
   Phone, Mail, Trash2, Building2, GripVertical, Star,
   Sparkles, Loader2, CalendarDays, Image as ImageIcon,
   Archive, RotateCcw, Library, Download,

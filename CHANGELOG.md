@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.85.0 — 2026-04-25
+
+### Visual: dollar-sign icon → wallet icon, app-wide
+
+The dollar-sign (`$`) icon was used everywhere as the "money" /
+"budget" glyph — sidebar nav, dashboard cards, event cost badges,
+budget tables, scenarios, settings. It read as US-centric next to
+chapters whose budgets are denominated in EUR, INR, KES, PAB, etc.
+
+Swapped to lucide's `Wallet` across all 11 files that imported
+`DollarSign`. Currency-agnostic, reads instantly as "budget", no
+flag attached. Currency formatting (the actual numbers) is
+unchanged — that already respects each chapter's `currency` setting
+via `formatCurrency()`.
+
+---
+
 ## v1.84.2 — 2026-04-25
 
 ### Added: Panama currency and timezone

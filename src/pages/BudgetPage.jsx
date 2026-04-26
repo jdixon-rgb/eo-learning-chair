@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/utils'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, AlertTriangle } from 'lucide-react'
+import { Wallet, AlertTriangle } from 'lucide-react'
 
 // ── Inline editable cell ──────────────────────────────────────────────
 function EditableCell({ value, onChange, warn, contracted, currency = 'USD' }) {
@@ -339,7 +339,7 @@ export default function BudgetPage() {
               <tr className="bg-muted/30 font-semibold border-t">
                 <td className="px-3 py-2.5" colSpan={3}>
                   <div className="flex items-center gap-1.5">
-                    <DollarSign className="h-3.5 w-3.5" />
+                    <Wallet className="h-3.5 w-3.5" />
                     Totals
                   </div>
                 </td>

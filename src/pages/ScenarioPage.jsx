@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
 import {
-  Shuffle, Plus, Trash2, DollarSign, Target, TrendingUp,
+  Shuffle, Plus, Trash2, Wallet, Target, TrendingUp,
   Star, Check, X, Copy, ChevronDown,
 } from 'lucide-react'
 
@@ -273,7 +273,7 @@ export default function ScenarioPage() {
           label="Total Costs"
           value={formatCurrency(currentMetrics.totalCost)}
           subtitle={`${formatCurrency(currentMetrics.totalSpeakerFee)} speakers + ${formatCurrency(currentMetrics.nonSpeakerCosts)} other`}
-          icon={<DollarSign className="h-4 w-4" />}
+          icon={<Wallet className="h-4 w-4" />}
           diff={activeMetrics ? currentMetrics.totalCost - baselineMetrics.totalCost : null}
           diffFormat="currency"
           diffInverted
@@ -319,7 +319,7 @@ export default function ScenarioPage() {
           <div className="rounded-xl border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <Wallet className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-semibold">Speaker Fee Ratio</span>
               </div>
               <div className="flex items-center gap-3 text-sm">

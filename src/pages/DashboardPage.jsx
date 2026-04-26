@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   Calendar,
   Users,
-  DollarSign,
+  Wallet,
   Plus,
   ArrowRight,
   TrendingUp,
@@ -95,7 +95,7 @@ export default function DashboardPage() {
             to: '/events',
           },
           {
-            icon: DollarSign,
+            icon: Wallet,
             label: 'Review the learning budget',
             description: 'See what\'s been allocated to learning for this fiscal year.',
             to: '/budget',
@@ -131,7 +131,7 @@ export default function DashboardPage() {
         {/* Budget Health */}
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-            <DollarSign className="h-4 w-4" />
+            <Wallet className="h-4 w-4" />
             Budget Health
           </div>
           <p className="text-2xl font-bold">{formatCurrency(remaining, currency)}</p>
