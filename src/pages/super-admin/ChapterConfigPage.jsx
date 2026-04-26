@@ -316,6 +316,7 @@ export default function ChapterConfigPage() {
               <option value="INR">INR — Indian Rupee</option>
               <option value="PHP">PHP — Philippine Peso</option>
               <option value="KES">KES — Kenyan Shilling</option>
+              <option value="PAB">PAB — Panamanian Balboa</option>
             </select>
           </div>
           <div>
@@ -331,6 +332,7 @@ export default function ChapterConfigPage() {
               <option value="America/Chicago">America/Chicago</option>
               <option value="America/New_York">America/New York</option>
               <option value="America/Toronto">America/Toronto</option>
+              <option value="America/Panama">America/Panama</option>
               <option value="Europe/London">Europe/London</option>
               <option value="Europe/Madrid">Europe/Madrid (Barcelona)</option>
               <option value="Europe/Berlin">Europe/Berlin</option>

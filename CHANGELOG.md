@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.84.2 — 2026-04-25
+
+### Added: Panama currency and timezone
+
+- Currency: **PAB** — Panamanian Balboa (pegged 1:1 with USD; pick
+  PAB for chapters that book in Balboa, USD if they keep books in
+  US dollars).
+- Timezone: **America/Panama** (EST, no DST).
+
+---
+
 ## v1.84.1 — 2026-04-25
 
 ### Hotfix: white screen of death on super-admin dashboard
