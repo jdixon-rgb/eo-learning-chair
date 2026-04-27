@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.86.0 — 2026-04-26
+
+### Feature: Test Accounts legend on super-admin dashboard (staging/dev only)
+
+Adds a yellow callout panel on the Super Admin dashboard that lists
+seeded test invites (one per chair role, all routing to the dev's
+inbox via Gmail+aliases) with a one-click "Send Magic Link" button
+per role.
+
+The panel is gated three ways:
+- Only renders when `VITE_APP_ENV` is `staging` or `development`
+  (production never sees it, even for super_admin).
+- Only queries `member_invites` rows matching the test-account
+  email pattern, so the panel is empty if the seed isn't applied.
+- Only the super-admin surface mounts the component.
+
+Companion to `supabase/seed_saps.sql` and `supabase/seed.sql` —
+together they give a fresh staging environment realistic data plus
+multi-role login coverage in ~2 minutes of setup.
+
+---
+
 ## v1.85.1 — 2026-04-25
 
 ### Fix: own-chapter shared speakers now visible in the Shared Library
