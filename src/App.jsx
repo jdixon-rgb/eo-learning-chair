@@ -10,7 +10,7 @@ import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
 import { ForumStoreProvider } from '@/lib/forumStore'
 import { VendorStoreProvider } from '@/lib/vendorStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES, REGIONAL_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES, REGIONAL_ROLES, SPEAKER_LIBRARY_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import BetaTermsAckGate from '@/components/BetaTermsAckGate'
 import { PageHeaderProvider } from '@/lib/pageHeader'
@@ -64,6 +64,8 @@ import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
 import RegionalLearningDashboard from '@/pages/regional/RegionalLearningDashboard'
+import SpeakerLibraryPage from '@/pages/library/SpeakerLibraryPage'
+import SpeakerLibraryDetailPage from '@/pages/library/SpeakerLibraryDetailPage'
 import FinanceDashboard from '@/pages/finance/FinanceDashboard'
 import VendorsPage from '@/pages/portal/VendorsPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
@@ -206,6 +208,14 @@ function App() {
                 {/* Regional Learning Chair Expert routes */}
                 <Route path="/regional/learning" element={
                   <ProtectedRoute allowedRoles={[...REGIONAL_ROLES, 'super_admin']}><RegionalLearningDashboard /></ProtectedRoute>
+                } />
+
+                {/* Public Speaker Library routes */}
+                <Route path="/library/speakers" element={
+                  <ProtectedRoute allowedRoles={SPEAKER_LIBRARY_ROLES}><SpeakerLibraryPage /></ProtectedRoute>
+                } />
+                <Route path="/library/speakers/:id" element={
+                  <ProtectedRoute allowedRoles={SPEAKER_LIBRARY_ROLES}><SpeakerLibraryDetailPage /></ProtectedRoute>
                 } />
 
                 {/* Board routes */}

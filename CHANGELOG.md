@@ -17,6 +17,74 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.88.0 — 2026-04-27
+
+### Feature: Public Speaker Library
+
+A new cross-chapter, shared catalog of speakers — a TripAdvisor-style
+library for EO Learning Chairs. Seeded with 92 speakers from the EO
+Global Speakers Academy database; grown by Learning Chairs over time
+through open contribution and reviews.
+
+**Surfaces (sidebar nav under Learning Chair + Regional Learning
+Chair Expert):**
+
+- `/library/speakers` — list with search (name / topic), filters
+  (EO chapter, class year, minimum rating, honorarium range,
+  completeness flags), and sort (name, rating, review count, recently
+  added, recently updated).
+- `/library/speakers/:id` — detail view with photo, bio, honorarium,
+  travel cost (with notes), reviews from other Learning Chairs, and
+  a collapsible revision history.
+
+**Capabilities:**
+
+- **View**: Learning Chair, Learning Chair Elect, Regional Learning
+  Chair Expert, Super Admin, President-style roles, EDs, Coordinators.
+- **Add a new speaker**: any role above (open contribution model,
+  per JSD's spec).
+- **Edit existing speaker**: any role above. Every edit is recorded
+  in `public_speaker_revisions` via a Postgres trigger — who edited,
+  what fields changed, when. Visible in the detail page's collapsible
+  Revision History panel.
+- **Add review (1–5 stars + free-text body)**: same role set. One
+  review per Learning Chair per speaker (uniquely keyed); editable
+  and deletable by the author.
+- **Add to my pipeline**: Learning Chair, Learning Chair Elect, EDs,
+  Coordinators, Super Admin. Imports a copy into the active chapter's
+  `speakers` table with `imported_from_library_id` set so we keep the
+  lineage. The library row stays untouched; the chapter copy evolves
+  independently (pipeline stage, fees, contract, etc.). Regional
+  experts cannot import (they have no chapter pipeline).
+
+**Schema (migration 072):**
+
+- `public_speakers` — shared catalog, no chapter_id. Fields include
+  name, topic, eo_chapter, class_year, source, source_url, bio,
+  photo_url, honorarium_amount/notes, travel_amount/notes.
+- `public_speaker_reviews` — rating + body, attributed to user +
+  chapter. Reviewer chapter auto-stamped from the reviewer's profile.
+- `public_speaker_revisions` — audit log populated by trigger on
+  `public_speakers` UPDATE. Stores a JSONB diff of changed fields
+  with the editor's user id and chapter.
+- `speakers.imported_from_library_id` — new nullable FK on chapter
+  pipeline rows for lineage.
+
+**Seed (migration 073):** loads the 92 GSA speakers from
+`eo_global_speakers_academy_database.xlsx` (committed alongside).
+Idempotent via a `(source, lower(name))` unique index, so a future
+GSA refresh can be added as a follow-up migration without colliding.
+
+**RLS:** SELECT is open to authenticated; INSERT/UPDATE on speakers
+gated by a `can_edit_speaker_library()` SQL helper that mirrors the
+JS permission set; reviewers can only CRUD their own reviews;
+revisions are read-only to clients (writes happen via the trigger).
+
+Migrations 072 and 073 applied to staging Supabase 2026-04-27.
+Promote to prod after staging verification.
+
+---
+
 ## v1.87.1 — 2026-04-27
 
 ### Fix: Staff Add silently failed because upsert_staff_invite RPC was missing

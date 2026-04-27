@@ -54,6 +54,13 @@ export const FEATURE_PERMISSIONS = {
   canManageFYBudget:     ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Partners (SAP) — visible to leadership, learning chairs, staff, and regional expert
   canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'regional_learning_chair_expert'],
+  // Public Speaker Library — shared cross-chapter catalog
+  canViewSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  // Editing + reviewing mirror the SQL helper can_edit_speaker_library()
+  canEditSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  canReviewSpeakers:       ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  // Import requires a chapter pipeline to import into; regional expert has no chapter
+  canImportFromLibrary:    ['super_admin', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
 }
 
 export function hasPermission(role, feature) {
@@ -62,6 +69,10 @@ export function hasPermission(role, feature) {
 
 // Regional oversight roles (span multiple chapters, no chapter_id)
 export const REGIONAL_ROLES = ['regional_learning_chair_expert']
+
+// Speaker Library access — anyone who consumes or contributes to the
+// public catalog. Mirrors canViewSpeakerLibrary above.
+export const SPEAKER_LIBRARY_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator']
 
 // All roles that can access the admin layout (sidebar)
 export const ADMIN_LAYOUT_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison']
