@@ -290,7 +290,7 @@ export function BoardStoreProvider({ children }) {
       p_role: appRole,
       p_chapter_id: activeChapterId,
     })
-    if (error) console.error('upsertStaffInvite error:', error)
+    if (error) throw error
   }, [activeChapterId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Sync member_invites (auth whitelist) ──
