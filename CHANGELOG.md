@@ -17,6 +17,40 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.87.0 — 2026-04-26
+
+### Feature: Super-admin surface to invite Regional Learning Chair Experts
+
+Adds a `Regional Experts` page under Super Admin (sidebar nav item) for
+inviting cross-chapter oversight roles — today the Regional Learning
+Chair Expert role, scaffolded for additional regional roles in future.
+
+The form takes name, email, and region (with autocomplete suggestions
+drawn from canonical EO_REGIONS plus regions already tagged on chapters,
+so labels stay consistent). Saving inserts into `member_invites` with
+`chapter_id = null` and the chosen region. Once the invitee signs in,
+the existing `handle_new_user` trigger creates a profile with the
+correct role + region, which routes them to `RegionalLearningDashboard`.
+
+The list view shows status (Invited vs Active), the chosen region, and
+delete + generate-magic-link actions (latter is super_admin only,
+matching the StaffManagementPage pattern).
+
+### Fix: handle_new_user dropped region copy in migration 069
+
+Migration 066 added the `region` column copy from invite to profile.
+Migration 069 then rewrote `handle_new_user` to add the wildcard-domain
+fallback path — but the rewrite silently dropped the `region` column
+from the profile insert, so any regional expert created since 069 would
+sign in with `profile.region = NULL` and see the empty-state Regional
+Dashboard forever.
+
+Migration 070 rebuilds `handle_new_user` combining both: the three
+lookup passes from 069 (exact email, phone, domain wildcard), with
+the `region` copy from 066 restored in the matched-invite branch.
+
+---
+
 ## v1.86.1 — 2026-04-26
 
 ### Fix: Wrap React tree in Sentry.ErrorBoundary
