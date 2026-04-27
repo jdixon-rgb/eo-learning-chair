@@ -8,6 +8,7 @@ import PageHeader from '@/lib/pageHeader'
 import ActivityIndicator from '@/components/ActivityIndicator'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { EO_REGIONS } from '@/lib/constants'
+import TestAccountsLegend from '@/components/super-admin/TestAccountsLegend'
 
 const MONTH_NAMES = [
   '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -164,6 +165,8 @@ export default function SuperAdminDashboard() {
           </Button>
         </Link>
       </div>
+
+      <TestAccountsLegend />
 
       {allChapters.length === 0 && (
         <div className="col-span-full text-center py-12 text-muted-foreground">
