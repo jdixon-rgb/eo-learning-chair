@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.86.1 — 2026-04-26
+
+### Fix: Wrap React tree in Sentry.ErrorBoundary
+
+Verified Sentry is initialized correctly on staging (DSN baked into
+bundle, `environment: "staging"` tag set, test envelope accepted by
+`ingest.us.sentry.io`). Added a `Sentry.ErrorBoundary` around `<App />`
+in `src/main.jsx` so React render-time crashes also reach Sentry —
+previously they were swallowed by React's default handling and never
+hit `window.onerror`, which is what Sentry's auto-instrumentation
+listens to.
+
+---
+
 ## v1.86.0 — 2026-04-26
 
 ### Feature: Test Accounts legend on super-admin dashboard (staging/dev only)
