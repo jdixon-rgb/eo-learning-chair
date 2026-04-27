@@ -17,6 +17,38 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.87.1 — 2026-04-27
+
+### Fix: Staff Add silently failed because upsert_staff_invite RPC was missing
+
+The Add Staff form on the Staff page POSTed to `rpc/upsert_staff_invite`,
+which returned `PGRST202 — Could not find the function ... in the schema
+cache`. The RPC was originally defined in `008_staff_invite_rpc.sql`,
+but that file collided on version prefix with another 008 migration and
+got moved to `supabase/migrations_archive/`. The archived migration was
+never replayed against either Supabase project, so the function did not
+exist in staging or prod.
+
+Compounding the silence: `upsertStaffInvite` in `boardStore.js` only
+logged the error to `console.error`, so the page's UI showed a green
+"Added <email>." confirmation while no row was actually inserted.
+Justice Butler appeared in the table because someone added her manually
+via the Studio SQL editor at some point; nothing else has been added
+via the form since the function went missing.
+
+Two fixes:
+
+- **Migration 071** restores `public.upsert_staff_invite(p_email,
+  p_full_name, p_role, p_chapter_id)` with the same body as the
+  archived 008 migration. Pushed to staging and prod 2026-04-27.
+- **`upsertStaffInvite` now throws on error** instead of silently
+  console-logging. The page already wraps the call in try/catch and
+  surfaces `err.message` — so any future RPC failure (RLS, missing
+  function, constraint violation) will show up in the form's status
+  line instead of looking like a successful add.
+
+---
+
 ## v1.87.0 — 2026-04-26
 
 ### Feature: Super-admin surface to invite Regional Learning Chair Experts
