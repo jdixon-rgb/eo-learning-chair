@@ -17,6 +17,20 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.88.2 — 2026-04-28
+
+### Fix: Hide "Use phone instead" toggle on Login until SMS works
+
+Twilio toll-free verification is still in review, so the SMS-OTP path
+sends a code that never arrives — users on the phone tab dead-end on
+the verify-code screen waiting for an SMS that won't show. Hidden the
+toggle behind a `PHONE_OTP_ENABLED` const in `LoginPage.jsx` (set to
+`false`); flip it back to `true` once SMS delivery is confirmed in
+prod. Email magic-link, Google, and Microsoft remain visible and are
+the only sign-in paths users are pointed at.
+
+---
+
 ## v1.88.1 — 2026-04-28
 
 ### Fix: Stale `estimated_amount` references on `budget_items`

@@ -11,6 +11,12 @@ import BetaTermsModal from '@/components/BetaTermsModal'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
 import { APP_VERSION } from '@/lib/version'
 
+// Phone-OTP sign-in is gated behind a Twilio toll-free verification
+// that's still in review. Until it clears, hide the "Use phone instead"
+// toggle so users can't dead-end on an SMS that never arrives. Flip
+// this to true once SMS delivery is confirmed in production.
+const PHONE_OTP_ENABLED = false
+
 // Normalize a user-entered phone string to E.164.
 // Returns null if input cannot be confidently parsed.
 //
@@ -390,16 +396,18 @@ export default function LoginPage() {
                 </form>
               )}
 
-              {/* Method toggle */}
-              <div className="mt-6 pt-4 border-t border-border text-center">
-                <button
-                  type="button"
-                  onClick={() => switchMethod(method === 'email' ? 'phone' : 'email')}
-                  className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 cursor-pointer"
-                >
-                  {method === 'email' ? 'Use phone instead' : 'Use email instead'}
-                </button>
-              </div>
+              {/* Method toggle — hidden until Twilio TF verification clears */}
+              {PHONE_OTP_ENABLED && (
+                <div className="mt-6 pt-4 border-t border-border text-center">
+                  <button
+                    type="button"
+                    onClick={() => switchMethod(method === 'email' ? 'phone' : 'email')}
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 cursor-pointer"
+                  >
+                    {method === 'email' ? 'Use phone instead' : 'Use email instead'}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
