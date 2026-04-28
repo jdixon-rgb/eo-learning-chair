@@ -218,9 +218,9 @@ export default function EventDetailPage() {
                   const fee = getSpeakerFee(speakerObj)
                   const existingItem = eventBudget.find(b => b.category === 'speaker_fee')
                   if (existingItem) {
-                    updateBudgetItem(existingItem.id, { estimated_amount: fee, description: speakerObj ? `${speakerObj.name}` : '' })
+                    updateBudgetItem(existingItem.id, { budget_amount: fee, description: speakerObj ? `${speakerObj.name}` : '' })
                   } else if (fee > 0) {
-                    addBudgetItem({ event_id: id, category: 'speaker_fee', description: speakerObj?.name || '', estimated_amount: fee, actual_amount: null })
+                    addBudgetItem({ event_id: id, category: 'speaker_fee', description: speakerObj?.name || '', budget_amount: fee, actual_amount: null })
                   }
                 }
 

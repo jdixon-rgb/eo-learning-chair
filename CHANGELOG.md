@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.88.1 — 2026-04-28
+
+### Fix: Stale `estimated_amount` references on `budget_items`
+
+Migration 010 renamed `budget_items.estimated_amount` to `budget_amount`,
+but four code references slipped through:
+
+- `EventDetailPage.jsx` (×2) — `syncSpeakerFeeBudget` was writing
+  `estimated_amount` when a primary speaker was set on an event.
+  Surfaced as a yellow toast: "Save failed (update:budget_items):
+  Could not find the 'estimated_amount' column of 'budget_items' in
+  the schema cache".
+- `EventsPage.jsx` and `CalendarPage.jsx` — read-side aggregations of
+  `b.estimated_amount` silently summed to 0, so per-event budget rolls
+  on the events list and calendar showed $0 even when budget lines
+  existed.
+
+All four switched to `budget_amount`. Read paths now compute correctly;
+the speaker-fee sync no longer fails silently.
+
+---
+
 ## v1.88.0 — 2026-04-27
 
 ### Feature: Public Speaker Library
