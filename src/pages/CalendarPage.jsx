@@ -38,7 +38,7 @@ export default function CalendarPage() {
   const getEventBudget = (eventId) => {
     return budgetItems
       .filter(b => b.event_id === eventId)
-      .reduce((sum, b) => sum + (b.estimated_amount || 0), 0)
+      .reduce((sum, b) => sum + (b.budget_amount || 0), 0)
   }
 
   const handleCreate = () => {

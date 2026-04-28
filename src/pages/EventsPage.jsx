@@ -19,7 +19,7 @@ export default function EventsPage() {
   const sortedEvents = [...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99))
 
   const getEventBudget = (eventId) =>
-    budgetItems.filter(b => b.event_id === eventId).reduce((s, b) => s + (b.estimated_amount || 0), 0)
+    budgetItems.filter(b => b.event_id === eventId).reduce((s, b) => s + (b.budget_amount || 0), 0)
 
   return (
     <div className="space-y-6">
