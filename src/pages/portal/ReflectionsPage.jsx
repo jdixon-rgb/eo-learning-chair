@@ -261,7 +261,7 @@ export default function ReflectionsPage() {
           </p>
           <div className="flex gap-2 justify-end">
             <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={() => setShowClearConfirm(false)}>Cancel</button>
-            <button className="px-4 py-2 rounded-lg text-sm bg-red-600/80 hover:bg-red-600 text-foreground" onClick={handleClearAll}>Clear all</button>
+            <button className="px-4 py-2 rounded-lg text-sm bg-red-600/80 hover:bg-red-600 text-white" onClick={handleClearAll}>Clear all</button>
           </div>
         </Modal>
       )}
@@ -365,7 +365,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
       <div className="flex items-center justify-between">
         <button
           onClick={onNew}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/90 hover:bg-primary text-foreground text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/90 hover:bg-primary text-white text-sm font-medium"
         >
           <Plus className="h-4 w-4" /> New reflection
         </button>
@@ -480,7 +480,7 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
           </span>
           <button
             onClick={onDeclare}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warm/90 hover:bg-warm text-foreground text-xs font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warm/90 hover:bg-warm text-white text-xs font-medium"
           >
             <Pin className="h-3.5 w-3.5" /> Declare to parking lot
           </button>
@@ -810,7 +810,7 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
         </p>
         <button
           onClick={onAddNew}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-foreground"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white"
         >
           <Pin className="h-4 w-4" />
           Add to parking lot
@@ -962,7 +962,7 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
         <div className="flex gap-2 justify-end pt-2">
           <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>Cancel</button>
           <button
-            className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-foreground disabled:opacity-40"
+            className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
             disabled={!name.trim()}
             onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
           >
@@ -1039,7 +1039,7 @@ function ScoreForm({ initial, onCancel, onConfirm, confirmLabel = 'Save' }) {
       <div className="flex gap-2 justify-end pt-2">
         <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={onCancel}>Cancel</button>
         <button
-          className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-foreground disabled:opacity-40"
+          className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
           disabled={!name.trim()}
           onClick={() => onConfirm({ name: name.trim(), importance, urgency })}
         >

@@ -19,7 +19,7 @@ export default function ScaleQuestion({ question, value, onChange }) {
             onClick={() => onChange(n)}
             className={`w-12 h-12 rounded-full border-2 text-sm font-bold transition-all cursor-pointer ${
               value === n
-                ? 'bg-primary border-primary text-foreground scale-110'
+                ? 'bg-primary border-primary text-white scale-110'
                 : 'border-foreground/30 text-muted-foreground hover:border-foreground/50 hover:text-foreground hover:bg-muted/50'
             }`}
           >
