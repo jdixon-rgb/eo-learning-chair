@@ -17,6 +17,30 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.88.5 — 2026-04-29
+
+### Fix: Restore `text-white` on solid-color buttons broken by v1.88.4 sweep
+
+The 1.88.4 sweep over-converted: it turned `text-white` into
+`text-foreground` everywhere, but on solid dark accent backgrounds
+(`bg-primary`, `bg-warm`, `bg-red-600/80`) `text-white` is correct —
+those buttons want light text on a dark surface. After the sweep
+those buttons rendered dark text on dark, invisible.
+
+Reverted 7 occurrences:
+
+- ReflectionsPage: "Clear all" (`bg-red-600/80`), Save (`bg-primary/90`),
+  Declare to parking lot (`bg-warm/90`), Add to parking lot
+  (`bg-primary`), and the two editor save buttons (`bg-primary` ×2).
+- ScaleQuestion: the active/selected scale button (`bg-primary`).
+
+Light text on solid dark accent ≠ over-conversion target. Lesson for
+future sweeps: only swap `text-white` → `text-foreground` where the
+parent surface is light. Solid `bg-primary` / `bg-warm` /
+`bg-{red,emerald,blue}-{600+}` keep `text-white`.
+
+---
+
 ## v1.88.4 — 2026-04-29
 
 ### Fix: Sweep remaining light-on-light contrast bugs across the app
