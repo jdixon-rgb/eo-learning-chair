@@ -586,7 +586,7 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
             <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-              {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-ink">{v}</option>)}
+              {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card">{v}</option>)}
             </select>
           </div>
           <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
@@ -1457,9 +1457,9 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
         </div>
         <div className="flex items-center gap-3">
           <select value={status} onChange={e => setStatus(e.target.value)} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-            <option value="draft" className="bg-ink">Draft</option>
-            <option value="published" className="bg-ink">Published</option>
-            <option value="archived" className="bg-ink">Archived</option>
+            <option value="draft" className="bg-card">Draft</option>
+            <option value="published" className="bg-card">Published</option>
+            <option value="archived" className="bg-card">Archived</option>
           </select>
           <button onClick={handleSave} className="px-4 py-2 rounded-lg text-sm bg-primary text-white hover:bg-primary/90">
             {agenda ? 'Save changes' : 'Create agenda'}
@@ -1535,7 +1535,7 @@ function AgendaEditor({ agenda, forum, items: initialItems, memberId, onSaveAgen
               <input type="text" value={newItemTitle} onChange={e => setNewItemTitle(e.target.value)} placeholder="Item title"
                 className="flex-1 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground" />
               <input type="number" value={newItemMin} onChange={e => setNewItemMin(Number(e.target.value))} min="1"
-                className="w-20 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-white text-center" />
+                className="w-20 bg-muted/30 border border-border rounded-lg px-3 py-2 text-xs text-foreground text-center" />
               <span className="text-xs text-muted-foreground/60 self-center">min</span>
             </div>
             <textarea value={newItemDesc} onChange={e => setNewItemDesc(e.target.value)} placeholder="Description / sub-items (optional)" rows={2}
@@ -1610,8 +1610,8 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
           <label className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Show:</label>
           <select value={filterMemberId} onChange={e => setFilterMemberId(e.target.value)}
             className="bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground/90 focus:border-primary focus:outline-none cursor-pointer">
-            <option value="all" className="bg-ink">Everyone</option>
-            {authors.map(a => <option key={a.id} value={a.id} className="bg-ink">{a.name}</option>)}
+            <option value="all" className="bg-card">Everyone</option>
+            {authors.map(a => <option key={a.id} value={a.id} className="bg-card">{a.name}</option>)}
           </select>
         </div>
         <button onClick={onAddNew} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90">
@@ -1638,16 +1638,16 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
                 <td className="text-center px-3 py-3 text-foreground/80">
                   <select value={e.importance} onChange={ev => onUpdate(e.id, { importance: Number(ev.target.value) })}
                     className="bg-muted/30 border border-border rounded px-2 py-1 text-sm text-foreground cursor-pointer">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-ink">{n}</option>)}
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-card">{n}</option>)}
                   </select>
                 </td>
                 <td className="text-center px-3 py-3 text-foreground/80">
                   <select value={e.urgency} onChange={ev => onUpdate(e.id, { urgency: Number(ev.target.value) })}
                     className="bg-muted/30 border border-border rounded px-2 py-1 text-sm text-foreground cursor-pointer">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-ink">{n}</option>)}
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n} className="bg-card">{n}</option>)}
                   </select>
                 </td>
-                <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
+                <td className="text-center px-3 py-3 text-foreground font-semibold">{e.importance + e.urgency}</td>
                 <td className="px-3 py-3">
                   <div className="flex gap-1">
                     <button onClick={() => setEditing(e)} className="text-muted-foreground/60 hover:text-foreground" title="Edit name/author">
@@ -1666,7 +1666,7 @@ function ParkingLotTab({ entries, currentMemberId, chapterMembers, currentForum,
 
       {editing && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setEditing(null)}>
-          <div className="bg-ink border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
+          <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={ev => ev.stopPropagation()}>
             <h3 className="text-base font-semibold">Edit parking lot entry</h3>
             <EditParkingLotForm
               entry={editing}
@@ -1697,9 +1697,9 @@ function EditParkingLotForm({ entry, forumMembers, onClose, onSave }) {
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Author (forum mate)</label>
         <select value={authorId} onChange={e => setAuthorId(e.target.value)}
-          className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-white focus:border-primary focus:outline-none cursor-pointer">
-          <option value="" className="bg-ink">Unknown</option>
-          {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>)}
+          className="w-full rounded-lg bg-muted/30 border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none cursor-pointer">
+          <option value="" className="bg-card">Unknown</option>
+          {forumMembers.map(m => <option key={m.id} value={m.id} className="bg-card">{m.name}</option>)}
         </select>
       </div>
       <div>
@@ -1726,7 +1726,7 @@ function ParkingLotAddModal({ onClose, onConfirm }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-ink border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4" onClick={e => e.stopPropagation()}>
         <h3 className="text-base font-semibold">Add to parking lot</h3>
         <p className="text-xs text-muted-foreground">Your forum will see the name and scores. Nothing else.</p>
         <div>

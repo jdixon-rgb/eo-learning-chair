@@ -145,7 +145,7 @@ function BroadcastItem({ broadcast, navigator, currentMember, responses, onSubmi
           onChange={e => setNote(e.target.value)}
           rows={2}
           placeholder="Optional context for the chair…"
-          className="mt-2 w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+          className="mt-2 w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
         />
       )}
     </div>
