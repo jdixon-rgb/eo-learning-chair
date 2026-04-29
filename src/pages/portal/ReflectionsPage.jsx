@@ -163,7 +163,7 @@ export default function ReflectionsPage() {
 
   // ── Render guards ──
   if (loading) {
-    return <div className="text-white/60 text-center py-12">Loading…</div>
+    return <div className="text-muted-foreground text-center py-12">Loading…</div>
   }
 
   if (!member) {
@@ -214,10 +214,10 @@ export default function ReflectionsPage() {
     <div className="space-y-6">
       <div className="text-center py-4">
         <h1 className="text-2xl md:text-3xl font-bold">Reflections</h1>
-        <p className="text-white/50 text-sm mt-1">Private to you — until you choose to share</p>
+        <p className="text-muted-foreground text-sm mt-1">Private to you — until you choose to share</p>
       </div>
 
-      <div className="flex justify-center gap-1 border-b border-white/10">
+      <div className="flex justify-center gap-1 border-b border-border">
         <TabButton active={tab === 'reflections'} onClick={() => setTab('reflections')} icon={BookOpen}>
           My Reflections
         </TabButton>
@@ -255,13 +255,13 @@ export default function ReflectionsPage() {
       {showClearConfirm && (
         <Modal onClose={() => setShowClearConfirm(false)}>
           <h3 className="text-lg font-bold mb-2">Clear all reflections?</h3>
-          <p className="text-sm text-white/60 mb-5">
-            This will delete all of your reflections in <span className="text-white/80">{member.forum}</span>.
+          <p className="text-sm text-muted-foreground mb-5">
+            This will delete all of your reflections in <span className="text-foreground">{member.forum}</span>.
             Parking lot entries you've declared will stay. This can't be undone.
           </p>
           <div className="flex gap-2 justify-end">
-            <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={() => setShowClearConfirm(false)}>Cancel</button>
-            <button className="px-4 py-2 rounded-lg text-sm bg-red-600/80 hover:bg-red-600 text-white" onClick={handleClearAll}>Clear all</button>
+            <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={() => setShowClearConfirm(false)}>Cancel</button>
+            <button className="px-4 py-2 rounded-lg text-sm bg-red-600/80 hover:bg-red-600 text-foreground" onClick={handleClearAll}>Clear all</button>
           </div>
         </Modal>
       )}
@@ -297,7 +297,7 @@ function TabButton({ active, onClick, icon: Icon, children }) {
     <button
       onClick={onClick}
       className={`px-5 py-3 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
-        active ? 'border-primary text-white' : 'border-transparent text-white/50 hover:text-white/80'
+        active ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
       }`}
     >
       <Icon className="h-4 w-4" />
@@ -309,9 +309,9 @@ function TabButton({ active, onClick, icon: Icon, children }) {
 function EmptyState({ title, body }) {
   return (
     <div className="text-center py-16 max-w-lg mx-auto">
-      <Sparkles className="h-8 w-8 text-white/30 mx-auto mb-4" />
-      <h2 className="text-xl font-semibold text-white/90">{title}</h2>
-      <p className="text-sm text-white/50 mt-2 leading-relaxed">{body}</p>
+      <Sparkles className="h-8 w-8 text-muted-foreground/70 mx-auto mb-4" />
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{body}</p>
     </div>
   )
 }
@@ -319,7 +319,7 @@ function EmptyState({ title, body }) {
 function Modal({ children, onClose }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0f1724] border border-white/10 rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
@@ -330,22 +330,22 @@ function Modal({ children, onClose }) {
 function TemplatePicker({ templates, onPick, onBack }) {
   return (
     <div className="space-y-6">
-      <button onClick={onBack} className="text-white/60 hover:text-white text-sm flex items-center gap-1">
+      <button onClick={onBack} className="text-muted-foreground hover:text-foreground text-sm flex items-center gap-1">
         <ChevronLeft className="h-4 w-4" /> Back
       </button>
       <div className="text-center">
         <h2 className="text-2xl font-bold">Pick a template</h2>
-        <p className="text-white/50 text-sm mt-1">Different shapes for different kinds of reflection.</p>
+        <p className="text-muted-foreground text-sm mt-1">Different shapes for different kinds of reflection.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {templates.map(t => (
           <button
             key={t.slug}
             onClick={() => onPick(t)}
-            className="text-left rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-primary/50 hover:bg-white/[0.07] transition-all"
+            className="text-left rounded-2xl border border-border bg-muted/40 p-5 hover:border-primary/50 hover:bg-muted/60 transition-all"
           >
-            <h3 className="font-semibold text-white mb-2">{t.name}</h3>
-            <p className="text-xs text-white/50 leading-relaxed">{t.description}</p>
+            <h3 className="font-semibold text-foreground mb-2">{t.name}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t.description}</p>
           </button>
         ))}
       </div>
@@ -365,7 +365,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
       <div className="flex items-center justify-between">
         <button
           onClick={onNew}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/90 hover:bg-primary text-white text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/90 hover:bg-primary text-foreground text-sm font-medium"
         >
           <Plus className="h-4 w-4" /> New reflection
         </button>
@@ -373,7 +373,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
           {reflections.length > 0 && (
             <button
               onClick={handleDownloadAll}
-              className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               title="Download all as PDF"
             >
               <Download className="h-3.5 w-3.5" /> Download all
@@ -382,7 +382,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
           {reflections.length > 0 && (
             <button
               onClick={onClearAll}
-              className="text-xs text-white/40 hover:text-red-400 transition-colors"
+              className="text-xs text-muted-foreground/80 hover:text-red-400 transition-colors"
             >
               Clear all
             </button>
@@ -391,7 +391,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
       </div>
 
       {reflections.length === 0 ? (
-        <div className="text-center py-16 text-white/40 text-sm">
+        <div className="text-center py-16 text-muted-foreground/80 text-sm">
           Nothing here yet. Start your first reflection.
         </div>
       ) : (
@@ -401,12 +401,12 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
             return (
               <li
                 key={r.id}
-                className="rounded-xl border border-white/5 bg-white/[0.03] p-4 flex items-center gap-4 hover:border-white/20 transition-colors cursor-pointer group"
+                className="rounded-xl border border-border/60 bg-muted/30 p-4 flex items-center gap-4 hover:border-foreground/30 transition-colors cursor-pointer group"
                 onClick={() => onOpen(r)}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white/90 truncate">{headline}</p>
-                  <div className="flex items-center gap-2 text-xs text-white/40 mt-1">
+                  <p className="text-sm font-medium text-foreground truncate">{headline}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/80 mt-1">
                     <span>{tmplName(r.template_slug)}</span>
                     {r.category && <><span>•</span><span className="capitalize">{r.category}</span></>}
                     <span>•</span>
@@ -415,7 +415,7 @@ function ReflectionsList({ reflections, templates, memberName, forumName, onNew,
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(r.id) }}
-                  className="text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                  className="text-muted-foreground/50 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                   title="Delete"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -471,16 +471,16 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-white/60 hover:text-white text-sm flex items-center gap-1">
+        <button onClick={onBack} className="text-muted-foreground hover:text-foreground text-sm flex items-center gap-1">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-white/40">
+          <span className="text-xs text-muted-foreground/80">
             {dirty ? 'Saving…' : savedAt ? `Saved ${savedAt.toLocaleTimeString()}` : 'Saved'}
           </span>
           <button
             onClick={onDeclare}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warm/90 hover:bg-warm text-white text-xs font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warm/90 hover:bg-warm text-foreground text-xs font-medium"
           >
             <Pin className="h-3.5 w-3.5" /> Declare to parking lot
           </button>
@@ -489,14 +489,14 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
               const { downloadReflectionPdf } = await import('@/lib/reflectionsPdf')
               downloadReflectionPdf({ ...reflection, content, category: category || null, feelings: selectedFeelings }, template, { memberName })
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 text-xs font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/40 hover:bg-muted/70 border border-border text-foreground text-xs font-medium"
             title="Download as PDF"
           >
             <Download className="h-3.5 w-3.5" /> Download PDF
           </button>
           <button
             onClick={onDelete}
-            className="text-white/30 hover:text-red-400"
+            className="text-muted-foreground/70 hover:text-red-400"
             title="Delete reflection"
           >
             <Trash2 className="h-4 w-4" />
@@ -506,7 +506,7 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
 
       <div>
         <h2 className="text-xl font-bold">{template?.name}</h2>
-        <p className="text-xs text-white/40 mt-1">{template?.description}</p>
+        <p className="text-xs text-muted-foreground/80 mt-1">{template?.description}</p>
       </div>
 
       <div>
@@ -553,12 +553,12 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {schema.meps.map(m => (
                   <div key={m.key}>
-                    <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">{m.label}</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1">{m.label}</div>
                     <input
                       type="text"
                       value={content.meps?.[m.key] || ''}
                       onChange={(e) => updateMeps(m.key, e.target.value)}
-                      className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+                      className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
                       placeholder="one word"
                     />
                   </div>
@@ -569,16 +569,16 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
 
           <div className="space-y-6">
             {schema.rows.map(row => (
-              <div key={row.key} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                <h4 className="text-sm font-semibold text-white/80 mb-3">{row.label}</h4>
+              <div key={row.key} className="rounded-xl border border-border bg-muted/20 p-4">
+                <h4 className="text-sm font-semibold text-foreground mb-3">{row.label}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {schema.columns.map(col => {
                     const cellVal = content[row.key]?.[col.key]
                     const field = { ...col, label: col.label, help: col.help }
                     return (
                       <div key={col.key}>
-                        <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">{col.label}</div>
-                        {col.help && <div className="text-[10px] text-white/30 mb-2">{col.help}</div>}
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1">{col.label}</div>
+                        {col.help && <div className="text-[10px] text-muted-foreground/70 mb-2">{col.help}</div>}
                         <FieldBody
                           field={field}
                           value={col.type === 'feelings_pills' ? (cellVal || []) : cellVal}
@@ -612,7 +612,7 @@ function ReflectionEditor({ reflection, template, feelings, memberName, onAddFee
 }
 
 function Label({ children }) {
-  return <div className="text-xs uppercase tracking-wider text-white/40 mb-2">{children}</div>
+  return <div className="text-xs uppercase tracking-wider text-muted-foreground/80 mb-2">{children}</div>
 }
 
 function CategoryChip({ label, active, onClick }) {
@@ -620,7 +620,7 @@ function CategoryChip({ label, active, onClick }) {
     <button
       onClick={onClick}
       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-        active ? 'bg-primary/20 border-primary text-white' : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
+        active ? 'bg-primary/20 border-primary text-foreground' : 'bg-muted/40 border-border text-muted-foreground hover:border-foreground/40'
       }`}
     >
       {label}
@@ -632,7 +632,7 @@ function FieldRenderer({ field, value, onChange, feelings, onAddFeeling }) {
   return (
     <div>
       <Label>{field.label}</Label>
-      {field.help && <div className="text-xs text-white/40 -mt-1 mb-2">{field.help}</div>}
+      {field.help && <div className="text-xs text-muted-foreground/80 -mt-1 mb-2">{field.help}</div>}
       <FieldBody field={field} value={value} onChange={onChange} feelings={feelings} onAddFeeling={onAddFeeling} />
     </div>
   )
@@ -645,7 +645,7 @@ function FieldBody({ field, value, onChange, feelings, onAddFeeling, compact }) 
         type="text"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+        className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
       />
     )
   }
@@ -655,7 +655,7 @@ function FieldBody({ field, value, onChange, feelings, onAddFeeling, compact }) 
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         rows={compact ? 3 : 5}
-        className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none resize-y"
+        className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none resize-y"
       />
     )
   }
@@ -713,7 +713,7 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
         {value.map(word => (
           <span
             key={word}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/40 text-xs text-white"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/40 text-xs text-foreground"
           >
             {word}
             <button onClick={() => remove(word)} className="hover:text-red-300">
@@ -737,24 +737,24 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
             }
           }}
           placeholder="Type a feeling…"
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+          className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
         />
         {open && query.trim() && (
-          <div className="absolute z-10 mt-1 w-full rounded-lg bg-[#0f1724] border border-white/10 shadow-xl max-h-64 overflow-y-auto">
+          <div className="absolute z-10 mt-1 w-full rounded-lg bg-card border border-border shadow-xl max-h-64 overflow-y-auto">
             {suggestions.map(s => (
               <button
                 key={s.id}
                 onClick={() => add(s.word)}
-                className="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-white/5 flex items-center justify-between"
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted/50 flex items-center justify-between"
               >
                 <span>{s.word}</span>
-                <span className="text-[10px] text-white/30">{s.parent_group}</span>
+                <span className="text-[10px] text-muted-foreground/70">{s.parent_group}</span>
               </button>
             ))}
             {!exactMatch && query.trim() && (
               <button
                 onClick={handleAddNew}
-                className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-white/5 flex items-center gap-1 border-t border-white/5"
+                className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-muted/50 flex items-center gap-1 border-t border-border/60"
               >
                 <Plus className="h-3 w-3" /> Add "{query.trim()}"
               </button>
@@ -805,12 +805,12 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
   if (entries.length === 0) {
     return (
       <div className="text-center py-16">
-        <p className="text-white/40 text-sm mb-4">
+        <p className="text-muted-foreground/80 text-sm mb-4">
           Nothing on the parking lot yet. Add an item directly, or declare one from a reflection.
         </p>
         <button
           onClick={onAddNew}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-foreground"
         >
           <Pin className="h-4 w-4" />
           Add to parking lot
@@ -823,29 +823,29 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <label className="text-[10px] uppercase tracking-wider text-white/40 font-semibold">Show:</label>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">Show:</label>
           <select
             value={filterMemberId}
             onChange={(e) => setFilterMemberId(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 hover:border-white/30 focus:border-primary focus:outline-none cursor-pointer"
+            className="bg-muted/40 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground hover:border-foreground/40 focus:border-primary focus:outline-none cursor-pointer"
           >
-            <option value="all" className="bg-ink">Everyone</option>
+            <option value="all" className="bg-card">Everyone</option>
             {authors.map(a => (
-              <option key={a.id} value={a.id} className="bg-ink">{a.name}</option>
+              <option key={a.id} value={a.id} className="bg-card">{a.name}</option>
             ))}
           </select>
         </div>
         <button
           onClick={onAddNew}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white/80"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/40 hover:bg-muted/70 border border-border text-foreground"
         >
           <Pin className="h-3.5 w-3.5" />
           Add item
         </button>
       </div>
-      <div className="rounded-xl border border-white/10 overflow-hidden">
+      <div className="rounded-xl border border-border overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/40">
+        <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground/80">
           <tr>
             <th className="text-left px-4 py-3">Name</th>
             <th className="text-left px-3 py-3 w-32">Author</th>
@@ -859,10 +859,10 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
           {filteredEntries.map(e => {
             const canEdit = true // all forum mates are equal
             return (
-              <tr key={e.id} className="border-t border-white/5">
-                <td className="px-4 py-3 text-white/90">{e.name}</td>
-                <td className="px-3 py-3 text-white/50 text-xs">{getAuthorName(e.author_member_id)}</td>
-                <td className="text-center px-3 py-3 text-white/70">
+              <tr key={e.id} className="border-t border-border/60">
+                <td className="px-4 py-3 text-foreground">{e.name}</td>
+                <td className="px-3 py-3 text-muted-foreground text-xs">{getAuthorName(e.author_member_id)}</td>
+                <td className="text-center px-3 py-3 text-foreground/80">
                   {canEdit ? (
                     <ScoreSelect
                       value={e.importance}
@@ -872,7 +872,7 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
                     e.importance
                   )}
                 </td>
-                <td className="text-center px-3 py-3 text-white/70">
+                <td className="text-center px-3 py-3 text-foreground/80">
                   {canEdit ? (
                     <ScoreSelect
                       value={e.urgency}
@@ -882,14 +882,14 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
                     e.urgency
                   )}
                 </td>
-                <td className="text-center px-3 py-3 text-white font-semibold">{e.importance + e.urgency}</td>
+                <td className="text-center px-3 py-3 text-foreground font-semibold">{e.importance + e.urgency}</td>
                 <td className="px-3 py-3">
                   {canEdit && (
                     <div className="flex gap-1">
-                      <button onClick={() => setEditing(e)} className="text-white/30 hover:text-white" title="Edit name">
+                      <button onClick={() => setEditing(e)} className="text-muted-foreground/70 hover:text-foreground" title="Edit name">
                         <Save className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={() => onDelete(e.id)} className="text-white/30 hover:text-red-400" title="Delete">
+                      <button onClick={() => onDelete(e.id)} className="text-muted-foreground/70 hover:text-red-400" title="Delete">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -935,7 +935,7 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Short name for this item"
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+            className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
           />
         </div>
         <div>
@@ -943,11 +943,11 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
           <select
             value={authorId}
             onChange={(e) => setAuthorId(e.target.value)}
-            className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:border-primary focus:outline-none cursor-pointer"
+            className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none cursor-pointer"
           >
-            <option value="" className="bg-ink">Unknown</option>
+            <option value="" className="bg-card">Unknown</option>
             {forumMembers.map(m => (
-              <option key={m.id} value={m.id} className="bg-ink">{m.name}</option>
+              <option key={m.id} value={m.id} className="bg-card">{m.name}</option>
             ))}
           </select>
         </div>
@@ -960,9 +960,9 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
           <input type="range" min="1" max="10" value={urgency} onChange={(e) => setUrgency(Number(e.target.value))} className="w-full" />
         </div>
         <div className="flex gap-2 justify-end pt-2">
-          <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onClose}>Cancel</button>
+          <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={onClose}>Cancel</button>
           <button
-            className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
+            className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-foreground disabled:opacity-40"
             disabled={!name.trim()}
             onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
           >
@@ -980,10 +980,10 @@ function ScoreSelect({ value, onChange }) {
     <select
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white/90 hover:border-white/30 focus:border-primary focus:outline-none cursor-pointer"
+      className="bg-muted/40 border border-border rounded px-2 py-1 text-sm text-foreground hover:border-foreground/40 focus:border-primary focus:outline-none cursor-pointer"
     >
       {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-        <option key={n} value={n} className="bg-ink">{n}</option>
+        <option key={n} value={n} className="bg-card">{n}</option>
       ))}
     </select>
   )
@@ -996,7 +996,7 @@ function DeclareDialog({ reflection, onClose, onConfirm }) {
   return (
     <Modal onClose={onClose}>
       <h3 className="text-lg font-bold mb-1">{fromReflection ? 'Declare to parking lot' : 'Add to parking lot'}</h3>
-      <p className="text-xs text-white/50 mb-5">
+      <p className="text-xs text-muted-foreground mb-5">
         {fromReflection
           ? 'Your forum will see the name and scores. The rest of your reflection stays private.'
           : 'Your forum will see the name and scores. Nothing else.'}
@@ -1025,7 +1025,7 @@ function ScoreForm({ initial, onCancel, onConfirm, confirmLabel = 'Save' }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Short name for this parking lot item"
-          className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-primary focus:outline-none"
+          className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
         />
       </div>
       <div>
@@ -1037,9 +1037,9 @@ function ScoreForm({ initial, onCancel, onConfirm, confirmLabel = 'Save' }) {
         <input type="range" min="1" max="10" value={urgency} onChange={(e) => setUrgency(Number(e.target.value))} className="w-full" />
       </div>
       <div className="flex gap-2 justify-end pt-2">
-        <button className="px-4 py-2 rounded-lg text-sm text-white/60 hover:text-white" onClick={onCancel}>Cancel</button>
+        <button className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground" onClick={onCancel}>Cancel</button>
         <button
-          className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
+          className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-foreground disabled:opacity-40"
           disabled={!name.trim()}
           onClick={() => onConfirm({ name: name.trim(), importance, urgency })}
         >

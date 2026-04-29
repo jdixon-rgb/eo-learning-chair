@@ -17,6 +17,36 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.88.3 — 2026-04-29
+
+### Fix: Reflections page — dark text on light background
+
+`ReflectionsPage.jsx` was originally written assuming a dark surface,
+so every text/border/background utility was on the white-on-dark scale
+(`text-white`, `bg-white/5`, `border-white/10`, etc.). The Member
+Portal layout is light-themed (cream `bg-background`), so the page
+rendered white-on-cream and was effectively unreadable for any
+member opening Reflections in production. The Parking Lot tab's
+filter dropdown had the same issue — selected text invisible on the
+closed select.
+
+Converted all dark-theme color utilities in `ReflectionsPage.jsx` to
+the project's light-theme tokens:
+
+- `text-white` / `text-white/90` / `text-white/80` → `text-foreground`
+- `text-white/70` → `text-foreground/80`
+- `text-white/60` / `text-white/50` → `text-muted-foreground`
+- `text-white/40-20` → `text-muted-foreground/{50-80}`
+- `bg-white/{5,[0.03],[0.02]}` → `bg-muted/{20,30,40}`
+- `border-white/{5,10}` → `border-border{,/60}`
+- `placeholder-white/30` → `placeholder:text-muted-foreground/60`
+- Modal background `bg-[#0f1724]` → `bg-card`
+- Select option background `bg-ink` → `bg-card`
+
+No layout or behavior changes — pure styling swap.
+
+---
+
 ## v1.88.2 — 2026-04-28
 
 ### Fix: Hide "Use phone instead" toggle on Login until SMS works
