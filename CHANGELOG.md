@@ -17,6 +17,52 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.88.4 — 2026-04-29
+
+### Fix: Sweep remaining light-on-light contrast bugs across the app
+
+Continuation of v1.88.3's Reflections fix. Searched the entire frontend
+for places using dark-theme color utilities (`text-white`, `bg-white/X`,
+`border-white/X`, `bg-ink`, hardcoded dark hex backgrounds) on top of
+the light-themed Member Portal layout, and converted them to the
+project's light-theme tokens.
+
+**Line-level fixes:**
+
+- `MemberNotificationsPage.jsx:149` — unread notification title was
+  `text-white` on a light card → `text-foreground`.
+- `ForumHomePage.jsx:1538` — minutes input field had `text-white` on
+  `bg-muted/30` → `text-foreground`.
+- `ForumHomePage.jsx:1650` — parking lot total cell had `text-white`
+  on default light table cell → `text-foreground`.
+- `ForumHomePage.jsx:1700` — author select had `text-white` on
+  `bg-muted/30` → `text-foreground`.
+- `ForumHomePage.jsx` (sweep) — replaced all `bg-ink` option backgrounds
+  with `bg-card` for consistency (though browsers ignore option styling).
+- `NavigatorBroadcastCard.jsx:148` — broadcast note textarea had
+  `text-white placeholder-white/30` → `text-foreground placeholder:text-muted-foreground/60`.
+
+**Full-file conversions** (52 class swaps total):
+
+- `src/components/survey/MultiSelectQuestion.jsx`
+- `src/components/survey/OpenTextQuestion.jsx`
+- `src/components/survey/RankingQuestion.jsx`
+- `src/components/survey/ScaleQuestion.jsx`
+- `src/components/survey/SingleSelectQuestion.jsx`
+
+All five were originally written assuming a dark survey overlay but
+render inside the light-themed `SurveyPage` in the Member Portal, so
+question prompts, option labels, and rating widgets were invisible or
+near-invisible. Same conversion mapping as v1.88.3 (text-foreground,
+text-muted-foreground, bg-muted, border-border, etc.).
+
+Excluded from the sweep on purpose:
+- `LifelinePage.jsx` — has its own intentional `lifeline-paper` /
+  `lifeline-ink` paper-themed surface.
+- `SAPPortalLayout` and its pages — separate themed surface.
+
+---
+
 ## v1.88.3 — 2026-04-29
 
 ### Fix: Reflections page — dark text on light background

@@ -146,7 +146,7 @@ export default function MemberNotificationsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className={`text-sm font-semibold ${n.is_read ? 'text-muted-foreground' : 'text-white'}`}>
+                      <h3 className={`text-sm font-semibold ${n.is_read ? 'text-muted-foreground' : 'text-foreground'}`}>
                         {n.title}
                       </h3>
                       {!n.is_read && <div className="w-2 h-2 rounded-full bg-warm shrink-0" />}
