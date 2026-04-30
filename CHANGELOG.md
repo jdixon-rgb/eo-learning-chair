@@ -17,6 +17,26 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.0 — 2026-04-30
+
+### Feature: Photo upload for Lifeline events
+
+Members can now attach a photo to each event on their Lifeline. The
+photo appears as a thumbnail on the event card in the All Events list
+and in full size inside the Event Details modal (click to enlarge).
+
+- Add / replace / remove a photo from the Add Event and Edit Event form
+  (JPEG / PNG / WebP / GIF, 5 MB max).
+- Photos are stored in a new private `lifeline-photos` Supabase Storage
+  bucket. Storage RLS scopes access by `member_id` folder so only the
+  owning member can read or write their own files — same privacy posture
+  as the rest of the Lifeline module.
+- New columns on `life_events`: `photo_storage_path`, `photo_file_name`.
+
+Migration: `074_lifeline_event_photos.sql`.
+
+---
+
 ## v1.88.5 — 2026-04-29
 
 ### Fix: Restore `text-white` on solid-color buttons broken by v1.88.4 sweep

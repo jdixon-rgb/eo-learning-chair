@@ -17,6 +17,7 @@ import { EventDetailModal } from '@/components/lifeline/EventDetailModal'
 import { BirthYearOnboarding } from '@/components/lifeline/BirthYearOnboarding'
 import { Toaster } from '@/components/lifeline/Toaster'
 import { useToast } from '@/components/lifeline/useToast'
+import { useLifelinePhotoUrl } from '@/components/lifeline/useLifelinePhotoUrl'
 import { Button } from '@/components/ui/button'
 import {
   Plus,
@@ -593,112 +594,139 @@ function EventsList({
               </p>
             )}
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((event, idxInYear) => {
-                const score = eventScore(event.valence, event.intensity)
-                const isPositive = event.valence === 'positive'
-                const canMoveUp = items.length > 1 && idxInYear > 0
-                const canMoveDown =
-                  items.length > 1 && idxInYear < items.length - 1
-                return (
-                  <div
-                    key={event.id}
-                    className="group bg-lifeline-card border border-lifeline-border rounded-lg px-4 py-3 hover:border-lifeline-accent/40 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`shrink-0 mt-0.5 w-9 h-9 rounded flex items-center justify-center font-lifeline-mono text-sm font-bold ${
-                          isPositive
-                            ? 'bg-lifeline-positive-bg text-lifeline-positive'
-                            : 'bg-lifeline-negative-bg text-lifeline-negative'
-                        }`}
-                      >
-                        {score > 0 ? `+${score}` : score}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-1">
-                          <p className="font-lifeline-body text-sm text-lifeline-ink leading-tight font-medium truncate">
-                            {event.title}
-                          </p>
-                          <div className="flex gap-0.5 shrink-0 ml-1 items-center">
-                            <button
-                              onClick={() => onToggleBrief(event)}
-                              className={`p-1 rounded transition-colors ${
-                                event.brief
-                                  ? 'text-lifeline-accent'
-                                  : 'text-lifeline-ink-faint/40 opacity-0 group-hover:opacity-100 hover:text-lifeline-accent'
-                              }`}
-                              title={
-                                event.brief
-                                  ? 'Remove from brief'
-                                  : 'Add to brief'
-                              }
-                            >
-                              {event.brief ? (
-                                <BookmarkCheck className="h-3 w-3" />
-                              ) : (
-                                <Bookmark className="h-3 w-3" />
-                              )}
-                            </button>
-                            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {canMoveUp && (
-                                <button
-                                  onClick={() => onReorder(event, 'up')}
-                                  className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-ink hover:bg-lifeline-paper-dark transition-colors"
-                                  title="Move up within year"
-                                >
-                                  <ChevronUp className="h-3 w-3" />
-                                </button>
-                              )}
-                              {canMoveDown && (
-                                <button
-                                  onClick={() => onReorder(event, 'down')}
-                                  className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-ink hover:bg-lifeline-paper-dark transition-colors"
-                                  title="Move down within year"
-                                >
-                                  <ChevronDown className="h-3 w-3" />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => onEdit(event)}
-                                className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-ink hover:bg-lifeline-paper-dark transition-colors"
-                                title="Edit"
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Delete "${event.title}"?`))
-                                    onDelete(event)
-                                }}
-                                className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-negative hover:bg-lifeline-negative-bg transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="font-lifeline-mono text-xs text-lifeline-ink-faint mt-0.5">
-                          {formatTimeLabel(event.timeType, event.timeValue)}
-                          {event.timeType === 'age' && (
-                            <span className="ml-1 text-lifeline-ink-faint/60">
-                              ({event.computedYear})
-                            </span>
-                          )}
-                        </p>
-                        {event.summary && (
-                          <p className="font-lifeline-body text-xs text-lifeline-ink-muted mt-1.5 leading-relaxed line-clamp-2">
-                            {event.summary}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+              {items.map((event, idxInYear) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  canMoveUp={items.length > 1 && idxInYear > 0}
+                  canMoveDown={
+                    items.length > 1 && idxInYear < items.length - 1
+                  }
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onReorder={onReorder}
+                  onToggleBrief={onToggleBrief}
+                />
+              ))}
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function EventCard({
+  event,
+  canMoveUp,
+  canMoveDown,
+  onEdit,
+  onDelete,
+  onReorder,
+  onToggleBrief,
+}) {
+  const score = eventScore(event.valence, event.intensity)
+  const isPositive = event.valence === 'positive'
+  const photoUrl = useLifelinePhotoUrl(event.photoStoragePath)
+
+  return (
+    <div className="group bg-lifeline-card border border-lifeline-border rounded-lg px-4 py-3 hover:border-lifeline-accent/40 transition-colors">
+      <div className="flex items-start gap-3">
+        <div
+          className={`shrink-0 mt-0.5 w-9 h-9 rounded flex items-center justify-center font-lifeline-mono text-sm font-bold ${
+            isPositive
+              ? 'bg-lifeline-positive-bg text-lifeline-positive'
+              : 'bg-lifeline-negative-bg text-lifeline-negative'
+          }`}
+        >
+          {score > 0 ? `+${score}` : score}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-1">
+            <p className="font-lifeline-body text-sm text-lifeline-ink leading-tight font-medium truncate">
+              {event.title}
+            </p>
+            <div className="flex gap-0.5 shrink-0 ml-1 items-center">
+              <button
+                onClick={() => onToggleBrief(event)}
+                className={`p-1 rounded transition-colors ${
+                  event.brief
+                    ? 'text-lifeline-accent'
+                    : 'text-lifeline-ink-faint/40 opacity-0 group-hover:opacity-100 hover:text-lifeline-accent'
+                }`}
+                title={event.brief ? 'Remove from brief' : 'Add to brief'}
+              >
+                {event.brief ? (
+                  <BookmarkCheck className="h-3 w-3" />
+                ) : (
+                  <Bookmark className="h-3 w-3" />
+                )}
+              </button>
+              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {canMoveUp && (
+                  <button
+                    onClick={() => onReorder(event, 'up')}
+                    className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-ink hover:bg-lifeline-paper-dark transition-colors"
+                    title="Move up within year"
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </button>
+                )}
+                {canMoveDown && (
+                  <button
+                    onClick={() => onReorder(event, 'down')}
+                    className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-ink hover:bg-lifeline-paper-dark transition-colors"
+                    title="Move down within year"
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                )}
+                <button
+                  onClick={() => onEdit(event)}
+                  className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-ink hover:bg-lifeline-paper-dark transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`Delete "${event.title}"?`)) onDelete(event)
+                  }}
+                  className="p-1 rounded text-lifeline-ink-muted hover:text-lifeline-negative hover:bg-lifeline-negative-bg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <p className="font-lifeline-mono text-xs text-lifeline-ink-faint mt-0.5">
+            {formatTimeLabel(event.timeType, event.timeValue)}
+            {event.timeType === 'age' && (
+              <span className="ml-1 text-lifeline-ink-faint/60">
+                ({event.computedYear})
+              </span>
+            )}
+          </p>
+          {event.summary && (
+            <p className="font-lifeline-body text-xs text-lifeline-ink-muted mt-1.5 leading-relaxed line-clamp-2">
+              {event.summary}
+            </p>
+          )}
+          {event.photoStoragePath && (
+            <div className="mt-2">
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt={event.photoFileName || event.title}
+                  className="w-full max-h-32 object-cover rounded border border-lifeline-border bg-lifeline-paper"
+                />
+              ) : (
+                <div className="w-full h-16 rounded border border-lifeline-border bg-lifeline-paper animate-pulse" />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

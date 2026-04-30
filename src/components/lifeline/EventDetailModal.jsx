@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import {
   Dialog,
@@ -8,6 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatTimeLabel, eventScore } from '@/lib/lifelineStore'
+import { useLifelinePhotoUrl } from './useLifelinePhotoUrl'
 
 const INTENSITY_LABELS = {
   1: 'Mild',
@@ -31,6 +33,8 @@ const INTENSITY_LABELS = {
 export function EventDetailModal({ event, onClose, onEdit, onDelete }) {
   const score = eventScore(event.valence, event.intensity)
   const isPositive = event.valence === 'positive'
+  const photoUrl = useLifelinePhotoUrl(event.photoStoragePath)
+  const [zoomed, setZoomed] = useState(false)
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -70,6 +74,28 @@ export function EventDetailModal({ event, onClose, onEdit, onDelete }) {
           </Badge>
         </div>
 
+        {/* Photo */}
+        {event.photoStoragePath && (
+          <div className="mt-3">
+            {photoUrl ? (
+              <button
+                type="button"
+                onClick={() => setZoomed(true)}
+                className="block w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-lifeline-accent rounded"
+                title="Click to enlarge"
+              >
+                <img
+                  src={photoUrl}
+                  alt={event.photoFileName || event.title}
+                  className="w-full max-h-72 object-cover rounded border border-lifeline-border bg-lifeline-paper"
+                />
+              </button>
+            ) : (
+              <div className="w-full h-32 rounded border border-lifeline-border bg-lifeline-paper animate-pulse" />
+            )}
+          </div>
+        )}
+
         {/* Summary */}
         {event.summary ? (
           <p className="font-lifeline-body text-sm text-lifeline-ink leading-relaxed mt-3 whitespace-pre-wrap">
@@ -79,6 +105,25 @@ export function EventDetailModal({ event, onClose, onEdit, onDelete }) {
           <p className="font-lifeline-body text-sm text-lifeline-ink-faint italic mt-3">
             No summary written.
           </p>
+        )}
+
+        {/* Zoom overlay */}
+        {zoomed && photoUrl && (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setZoomed(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' || e.key === 'Enter') setZoomed(false)
+            }}
+            className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4 cursor-zoom-out"
+          >
+            <img
+              src={photoUrl}
+              alt={event.photoFileName || event.title}
+              className="max-w-full max-h-full object-contain rounded shadow-2xl"
+            />
+          </div>
         )}
 
         {/* Actions */}
