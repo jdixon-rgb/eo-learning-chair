@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.1 — 2026-04-30
+
+### Fix: Lifeline event photos now persist (storage upload was silently failing)
+
+The 1.89.0 release uploaded photos to a path scoped by `member_id` and
+guarded by a storage RLS policy that called `current_chapter_member_id()`.
+That SECURITY DEFINER function doesn't behave reliably from inside the
+storage RLS evaluation context, so every upload was being rejected and
+the form was swallowing the error before the user saw it. The image
+visible right after save was the local file preview — nothing actually
+landed in the bucket or the row.
+
+- New migration `075` rewrites the storage policies to use the canonical
+  Supabase pattern: scope by `auth.uid()`, with `auth.uid()` as the
+  first folder of every object key.
+- The client now builds paths as `{auth.uid()}/{event_id}/{filename}`
+  and passes `userId` (auth.uid()) to `setLifeEventPhoto`.
+- Photo upload errors are no longer swallowed — they stay on screen so
+  the user can retry without losing their picked file, and full error
+  details are logged to the console for triage.
+
+Privacy is unchanged: only the owning user can read or write under
+their own auth-uid folder, and `life_events` row-level RLS continues
+to ensure a photo can only be attached to an event the user owns.
+
+---
+
 ## v1.89.0 — 2026-04-30
 
 ### Feature: Photo upload for Lifeline events

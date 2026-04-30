@@ -389,29 +389,42 @@ export async function reorderLifeEvent(id, direction, memberId) {
 
 // ── Event photos ─────────────────────────────────────────────
 // Photos are stored in the private `lifeline-photos` bucket. Storage RLS
-// (see migration 074) scopes access by the first folder of the object key,
-// which is always the owning member's id. Path layout:
-//   {memberId}/{eventId}/{timestamp}_{safeName}
+// (migration 075) scopes access by the first folder of the object key,
+// which is always the uploader's auth.uid(). Path layout:
+//   {userId}/{eventId}/{timestamp}_{safeName}
+// userId is auth.uid() — using auth.uid() (rather than chapter_members.id)
+// is the canonical Supabase storage pattern and avoids the SECURITY DEFINER
+// function indirection that broke uploads under the original 074 policies.
 
 function safeFileName(name) {
   const trimmed = (name || 'photo').trim().toLowerCase()
   return trimmed.replace(/[^a-z0-9._-]+/g, '-').slice(-80) || 'photo'
 }
 
-function buildPhotoPath(memberId, eventId, file) {
-  return `${memberId}/${eventId}/${Date.now()}_${safeFileName(file.name)}`
+function buildPhotoPath(userId, eventId, file) {
+  return `${userId}/${eventId}/${Date.now()}_${safeFileName(file.name)}`
+}
+
+function describeError(err, fallback) {
+  if (!err) return fallback
+  if (typeof err === 'string') return err
+  return err.message || err.error || err.statusText || fallback
 }
 
 // Upload a new photo for an event. If the event already has a photo, the
 // previous object is deleted from storage after the new one is in place.
 // Updates the event row's photo_storage_path / photo_file_name and returns
 // the refreshed LifeEvent.
-export async function setLifeEventPhoto(eventId, memberId, file, oldPath) {
+//
+// `userId` is the caller's auth.uid() (used for the storage path so the
+// owner-only storage RLS allows the write). Row-level RLS on life_events
+// independently ensures the caller actually owns the event being updated.
+export async function setLifeEventPhoto(eventId, userId, file, oldPath) {
   if (!isSupabaseConfigured()) {
     return { data: null, error: 'Supabase not configured' }
   }
   if (!eventId) return { data: null, error: 'Event id required' }
-  if (!memberId) return { data: null, error: 'Member id required' }
+  if (!userId) return { data: null, error: 'User id required' }
   if (!file) return { data: null, error: 'No file provided' }
   if (!file.type?.startsWith('image/')) {
     return { data: null, error: 'Photo must be an image file' }
@@ -420,9 +433,12 @@ export async function setLifeEventPhoto(eventId, memberId, file, oldPath) {
     return { data: null, error: 'Photo must be 5 MB or smaller' }
   }
 
-  const path = buildPhotoPath(memberId, eventId, file)
+  const path = buildPhotoPath(userId, eventId, file)
   const { error: upErr } = await uploadFile(LIFELINE_PHOTO_BUCKET, path, file)
-  if (upErr) return { data: null, error: upErr.message || 'Upload failed' }
+  if (upErr) {
+    console.error('[lifeline] photo upload failed', upErr)
+    return { data: null, error: describeError(upErr, 'Upload failed') }
+  }
 
   const { data, error } = await supabase
     .from('life_events')
@@ -436,9 +452,10 @@ export async function setLifeEventPhoto(eventId, memberId, file, oldPath) {
     .single()
 
   if (error) {
+    console.error('[lifeline] photo row update failed', error)
     // Roll back the upload so we don't orphan the new object.
     await deleteFile(LIFELINE_PHOTO_BUCKET, path)
-    return { data: null, error }
+    return { data: null, error: describeError(error, 'Could not save photo') }
   }
 
   if (oldPath && oldPath !== path) {
