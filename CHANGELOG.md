@@ -17,6 +17,24 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.2 — 2026-04-30
+
+### Fix: Lifeline photo uploads — "Bucket not found" error
+
+After 1.89.1 fixed the storage RLS, uploads still failed with a
+"Bucket not found" 404 from the Supabase Storage service. Cause:
+RLS is enabled on `storage.buckets` in this project but no SELECT
+policy was ever defined, so authenticated users couldn't even see
+the bucket row to upload into.
+
+Migration `076` adds a SELECT policy on `storage.buckets` granting
+authenticated users visibility of the `lifeline-photos` bucket only.
+Object-level access stays gated by the per-folder `storage.objects`
+policies from migration 075 — only the owning user can read or write
+under their own auth-uid folder.
+
+---
+
 ## v1.89.1 — 2026-04-30
 
 ### Fix: Lifeline event photos now persist (storage upload was silently failing)
