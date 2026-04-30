@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ImagePlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,9 +13,14 @@ import {
 } from '@/components/ui/dialog'
 import {
   CURRENT_YEAR,
+  LIFELINE_PHOTO_ACCEPT,
+  LIFELINE_PHOTO_MAX_BYTES,
+  clearLifeEventPhoto,
   createLifeEvent,
+  setLifeEventPhoto,
   updateLifeEvent,
 } from '@/lib/lifelineStore'
+import { useLifelinePhotoUrl } from './useLifelinePhotoUrl'
 
 // Create/edit modal for a life event. Called from the Lifeline page.
 // Ported from lifeline.ourchapteros.com with the fetch-based API calls
@@ -45,6 +51,50 @@ export function EventForm({ event, memberId, birthYear, onClose, onSaved }) {
   const [brief, setBrief] = useState(event?.brief ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  // Photo state — three independent signals:
+  //   photoFile   — a newly chosen File the user wants to upload on save
+  //   localPreview — object URL for showing that File before upload
+  //   removePhoto — user clicked Remove on the existing saved photo
+  const existingPhotoPath = event?.photoStoragePath ?? null
+  const existingPhotoName = event?.photoFileName ?? null
+  const [photoFile, setPhotoFile] = useState(null)
+  const [removePhoto, setRemovePhoto] = useState(false)
+  const fileInputRef = useRef(null)
+  const existingPhotoUrl = useLifelinePhotoUrl(
+    !photoFile && !removePhoto ? existingPhotoPath : null
+  )
+
+  const localPreview = useMemo(
+    () => (photoFile ? URL.createObjectURL(photoFile) : null),
+    [photoFile]
+  )
+  useEffect(() => {
+    if (!localPreview) return undefined
+    return () => URL.revokeObjectURL(localPreview)
+  }, [localPreview])
+
+  function handlePhotoPick(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Photo must be an image file.')
+      return
+    }
+    if (file.size > LIFELINE_PHOTO_MAX_BYTES) {
+      setError('Photo must be 5 MB or smaller.')
+      return
+    }
+    setError('')
+    setPhotoFile(file)
+    setRemovePhoto(false)
+  }
+
+  function handlePhotoClear() {
+    setPhotoFile(null)
+    setRemovePhoto(!!existingPhotoPath)
+  }
 
   const computedPreview =
     timeType === 'age' && timeValue && birthYear != null
@@ -92,7 +142,43 @@ export function EventForm({ event, memberId, birthYear, onClose, onSaved }) {
       setSaving(false)
       return
     }
-    onSaved(data)
+
+    let finalEvent = data
+    if (photoFile) {
+      const { data: withPhoto, error: photoErr } = await setLifeEventPhoto(
+        finalEvent.id,
+        memberId,
+        photoFile,
+        existingPhotoPath
+      )
+      if (photoErr) {
+        setError(
+          typeof photoErr === 'string'
+            ? photoErr
+            : photoErr?.message || 'Photo upload failed.'
+        )
+        setSaving(false)
+        // Event itself was saved — surface what we have so the user can retry
+        // the photo from the edit form rather than losing their entry.
+        onSaved(finalEvent)
+        return
+      }
+      finalEvent = withPhoto
+    } else if (removePhoto && existingPhotoPath) {
+      const { data: cleared, error: clearErr } = await clearLifeEventPhoto(
+        finalEvent.id,
+        existingPhotoPath
+      )
+      if (clearErr) {
+        setError(clearErr?.message || 'Could not remove existing photo.')
+        setSaving(false)
+        onSaved(finalEvent)
+        return
+      }
+      finalEvent = cleared
+    }
+
+    onSaved(finalEvent)
   }
 
   return (
@@ -290,6 +376,67 @@ export function EventForm({ event, memberId, birthYear, onClose, onSaved }) {
             <p className="text-xs text-lifeline-ink-faint text-right">
               {summary.length}/500
             </p>
+          </div>
+
+          {/* Photo */}
+          <div className="space-y-1.5">
+            <Label className="text-lifeline-ink-muted">
+              Photo{' '}
+              <span className="text-lifeline-ink-faint">(optional)</span>
+            </Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={LIFELINE_PHOTO_ACCEPT}
+              onChange={handlePhotoPick}
+              className="hidden"
+            />
+            {localPreview || existingPhotoUrl ? (
+              <div className="relative">
+                <img
+                  src={localPreview || existingPhotoUrl}
+                  alt={photoFile?.name || existingPhotoName || 'Event photo'}
+                  className="w-full max-h-56 object-cover rounded border border-lifeline-border bg-lifeline-paper"
+                />
+                <button
+                  type="button"
+                  onClick={handlePhotoClear}
+                  className="absolute top-2 right-2 rounded-full bg-black/60 hover:bg-black/80 text-white p-1"
+                  title="Remove photo"
+                  aria-label="Remove photo"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+                <div className="mt-1.5 flex items-center justify-between">
+                  <p className="font-lifeline-body text-xs text-lifeline-ink-faint truncate pr-2">
+                    {photoFile
+                      ? `New: ${photoFile.name}`
+                      : existingPhotoName || 'Saved photo'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="font-lifeline-body text-xs text-lifeline-accent hover:underline shrink-0"
+                  >
+                    Replace
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 rounded border border-dashed border-lifeline-border px-3 py-6 text-sm font-lifeline-body text-lifeline-ink-muted hover:border-lifeline-accent/40 hover:text-lifeline-accent transition-colors"
+              >
+                <ImagePlus className="h-4 w-4" />
+                {removePhoto ? 'Choose a different photo' : 'Add a photo'}
+              </button>
+            )}
+            {removePhoto && !photoFile && (
+              <p className="font-lifeline-body text-xs text-lifeline-ink-faint">
+                The current photo will be removed when you save.
+              </p>
+            )}
           </div>
 
           {error && (

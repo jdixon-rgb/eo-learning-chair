@@ -6,6 +6,11 @@
 // in the caller's member context — RLS does the ownership filtering.
 
 import { supabase, isSupabaseConfigured } from './supabase'
+import { uploadFile, deleteFile, getSignedDownloadUrl } from './db'
+
+export const LIFELINE_PHOTO_BUCKET = 'lifeline-photos'
+export const LIFELINE_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+export const LIFELINE_PHOTO_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
 
 // ── Shared helpers (ported from lifeline/lib/utils.ts) ───────
 // Keep these inline rather than importing from another file so this store
@@ -82,6 +87,8 @@ function toLifeEvent(row) {
     computedYear: row.computed_year,
     sortOrder: row.sort_order,
     brief: row.brief,
+    photoStoragePath: row.photo_storage_path ?? null,
+    photoFileName: row.photo_file_name ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -378,4 +385,97 @@ export async function reorderLifeEvent(id, direction, memberId) {
   if (err2) return { error: err2 }
 
   return { error: null }
+}
+
+// ── Event photos ─────────────────────────────────────────────
+// Photos are stored in the private `lifeline-photos` bucket. Storage RLS
+// (see migration 074) scopes access by the first folder of the object key,
+// which is always the owning member's id. Path layout:
+//   {memberId}/{eventId}/{timestamp}_{safeName}
+
+function safeFileName(name) {
+  const trimmed = (name || 'photo').trim().toLowerCase()
+  return trimmed.replace(/[^a-z0-9._-]+/g, '-').slice(-80) || 'photo'
+}
+
+function buildPhotoPath(memberId, eventId, file) {
+  return `${memberId}/${eventId}/${Date.now()}_${safeFileName(file.name)}`
+}
+
+// Upload a new photo for an event. If the event already has a photo, the
+// previous object is deleted from storage after the new one is in place.
+// Updates the event row's photo_storage_path / photo_file_name and returns
+// the refreshed LifeEvent.
+export async function setLifeEventPhoto(eventId, memberId, file, oldPath) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: 'Supabase not configured' }
+  }
+  if (!eventId) return { data: null, error: 'Event id required' }
+  if (!memberId) return { data: null, error: 'Member id required' }
+  if (!file) return { data: null, error: 'No file provided' }
+  if (!file.type?.startsWith('image/')) {
+    return { data: null, error: 'Photo must be an image file' }
+  }
+  if (file.size > LIFELINE_PHOTO_MAX_BYTES) {
+    return { data: null, error: 'Photo must be 5 MB or smaller' }
+  }
+
+  const path = buildPhotoPath(memberId, eventId, file)
+  const { error: upErr } = await uploadFile(LIFELINE_PHOTO_BUCKET, path, file)
+  if (upErr) return { data: null, error: upErr.message || 'Upload failed' }
+
+  const { data, error } = await supabase
+    .from('life_events')
+    .update({
+      photo_storage_path: path,
+      photo_file_name: file.name,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', eventId)
+    .select()
+    .single()
+
+  if (error) {
+    // Roll back the upload so we don't orphan the new object.
+    await deleteFile(LIFELINE_PHOTO_BUCKET, path)
+    return { data: null, error }
+  }
+
+  if (oldPath && oldPath !== path) {
+    await deleteFile(LIFELINE_PHOTO_BUCKET, oldPath)
+  }
+
+  return { data: toLifeEvent(data), error: null }
+}
+
+// Remove the photo from an event: clear the row's pointers, then delete
+// the object from storage. Returns the refreshed LifeEvent.
+export async function clearLifeEventPhoto(eventId, oldPath) {
+  if (!isSupabaseConfigured()) {
+    return { data: null, error: 'Supabase not configured' }
+  }
+  if (!eventId) return { data: null, error: 'Event id required' }
+
+  const { data, error } = await supabase
+    .from('life_events')
+    .update({
+      photo_storage_path: null,
+      photo_file_name: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', eventId)
+    .select()
+    .single()
+  if (error) return { data: null, error }
+
+  if (oldPath) await deleteFile(LIFELINE_PHOTO_BUCKET, oldPath)
+
+  return { data: toLifeEvent(data), error: null }
+}
+
+// Resolve a signed URL for a stored photo. Returns null when not configured
+// or when the path is missing — callers should fall back to a placeholder.
+export async function getLifeEventPhotoUrl(path, expiresIn = 3600) {
+  if (!path) return null
+  return getSignedDownloadUrl(LIFELINE_PHOTO_BUCKET, path, expiresIn)
 }
