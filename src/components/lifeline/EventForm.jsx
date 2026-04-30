@@ -29,6 +29,7 @@ import { useLifelinePhotoUrl } from './useLifelinePhotoUrl'
 // Props:
 //   event     — the LifeEvent to edit, or null/undefined for a new one
 //   memberId  — chapter_members.id for the current user
+//   userId    — auth.uid() for the current user (used for photo storage path)
 //   birthYear — current member's birth year (required for age events)
 //   onClose   — called when the user dismisses the modal
 //   onSaved   — called with the new/updated LifeEvent after a successful save
@@ -37,7 +38,14 @@ import { useLifelinePhotoUrl } from './useLifelinePhotoUrl'
 // placeholder. Step 9 upgrades this to a Radix slider if desired —
 // everything else in this component stays the same.
 
-export function EventForm({ event, memberId, birthYear, onClose, onSaved }) {
+export function EventForm({
+  event,
+  memberId,
+  userId,
+  birthYear,
+  onClose,
+  onSaved,
+}) {
   const isEdit = !!event
 
   const [title, setTitle] = useState(event?.title ?? '')
@@ -145,22 +153,28 @@ export function EventForm({ event, memberId, birthYear, onClose, onSaved }) {
 
     let finalEvent = data
     if (photoFile) {
+      if (!userId) {
+        setError('Cannot upload photo — not signed in.')
+        setSaving(false)
+        return
+      }
       const { data: withPhoto, error: photoErr } = await setLifeEventPhoto(
         finalEvent.id,
-        memberId,
+        userId,
         photoFile,
         existingPhotoPath
       )
       if (photoErr) {
+        // Keep the event on screen with the error so the user can retry
+        // without losing their photo selection. The event row itself was
+        // saved successfully — bubble it up silently so list state stays
+        // consistent, then leave the form open with the error message.
         setError(
           typeof photoErr === 'string'
             ? photoErr
-            : photoErr?.message || 'Photo upload failed.'
+            : photoErr?.message || 'Photo upload failed. Try again.'
         )
         setSaving(false)
-        // Event itself was saved — surface what we have so the user can retry
-        // the photo from the edit form rather than losing their entry.
-        onSaved(finalEvent)
         return
       }
       finalEvent = withPhoto
@@ -170,9 +184,12 @@ export function EventForm({ event, memberId, birthYear, onClose, onSaved }) {
         existingPhotoPath
       )
       if (clearErr) {
-        setError(clearErr?.message || 'Could not remove existing photo.')
+        setError(
+          typeof clearErr === 'string'
+            ? clearErr
+            : clearErr?.message || 'Could not remove existing photo.'
+        )
         setSaving(false)
-        onSaved(finalEvent)
         return
       }
       finalEvent = cleared

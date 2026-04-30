@@ -442,6 +442,7 @@ export default function LifelinePage() {
         <EventForm
           event={editingEvent}
           memberId={memberId}
+          userId={user?.id}
           birthYear={birthYear}
           onClose={() => {
             setShowEventForm(false)
