@@ -17,6 +17,67 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.5 — 2026-05-06
+
+### Fix: "Set Primary" on event speakers no longer silently no-ops
+
+Clicking "Set Primary" on a candidate speaker would briefly highlight
+them as primary and then revert. Cause: when the chosen speaker's id
+existed in local state but not on the server (an orphan from the
+earlier `addSpeaker` race fixed in 1.89.4), `updateEvent` caught the
+FK violation and silently retried with `speaker_id: null` — making it
+look like nothing happened.
+
+Now the FK error reverts only the failed field to its prior value
+(rather than nulling it) and surfaces a clear banner: *"Couldn't
+update speaker — that record isn't on the server yet. Please refresh
+the page and try again."* A page refresh re-hydrates from the server
+and clears the stale local row.
+
+Files: `src/lib/store.js`
+
+---
+
+## v1.89.4 — 2026-05-06
+
+### Fix: speaker_pipeline FK violation when deleting a freshly-added duplicate
+
+Adding a speaker and quickly deleting it (e.g. removing a duplicate)
+produced a "Save failed (insert:speaker_pipeline) … violates foreign
+key constraint" banner. Cause: `addSpeaker` awaited the `speakers`
+insert but fired the `speaker_pipeline` insert without awaiting, and
+the form's submit handler didn't await `addSpeaker` either — so a
+delete could land at Supabase between the two inserts and the trailing
+pipeline insert hit a missing speaker.
+
+Now both inserts are awaited (and the form stays open until they
+complete), failed creates roll back local state, and the redundant
+explicit pipeline-row deletes in `deleteSpeaker` are removed in favor
+of the existing `ON DELETE CASCADE` FK.
+
+Files: `src/lib/store.js`, `src/pages/SpeakersPage.jsx`
+
+---
+
+## v1.89.3 — 2026-05-05
+
+### Fix: Speaker contract / W-9 uploads accept any filename
+
+Some speaker documents (e.g. agency-supplied contracts) couldn't be
+uploaded — the file picker would close and nothing happened, with no
+error shown. Cause: the storage path used the raw filename, which
+Supabase Storage rejects when it contains non-ASCII characters,
+em-dashes, smart quotes, `#`, `&`, etc.
+
+Now the storage key is sanitized (the original filename is still kept
+and shown in the UI), a timestamp prefix prevents collisions on
+re-upload, and any failure surfaces a visible error instead of
+silently doing nothing.
+
+Files: `src/pages/SpeakersPage.jsx`
+
+---
+
 ## v1.89.2 — 2026-04-30
 
 ### Fix: Lifeline photo uploads — "Bucket not found" error
