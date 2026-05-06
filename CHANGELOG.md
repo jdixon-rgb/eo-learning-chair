@@ -17,6 +17,25 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.3 — 2026-05-05
+
+### Fix: Speaker contract / W-9 uploads accept any filename
+
+Some speaker documents (e.g. agency-supplied contracts) couldn't be
+uploaded — the file picker would close and nothing happened, with no
+error shown. Cause: the storage path used the raw filename, which
+Supabase Storage rejects when it contains non-ASCII characters,
+em-dashes, smart quotes, `#`, `&`, etc.
+
+Now the storage key is sanitized (the original filename is still kept
+and shown in the UI), a timestamp prefix prevents collisions on
+re-upload, and any failure surfaces a visible error instead of
+silently doing nothing.
+
+Files: `src/pages/SpeakersPage.jsx`
+
+---
+
 ## v1.89.2 — 2026-04-30
 
 ### Fix: Lifeline photo uploads — "Bucket not found" error

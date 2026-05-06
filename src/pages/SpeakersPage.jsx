@@ -60,20 +60,43 @@ export default function SpeakersPage() {
 
   const handleDocUpload = useCallback(async (file, docType) => {
     if (!editSpeaker?._pipeline_id) return
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) return
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) return
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      alert(`Can't upload "${file.name}": that file type isn't supported. Please upload a PDF or Word doc.`)
+      return
+    }
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      alert(`"${file.name}" is too large (max ${MAX_FILE_SIZE_MB} MB).`)
+      return
+    }
 
     setUploadingDoc(docType)
-    const storagePath = `${activeChapterId}/speakers/${editSpeaker.id}/${docType}_${file.name}`
+    // Sanitize for storage key: Supabase rejects non-ASCII / many punctuation chars.
+    // Original filename is preserved separately for display.
+    const lastDot = file.name.lastIndexOf('.')
+    const stem = lastDot > 0 ? file.name.slice(0, lastDot) : file.name
+    const ext = lastDot > 0 ? file.name.slice(lastDot) : ''
+    const safeStem = stem
+      .normalize('NFKD').replace(/\p{M}/gu, '')
+      .replace(/[^A-Za-z0-9._-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 80) || 'file'
+    const safeExt = ext.replace(/[^A-Za-z0-9.]/g, '')
+    const storagePath = `${activeChapterId}/speakers/${editSpeaker.id}/${docType}_${Date.now()}_${safeStem}${safeExt}`
     try {
       const res = await uploadFile('event-documents', storagePath, file)
-      if (res?.error) { console.error(`${docType} upload error:`, res.error); return }
+      if (res?.error) {
+        console.error(`${docType} upload error:`, res.error)
+        alert(`Upload failed: ${res.error.message || res.error}`)
+        return
+      }
       const pathKey = docType === 'contract' ? 'contract_storage_path' : 'w9_storage_path'
       const nameKey = docType === 'contract' ? 'contract_file_name' : 'w9_file_name'
       updatePipelineEntry(editSpeaker._pipeline_id, { [pathKey]: storagePath, [nameKey]: file.name })
       setEditSpeaker(prev => ({ ...prev, [pathKey]: storagePath, [nameKey]: file.name }))
     } catch (err) {
       console.error(`${docType} upload failed:`, err)
+      alert(`Upload failed: ${err?.message || err}`)
     } finally {
       setUploadingDoc(null)
     }
