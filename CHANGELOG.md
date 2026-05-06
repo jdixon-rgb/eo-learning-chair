@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.4 — 2026-05-06
+
+### Fix: speaker_pipeline FK violation when deleting a freshly-added duplicate
+
+Adding a speaker and quickly deleting it (e.g. removing a duplicate)
+produced a "Save failed (insert:speaker_pipeline) … violates foreign
+key constraint" banner. Cause: `addSpeaker` awaited the `speakers`
+insert but fired the `speaker_pipeline` insert without awaiting, and
+the form's submit handler didn't await `addSpeaker` either — so a
+delete could land at Supabase between the two inserts and the trailing
+pipeline insert hit a missing speaker.
+
+Now both inserts are awaited (and the form stays open until they
+complete), failed creates roll back local state, and the redundant
+explicit pipeline-row deletes in `deleteSpeaker` are removed in favor
+of the existing `ON DELETE CASCADE` FK.
+
+Files: `src/lib/store.js`, `src/pages/SpeakersPage.jsx`
+
+---
+
 ## v1.89.3 — 2026-05-05
 
 ### Fix: Speaker contract / W-9 uploads accept any filename

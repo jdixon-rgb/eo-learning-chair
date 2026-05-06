@@ -147,7 +147,7 @@ export default function SpeakersPage() {
   // IDs of speakers already in current FY pipeline
   const pipelineSpeakerIds = new Set(pipelineSpeakers.map(p => p.id))
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name) return
     const { assigned_event_ids, ...allData } = form
 
@@ -183,7 +183,10 @@ export default function SpeakersPage() {
       }
       speakerId = editSpeaker.id
     } else {
-      const newSpeaker = addSpeaker({ ...libraryData, ...pipelineData, pipeline_stage: 'researching' })
+      // Await both DB inserts so a quick follow-up delete can't race
+      // ahead of the speaker_pipeline insert (FK violation otherwise).
+      const newSpeaker = await addSpeaker({ ...libraryData, ...pipelineData, pipeline_stage: 'researching' })
+      if (!newSpeaker) return
       speakerId = newSpeaker.id
     }
 

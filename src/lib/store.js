@@ -210,9 +210,6 @@ export function StoreProvider({ children }) {
             contract_storage_path, contract_file_name, w9_storage_path,
             w9_file_name, notes, ...libraryData } = speakerData
     const newSpeaker = { ...libraryData, id, chapter_id: activeChapterId, pipeline_stage: pipeline_stage || 'researching', created_at: now, updated_at: now }
-    setSpeakers(prev => [...prev, newSpeaker])
-    // Speaker row must exist before pipeline insert (FK constraint)
-    await dbWrite(() => insertRow('speakers', newSpeaker), 'insert:speakers')
     const pipelineId = crypto.randomUUID()
     const pipelineEntry = {
       id: pipelineId, speaker_id: id, chapter_id: activeChapterId,
@@ -223,8 +220,24 @@ export function StoreProvider({ children }) {
       w9_storage_path: w9_storage_path ?? null, w9_file_name: w9_file_name ?? null,
       notes: notes ?? '', created_at: now, updated_at: now,
     }
+    // Optimistic local update
+    setSpeakers(prev => [...prev, newSpeaker])
     setSpeakerPipeline(prev => [...prev, pipelineEntry])
-    dbWrite(() => insertRow('speaker_pipeline', pipelineEntry), 'insert:speaker_pipeline')
+    // Speaker row must exist before pipeline insert (FK constraint).
+    // Both inserts are awaited so callers can defer follow-up actions
+    // (e.g. delete) until DB state is consistent — prevents the
+    // create-then-delete race that orphans the queued pipeline insert.
+    const speakerRes = await dbWrite(() => insertRow('speakers', newSpeaker), 'insert:speakers')
+    if (speakerRes?.error) {
+      // Roll back local state — the row is not in DB
+      setSpeakers(prev => prev.filter(s => s.id !== id))
+      setSpeakerPipeline(prev => prev.filter(p => p.id !== pipelineId))
+      return null
+    }
+    const pipelineRes = await dbWrite(() => insertRow('speaker_pipeline', pipelineEntry), 'insert:speaker_pipeline')
+    if (pipelineRes?.error) {
+      setSpeakerPipeline(prev => prev.filter(p => p.id !== pipelineId))
+    }
     return newSpeaker
   }, [activeChapterId, activeFiscalYear, dbWrite])
 
@@ -236,12 +249,11 @@ export function StoreProvider({ children }) {
 
   const deleteSpeaker = useCallback((id) => {
     setSpeakers(prev => prev.filter(s => s.id !== id))
-    // Also remove any pipeline entries for this speaker
-    const pipelineIds = speakerPipeline.filter(p => p.speaker_id === id).map(p => p.id)
+    // Pipeline rows are removed in DB by ON DELETE CASCADE
+    // (speaker_pipeline.speaker_id → speakers.id); just clear local state.
     setSpeakerPipeline(prev => prev.filter(p => p.speaker_id !== id))
     dbWrite(() => deleteRow('speakers', id), 'delete:speakers')
-    pipelineIds.forEach(pid => dbWrite(() => deleteRow('speaker_pipeline', pid), 'delete:speaker_pipeline'))
-  }, [dbWrite, speakerPipeline])
+  }, [dbWrite])
 
   // ── Speaker Pipeline operations ──
 
