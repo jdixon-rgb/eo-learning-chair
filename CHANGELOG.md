@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.89.5 — 2026-05-06
+
+### Fix: "Set Primary" on event speakers no longer silently no-ops
+
+Clicking "Set Primary" on a candidate speaker would briefly highlight
+them as primary and then revert. Cause: when the chosen speaker's id
+existed in local state but not on the server (an orphan from the
+earlier `addSpeaker` race fixed in 1.89.4), `updateEvent` caught the
+FK violation and silently retried with `speaker_id: null` — making it
+look like nothing happened.
+
+Now the FK error reverts only the failed field to its prior value
+(rather than nulling it) and surfaces a clear banner: *"Couldn't
+update speaker — that record isn't on the server yet. Please refresh
+the page and try again."* A page refresh re-hydrates from the server
+and clears the stale local row.
+
+Files: `src/lib/store.js`
+
+---
+
 ## v1.89.4 — 2026-05-06
 
 ### Fix: speaker_pipeline FK violation when deleting a freshly-added duplicate

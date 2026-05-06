@@ -347,7 +347,13 @@ export function StoreProvider({ children }) {
 
   const updateEvent = useCallback((id, updates) => {
     const now = new Date().toISOString()
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...updates, updated_at: now } : e))
+    // Capture the pre-update event so we can revert specific fields if the
+    // server rejects the write (e.g. FK violation on a local-only speaker).
+    let priorEvent = null
+    setEvents(prev => {
+      priorEvent = prev.find(e => e.id === id) || null
+      return prev.map(e => e.id === id ? { ...e, ...updates, updated_at: now } : e)
+    })
     // Strip non-UUID values from uuid[] columns before DB write (mock data uses
     // string IDs like "sap-aptive" which PostgreSQL rejects).
     const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -366,16 +372,20 @@ export function StoreProvider({ children }) {
     }
     dbWrite(async () => {
       const res = await updateRow('events', id, sanitized)
-      // If a foreign key violation occurs (orphaned venue_id/speaker_id from
-      // a record that was saved locally but never persisted to the DB),
-      // retry with the offending FK nulled out.
+      // FK violation on speaker_id / venue_id: the referenced row exists in
+      // local state but not on the server. Revert the optimistic change for
+      // just that field and surface a clear message — silently nulling the
+      // FK (the previous behavior) made "Set Primary" appear to no-op.
       if (res?.error?.code === '23503') {
         const fkField = res.error.message?.includes('venue_id') ? 'venue_id'
           : res.error.message?.includes('speaker_id') ? 'speaker_id'
           : null
         if (fkField) {
-          setEvents(prev => prev.map(e => e.id === id ? { ...e, [fkField]: null } : e))
-          return updateRow('events', id, { ...sanitized, [fkField]: null })
+          const priorValue = priorEvent?.[fkField] ?? null
+          setEvents(prev => prev.map(e => e.id === id ? { ...e, [fkField]: priorValue } : e))
+          const label = fkField === 'speaker_id' ? 'speaker' : 'venue'
+          setDbError(`Couldn't update ${label} — that record isn't on the server yet. Please refresh the page and try again.`)
+          return {} // suppress dbWrite's generic error toast
         }
       }
       return res
