@@ -17,6 +17,54 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.90.0 — 2026-05-07
+
+### Feature: Send Speaker Payment Package to Executive Director
+
+Learning chairs can now email a speaker's contract, W-9, and key
+payment terms (deposit, final payment, due dates, payment notes)
+directly to the chapter's Executive Director from the speaker card.
+The email body summarizes the terms inline so the ED doesn't have to
+open the PDFs to find the deposit amount or due date.
+
+**What's new:**
+- New "Send payment package to ED" button at the top of the Speaker
+  Documents section in the speaker dialog (visible once a contract or
+  W-9 has been uploaded).
+- A modal collects recipient (pre-filled from the chapter's new
+  *Executive Director Email* setting), optional CC, optional note, and
+  the event context for the subject line.
+- New Payment Terms section on the speaker dialog (deposit, deposit
+  due date, final payment, final due date, free-form payment notes).
+- Audit display under the Documents header: "Last sent {date} to
+  {email}" once a package has been sent — supports re-sends.
+- New Settings → Chapter Configuration field: *Executive Director
+  Email* (default recipient).
+
+**Required deploy step:** This feature depends on Resend. Set these
+two Vercel env vars (Production and Preview) before the feature can
+send mail:
+
+- `RESEND_API_KEY` — from Resend → API Keys
+- `RESEND_FROM_EMAIL` — a verified sender, e.g. `OurChapter OS <noreply@ourchapteros.com>`
+
+Until those are set the API endpoint returns a 500 with a clear
+"Server misconfigured" message and the modal surfaces it.
+
+**Schema:** Migration `077_speaker_payment_package.sql` adds
+`chapters.executive_director_email` and several columns on
+`speaker_pipeline` (`deposit_amount`, `deposit_due_date`,
+`final_payment_amount`, `final_payment_due_date`,
+`payment_terms_notes`, `ed_package_sent_at`, `ed_package_sent_to`).
+
+Files: `supabase/migrations/077_speaker_payment_package.sql`,
+`api/speakers/send-payment-package.js`,
+`src/components/SendPaymentPackageDialog.jsx`,
+`src/pages/SpeakersPage.jsx`,
+`src/pages/SettingsPage.jsx`.
+
+---
+
 ## v1.89.5 — 2026-05-06
 
 ### Fix: "Set Primary" on event speakers no longer silently no-ops
