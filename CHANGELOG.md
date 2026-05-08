@@ -17,6 +17,42 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.91.0 — 2026-05-08
+
+### Feature: Chapter-wide SAP interest checklist
+
+Members can now declare which Strategic Alliance Partners they'd like
+to meet at the chapter level — a passive checklist distinct from the
+forum-scoped SAP interest tab on Forum Home.
+
+**New page:** `/portal/partners` — categorized by industry, search
+across name/industry/description, checkbox per partner, count of
+total chapter interest displayed.
+
+**Three downstream consumers (consumption views are forthcoming):**
+- The SAP themselves see who in the chapter wants to meet them — they
+  can market directly to declared interest instead of cold-blasting
+  the whole roster.
+- The SAP Chair sees aggregate chapter pull to inform programming.
+- Forum moderators can join this against their forum membership to
+  see which of their forum members care about which partners — a
+  complement to the existing per-forum tab.
+
+**Technical:**
+- Migration `078_sap_member_interest.sql` adds `sap_member_interest`
+  table with chapter-scoped RLS. SAP contacts can read rows for their
+  own SAP. Chapter members can read all rows in their chapter (this
+  is intentionally non-secret — visibility helps members find each
+  other around shared interests).
+- `sapStore` extended with `memberInterest`, `toggleMemberInterest`,
+  `interestedMembersForSAP`, `isMemberInterestedInSAP`.
+- New `Partners` link in the Member Portal nav.
+
+**Migration push required.** The new table needs `supabase db push
+--linked --yes` against staging before the page persists data.
+
+---
+
 ## v1.90.3 — 2026-05-08
 
 ### Tweak: Staging affordances in the app chrome

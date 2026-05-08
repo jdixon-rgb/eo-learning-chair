@@ -68,6 +68,7 @@ import SpeakerLibraryPage from '@/pages/library/SpeakerLibraryPage'
 import SpeakerLibraryDetailPage from '@/pages/library/SpeakerLibraryDetailPage'
 import FinanceDashboard from '@/pages/finance/FinanceDashboard'
 import VendorsPage from '@/pages/portal/VendorsPage'
+import MemberSAPInterestPage from '@/pages/portal/MemberSAPInterestPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
 import SAPPortalDashboard from '@/pages/sap-portal/SAPPortalDashboard'
 import SAPEventListPage from '@/pages/sap-portal/SAPEventListPage'
@@ -249,6 +250,7 @@ function App() {
                 <Route path="/portal/forum" element={<ForumHomePage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
+                <Route path="/portal/partners" element={<MemberSAPInterestPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
                 <Route path="/portal/profile" element={<MemberProfilePage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />

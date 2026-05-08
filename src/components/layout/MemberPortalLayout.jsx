@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
-import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store } from 'lucide-react'
+import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store, Handshake } from 'lucide-react'
 import { useState } from 'react'
 import { APP_VERSION } from '@/lib/version'
 import { isStaging } from '@/lib/env'
@@ -12,6 +12,7 @@ const portalNav = [
   { to: '/portal/forum', icon: Users, label: 'Forum' },
   { to: '/portal/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/portal/vendors', icon: Store, label: 'Vendors' },
+  { to: '/portal/partners', icon: Handshake, label: 'Partners' },
   { to: '/portal/notifications', icon: Bell, label: 'Notifications' },
 ]
 
