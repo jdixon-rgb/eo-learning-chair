@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.90.2 — 2026-05-08
+
+### Tweak: Orange favicon on staging
+
+Staging tabs now show an orange "OC" favicon instead of the blue
+production one, so it's easy to tell at a glance which tab is which
+when both environments are open. Driven by `VITE_APP_ENV === 'staging'`.
+
+---
+
 ## v1.90.1 — 2026-05-08
 
 ### Fix: Hide Coordinator nav item from SAP Chair
