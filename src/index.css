@@ -50,6 +50,12 @@
   --color-primary: #4a6d8c;           /* céruléen pâle */
   --color-primary-foreground: #ffffff;
 
+  /* Staging-only accent. Used to swap the brand wordmark and active
+     nav highlight to orange on staging so it's visually distinct from
+     production. Matches the staging favicon color. */
+  --color-staging: #e8743f;
+  --color-staging-foreground: #ffffff;
+
   --color-secondary: #ede8df;         /* paper-dark */
   --color-secondary-foreground: #1a1714;
 

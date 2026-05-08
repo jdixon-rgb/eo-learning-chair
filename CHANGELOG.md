@@ -17,6 +17,24 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.90.3 — 2026-05-08
+
+### Tweak: Staging affordances in the app chrome
+
+Subtle visual signals so it's obvious at a glance which tab is staging
+without departing from the production look:
+
+- Wordmark "Our" renders in orange on staging (instead of céruléen).
+- The active sidebar nav highlight is orange on staging.
+- A small orange "staging" label appears just to the left of the
+  version number in every footer (Sidebar, Member Portal, SAP Portal,
+  Login, Access Needed).
+
+Driven by a new `isStaging` helper at `src/lib/env.js` and a new
+`--color-staging` token in the theme. Production is unchanged.
+
+---
+
 ## v1.90.2 — 2026-05-08
 
 ### Tweak: Orange favicon on staging

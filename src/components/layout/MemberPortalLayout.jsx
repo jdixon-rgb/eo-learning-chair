@@ -4,6 +4,7 @@ import { ADMIN_LAYOUT_ROLES } from '@/lib/permissions'
 import { Compass, Calendar, Bell, LogOut, Menu, X, ArrowLeft, Users, Store } from 'lucide-react'
 import { useState } from 'react'
 import { APP_VERSION } from '@/lib/version'
+import { isStaging } from '@/lib/env'
 import BuiltByFooter from '@/components/BuiltByFooter'
 
 const portalNav = [
@@ -116,7 +117,10 @@ export default function MemberPortalLayout() {
 
       {/* Version footer + builder attribution */}
       <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 text-center pb-2">
-        <span className="text-[10px] text-muted-foreground/60">v{APP_VERSION}</span>
+        <span className="text-[10px] text-muted-foreground/60">
+          {isStaging && <span className="font-semibold text-staging mr-1">staging</span>}
+          v{APP_VERSION}
+        </span>
       </div>
       <BuiltByFooter />
     </div>

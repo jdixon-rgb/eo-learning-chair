@@ -5,6 +5,7 @@ import { useBoardStore } from '@/lib/boardStore'
 import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus, Activity } from 'lucide-react'
 import { formatDateWithDay } from '@/lib/utils'
 import { APP_VERSION } from '@/lib/version'
+import { isStaging } from '@/lib/env'
 import NavigatorBroadcastCard from './NavigatorBroadcastCard'
 import ProfileFreshnessCard from './ProfileFreshnessCard'
 
@@ -195,7 +196,10 @@ export default function MemberPortalDashboard() {
           <MessageSquarePlus className="h-3.5 w-3.5" />
           Suggestion | Report Bug
         </Link>
-        <span className="text-[10px] text-muted-foreground/40">v{APP_VERSION}</span>
+        <span className="text-[10px] text-muted-foreground/40">
+          {isStaging && <span className="font-semibold text-staging mr-1">staging</span>}
+          v{APP_VERSION}
+        </span>
       </div>
     </div>
   )

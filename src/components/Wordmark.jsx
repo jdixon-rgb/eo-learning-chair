@@ -1,4 +1,5 @@
 import { APP_NAME } from '@/lib/appBranding'
+import { isStaging } from '@/lib/env'
 
 // Neutral text wordmark for the app. Replaces the EO-branded logo image
 // across sidebars, login, and portal headers. Keeps the brand identity
@@ -16,7 +17,7 @@ export default function Wordmark({ className = '', size = 'md' }) {
     <span
       className={`font-semibold tracking-tight ${sizeClasses[size] || sizeClasses.md} ${className}`}
     >
-      <span className="text-primary">{first}</span>
+      <span className={isStaging ? 'text-staging' : 'text-primary'}>{first}</span>
       {rest.length > 0 && <span className="ml-1.5 text-foreground">{rest.join(' ')}</span>}
     </span>
   )

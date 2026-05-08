@@ -34,6 +34,13 @@ import {
 const CONTEXT_EXPANDED_KEY = 'eo-sidebar-context-expanded'
 import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
+import { isStaging } from '@/lib/env'
+
+// Active-nav highlight color. Orange on staging so the active item is
+// a glance-able env signal; otherwise the brand céruléen.
+const activeNavClass = isStaging
+  ? 'bg-staging text-staging-foreground'
+  : 'bg-primary text-primary-foreground'
 
 // Admin sub-pages.
 // Survey Results moved to the Learning Chair's main nav. Notifications
@@ -287,7 +294,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-primary text-primary-foreground'
+                    ? activeNavClass
                     : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                 }`
               }
@@ -311,7 +318,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
+                        ? activeNavClass
                         : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                     }`
                   }
@@ -338,7 +345,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
+                        ? activeNavClass
                         : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                     }`
                   }
@@ -366,7 +373,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             className={({ isActive }) =>
               `flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
                 isActive
-                  ? 'bg-primary text-primary-foreground'
+                  ? activeNavClass
                   : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground'
               }`
             }
@@ -412,6 +419,9 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </button>
           </div>
           <div className="mt-3 border-t border-sidebar-border pt-2 text-center">
+            {isStaging && (
+              <span className="text-[10px] font-semibold text-staging mr-1.5">staging</span>
+            )}
             <span className="text-[10px] text-muted-foreground">v{APP_VERSION}</span>
           </div>
         </div>
