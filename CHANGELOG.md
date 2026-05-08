@@ -17,6 +17,25 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.93.1 — 2026-05-08
+
+### Tweak: Member section nav restructure
+
+The Member sidebar section now groups items the way they're conceptually
+related, instead of presenting everything as flat siblings:
+
+- **Forum** (expandable) — Reflections, Lifeline nest under it.
+- **Vendors** (expandable) — SAPs nests under it (drops the duplicate
+  top-level SAPs entry that mirrored the SAP Chair's surface).
+- **Learning** — single link to the member calendar (chapter events,
+  speakers, Executive Education).
+
+Forum and Vendors are pure-route-based: they auto-expand when the user
+navigates anywhere inside the group, and auto-collapse when they leave.
+No persistent state, no extra clicks. A chevron indicates expand state.
+
+---
+
 ## v1.93.0 — 2026-05-08
 
 ### Feature: Forum Health + Forum Placement chair surfaces, Member sidebar section

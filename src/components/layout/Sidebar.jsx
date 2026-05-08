@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -26,11 +26,13 @@ import {
   Users2,
   Store,
   Sparkles,
+  GraduationCap,
   BarChart3,
   ClipboardCheck,
   Eye,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Settings as SettingsIcon,
 } from 'lucide-react'
 
@@ -67,15 +69,30 @@ const boardItems = [
 
 // Member-section sub-pages. Every chair (except staff) is also a member,
 // so this section gives them a one-click path into their personal forum
-// experience without leaving the chair shell. Currently links route into
-// the Compass member-portal layout; retiring that shell into the unified
-// sidebar happens in a follow-on slice.
+// experience without leaving the chair shell. Forum and Vendors are
+// expandable groups (they auto-expand when the user navigates to a
+// member route inside them, auto-collapse when they leave). Currently
+// links route into the Compass member-portal layout; retiring that
+// shell into the unified sidebar happens in a follow-on slice.
 const memberItems = [
-  { to: '/portal/forum', icon: Users, label: 'Forum' },
-  { to: '/portal/reflections', icon: Sparkles, label: 'Reflections' },
-  { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
-  { to: '/portal/vendors', icon: Store, label: 'Vendors' },
-  { to: '/portal/partners', icon: Handshake, label: 'SAPs' },
+  {
+    to: '/portal/forum',
+    icon: Users,
+    label: 'Forum',
+    children: [
+      { to: '/portal/reflections', icon: Sparkles, label: 'Reflections' },
+      { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
+    ],
+  },
+  {
+    to: '/portal/vendors',
+    icon: Store,
+    label: 'Vendors',
+    children: [
+      { to: '/portal/partners', icon: Handshake, label: 'SAPs' },
+    ],
+  },
+  { to: '/portal/calendar', icon: GraduationCap, label: 'Learning' },
 ]
 
 // Roles that don't get a Member section in the sidebar. Staff are staff
@@ -95,6 +112,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
   const { resetAll: resetTourTips } = useTourTips()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Collapsible context switcher block (Chapter / FY / Switch Role).
   // Always defaults collapsed on page load — expansion is a temporary
@@ -391,29 +409,66 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           {/* Member section — every chair (except staff) is also a member.
               Sits below the chair section so the chair's command center
               stays the focal point; member surfaces are one click away
-              instead of buried in a separate Compass shell. */}
+              instead of buried in a separate Compass shell. Forum and
+              Vendors are expandable groups: they auto-expand whenever the
+              current route is inside the group, and auto-collapse when
+              the user navigates away. */}
           {showMemberSection && (
             <>
               <div className="pt-4 pb-2 px-3">
                 <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Member</p>
               </div>
-              {memberItems.map(({ to, icon: Icon, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={onNavigate}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? activeNavClass
-                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                    }`
-                  }
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </NavLink>
-              ))}
+              {memberItems.map((item) => {
+                const Icon = item.icon
+                const inGroup = item.children && (
+                  location.pathname === item.to ||
+                  item.children.some(c => c.to === location.pathname)
+                )
+                return (
+                  <div key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? activeNavClass
+                            : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                        }`
+                      }
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="flex-1">{item.label}</span>
+                      {item.children && (
+                        inGroup
+                          ? <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                          : <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                      )}
+                    </NavLink>
+                    {item.children && inGroup && (
+                      <div className="mt-1 mb-1 ml-4 pl-3 border-l border-sidebar-border space-y-1">
+                        {item.children.map(({ to: childTo, icon: ChildIcon, label: childLabel }) => (
+                          <NavLink
+                            key={childTo}
+                            to={childTo}
+                            onClick={onNavigate}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                                isActive
+                                  ? activeNavClass
+                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                              }`
+                            }
+                          >
+                            <ChildIcon className="h-3.5 w-3.5" />
+                            {childLabel}
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </>
           )}
 
