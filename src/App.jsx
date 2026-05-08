@@ -68,6 +68,10 @@ import RegionalLearningDashboard from '@/pages/regional/RegionalLearningDashboar
 import SpeakerLibraryPage from '@/pages/library/SpeakerLibraryPage'
 import SpeakerLibraryDetailPage from '@/pages/library/SpeakerLibraryDetailPage'
 import FinanceDashboard from '@/pages/finance/FinanceDashboard'
+import ForumHealthDashboard from '@/pages/forum-health/ForumHealthDashboard'
+import ForumModeratorCommsPage from '@/pages/forum-health/ForumModeratorCommsPage'
+import ForumPlacementDashboard from '@/pages/forum-placement/ForumPlacementDashboard'
+import MemberLeadsPage from '@/pages/forum-placement/MemberLeadsPage'
 import VendorsPage from '@/pages/portal/VendorsPage'
 import MemberSAPInterestPage from '@/pages/portal/MemberSAPInterestPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
@@ -208,6 +212,22 @@ function App() {
                 {/* Finance Chair stub */}
                 <Route path="/finance" element={
                   <ProtectedRoute allowedRoles={FINANCE_ROLES}><FinanceDashboard /></ProtectedRoute>
+                } />
+
+                {/* Forum Health Chair routes */}
+                <Route path="/forum-health" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumHealthDashboard /></ProtectedRoute>
+                } />
+                <Route path="/forum-health/comms" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumModeratorCommsPage /></ProtectedRoute>
+                } />
+
+                {/* Forum Placement Chair routes */}
+                <Route path="/forum-placement" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_placement_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumPlacementDashboard /></ProtectedRoute>
+                } />
+                <Route path="/forum-placement/leads" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_placement_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><MemberLeadsPage /></ProtectedRoute>
                 } />
 
                 {/* Regional Learning Chair Expert routes */}

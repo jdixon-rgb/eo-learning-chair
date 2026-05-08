@@ -22,7 +22,10 @@ import {
   Briefcase,
   FileText,
   Mail,
+  Users,
   Users2,
+  Store,
+  Sparkles,
   BarChart3,
   ClipboardCheck,
   Eye,
@@ -61,6 +64,29 @@ const boardItems = [
   { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
   { to: '/board/scorecards', icon: BarChart3, label: 'Scorecards', permission: 'canViewScorecards' },
 ]
+
+// Member-section sub-pages. Every chair (except staff) is also a member,
+// so this section gives them a one-click path into their personal forum
+// experience without leaving the chair shell. Currently links route into
+// the Compass member-portal layout; retiring that shell into the unified
+// sidebar happens in a follow-on slice.
+const memberItems = [
+  { to: '/portal/forum', icon: Users, label: 'Forum' },
+  { to: '/portal/reflections', icon: Sparkles, label: 'Reflections' },
+  { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
+  { to: '/portal/vendors', icon: Store, label: 'Vendors' },
+  { to: '/portal/partners', icon: Handshake, label: 'SAPs' },
+]
+
+// Roles that don't get a Member section in the sidebar. Staff are staff
+// (ED + Coordinator have no forum life inside the product). SAP contacts
+// have their own external-partner portal. Super-admin not-impersonating
+// is platform-level — switch into a chair role first to see member surfaces.
+const NON_MEMBER_ROLES = new Set([
+  'chapter_executive_director',
+  'chapter_experience_coordinator',
+  'sap_contact',
+])
 
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId, viewAsRegion, setViewAsRegion } = useAuth()
@@ -102,6 +128,11 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const visibleBoard = hideChapterOps ? [] : boardItems.filter(item =>
     !item.permission || hasPermission(effectiveRole, item.permission)
   )
+
+  // Member section visibility: hidden for staff and SAP partner contacts;
+  // hidden for super-admin when not impersonating (they're not "in" a
+  // chapter as a member at the platform level).
+  const showMemberSection = !hideChapterOps && !NON_MEMBER_ROLES.has(effectiveRole)
 
   const handleSignOut = async () => {
     await signOut()
@@ -341,6 +372,35 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   key={to}
                   to={to}
                   end={to === '/board'}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? activeNavClass
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+            </>
+          )}
+
+          {/* Member section — every chair (except staff) is also a member.
+              Sits below the chair section so the chair's command center
+              stays the focal point; member surfaces are one click away
+              instead of buried in a separate Compass shell. */}
+          {showMemberSection && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Member</p>
+              </div>
+              {memberItems.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${

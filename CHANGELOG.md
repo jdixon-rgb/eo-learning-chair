@@ -17,6 +17,42 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.93.0 — 2026-05-08
+
+### Feature: Forum Health + Forum Placement chair surfaces, Member sidebar section
+
+Foundation slice for the moderator/forum work. Two new chair role
+surfaces are now impersonable by super-admin, and every chair (except
+staff) sees a new "Member" section in their sidebar pointing into the
+existing Compass forum experience without leaving the chair shell.
+
+**Two new chair roles:**
+- `forum_health_chair` — chapter-wide forum-health oversight, moderator
+  comms, summit programming. Lands at `/forum-health`. Stub dashboard
+  for now; full rollups + comms composer ship in a follow-up.
+- `forum_placement_chair` — new-member pipeline owner. Lands at
+  `/forum-placement` with a Member Leads inbox stub for the upcoming
+  member-referral feature.
+
+Both roles added to `CHAIR_ROLE_CONFIGS`, `BOARD_ROLES`, and
+`ADMIN_LAYOUT_ROLES`. The role-switcher now lists them so super-admin
+can preview each surface.
+
+**Sidebar "Member" section:**
+- New section below Board, visible to every role *except* staff
+  (`chapter_executive_director`, `chapter_experience_coordinator`),
+  SAP partner contacts, and super-admin when not impersonating.
+- Items: Forum, Reflections, Lifeline, Vendors, SAPs — each linking
+  into the existing `/portal/*` Compass routes for now. Compass shell
+  retirement (re-mounting these pages inside the main shell with
+  `/portal/*` redirects) lands in a follow-on slice.
+
+This is the first piece of the broader single-shell unification —
+every signed-in human (except staff) becomes a member with chair roles
+layered on top, and Compass eventually folds into the main app shell.
+
+---
+
 ## v1.92.0 — 2026-05-08
 
 ### Feature: SAP Pipeline + Renewal Intent
