@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.90.1 — 2026-05-08
+
+### Fix: Hide Coordinator nav item from SAP Chair
+
+The SAP Chair surface no longer shows the **Coordinator** link under
+the Admin section in the left-hand sidebar. Other admin permissions
+for the SAP Chair are unchanged.
+
+---
+
 ## v1.90.0 — 2026-05-07
 
 ### Feature: Send Speaker Payment Package to Executive Director
