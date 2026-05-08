@@ -30,6 +30,7 @@ import {
   ClipboardList,
   Lightbulb,
   Globe2,
+  GitBranch,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -86,6 +87,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/partners',
     navItems: [
       { to: '/partners', icon: Handshake, label: 'SAPs' },
+      { to: '/partners/pipeline', icon: GitBranch, label: 'Pipeline' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
     ],
   },

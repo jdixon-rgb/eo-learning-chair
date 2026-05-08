@@ -321,6 +321,64 @@ export function SAPStoreProvider({ children }) {
     return engagements.filter(e => e.sap_id === sapId)
   }, [engagements])
 
+  // ── Prospect Pipeline ────────────────────────────────────────
+  // A "prospect" is a SAP being courted but not yet active. Created
+  // via addProspect, advanced through pipeline stages, and finally
+  // promoted to status='active' once the contract is signed.
+  const addProspect = useCallback((partner) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      name: partner.name,
+      industry: partner.industry ?? '',
+      tier: partner.tier ?? 'gold',
+      status: 'prospect',
+      pipeline_stage: partner.pipeline_stage ?? 'lead',
+      description: partner.description ?? '',
+      contribution_type: partner.contribution_type ?? null,
+      contribution_description: partner.contribution_description ?? '',
+      contact_email: partner.contact_email ?? '',
+      contact_phone: partner.contact_phone ?? '',
+      website: partner.website ?? '',
+      annual_sponsorship: partner.annual_sponsorship ?? null,
+      notes: partner.notes ?? '',
+      created_at: now,
+      updated_at: now,
+    }
+    setPartners(prev => [...prev, row])
+    dbWrite(() => insertRow('saps', row), 'insert:saps:prospect')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const advancePipelineStage = useCallback((sapId, stage) => {
+    const updates = { pipeline_stage: stage, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:pipeline_stage')
+  }, [dbWrite])
+
+  const promoteProspectToActive = useCallback((sapId) => {
+    const updates = { status: 'active', pipeline_stage: null, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:promote')
+  }, [dbWrite])
+
+  // ── Renewal Intent (active SAPs only) ────────────────────────
+  // SAP Chair sets one of: 'renewing' | 'uncertain' | 'not_renewing'.
+  // Surfaces in President / Executive Director dashboards so leadership
+  // sees at-risk partnerships early.
+  const setRenewalStatus = useCallback((sapId, renewalStatus, renewalNotes) => {
+    const updates = {
+      renewal_status: renewalStatus,
+      renewal_status_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    if (typeof renewalNotes === 'string') updates.renewal_notes = renewalNotes
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:renewal')
+  }, [dbWrite])
+
   // ── Member Interest (chapter-wide) ───────────────────────────
   // A chapter member declares interest in a SAP. Distinct from the
   // forum-scoped sap_forum_interest. Read by: the SAP partner (warm
@@ -384,6 +442,8 @@ export function SAPStoreProvider({ children }) {
     engagements, addEngagement, updateEngagement, deleteEngagement,
     engagementsForEvent, engagementsForContact, engagementsForSAP,
     memberInterest, toggleMemberInterest, interestedMembersForSAP, isMemberInterestedInSAP,
+    addProspect, advancePipelineStage, promoteProspectToActive,
+    setRenewalStatus,
   }
 
   return createElement(SAPStoreContext.Provider, { value }, children)

@@ -17,6 +17,51 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.92.0 — 2026-05-08
+
+### Feature: SAP Pipeline + Renewal Intent
+
+Two new dimensions on every SAP — one for prospects (not-yet-onboarded
+partners moving through outreach), one for existing partners (renewal
+intent surfaced to leadership).
+
+**Pipeline (prospects):**
+- New page `/partners/pipeline` — five-column Kanban: Lead → Contacted
+  → Meeting → Negotiating → Signed.
+- Add a prospect with company/industry/tier/contact, then advance
+  through stages. On Signed → "Promote to Active" graduates them into
+  the regular SAPs roster.
+- Pipeline link added to SAP Chair sidebar.
+- Prospects (status='prospect') do NOT appear in member-facing surfaces
+  (Vendors, Partner Interest checklist, Forum SAPs tab) — those filters
+  already gate on status='active'.
+
+### Feature: Renewal Intent
+
+For active SAPs, the SAP Chair tags each partner as **Renewing**,
+**Uncertain**, or **Not renewing**. Three audiences:
+- SAP Chair: sets the signal inline on each partner card on `/partners`.
+- President + Executive Director: see a summary card on their
+  dashboard with counts per category and a list of at-risk partners
+  (uncertain + not-renewing) for early visibility.
+- Read-only for everyone except SAP Chair, super-admin, ED, CEC.
+
+**Technical:**
+- Migration `079_sap_pipeline_and_renewal.sql`: extends `saps.status`
+  to allow `'prospect'`; adds `pipeline_stage`, `renewal_status`,
+  `renewal_status_updated_at`, `renewal_notes` columns with check
+  constraints.
+- New constants: `SAP_PIPELINE_STAGES`, `SAP_RENEWAL_STATUSES`.
+- sapStore: `addProspect`, `advancePipelineStage`,
+  `promoteProspectToActive`, `setRenewalStatus`.
+- Reusable `<SAPRenewalControl>` component (editable + read-only modes).
+
+**Migration push required.** The new columns and check constraints
+need `supabase db push --linked --yes` against staging before the
+pipeline and renewal controls persist data.
+
+---
+
 ## v1.91.1 — 2026-05-08
 
 ### Tweak: Drop "Events" from SAP Chair nav

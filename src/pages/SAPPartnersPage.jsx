@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
+import SAPRenewalControl from '@/components/SAPRenewalControl'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -39,7 +40,8 @@ export default function SAPPartnersPage() {
     contactsForPartner, primaryContact,
   } = useSAPStore()
   const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
-  const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId } = useAuth()
+  const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId, effectiveRole } = useAuth()
+  const canEditRenewal = ['super_admin', 'sap_chair', 'chapter_executive_director', 'chapter_experience_coordinator'].includes(effectiveRole)
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
@@ -229,6 +231,9 @@ export default function SAPPartnersPage() {
             {primary && (
               <span className="text-xs text-muted-foreground hidden sm:inline">{primary.name}</span>
             )}
+            <span onClick={(e) => e.stopPropagation()} className="hidden md:inline-flex">
+              <SAPRenewalControl partner={partner} readOnly={!canEditRenewal} />
+            </span>
             <Badge variant="outline" className="text-[10px]">
               <Users className="h-3 w-3 mr-1" />
               {partnerContacts.length}

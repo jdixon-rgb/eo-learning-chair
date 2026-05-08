@@ -43,6 +43,25 @@ export const SAP_CONTRIBUTION_TYPES = [
   { id: 'other', label: 'Other' },
 ]
 
+// SAP prospect pipeline stages (a SAP with status='prospect' moves
+// through these on its way to becoming an active partner).
+export const SAP_PIPELINE_STAGES = [
+  { id: 'lead',         label: 'Lead',         color: '#94a3b8' },
+  { id: 'contacted',    label: 'Contacted',    color: '#64648c' },
+  { id: 'meeting',      label: 'Meeting',      color: '#3d46f2' },
+  { id: 'negotiating',  label: 'Negotiating',  color: '#fa653c' },
+  { id: 'signed',       label: 'Signed',       color: '#22c55e' },
+]
+
+// Renewal intent for an existing active SAP. Visible to SAP Chair
+// (set/edit), and rolled up to President / Executive Director views
+// so they know early which partner relationships are at risk.
+export const SAP_RENEWAL_STATUSES = [
+  { id: 'renewing',      label: 'Renewing',      color: '#22c55e' },
+  { id: 'uncertain',     label: 'Uncertain',     color: '#f59e0b' },
+  { id: 'not_renewing',  label: 'Not renewing',  color: '#dc2626' },
+]
+
 // Speaker pipeline stages
 export const PIPELINE_STAGES = [
   { id: 'researching', label: 'Researching', color: '#64648c' },

@@ -62,6 +62,7 @@ import PairingsPage from '@/pages/engagement/PairingsPage'
 import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
 import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
+import SAPPipelinePage from '@/pages/SAPPipelinePage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
 import RegionalLearningDashboard from '@/pages/regional/RegionalLearningDashboard'
 import SpeakerLibraryPage from '@/pages/library/SpeakerLibraryPage'
@@ -139,6 +140,9 @@ function App() {
                 <Route path="/events/:id" element={<EventDetailPage />} />
                 <Route path="/partners" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><SAPPartnersPage /></ProtectedRoute>
+                } />
+                <Route path="/partners/pipeline" element={
+                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><SAPPipelinePage /></ProtectedRoute>
                 } />
                 <Route path="/venues" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><VenuesPage /></ProtectedRoute>
