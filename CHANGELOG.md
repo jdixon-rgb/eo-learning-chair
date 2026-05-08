@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.91.1 — 2026-05-08
+
+### Tweak: Drop "Events" from SAP Chair nav
+
+The SAP Chair sidebar no longer shows both Events and Year Arc — only
+Year Arc, which is the more useful planning view for partner-visit
+scheduling. Other chair roles (Learning Chair, etc.) keep both.
+
+---
+
 ## v1.91.0 — 2026-05-08
 
 ### Feature: Chapter-wide SAP interest checklist

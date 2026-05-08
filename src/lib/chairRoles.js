@@ -86,7 +86,6 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/partners',
     navItems: [
       { to: '/partners', icon: Handshake, label: 'SAPs' },
-      { to: '/events', icon: CalendarDays, label: 'Events' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
     ],
   },
