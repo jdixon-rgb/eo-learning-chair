@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Mail, Phone, Globe, Archive, Check } from 'lucide-react'
+import SAPRating from '@/components/sap/SAPRating'
 
 // Renewal Kanban — four columns (Renewing | Uncertain | Not renewing
 // | Not set) for status='active' partners. The retention chair tags
@@ -132,9 +133,12 @@ export default function RenewalKanbanBoard({ search = '' }) {
                         </span>
                       )}
                     </div>
-                    {p.industry && (
-                      <div className="text-[11px] text-muted-foreground/80">{p.industry}</div>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {p.industry && (
+                        <span className="text-[11px] text-muted-foreground/80">{p.industry}</span>
+                      )}
+                      <SAPRating sapId={p.id} />
+                    </div>
                     <div className="flex flex-col gap-0.5 text-[11px] text-muted-foreground/80">
                       {p.contact_email && (
                         <a href={`mailto:${p.contact_email}`} className="flex items-center gap-1 hover:text-primary truncate">

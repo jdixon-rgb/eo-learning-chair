@@ -7,6 +7,8 @@ import ProspectPipelineBoard from '@/components/sap/ProspectPipelineBoard'
 import RenewalKanbanBoard from '@/components/sap/RenewalKanbanBoard'
 import PastSAPsList from '@/components/sap/PastSAPsList'
 import IndustryCombobox from '@/components/sap/IndustryCombobox'
+import IndustryFilter from '@/components/sap/IndustryFilter'
+import SAPRating from '@/components/sap/SAPRating'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -53,6 +55,7 @@ export default function SAPPartnersPage() {
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
+  const [industryFilter, setIndustryFilter] = useState([])
   const [invitedEmails, setInvitedEmails] = useState(new Set())
   const [expandedPartner, setExpandedPartner] = useState(null)
   // Inner view mode for the Active board: Tier View (default — how
@@ -86,10 +89,20 @@ export default function SAPPartnersPage() {
   const activePartners = partners.filter(p => (p.status || 'active') === 'active')
   const inactivePartners = partners.filter(p => p.status === 'inactive')
 
-  const filtered = activePartners.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.industry?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = activePartners
+    .filter(p => {
+      if (industryFilter.length === 0) return true
+      const ind = (p.industry || '').toLowerCase()
+      return industryFilter.some(s => s.toLowerCase() === ind)
+    })
+    .filter(p => {
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        p.name.toLowerCase().includes(q)
+        || (p.industry || '').toLowerCase().includes(q)
+      )
+    })
 
   const tierCounts = SAP_TIERS.map(t => ({
     ...t,
@@ -246,9 +259,12 @@ export default function SAPPartnersPage() {
                 <Badge variant="outline" className="text-[10px] shrink-0">{contribType.label}</Badge>
               )}
             </div>
-            {partner.industry && (
-              <p className="text-xs text-muted-foreground truncate">{partner.industry}</p>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {partner.industry && (
+                <p className="text-xs text-muted-foreground truncate">{partner.industry}</p>
+              )}
+              <SAPRating sapId={partner.id} />
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {primary && (
@@ -441,6 +457,9 @@ export default function SAPPartnersPage() {
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
+          )}
+          {segment === 'active' && (
+            <IndustryFilter selected={industryFilter} onChange={setIndustryFilter} />
           )}
           {segment === 'active' && (
             <>

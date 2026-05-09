@@ -17,6 +17,30 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.96.0 — 2026-05-09
+
+### Feature: Industry filter + member ratings on SAP cards
+
+**Industry filter** — a new Filter button next to the search bar
+opens a multi-select dropdown of every industry currently in use
+across this chapter's active SAPs. Pick any number to narrow the
+view; a count badge on the button shows how many filters are active;
+a Clear link inside the panel resets. The filter only lists
+industries actually in use, so the menu stays tight as the roster
+evolves.
+
+**Member ratings** — each SAP card on the Tier view and the Renewal
+Kanban now shows the chapter's member-facing rating, Google-style:
+filled star + average + count in parens (e.g. ★ 4.6 (12)). The
+rating is drawn from the linked Vendor record (members rate SAPs
+through `/portal/vendors`); if no member has rated yet, the badge
+is hidden rather than showing a misleading 0.0.
+
+The two together let the SAP Chair answer "show me every Banking
+partner — and which ones do members actually love?" in one glance.
+
+---
+
 ## v1.95.9 — 2026-05-09
 
 ### Tweak: Drop List View — Tier becomes the Active default
