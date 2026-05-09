@@ -2,6 +2,18 @@
 
 What to do when a Supabase migration goes sideways. One page. Read it before you need it.
 
+## After every prod deploy: run the post-deploy check
+
+```sh
+./scripts/post-deploy-check.sh <prod-anon-key>
+```
+
+This is the pilot's-checklist equivalent for shipping code/schema to prod. It runs the automated verifications (repo state, migration sync, app liveness, REST read paths) and prints a single-page status report ending in `DEPLOY HEALTHY` / `DEPLOY HEALTHY (with warnings)` / `DEPLOY UNHEALTHY`. Anything other than green-or-warnings means stop and investigate before considering the deploy complete.
+
+The script also prints a short list of manual verification cues (sidebar version stamp, dashboard render, Sentry check) that need eyes-on. Don't skip those — they catch the long tail this script can't.
+
+The anon key argument is optional but strongly recommended; without it the REST smoke test is skipped. Get it from Supabase Dashboard → prod project → Settings → API → anon/public key. (It's safe to share — every browser hitting the prod app has it.)
+
 ## Before pushing a migration to prod
 
 1. **Push to staging first.** Run `supabase db push --linked --yes` against the staging project.
@@ -18,7 +30,12 @@ What to do when a Supabase migration goes sideways. One page. Read it before you
    ./scripts/smoke-test-supabase.sh pnrbvaehjbabjckixoxt <prod-anon-key>
    ```
    If anything fails to load, treat it as a live incident. Don't wait for users to report it.
-7. **Watch Sentry** for ~10 minutes after prod deploy. New errors that mention table/column names = you broke something.
+7. **Run the post-deploy checklist:**
+   ```sh
+   ./scripts/post-deploy-check.sh <prod-anon-key>
+   ```
+   This bundles the smoke test plus all the other verifications. If it ends in `DEPLOY UNHEALTHY`, treat as a live incident.
+8. **Watch Sentry** for ~10 minutes after prod deploy. New errors that mention table/column names = you broke something.
 
 ## Every migration must reload PostgREST schema
 
