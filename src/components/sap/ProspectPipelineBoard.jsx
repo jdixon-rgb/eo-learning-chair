@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
+import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import { SAP_PIPELINE_STAGES, SAP_TIERS } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +24,8 @@ const emptyForm = {
 // and they show up in the Active Renewal board.
 export default function ProspectPipelineBoard() {
   const { partners, addProspect, advancePipelineStage, promoteProspectToActive, deletePartner } = useSAPStore()
+  const { effectiveRole } = useAuth()
+  const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
 
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState(emptyForm)
@@ -74,10 +78,12 @@ export default function ProspectPipelineBoard() {
         <p className="text-xs text-muted-foreground/80">
           {prospects.length} prospect{prospects.length === 1 ? '' : 's'} in the pipeline
         </p>
-        <Button size="sm" onClick={() => setShowAdd(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Prospect
-        </Button>
+        {canEdit && (
+          <Button size="sm" onClick={() => setShowAdd(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Prospect
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -146,40 +152,42 @@ export default function ProspectPipelineBoard() {
                       {p.notes && (
                         <div className="text-[11px] text-muted-foreground/70 italic line-clamp-2">{p.notes}</div>
                       )}
-                      <div className="flex items-center gap-1 pt-1">
-                        <button
-                          onClick={() => advance(p.id, stage.id, -1)}
-                          disabled={isFirst}
-                          className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Move back a stage"
-                        >
-                          <ArrowLeft className="h-3.5 w-3.5" />
-                        </button>
-                        {isLast ? (
+                      {canEdit && (
+                        <div className="flex items-center gap-1 pt-1">
                           <button
-                            onClick={() => promote(p.id)}
-                            className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
+                            onClick={() => advance(p.id, stage.id, -1)}
+                            disabled={isFirst}
+                            className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Move back a stage"
                           >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Promote to Active
+                            <ArrowLeft className="h-3.5 w-3.5" />
                           </button>
-                        ) : (
+                          {isLast ? (
+                            <button
+                              onClick={() => promote(p.id)}
+                              className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              Promote to Active
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => advance(p.id, stage.id, 1)}
+                              className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20"
+                            >
+                              Advance
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => advance(p.id, stage.id, 1)}
-                            className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20"
+                            onClick={() => remove(p.id)}
+                            className="text-[10px] px-1.5 py-1 rounded text-muted-foreground/70 hover:text-destructive"
+                            title="Remove prospect"
                           >
-                            Advance
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            ✕
                           </button>
-                        )}
-                        <button
-                          onClick={() => remove(p.id)}
-                          className="text-[10px] px-1.5 py-1 rounded text-muted-foreground/70 hover:text-destructive"
-                          title="Remove prospect"
-                        >
-                          ✕
-                        </button>
-                      </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

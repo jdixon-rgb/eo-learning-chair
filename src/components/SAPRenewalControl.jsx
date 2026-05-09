@@ -56,7 +56,25 @@ export default function SAPRenewalControl({ partner, readOnly = false, size = 's
             return (
               <button
                 key={s.id}
-                onClick={() => { setRenewalStatus(partner.id, s.id); setExpanded(false) }}
+                onClick={() => {
+                  // Capture a reason on the permanent record when
+                  // marking Not Renewing — same guard rail as the
+                  // Renewal Kanban dialog, just lighter-weight here.
+                  if (s.id === 'not_renewing' && partner.renewal_status !== 'not_renewing') {
+                    const prior = partner.renewal_notes || ''
+                    const reason = window.prompt(
+                      `Why isn't ${partner.name} renewing? (Required — kept on the permanent record.)`,
+                      prior,
+                    )
+                    if (reason == null) { setExpanded(false); return }
+                    const trimmed = reason.trim()
+                    if (!trimmed) { setExpanded(false); return }
+                    setRenewalStatus(partner.id, s.id, trimmed)
+                  } else {
+                    setRenewalStatus(partner.id, s.id)
+                  }
+                  setExpanded(false)
+                }}
                 className="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-muted"
               >
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />

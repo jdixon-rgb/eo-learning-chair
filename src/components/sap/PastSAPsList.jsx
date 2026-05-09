@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
 import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import { SAP_TIERS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { Mail, Phone, Globe, RotateCcw, Calendar } from 'lucide-react'
@@ -14,7 +15,7 @@ import { Mail, Phone, Globe, RotateCcw, Calendar } from 'lucide-react'
 export default function PastSAPsList({ search = '' }) {
   const { partners, revivePartnerToProspect, deletePartner } = useSAPStore()
   const { effectiveRole } = useAuth()
-  const canRevive = ['super_admin', 'sap_chair', 'chapter_executive_director', 'chapter_experience_coordinator'].includes(effectiveRole)
+  const canRevive = hasPermission(effectiveRole, 'canEditSAPs')
 
   const inactivePartners = useMemo(() => {
     const q = search.trim().toLowerCase()

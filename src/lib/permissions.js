@@ -56,6 +56,11 @@ export const FEATURE_PERMISSIONS = {
   canManageFYBudget:     ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Partners (SAP) — visible to leadership, learning chairs, staff, and regional expert
   canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'regional_learning_chair_expert'],
+  // Editing SAPs — partners, contacts, renewal intent, prospect
+  // pipeline, archive/revive — is the SAP Chair's domain. Super-admin
+  // retained for cross-chapter support. Other roles view but don't
+  // edit, so the chair owns the data for their fiscal year.
+  canEditSAPs:           ['super_admin', 'sap_chair'],
   // Public Speaker Library — shared cross-chapter catalog
   canViewSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Editing + reviewing mirror the SQL helper can_edit_speaker_library()

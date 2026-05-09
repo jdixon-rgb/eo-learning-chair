@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSAPStore } from '@/lib/sapStore'
+import { hasPermission } from '@/lib/permissions'
 import SAPRenewalControl from '@/components/SAPRenewalControl'
 import ProspectPipelineBoard from '@/components/sap/ProspectPipelineBoard'
 import RenewalKanbanBoard from '@/components/sap/RenewalKanbanBoard'
@@ -46,7 +47,9 @@ export default function SAPPartnersPage() {
   } = useSAPStore()
   const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
   const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId, effectiveRole } = useAuth()
-  const canEditRenewal = ['super_admin', 'sap_chair', 'chapter_executive_director', 'chapter_experience_coordinator'].includes(effectiveRole)
+  const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
+  // The renewal chip in the partner-card header reuses the same gate.
+  const canEditRenewal = canEdit
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
@@ -258,12 +261,14 @@ export default function SAPPartnersPage() {
               <Users className="h-3 w-3 mr-1" />
               {partnerContacts.length}
             </Badge>
-            <button
-              className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-              onClick={(e) => { e.stopPropagation(); openEditPartner(partner) }}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
+            {canEdit && (
+              <button
+                className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); openEditPartner(partner) }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -288,9 +293,11 @@ export default function SAPPartnersPage() {
             <div className="mt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contacts</span>
-                <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => openAddContact(partner.id)}>
-                  <Plus className="h-3 w-3 mr-1" /> Contact
-                </Button>
+                {canEdit && (
+                  <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => openAddContact(partner.id)}>
+                    <Plus className="h-3 w-3 mr-1" /> Contact
+                  </Button>
+                )}
               </div>
               {partnerContacts.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic py-2">No contacts yet</p>
@@ -299,8 +306,8 @@ export default function SAPPartnersPage() {
                   {partnerContacts.map(c => (
                     <div
                       key={c.id}
-                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-accent/50 group cursor-pointer"
-                      onClick={() => openEditContact(c)}
+                      className={`flex items-center gap-2 py-1.5 px-2 rounded group ${canEdit ? 'hover:bg-accent/50 cursor-pointer' : ''}`}
+                      onClick={canEdit ? () => openEditContact(c) : undefined}
                     >
                       <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <User className="h-3 w-3 text-muted-foreground" />
@@ -363,15 +370,17 @@ export default function SAPPartnersPage() {
                         ) : c.email && invitedEmails.has(c.email.toLowerCase()) ? (
                           <span className="text-[9px] text-green-600 font-medium">Invited</span>
                         ) : null}
-                        <button
-                          className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-destructive cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (confirm(`Delete contact ${c.name}?`)) deleteContact(c.id)
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-destructive cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (confirm(`Delete contact ${c.name}?`)) deleteContact(c.id)
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -440,9 +449,11 @@ export default function SAPPartnersPage() {
                 <option value="renewal">Renewal Kanban</option>
                 <option value="tiers">Tier View</option>
               </Select>
-              <Button size="sm" onClick={openAddPartner}>
-                <Plus className="h-4 w-4" /> Add Partner
-              </Button>
+              {canEdit && (
+                <Button size="sm" onClick={openAddPartner}>
+                  <Plus className="h-4 w-4" /> Add Partner
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -546,7 +557,11 @@ export default function SAPPartnersPage() {
                 const tier = SAP_TIERS.find(t => t.id === partner.tier)
                 const contribType = SAP_CONTRIBUTION_TYPES.find(c => c.id === partner.contribution_type)
                 return (
-                  <tr key={partner.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEditPartner(partner)}>
+                  <tr
+                    key={partner.id}
+                    className={`border-b ${canEdit ? 'hover:bg-accent/50 cursor-pointer' : ''}`}
+                    onClick={canEdit ? () => openEditPartner(partner) : undefined}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${tier?.color}20` }}>

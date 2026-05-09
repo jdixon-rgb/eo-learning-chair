@@ -17,6 +17,47 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.8 — 2026-05-09
+
+### Access: SAP edit rights → SAP Chair only
+
+Editing anything in the SAP module — partners, contacts (incl. forum
+training), renewal intent, prospect pipeline, archive/revive — is
+now reserved to the SAP Chair (and super-admin for support). Other
+roles (President, Learning Chair, ED, CEC, etc.) still see all the
+data but can no longer change it. The chair owns the data for their
+fiscal year; when the role rolls to a new chair, edit rights move
+with it automatically.
+
+Concretely hidden when the viewer isn't the SAP Chair:
+- Add Partner / Add Prospect buttons
+- Edit pencil on each partner card
+- Tap-to-edit on partner rows in List View
+- Add Contact / Edit Contact / Delete Contact controls
+- Renewal Kanban "Mark as" pills and Archive button
+- Prospect pipeline advance / promote / remove buttons
+- Past SAPs Re-engage / Delete record buttons
+
+A new permission `canEditSAPs` in `permissions.js` is the single
+source of truth (`['super_admin', 'sap_chair']`).
+
+### Feature: Capture a reason when marking a SAP "Not renewing"
+
+When the SAP Chair flips a partner to **Not renewing** — either via
+the Renewal Kanban "Mark as" pills or the chip on the partner card
+header — the app now prompts for the reason and saves it to the
+partner's `renewal_notes`. That note is the permanent record: it
+travels with the SAP into Past SAPs if they get archived, surfaces
+in the at-risk list on the President dashboard, and is visible to
+the next chair so the institutional "why" doesn't get lost.
+
+The Kanban surface uses an inline dialog with a textarea; the
+smaller chip uses `window.prompt` for a lighter-weight ask.
+Re-clicking "Not renewing" on a partner already in that state
+does nothing — the reason is already on file.
+
+---
+
 ## v1.95.7 — 2026-05-09
 
 ### Fix: Add/edit contacts directly from the partner edit dialog
