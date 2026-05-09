@@ -634,21 +634,72 @@ function MembersTab({ forumMembers, currentMemberId, forumId, roles, isModerator
 // ────────────────────────────────────────────────────────────
 // Calendar Tab
 // ────────────────────────────────────────────────────────────
+// Derive EO fiscal year ("FY2027") from a JS Date.
+// FY runs Aug 1–Jul 31; the FY label uses the year that contains the
+// July end-date. (e.g. Aug 2026 → FY2027; Jul 2027 → FY2027.)
+function deriveFiscalYear(date) {
+  if (!date) return ''
+  const d = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(d.getTime())) return ''
+  const month = d.getMonth() // 0-indexed; Jan=0, Aug=7
+  const year = d.getFullYear()
+  return `FY${month >= 7 ? year + 1 : year}`
+}
+
+// Convert a Date to the local-time string a <input type="datetime-local"> wants.
+function toLocalInput(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fmtEventTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  })
+}
+
 function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) {
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ title: '', event_date: '', event_type: 'meeting', location: '', notes: '', fiscal_year: '' })
+  // Empty form: title + type + start/end datetime + location.
+  // Fiscal year is auto-derived from starts_at; we don't ask the user
+  // to type it.
+  const emptyForm = { title: '', event_type: 'meeting', starts_at: '', ends_at: '', location: '' }
+  const [form, setForm] = useState(emptyForm)
 
   const handleAdd = () => {
-    if (!form.title || !form.event_date) return
-    onAdd({ forum_id: forum.id, ...form })
+    if (!form.title || !form.starts_at) return
+    const startsIso = new Date(form.starts_at).toISOString()
+    const endsIso = form.ends_at ? new Date(form.ends_at).toISOString() : null
+    onAdd({
+      forum_id: forum.id,
+      title: form.title,
+      event_type: form.event_type,
+      // Keep event_date populated for backward compatibility with code
+      // that reads it directly. Same source of truth as starts_at.
+      event_date: form.starts_at.slice(0, 10),
+      starts_at: startsIso,
+      ends_at: endsIso,
+      location: form.location,
+      fiscal_year: deriveFiscalYear(form.starts_at),
+    })
     setShowAdd(false)
-    setForm({ title: '', event_date: '', event_type: 'meeting', location: '', notes: '', fiscal_year: '' })
+    setForm(emptyForm)
   }
 
-  // Forum events only
+  // Forum events only — sort by starts_at when present, else event_date.
   const allEvents = useMemo(() => {
     return events.map(e => ({ ...e, source: 'forum' }))
-      .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''))
+      .sort((a, b) => {
+        const ka = a.starts_at || a.event_date || ''
+        const kb = b.starts_at || b.event_date || ''
+        return ka.localeCompare(kb)
+      })
   }, [events])
 
   return (
@@ -663,18 +714,33 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
 
       {showAdd && (
         <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-          <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Event title" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
-          <div className="grid grid-cols-2 gap-3">
-            <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
-            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+          <div>
+            <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Title</label>
+            <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Q3 retreat" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Type</label>
+            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
               {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card">{v}</option>)}
             </select>
           </div>
-          <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
-          <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Starts</label>
+              <input type="datetime-local" value={form.starts_at} onChange={e => setForm(f => ({ ...f, starts_at: e.target.value, ends_at: f.ends_at || e.target.value }))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Ends</label>
+              <input type="datetime-local" value={form.ends_at} onChange={e => setForm(f => ({ ...f, ends_at: e.target.value }))} min={form.starts_at} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Location <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span></label>
+            <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Venue, address, or virtual link" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          </div>
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
-            <button onClick={handleAdd} disabled={!form.title || !form.event_date} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
+            <button onClick={handleAdd} disabled={!form.title || !form.starts_at} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
           </div>
         </div>
       )}
@@ -683,24 +749,30 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
         <div className="text-center py-12 text-muted-foreground/70 text-sm">No events scheduled.</div>
       ) : (
         <div className="space-y-2">
-          {allEvents.map(e => (
-            <div key={e.id} className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">{e.title}</span>
-                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
-                    {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                  </span>
+          {allEvents.map(e => {
+            // Prefer starts_at/ends_at; fall back to event_date for legacy rows.
+            const startLabel = e.starts_at ? fmtEventTime(e.starts_at) : e.event_date
+            const endLabel = e.ends_at ? fmtEventTime(e.ends_at) : ''
+            const range = endLabel && endLabel !== startLabel ? `${startLabel} – ${endLabel}` : startLabel
+            return (
+              <div key={e.id} className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">{e.title}</span>
+                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
+                      {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground/70 mt-0.5">{range}{e.location ? ` · ${e.location}` : ''}</p>
                 </div>
-                <p className="text-xs text-muted-foreground/70 mt-0.5">{e.event_date}{e.location ? ` · ${e.location}` : ''}</p>
+                {isModerator && (
+                  <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
-              {isModerator && (
-                <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

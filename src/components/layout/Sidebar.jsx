@@ -492,6 +492,12 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   location.pathname === item.to ||
                   item.children.some(c => c.to === location.pathname)
                 )
+                // When the user is on /portal/forum with a moderator-
+                // elevated tab open (agenda / calendar / members), the
+                // Moderator section's deep-link is the more-specific
+                // match. Suppress the Member > Forum highlight in that
+                // case so only ONE row is highlighted at a time.
+                const moderatorTabActive = item.to === '/portal/forum' && ['agenda', 'calendar', 'members'].includes(new URLSearchParams(location.search).get('tab'))
                 return (
                   <div key={item.to}>
                     <NavLink
@@ -499,7 +505,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                       onClick={onNavigate}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                          isActive
+                          isActive && !moderatorTabActive
                             ? activeNavClass
                             : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                         }`

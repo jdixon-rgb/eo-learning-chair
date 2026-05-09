@@ -17,6 +17,56 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.2.1 — 2026-05-09
+
+### Fix: Forum calendar events — start/end datetimes + cleaner form
+
+The forum calendar was asking moderators to type the fiscal year by
+hand, only accepted a single date (no time, no end), and rendered two
+unlabeled placeholder fields.
+
+- **Start + End datetime fields** replace the single date input.
+  Multi-day events (retreats, summits) can now be expressed properly.
+- **Fiscal year input dropped** from the form — auto-derived from the
+  start date (FY runs Aug 1–Jul 31).
+- **Every input now has a clear label** so nothing reads as a blank
+  ghost field.
+- **Sidebar double-highlight** fixed: when on /portal/forum with a
+  moderator-elevated tab (agenda / calendar / members), only the
+  Moderator section's matching item highlights — not also the
+  Member > Forum entry.
+
+**Schema:** migration 087 adds `starts_at` + `ends_at` (timestamptz)
+to `forum_calendar_events`. Backfilled from `event_date` for existing
+rows. `event_date` stays populated on new writes for backward
+compatibility with code that reads it directly.
+
+## v2.2.0 — 2026-05-09
+
+### Feat: At-Risk Members ledger — co-owned by Health + Placement chairs
+
+New surface at `/forum-health/at-risk` that captures the qualitative
+chair-in-the-head knowledge from forum seedings and ongoing health
+checks: who showed up wavering, who's disengaged, who might fit better
+elsewhere. Survives chair handoffs.
+
+Each entry holds: risk level (low/medium/high), reason chips
+(no-show, on-the-fence call, disengaged, culture fit, attendance, life
+pressure, considering exit, other), free-text notes, "better fit"
+note, and a recommended action (watch / coach / reassess / reassign /
+plan exit). Workflow buttons: mark reviewed (touches `last_reviewed_at`),
+edit, resolve with outcome, reopen, delete. One open entry per (forum
+× member); resolved entries pile up as history.
+
+Added to both **Forum Health Chair** and **Forum Placement Chair**
+sidebars — same page, both chairs read/write. The forum-health
+dashboard card now shows an "N at risk" badge with deep-link.
+
+Migration 086 (`forum_at_risk_entries`) with partial unique index
+guaranteeing one open per (forum × member). RLS admits
+`forum_health_chair` and `forum_placement_chair` explicitly alongside
+chapter admins, same scope-tight pattern as 085.
+
 ## v2.1.1 — 2026-05-09
 
 ### Fix: Role switcher label — "Moderator" instead of "Forum Moderator"
