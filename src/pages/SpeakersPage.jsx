@@ -18,7 +18,8 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight, Lock, LockOpen, Globe } from 'lucide-react'
+import SendPaymentPackageDialog from '@/components/SendPaymentPackageDialog'
+import { Plus, Search, Star, GripVertical, User, CalendarDays, Play, Upload, FileText, Trash2, Download, Loader2, BookOpen, ArrowRight, Lock, LockOpen, Globe, Send } from 'lucide-react'
 
 const emptyForm = {
   name: '', topic: '', bio: '', fee_range_low: '', fee_range_high: '',
@@ -28,6 +29,9 @@ const emptyForm = {
   contact_method: 'direct', fit_score: 7, notes: '', sizzle_reel_url: '',
   routing_flexibility: false, multi_chapter_interest: false,
   share_scope: 'chapter_only',
+  deposit_amount: '', deposit_due_date: '',
+  final_payment_amount: '', final_payment_due_date: '',
+  payment_terms_notes: '',
   assigned_event_ids: [],
 }
 
@@ -50,13 +54,17 @@ export default function SpeakersPage() {
   const [viewMode, setViewMode] = useState('kanban')
   const [dragSpeaker, setDragSpeaker] = useState(null)
   const [uploadingDoc, setUploadingDoc] = useState(null)
+  const [showSendPackage, setShowSendPackage] = useState(false)
   const contractInputRef = useRef(null)
   const w9InputRef = useRef(null)
 
   // Pipeline-specific fields that live on speaker_pipeline, not speakers
   const PIPELINE_FIELDS = ['pipeline_stage', 'fit_score', 'fee_estimated', 'fee_actual',
     'fee_estimated_private', 'fee_actual_private',
-    'contract_storage_path', 'contract_file_name', 'w9_storage_path', 'w9_file_name', 'notes']
+    'contract_storage_path', 'contract_file_name', 'w9_storage_path', 'w9_file_name', 'notes',
+    'deposit_amount', 'deposit_due_date',
+    'final_payment_amount', 'final_payment_due_date',
+    'payment_terms_notes']
 
   const handleDocUpload = useCallback(async (file, docType) => {
     if (!editSpeaker?._pipeline_id) return
@@ -168,6 +176,10 @@ export default function SpeakersPage() {
     pipelineData.fee_estimated = pipelineData.fee_estimated ? parseFloat(pipelineData.fee_estimated) : null
     pipelineData.fee_actual = pipelineData.fee_actual ? parseFloat(pipelineData.fee_actual) : null
     pipelineData.fit_score = parseInt(pipelineData.fit_score)
+    pipelineData.deposit_amount = pipelineData.deposit_amount ? parseInt(pipelineData.deposit_amount) : null
+    pipelineData.final_payment_amount = pipelineData.final_payment_amount ? parseInt(pipelineData.final_payment_amount) : null
+    pipelineData.deposit_due_date = pipelineData.deposit_due_date || null
+    pipelineData.final_payment_due_date = pipelineData.final_payment_due_date || null
 
     // Denormalize source chapter name when sharing globally so other
     // chapters can attribute it without opening up cross-chapter chapters.* reads.
@@ -250,6 +262,11 @@ export default function SpeakersPage() {
       sizzle_reel_url: speaker.sizzle_reel_url || '',
       routing_flexibility: speaker.routing_flexibility || false,
       multi_chapter_interest: speaker.multi_chapter_interest || false,
+      deposit_amount: speaker.deposit_amount ?? '',
+      deposit_due_date: speaker.deposit_due_date || '',
+      final_payment_amount: speaker.final_payment_amount ?? '',
+      final_payment_due_date: speaker.final_payment_due_date || '',
+      payment_terms_notes: speaker.payment_terms_notes || '',
       assigned_event_ids: assignedEventIds,
     })
     setShowForm(true)
@@ -778,10 +795,61 @@ export default function SpeakersPage() {
                 </div>
               </div>
 
+              {/* Payment Terms — only when pipeline entry exists */}
+              {editSpeaker?._pipeline_id && (
+                <div className="col-span-2 space-y-3 pt-2 border-t">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Terms</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Deposit ($)</label>
+                      <Input type="number" value={form.deposit_amount} onChange={e => setForm(p => ({ ...p, deposit_amount: e.target.value }))} placeholder="e.g. 7500" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Deposit due</label>
+                      <Input type="date" value={form.deposit_due_date} onChange={e => setForm(p => ({ ...p, deposit_due_date: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Final payment ($)</label>
+                      <Input type="number" value={form.final_payment_amount} onChange={e => setForm(p => ({ ...p, final_payment_amount: e.target.value }))} placeholder="e.g. 7500" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-muted-foreground">Final payment due</label>
+                      <Input type="date" value={form.final_payment_due_date} onChange={e => setForm(p => ({ ...p, final_payment_due_date: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-medium text-muted-foreground">Payment notes</label>
+                    <Textarea
+                      value={form.payment_terms_notes}
+                      onChange={e => setForm(p => ({ ...p, payment_terms_notes: e.target.value }))}
+                      placeholder="Wire instructions, payee on the W-9 if different from speaker, hotel/travel reimbursement, etc."
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Speaker Documents — only when pipeline entry exists */}
               {editSpeaker?._pipeline_id && (
                 <div className="col-span-2 space-y-3 pt-2 border-t">
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Speaker Documents</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Speaker Documents</label>
+                    {(editSpeaker.contract_storage_path || editSpeaker.w9_storage_path) && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSendPackage(true)}
+                        className="text-[11px] text-primary hover:underline cursor-pointer flex items-center gap-1"
+                        title="Email the contract, W-9, and key payment terms to the Executive Director"
+                      >
+                        <Send className="h-3 w-3" /> Send payment package to ED
+                      </button>
+                    )}
+                  </div>
+                  {editSpeaker.ed_package_sent_at && (
+                    <p className="text-[10px] text-muted-foreground -mt-1">
+                      Last sent {new Date(editSpeaker.ed_package_sent_at).toLocaleDateString()} to {editSpeaker.ed_package_sent_to}
+                    </p>
+                  )}
                   {/* Contract */}
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
@@ -901,6 +969,20 @@ export default function SpeakersPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <SendPaymentPackageDialog
+        open={showSendPackage}
+        onOpenChange={setShowSendPackage}
+        speaker={editSpeaker}
+        chapter={chapter}
+        events={events}
+        onSent={({ sentAt, sentTo }) => {
+          if (editSpeaker?._pipeline_id) {
+            updatePipelineEntry(editSpeaker._pipeline_id, { ed_package_sent_at: sentAt, ed_package_sent_to: sentTo })
+            setEditSpeaker(prev => prev ? { ...prev, ed_package_sent_at: sentAt, ed_package_sent_to: sentTo } : prev)
+          }
+        }}
+      />
     </div>
   )
 }

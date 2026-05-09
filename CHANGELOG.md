@@ -17,6 +17,449 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.3 — 2026-05-08
+
+### Cleanup: Post-Compass-retirement polish
+
+Three small fixes that fell out of moving everyone onto the unified
+shell in v1.95.0:
+
+- **Portal page widths.** Member-portal pages were originally sized
+  for a centered max-w-5xl column inside the retired
+  MemberPortalLayout; in the unified shell they were stretching
+  awkwardly wide on desktop. AppLayout now applies max-w-5xl
+  centered ONLY on `/portal/*` routes — chair pages keep full width.
+- **MemberPortalDashboard.** Dropped the "Your Compass" subtitle
+  (Compass is gone) and the redundant page-bottom Suggestion +
+  version footer (the sidebar already provides both).
+- **Sidebar footer.** Fixed an undefined-variable reference
+  (`profile?.email || role || ''`) that would have thrown if a user's
+  profile email were ever missing — now just falls back to empty.
+
+---
+
+## v1.95.2 — 2026-05-08
+
+### Feature: Industry combobox — typeahead with allow-create
+
+The Industry field on Add Partner and Add Prospect forms is now a
+combobox instead of a free-text Input. Two purposes:
+
+1. **Don't end up with 18 spellings of the same thing.** Suggestions
+   come from a canonical `SAP_INDUSTRIES` list (~40 entries common
+   to chapter SAP rosters) PLUS any non-canonical industries already
+   in use across this chapter's existing SAPs — so chair-added
+   one-offs propagate forward.
+2. **Don't lock anyone out of legitimate edge cases.** Typing
+   something brand-new still works; an "Add as a new industry" row
+   appears at the bottom of the dropdown once it's clear nothing
+   matched. Subsequent chairs see that new entry as a suggestion.
+
+Substring match, case-insensitive; prefix matches sort first. Press
+Enter to accept the top suggestion or commit your typed value.
+
+---
+
+## v1.95.1 — 2026-05-08
+
+### Tweak: Rename SAP Chair sidebar entry → "Manage SAPs"
+
+The SAP Chair's sidebar entry now reads **Manage SAPs** instead of
+"SAPs" — clearer that this is where the chair does the work of
+managing the partner roster (Active / Prospect / Past), not just
+where they look at it.
+
+---
+
+## v1.95.0 — 2026-05-08
+
+### Feature: One shell for everyone — Compass top-nav layout retired
+
+Every signed-in human now sees the same chrome — the unified sidebar
+shell. Members, chairs, moderators all use the same nav with the same
+sign-out, the same chapter / FY / role context block, the same footer.
+No more popping between the Compass top-nav and the chair sidebar
+depending on whether you clicked Forum or Year Arc.
+
+**Changes:**
+- `/portal/*` routes (Forum, Reflections, Lifeline, Vendors, Partners,
+  Calendar, Notifications, Profile, Survey, Feedback) now render inside
+  `AppLayout` instead of the retired `MemberPortalLayout`.
+- The duplicate "Compass (Member Portal)" link in the sidebar footer is
+  gone — those surfaces are reachable directly from the Member section
+  in the main nav.
+- `MemberPortalLayout.jsx` deleted.
+- A regular member with no chair role sees the Member section + footer
+  (their chair-role config has empty navItems, so the chair section is
+  empty for them — clean and intentional).
+
+The PORTAL_ROLES gate still excludes regional_learning_chair_expert
+from member-private content (reflections, lifeline, forum) — privacy
+behavior is unchanged.
+
+---
+
+## v1.94.4 — 2026-05-08
+
+### Tweak: Rename "Pipeline" → "Prospect" in SAPs toggle
+
+The middle segment of the SAPs page is now labeled **Prospect**
+(matches `status='prospect'` and the user's mental model:
+**Active | Prospect | Past**). URL param is `?view=prospect`; the
+older `?view=pipeline` is still accepted as an alias so existing
+links keep working.
+
+---
+
+## v1.94.3 — 2026-05-08
+
+### Fix: Pin document to viewport width on mobile
+
+The TopBar still appeared narrower than the body on mobile Chrome
+because mobile browsers expand the viewport to fit any horizontally-
+overflowing element, leaving top-anchored chrome (the TopBar)
+visually "short" relative to the screen.
+
+Added `width: 100%; max-width: 100vw; overflow-x: hidden` on `html`
+and `body`. Combined with the AppLayout container's overflow guard
+from v1.94.2, this prevents any rogue wide content anywhere in the
+app from pushing the viewport sideways.
+
+---
+
+## v1.94.2 — 2026-05-08
+
+### Fix: SAPs page mobile — full-width topbar + List as default view
+
+- The Active board now defaults to **List View** (most familiar /
+  most compact); Renewal Kanban and Tier View remain available via
+  the dropdown.
+- View dropdown order is List → Renewal Kanban → Tier View.
+- Topbar appeared visually shorter than the body on mobile because
+  rogue horizontal overflow inside the page was scrolling the
+  viewport. Added `overflow-x-hidden` on the layout container,
+  explicit `w-full` on the header, and `flex-wrap` on the SAPs page
+  controls subgroup so wide control rows wrap instead of pushing
+  the viewport.
+
+---
+
+## v1.94.1 — 2026-05-08
+
+### Fix: Renewal Kanban controls — explicit labels, mobile-friendly
+
+The arrow-based "advance / retreat" buttons on each renewal card
+were unreadable on mobile (where columns stack vertically, "left"
+and "right" lose their meaning) and the rightmost-column right
+button was a dead-end disabled state.
+
+Replaced with a "Mark as" pill row showing all three renewal
+statuses by name (Renewing / Uncertain / Not renewing). The current
+status is filled with its color; the others are tappable outlines.
+You always see exactly what state you're choosing — no inferring
+from arrow direction. The Archive action on the "Not renewing"
+column is now its own full-width button below the pills.
+
+---
+
+## v1.94.0 — 2026-05-08
+
+### Feature: Unified SAP lifecycle on /partners — Active | Pipeline | Past
+
+The SAPs page now spans the full partner lifecycle behind one nav
+entry, with a segmented toggle at the top and a Kanban-everywhere UX.
+
+**Active** — renewal Kanban (Renewing | Uncertain | Not renewing |
+Not set) is now the default view for active partners. Tier and List
+views remain as alternatives via a sub-toggle. The SAP Chair drags
+cards between renewal columns; cards in "Not renewing" gain an
+**Archive** action that moves the partner into Past SAPs (status →
+'inactive') without losing any history.
+
+**Pipeline** — five-column prospect Kanban (Lead → Contacted →
+Meeting → Negotiating → Signed) lifted out of the standalone page
+into a reusable component embedded as the second segment.
+
+**Past SAPs** — new institutional-memory archive. When an active
+partner declines to renew, archiving them lands here with their full
+record preserved (contact, last sponsorship amount, contribution
+type, notes, archive date). A **Re-engage** button drops them back
+into the prospect pipeline as a Lead so a future SAP Chair can
+restart the conversation when something changes — "look, what's
+changed; we'd love to have you back."
+
+**Routing:** the segment is URL-synced via `?view=pipeline` or
+`?view=past`; deep links and bookmarks survive. The standalone
+`/partners/pipeline` route now redirects to the toggle.
+
+**Nav:** the duplicate "Pipeline" sidebar entry on the SAP Chair
+surface is gone — one "SAPs" entry now covers all three lifecycle
+states.
+
+**Store:** new `archivePartner` (active → inactive) and
+`revivePartnerToProspect` (inactive → prospect:lead) methods.
+
+### Context: SAP Chair role split
+
+Recorded but not yet implemented — the single SAP Chair role is
+being conceptually split into a retention-focused chair (lives on
+Active) and an acquisition-focused chair (lives on Pipeline). Today's
+toggle supports the split workflow without the role refactor; the
+new role definitions are deferred until naming is decided.
+
+---
+
+## v1.93.2 — 2026-05-08
+
+### Tweak: Vendors as a single Member entry (no SAPs sub-item)
+
+The SAPs sub-item under Vendors goes away — Vendors is the broader
+catalog and SAPs are a subset. Surfacing both as separate sidebar
+entries was redundant. Going forward, when a member opens Vendors and
+picks a category, SAPs (formal partners) will rise to the top of the
+category and be flagged with a shield badge so the preferred/supported
+partners are visually obvious. (In-page priority + badge treatment
+inside `VendorsPage.jsx` is TBD; this commit is just the sidebar
+simplification.)
+
+The existing `/portal/partners` page remains for SAP Chair workflows
+and members declaring SAP-specific interest — it just isn't a top-level
+member-nav entry anymore.
+
+---
+
+## v1.93.1 — 2026-05-08
+
+### Tweak: Member section nav restructure
+
+The Member sidebar section now groups items the way they're conceptually
+related, instead of presenting everything as flat siblings:
+
+- **Forum** (expandable) — Reflections, Lifeline nest under it.
+- **Vendors** (expandable) — SAPs nests under it (drops the duplicate
+  top-level SAPs entry that mirrored the SAP Chair's surface).
+- **Learning** — single link to the member calendar (chapter events,
+  speakers, Executive Education).
+
+Forum and Vendors are pure-route-based: they auto-expand when the user
+navigates anywhere inside the group, and auto-collapse when they leave.
+No persistent state, no extra clicks. A chevron indicates expand state.
+
+---
+
+## v1.93.0 — 2026-05-08
+
+### Feature: Forum Health + Forum Placement chair surfaces, Member sidebar section
+
+Foundation slice for the moderator/forum work. Two new chair role
+surfaces are now impersonable by super-admin, and every chair (except
+staff) sees a new "Member" section in their sidebar pointing into the
+existing Compass forum experience without leaving the chair shell.
+
+**Two new chair roles:**
+- `forum_health_chair` — chapter-wide forum-health oversight, moderator
+  comms, summit programming. Lands at `/forum-health`. Stub dashboard
+  for now; full rollups + comms composer ship in a follow-up.
+- `forum_placement_chair` — new-member pipeline owner. Lands at
+  `/forum-placement` with a Member Leads inbox stub for the upcoming
+  member-referral feature.
+
+Both roles added to `CHAIR_ROLE_CONFIGS`, `BOARD_ROLES`, and
+`ADMIN_LAYOUT_ROLES`. The role-switcher now lists them so super-admin
+can preview each surface.
+
+**Sidebar "Member" section:**
+- New section below Board, visible to every role *except* staff
+  (`chapter_executive_director`, `chapter_experience_coordinator`),
+  SAP partner contacts, and super-admin when not impersonating.
+- Items: Forum, Reflections, Lifeline, Vendors, SAPs — each linking
+  into the existing `/portal/*` Compass routes for now. Compass shell
+  retirement (re-mounting these pages inside the main shell with
+  `/portal/*` redirects) lands in a follow-on slice.
+
+This is the first piece of the broader single-shell unification —
+every signed-in human (except staff) becomes a member with chair roles
+layered on top, and Compass eventually folds into the main app shell.
+
+---
+
+## v1.92.0 — 2026-05-08
+
+### Feature: SAP Pipeline + Renewal Intent
+
+Two new dimensions on every SAP — one for prospects (not-yet-onboarded
+partners moving through outreach), one for existing partners (renewal
+intent surfaced to leadership).
+
+**Pipeline (prospects):**
+- New page `/partners/pipeline` — five-column Kanban: Lead → Contacted
+  → Meeting → Negotiating → Signed.
+- Add a prospect with company/industry/tier/contact, then advance
+  through stages. On Signed → "Promote to Active" graduates them into
+  the regular SAPs roster.
+- Pipeline link added to SAP Chair sidebar.
+- Prospects (status='prospect') do NOT appear in member-facing surfaces
+  (Vendors, Partner Interest checklist, Forum SAPs tab) — those filters
+  already gate on status='active'.
+
+### Feature: Renewal Intent
+
+For active SAPs, the SAP Chair tags each partner as **Renewing**,
+**Uncertain**, or **Not renewing**. Three audiences:
+- SAP Chair: sets the signal inline on each partner card on `/partners`.
+- President + Executive Director: see a summary card on their
+  dashboard with counts per category and a list of at-risk partners
+  (uncertain + not-renewing) for early visibility.
+- Read-only for everyone except SAP Chair, super-admin, ED, CEC.
+
+**Technical:**
+- Migration `079_sap_pipeline_and_renewal.sql`: extends `saps.status`
+  to allow `'prospect'`; adds `pipeline_stage`, `renewal_status`,
+  `renewal_status_updated_at`, `renewal_notes` columns with check
+  constraints.
+- New constants: `SAP_PIPELINE_STAGES`, `SAP_RENEWAL_STATUSES`.
+- sapStore: `addProspect`, `advancePipelineStage`,
+  `promoteProspectToActive`, `setRenewalStatus`.
+- Reusable `<SAPRenewalControl>` component (editable + read-only modes).
+
+**Migration push required.** The new columns and check constraints
+need `supabase db push --linked --yes` against staging before the
+pipeline and renewal controls persist data.
+
+---
+
+## v1.91.1 — 2026-05-08
+
+### Tweak: Drop "Events" from SAP Chair nav
+
+The SAP Chair sidebar no longer shows both Events and Year Arc — only
+Year Arc, which is the more useful planning view for partner-visit
+scheduling. Other chair roles (Learning Chair, etc.) keep both.
+
+---
+
+## v1.91.0 — 2026-05-08
+
+### Feature: Chapter-wide SAP interest checklist
+
+Members can now declare which Strategic Alliance Partners they'd like
+to meet at the chapter level — a passive checklist distinct from the
+forum-scoped SAP interest tab on Forum Home.
+
+**New page:** `/portal/partners` — categorized by industry, search
+across name/industry/description, checkbox per partner, count of
+total chapter interest displayed.
+
+**Three downstream consumers (consumption views are forthcoming):**
+- The SAP themselves see who in the chapter wants to meet them — they
+  can market directly to declared interest instead of cold-blasting
+  the whole roster.
+- The SAP Chair sees aggregate chapter pull to inform programming.
+- Forum moderators can join this against their forum membership to
+  see which of their forum members care about which partners — a
+  complement to the existing per-forum tab.
+
+**Technical:**
+- Migration `078_sap_member_interest.sql` adds `sap_member_interest`
+  table with chapter-scoped RLS. SAP contacts can read rows for their
+  own SAP. Chapter members can read all rows in their chapter (this
+  is intentionally non-secret — visibility helps members find each
+  other around shared interests).
+- `sapStore` extended with `memberInterest`, `toggleMemberInterest`,
+  `interestedMembersForSAP`, `isMemberInterestedInSAP`.
+- New `Partners` link in the Member Portal nav.
+
+**Migration push required.** The new table needs `supabase db push
+--linked --yes` against staging before the page persists data.
+
+---
+
+## v1.90.3 — 2026-05-08
+
+### Tweak: Staging affordances in the app chrome
+
+Subtle visual signals so it's obvious at a glance which tab is staging
+without departing from the production look:
+
+- Wordmark "Our" renders in orange on staging (instead of céruléen).
+- The active sidebar nav highlight is orange on staging.
+- A small orange "staging" label appears just to the left of the
+  version number in every footer (Sidebar, Member Portal, SAP Portal,
+  Login, Access Needed).
+
+Driven by a new `isStaging` helper at `src/lib/env.js` and a new
+`--color-staging` token in the theme. Production is unchanged.
+
+---
+
+## v1.90.2 — 2026-05-08
+
+### Tweak: Orange favicon on staging
+
+Staging tabs now show an orange "OC" favicon instead of the blue
+production one, so it's easy to tell at a glance which tab is which
+when both environments are open. Driven by `VITE_APP_ENV === 'staging'`.
+
+---
+
+## v1.90.1 — 2026-05-08
+
+### Fix: Hide Coordinator nav item from SAP Chair
+
+The SAP Chair surface no longer shows the **Coordinator** link under
+the Admin section in the left-hand sidebar. Other admin permissions
+for the SAP Chair are unchanged.
+
+---
+
+## v1.90.0 — 2026-05-07
+
+### Feature: Send Speaker Payment Package to Executive Director
+
+Learning chairs can now email a speaker's contract, W-9, and key
+payment terms (deposit, final payment, due dates, payment notes)
+directly to the chapter's Executive Director from the speaker card.
+The email body summarizes the terms inline so the ED doesn't have to
+open the PDFs to find the deposit amount or due date.
+
+**What's new:**
+- New "Send payment package to ED" button at the top of the Speaker
+  Documents section in the speaker dialog (visible once a contract or
+  W-9 has been uploaded).
+- A modal collects recipient (pre-filled from the chapter's new
+  *Executive Director Email* setting), optional CC, optional note, and
+  the event context for the subject line.
+- New Payment Terms section on the speaker dialog (deposit, deposit
+  due date, final payment, final due date, free-form payment notes).
+- Audit display under the Documents header: "Last sent {date} to
+  {email}" once a package has been sent — supports re-sends.
+- New Settings → Chapter Configuration field: *Executive Director
+  Email* (default recipient).
+
+**Required deploy step:** This feature depends on Resend. Set these
+two Vercel env vars (Production and Preview) before the feature can
+send mail:
+
+- `RESEND_API_KEY` — from Resend → API Keys
+- `RESEND_FROM_EMAIL` — a verified sender, e.g. `OurChapter OS <noreply@ourchapteros.com>`
+
+Until those are set the API endpoint returns a 500 with a clear
+"Server misconfigured" message and the modal surfaces it.
+
+**Schema:** Migration `077_speaker_payment_package.sql` adds
+`chapters.executive_director_email` and several columns on
+`speaker_pipeline` (`deposit_amount`, `deposit_due_date`,
+`final_payment_amount`, `final_payment_due_date`,
+`payment_terms_notes`, `ed_package_sent_at`, `ed_package_sent_to`).
+
+Files: `supabase/migrations/077_speaker_payment_package.sql`,
+`api/speakers/send-payment-package.js`,
+`src/components/SendPaymentPackageDialog.jsx`,
+`src/pages/SpeakersPage.jsx`,
+`src/pages/SettingsPage.jsx`.
+
+---
+
 ## v1.89.5 — 2026-05-06
 
 ### Fix: "Set Primary" on event speakers no longer silently no-ops

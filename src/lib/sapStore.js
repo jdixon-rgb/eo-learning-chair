@@ -32,6 +32,7 @@ export function SAPStoreProvider({ children }) {
   const [forumAppearances, setForumAppearances] = useState(cached?.forumAppearances ?? [])
   const [chapterFeedback, setChapterFeedback] = useState(cached?.chapterFeedback ?? [])
   const [engagements, setEngagements] = useState(cached?.engagements ?? [])
+  const [memberInterest, setMemberInterest] = useState(cached?.memberInterest ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -40,8 +41,8 @@ export function SAPStoreProvider({ children }) {
   // Persist
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { partners, contacts, connectRequests, forumAppearances, chapterFeedback, engagements })
-  }, [activeChapterId, partners, contacts, connectRequests, forumAppearances, chapterFeedback, engagements])
+    saveCache(activeChapterId, { partners, contacts, connectRequests, forumAppearances, chapterFeedback, engagements, memberInterest })
+  }, [activeChapterId, partners, contacts, connectRequests, forumAppearances, chapterFeedback, engagements, memberInterest])
 
   // Hydrate from Supabase when chapter changes
   useEffect(() => {
@@ -58,6 +59,7 @@ export function SAPStoreProvider({ children }) {
     if (chapterCache) {
       if (chapterCache.partners) setPartners(chapterCache.partners)
       if (chapterCache.contacts) setContacts(chapterCache.contacts)
+      if (chapterCache.memberInterest) setMemberInterest(chapterCache.memberInterest)
     }
 
     setLoading(true)
@@ -74,6 +76,14 @@ export function SAPStoreProvider({ children }) {
         } catch {
           // sap_contacts table may not exist; contacts will stay at defaults
           setContacts([])
+        }
+        // sap_member_interest is a newer table; degrade gracefully
+        // if the migration hasn't been pushed yet.
+        try {
+          const interestRes = await fetchByChapter('sap_member_interest', activeChapterId)
+          if (interestRes.data) setMemberInterest(interestRes.data)
+        } catch {
+          setMemberInterest([])
         }
       } catch (err) {
         setDbError(err.message || String(err))
@@ -311,6 +321,120 @@ export function SAPStoreProvider({ children }) {
     return engagements.filter(e => e.sap_id === sapId)
   }, [engagements])
 
+  // ── Prospect Pipeline ────────────────────────────────────────
+  // A "prospect" is a SAP being courted but not yet active. Created
+  // via addProspect, advanced through pipeline stages, and finally
+  // promoted to status='active' once the contract is signed.
+  const addProspect = useCallback((partner) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      name: partner.name,
+      industry: partner.industry ?? '',
+      tier: partner.tier ?? 'gold',
+      status: 'prospect',
+      pipeline_stage: partner.pipeline_stage ?? 'lead',
+      description: partner.description ?? '',
+      contribution_type: partner.contribution_type ?? null,
+      contribution_description: partner.contribution_description ?? '',
+      contact_email: partner.contact_email ?? '',
+      contact_phone: partner.contact_phone ?? '',
+      website: partner.website ?? '',
+      annual_sponsorship: partner.annual_sponsorship ?? null,
+      notes: partner.notes ?? '',
+      created_at: now,
+      updated_at: now,
+    }
+    setPartners(prev => [...prev, row])
+    dbWrite(() => insertRow('saps', row), 'insert:saps:prospect')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const advancePipelineStage = useCallback((sapId, stage) => {
+    const updates = { pipeline_stage: stage, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:pipeline_stage')
+  }, [dbWrite])
+
+  const promoteProspectToActive = useCallback((sapId) => {
+    const updates = { status: 'active', pipeline_stage: null, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:promote')
+  }, [dbWrite])
+
+  // Archive an active SAP that's not renewing — preserves the full
+  // record so a future chair can revisit them. status flips to
+  // 'inactive'; clears renewal_status since it no longer applies.
+  const archivePartner = useCallback((sapId) => {
+    const updates = { status: 'inactive', renewal_status: null, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:archive')
+  }, [dbWrite])
+
+  // Re-engage a past SAP — drop them back into the prospect pipeline
+  // as a Lead. All historical fields (contact, sponsorship amount,
+  // contribution type, notes) are preserved.
+  const revivePartnerToProspect = useCallback((sapId) => {
+    const updates = { status: 'prospect', pipeline_stage: 'lead', updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:revive')
+  }, [dbWrite])
+
+  // ── Renewal Intent (active SAPs only) ────────────────────────
+  // SAP Chair sets one of: 'renewing' | 'uncertain' | 'not_renewing'.
+  // Surfaces in President / Executive Director dashboards so leadership
+  // sees at-risk partnerships early.
+  const setRenewalStatus = useCallback((sapId, renewalStatus, renewalNotes) => {
+    const updates = {
+      renewal_status: renewalStatus,
+      renewal_status_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    if (typeof renewalNotes === 'string') updates.renewal_notes = renewalNotes
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:renewal')
+  }, [dbWrite])
+
+  // ── Member Interest (chapter-wide) ───────────────────────────
+  // A chapter member declares interest in a SAP. Distinct from the
+  // forum-scoped sap_forum_interest. Read by: the SAP partner (warm
+  // leads), the SAP Chair (chapter pull), and forum moderators
+  // joining against their forum membership.
+  const toggleMemberInterest = useCallback((memberId, sapId) => {
+    if (!memberId || !sapId) return
+    const existing = memberInterest.find(
+      i => i.sap_id === sapId && i.chapter_member_id === memberId,
+    )
+    if (existing) {
+      setMemberInterest(prev => prev.filter(i => i.id !== existing.id))
+      dbWrite(() => deleteRow('sap_member_interest', existing.id), 'delete:sap_member_interest')
+    } else {
+      const id = crypto.randomUUID()
+      const now = new Date().toISOString()
+      const row = {
+        id,
+        chapter_id: activeChapterId,
+        sap_id: sapId,
+        chapter_member_id: memberId,
+        created_at: now,
+        updated_at: now,
+      }
+      setMemberInterest(prev => [...prev, row])
+      dbWrite(() => insertRow('sap_member_interest', row), 'insert:sap_member_interest')
+    }
+  }, [activeChapterId, memberInterest, dbWrite])
+
+  const interestedMembersForSAP = useCallback((sapId) => {
+    return memberInterest.filter(i => i.sap_id === sapId).map(i => i.chapter_member_id)
+  }, [memberInterest])
+
+  const isMemberInterestedInSAP = useCallback((memberId, sapId) => {
+    if (!memberId || !sapId) return false
+    return memberInterest.some(i => i.sap_id === sapId && i.chapter_member_id === memberId)
+  }, [memberInterest])
+
   // ── Helpers ───────────────────────────────────────────────────
   const contactsForPartner = useCallback((sapId) => {
     return contacts.filter(c => c.sap_id === sapId)
@@ -335,6 +459,9 @@ export function SAPStoreProvider({ children }) {
     addChapterFeedback,
     engagements, addEngagement, updateEngagement, deleteEngagement,
     engagementsForEvent, engagementsForContact, engagementsForSAP,
+    memberInterest, toggleMemberInterest, interestedMembersForSAP, isMemberInterestedInSAP,
+    addProspect, advancePipelineStage, promoteProspectToActive,
+    setRenewalStatus, archivePartner, revivePartnerToProspect,
   }
 
   return createElement(SAPStoreContext.Provider, { value }, children)

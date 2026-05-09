@@ -1,5 +1,6 @@
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import { useSAPStore } from '@/lib/sapStore'
 import { useAuth } from '@/lib/auth'
 import { getChairConfig } from '@/lib/chairRoles'
 import TourTip from '@/components/TourTip'
@@ -10,11 +11,15 @@ import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
 import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
 import PageHeader from '@/lib/pageHeader'
-import { Wallet, Users, CalendarDays, Palette, TrendingUp, UserPlus, Briefcase, Sparkles } from 'lucide-react'
+import SAPRenewalControl from '@/components/SAPRenewalControl'
+import { SAP_RENEWAL_STATUSES } from '@/lib/constants'
+import { Link } from 'react-router-dom'
+import { Wallet, Users, CalendarDays, Palette, TrendingUp, UserPlus, Briefcase, Sparkles, Handshake, ChevronRight } from 'lucide-react'
 
 export default function PresidentDashboard() {
   const { chapter, events, pipelineSpeakers } = useStore()
   const { chapterRoles, roleAssignments, chapterMembers, activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
+  const { partners: sapPartners } = useSAPStore()
   const { activeFiscalYear } = useFiscalYear()
   const { effectiveRole } = useAuth()
 
@@ -52,6 +57,23 @@ export default function PresidentDashboard() {
   const activeMembers = chapterMembers.filter(m => m.status === 'active').length
   const plannedEvents = events.filter(e => e.status !== 'cancelled').length
   const activeSpeakers = pipelineSpeakers.filter(s => s.pipeline_stage !== 'passed').length
+
+  // Renewal rollup across active SAPs. Surfaces here so leadership
+  // sees at-risk partner relationships early. SAP Chair sets the
+  // signal on /partners; this is read-only here.
+  const activeSaps = sapPartners.filter(p => (p.status || 'active') === 'active')
+  const renewalCounts = SAP_RENEWAL_STATUSES.reduce((acc, s) => {
+    acc[s.id] = activeSaps.filter(p => p.renewal_status === s.id).length
+    return acc
+  }, {})
+  const renewalNotSet = activeSaps.filter(p => !p.renewal_status).length
+  const atRiskSaps = activeSaps
+    .filter(p => p.renewal_status === 'uncertain' || p.renewal_status === 'not_renewing')
+    .sort((a, b) => {
+      // Not-renewing first, then uncertain.
+      if (a.renewal_status === b.renewal_status) return (a.name || '').localeCompare(b.name || '')
+      return a.renewal_status === 'not_renewing' ? -1 : 1
+    })
 
   // Brand-new chapter signal for the President's welcome guide.
   // Strict zero-state: no chair assignments, no active members, no events.
@@ -139,6 +161,55 @@ export default function PresidentDashboard() {
           <p className="text-xs text-muted-foreground mt-1">active speakers</p>
         </div>
       </div>
+
+      {/* SAP Renewals rollup */}
+      {activeSaps.length > 0 && (
+        <div className="rounded-xl border bg-card shadow-sm">
+          <div className="px-6 py-4 border-b flex items-center gap-2">
+            <Handshake className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">SAP Renewals</h2>
+            <Link to="/partners" className="text-xs text-primary hover:underline ml-auto inline-flex items-center gap-1">
+              View all <ChevronRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+            {SAP_RENEWAL_STATUSES.map(s => (
+              <div key={s.id} className="rounded-lg border border-border/60 px-3 py-2.5">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
+                </div>
+                <p className="text-xl font-bold" style={{ color: s.color }}>{renewalCounts[s.id]}</p>
+              </div>
+            ))}
+            <div className="rounded-lg border border-dashed border-border/60 px-3 py-2.5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Not set</span>
+              </div>
+              <p className="text-xl font-bold text-muted-foreground">{renewalNotSet}</p>
+            </div>
+          </div>
+          {atRiskSaps.length > 0 && (
+            <div className="border-t px-6 py-3">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">At-risk partners</p>
+              <ul className="space-y-1.5">
+                {atRiskSaps.slice(0, 6).map(p => (
+                  <li key={p.id} className="flex items-center gap-3 text-sm">
+                    <span className="flex-1 truncate">{p.name}</span>
+                    <SAPRenewalControl partner={p} readOnly size="md" />
+                  </li>
+                ))}
+                {atRiskSaps.length > 6 && (
+                  <li className="text-xs text-muted-foreground italic">
+                    +{atRiskSaps.length - 6} more on the partners page
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Board & Chair Assignments */}
       <div className="rounded-xl border bg-card shadow-sm">

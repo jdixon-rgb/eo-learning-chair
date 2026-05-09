@@ -14,6 +14,8 @@ import {
   LayoutDashboard,
   Calendar,
   Users,
+  Users2,
+  UserPlus,
   CalendarDays,
   MapPin,
   Wallet,
@@ -23,6 +25,7 @@ import {
   BookOpen,
   Compass,
   Heart,
+  Activity,
   Handshake,
   Crown,
   Briefcase,
@@ -30,6 +33,8 @@ import {
   ClipboardList,
   Lightbulb,
   Globe2,
+  GitBranch,
+  Megaphone,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -85,8 +90,8 @@ export const CHAIR_ROLE_CONFIGS = {
     title: 'SAP Chair',
     homePath: '/partners',
     navItems: [
-      { to: '/partners', icon: Handshake, label: 'SAPs' },
-      { to: '/events', icon: CalendarDays, label: 'Events' },
+      // /partners hosts a segmented toggle: Active | Prospect | Past
+      { to: '/partners', icon: Handshake, label: 'Manage SAPs' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
     ],
   },
@@ -123,6 +128,29 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/pairings', icon: UserCheck, label: 'Pairings' },
       { to: '/engagement/library', icon: BookOpen, label: 'Conversation Library' },
+    ],
+  },
+  forum_health_chair: {
+    title: 'Forum Health Chair',
+    homePath: '/forum-health',
+    // Owns forum-wide health: triages forums needing attention, runs the
+    // moderator summit, broadcasts to all moderators. Reuses the existing
+    // /board/forums admin page as the per-forum management surface.
+    navItems: [
+      { to: '/forum-health', icon: Activity, label: 'Dashboard' },
+      { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
+      { to: '/forum-health/comms', icon: Megaphone, label: 'Moderator Comms' },
+    ],
+  },
+  forum_placement_chair: {
+    title: 'Forum Placement Chair',
+    homePath: '/forum-placement',
+    // Owns the new-member pipeline: triages member referrals from the
+    // membership, places members into forums.
+    navItems: [
+      { to: '/forum-placement', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/forum-placement/leads', icon: UserPlus, label: 'Member Leads' },
+      { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
     ],
   },
   chapter_executive_director: {

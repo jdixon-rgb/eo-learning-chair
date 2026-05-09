@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Mail } from 'lucide-react'
 import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
+import { isStaging } from '@/lib/env'
 
 // Standalone "we don't recognize that email" page. Shown when an OAuth
 // or magic-link sign-in succeeds at the provider but the email isn't on
@@ -58,6 +59,7 @@ export default function AccessNeededPage() {
         </div>
 
         <div className="text-center mt-6 text-[11px] text-muted-foreground">
+          {isStaging && <span className="font-semibold text-staging mr-1">staging</span>}
           v{APP_VERSION}
         </div>
       </div>

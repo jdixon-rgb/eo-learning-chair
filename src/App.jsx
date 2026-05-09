@@ -30,7 +30,6 @@ import AccessNeededPage from '@/pages/AccessNeededPage'
 import PrivacyPolicy from '@/pages/PrivacyPolicy'
 import TermsOfService from '@/pages/TermsOfService'
 import MemberCalendarPage from '@/pages/MemberCalendarPage'
-import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
 import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
 import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
 import MemberProfilePage from '@/pages/portal/MemberProfilePage'
@@ -62,12 +61,18 @@ import PairingsPage from '@/pages/engagement/PairingsPage'
 import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
 import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
+import SAPPipelinePage from '@/pages/SAPPipelinePage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
 import RegionalLearningDashboard from '@/pages/regional/RegionalLearningDashboard'
 import SpeakerLibraryPage from '@/pages/library/SpeakerLibraryPage'
 import SpeakerLibraryDetailPage from '@/pages/library/SpeakerLibraryDetailPage'
 import FinanceDashboard from '@/pages/finance/FinanceDashboard'
+import ForumHealthDashboard from '@/pages/forum-health/ForumHealthDashboard'
+import ForumModeratorCommsPage from '@/pages/forum-health/ForumModeratorCommsPage'
+import ForumPlacementDashboard from '@/pages/forum-placement/ForumPlacementDashboard'
+import MemberLeadsPage from '@/pages/forum-placement/MemberLeadsPage'
 import VendorsPage from '@/pages/portal/VendorsPage'
+import MemberSAPInterestPage from '@/pages/portal/MemberSAPInterestPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
 import SAPPortalDashboard from '@/pages/sap-portal/SAPPortalDashboard'
 import SAPEventListPage from '@/pages/sap-portal/SAPEventListPage'
@@ -139,6 +144,9 @@ function App() {
                 <Route path="/partners" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><SAPPartnersPage /></ProtectedRoute>
                 } />
+                <Route path="/partners/pipeline" element={
+                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><SAPPipelinePage /></ProtectedRoute>
+                } />
                 <Route path="/venues" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><VenuesPage /></ProtectedRoute>
                 } />
@@ -205,6 +213,22 @@ function App() {
                   <ProtectedRoute allowedRoles={FINANCE_ROLES}><FinanceDashboard /></ProtectedRoute>
                 } />
 
+                {/* Forum Health Chair routes */}
+                <Route path="/forum-health" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumHealthDashboard /></ProtectedRoute>
+                } />
+                <Route path="/forum-health/comms" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumModeratorCommsPage /></ProtectedRoute>
+                } />
+
+                {/* Forum Placement Chair routes */}
+                <Route path="/forum-placement" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_placement_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumPlacementDashboard /></ProtectedRoute>
+                } />
+                <Route path="/forum-placement/leads" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_placement_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><MemberLeadsPage /></ProtectedRoute>
+                } />
+
                 {/* Regional Learning Chair Expert routes */}
                 <Route path="/regional/learning" element={
                   <ProtectedRoute allowedRoles={[...REGIONAL_ROLES, 'super_admin']}><RegionalLearningDashboard /></ProtectedRoute>
@@ -236,10 +260,14 @@ function App() {
                 } />
               </Route>
 
-              {/* Member Portal routes (dark-themed top nav layout) */}
+              {/* Member routes — render inside the unified sidebar shell.
+                  Compass had its own top-nav layout; we retired it so every
+                  signed-in human sees the same chrome. The PORTAL_ROLES gate
+                  still excludes regional_learning_chair_expert from member-
+                  private content (reflections, lifeline, forum). */}
               <Route element={
                 <ProtectedRoute allowedRoles={PORTAL_ROLES}>
-                  <MemberPortalLayout />
+                  <AppLayout />
                 </ProtectedRoute>
               }>
                 <Route path="/portal" element={<MemberPortalDashboard />} />
@@ -249,6 +277,7 @@ function App() {
                 <Route path="/portal/forum" element={<ForumHomePage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
+                <Route path="/portal/partners" element={<MemberSAPInterestPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
                 <Route path="/portal/profile" element={<MemberProfilePage />} />
                 <Route path="/portal/feedback" element={<FeedbackPage />} />

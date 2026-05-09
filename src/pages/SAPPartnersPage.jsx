@@ -1,5 +1,11 @@
 import { useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useSAPStore } from '@/lib/sapStore'
+import SAPRenewalControl from '@/components/SAPRenewalControl'
+import ProspectPipelineBoard from '@/components/sap/ProspectPipelineBoard'
+import RenewalKanbanBoard from '@/components/sap/RenewalKanbanBoard'
+import PastSAPsList from '@/components/sap/PastSAPsList'
+import IndustryCombobox from '@/components/sap/IndustryCombobox'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -39,13 +45,29 @@ export default function SAPPartnersPage() {
     contactsForPartner, primaryContact,
   } = useSAPStore()
   const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
-  const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId } = useAuth()
+  const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId, effectiveRole } = useAuth()
+  const canEditRenewal = ['super_admin', 'sap_chair', 'chapter_executive_director', 'chapter_experience_coordinator'].includes(effectiveRole)
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
   const [invitedEmails, setInvitedEmails] = useState(new Set())
   const [expandedPartner, setExpandedPartner] = useState(null)
-  const [viewMode, setViewMode] = useState('tiers') // tiers or list
+  // Inner view mode for the Active board. List is the default —
+  // it's the most compact and most familiar; users can opt into
+  // Renewal Kanban or Tier View when they want a different lens.
+  const [viewMode, setViewMode] = useState('list')
+
+  // Outer toggle — Active | Prospect | Past — synced to ?view= so
+  // links and back-button navigation work across the SAP lifecycle.
+  // Older `?view=pipeline` URLs are accepted as an alias for prospect.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const rawSegment = searchParams.get('view') || 'active'
+  const segment = rawSegment === 'pipeline' ? 'prospect' : rawSegment
+  const setSegment = (next) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'active') params.delete('view'); else params.set('view', next)
+    setSearchParams(params, { replace: true })
+  }
 
   // Partner dialog
   const [showPartnerForm, setShowPartnerForm] = useState(false)
@@ -229,6 +251,9 @@ export default function SAPPartnersPage() {
             {primary && (
               <span className="text-xs text-muted-foreground hidden sm:inline">{primary.name}</span>
             )}
+            <span onClick={(e) => e.stopPropagation()} className="hidden md:inline-flex">
+              <SAPRenewalControl partner={partner} readOnly={!canEditRenewal} />
+            </span>
             <Badge variant="outline" className="text-[10px]">
               <Users className="h-3 w-3 mr-1" />
               {partnerContacts.length}
@@ -372,34 +397,85 @@ export default function SAPPartnersPage() {
     )
   }
 
+  const prospectCount = partners.filter(p => p.status === 'prospect').length
+  const pastCount = partners.filter(p => p.status === 'inactive').length
+
+  const segments = [
+    { id: 'active', label: 'Active', count: activePartners.length },
+    { id: 'prospect', label: 'Prospect', count: prospectCount },
+    { id: 'past', label: 'Past', count: pastCount },
+  ]
+
   return (
     <div className="space-y-6">
       <TourTip />
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <PageHeader
           title="SAPs"
-          subtitle={`${activePartners.length} active partner${activePartners.length !== 1 ? 's' : ''} \u00b7 ${contacts.length} contacts`}
+          subtitle={
+            segment === 'active'
+              ? `${activePartners.length} active partner${activePartners.length !== 1 ? 's' : ''} \u00b7 ${contacts.length} contacts`
+              : segment === 'prospect'
+                ? `${prospectCount} prospect${prospectCount !== 1 ? 's' : ''}`
+                : `${pastCount} past partner${pastCount !== 1 ? 's' : ''} on file`
+          }
         />
-        <div className="flex gap-2 ml-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search partners..."
-              className="pl-9 w-60"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" size="sm" onClick={() => setViewMode(viewMode === 'tiers' ? 'list' : 'tiers')}>
-            {viewMode === 'tiers' ? 'List View' : 'Tier View'}
-          </Button>
-          <Button size="sm" onClick={openAddPartner}>
-            <Plus className="h-4 w-4" /> Add Partner
-          </Button>
+        <div className="flex gap-2 ml-auto items-center flex-wrap">
+          {(segment === 'active' || segment === 'past') && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search partners..."
+                className="pl-9 w-60"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+          )}
+          {segment === 'active' && (
+            <>
+              <Select value={viewMode} onChange={e => setViewMode(e.target.value)} className="w-36">
+                <option value="list">List View</option>
+                <option value="renewal">Renewal Kanban</option>
+                <option value="tiers">Tier View</option>
+              </Select>
+              <Button size="sm" onClick={openAddPartner}>
+                <Plus className="h-4 w-4" /> Add Partner
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Segmented toggle: Active | Prospect | Past */}
+      <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+        {segments.map(s => {
+          const active = s.id === segment
+          return (
+            <button
+              key={s.id}
+              onClick={() => setSegment(s.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${active ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {s.label}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-primary/10 text-primary' : 'bg-muted-foreground/10 text-muted-foreground/80'}`}>
+                {s.count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Prospect Kanban */}
+      {segment === 'prospect' && <ProspectPipelineBoard />}
+
+      {/* Past SAPs (institutional memory + re-engage) */}
+      {segment === 'past' && <PastSAPsList search={search} />}
+
+      {/* Active board */}
+      {segment === 'active' && (
+        <>
       {/* Tier summary badges */}
       <div className="flex gap-3 flex-wrap">
         {tierCounts.map(t => (
@@ -411,8 +487,10 @@ export default function SAPPartnersPage() {
         ))}
       </div>
 
-      {/* Tier View */}
-      {viewMode === 'tiers' ? (
+      {/* Renewal Kanban (default for Active) */}
+      {viewMode === 'renewal' ? (
+        <RenewalKanbanBoard search={search} />
+      ) : viewMode === 'tiers' ? (
         <div className="space-y-6">
           {SAP_TIERS.map(tier => {
             const tierPartners = filtered.filter(p => p.tier === tier.id)
@@ -493,19 +571,9 @@ export default function SAPPartnersPage() {
         </div>
       )}
 
-      {/* Inactive partners */}
-      {inactivePartners.length > 0 && (
-        <div className="rounded-xl border bg-card p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">Inactive ({inactivePartners.length})</h3>
-          <div className="flex flex-wrap gap-2">
-            {inactivePartners.map(p => (
-              <Badge key={p.id} variant="secondary" className="cursor-pointer" onClick={() => openEditPartner(p)}>
-                {p.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
+        </>
       )}
+      {/* Inactive partners now live under the "Past" segment via PastSAPsList. */}
 
       {/* ── Add/Edit Partner Dialog ───────────────────────── */}
       <Dialog open={showPartnerForm} onOpenChange={setShowPartnerForm}>
@@ -521,13 +589,11 @@ export default function SAPPartnersPage() {
               </div>
               <div>
                 <label className="text-xs font-medium">Industry</label>
-                <Select value={partnerForm.industry} onChange={e => setPartnerForm(p => ({ ...p, industry: e.target.value }))}>
-                  <option value="">Select industry…</option>
-                  {VENDOR_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  {partnerForm.industry && !VENDOR_CATEGORIES.includes(partnerForm.industry) && (
-                    <option value={partnerForm.industry}>{partnerForm.industry} (legacy)</option>
-                  )}
-                </Select>
+                <IndustryCombobox
+                  value={partnerForm.industry}
+                  onChange={(v) => setPartnerForm(p => ({ ...p, industry: v }))}
+                  placeholder="Type or pick an industry"
+                />
               </div>
               <div>
                 <label className="text-xs font-medium">Tier</label>

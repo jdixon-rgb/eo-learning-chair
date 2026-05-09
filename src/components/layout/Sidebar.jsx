@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -10,7 +10,6 @@ import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
 import { useState } from 'react'
 import {
-  Globe,
   X,
   LogOut,
   Shield,
@@ -22,18 +21,30 @@ import {
   Briefcase,
   FileText,
   Mail,
+  Users,
   Users2,
+  Store,
+  Sparkles,
+  GraduationCap,
   BarChart3,
   ClipboardCheck,
   Eye,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Settings as SettingsIcon,
 } from 'lucide-react'
 
 const CONTEXT_EXPANDED_KEY = 'eo-sidebar-context-expanded'
 import Wordmark from '@/components/Wordmark'
 import { APP_VERSION } from '@/lib/version'
+import { isStaging } from '@/lib/env'
+
+// Active-nav highlight color. Orange on staging so the active item is
+// a glance-able env signal; otherwise the brand céruléen.
+const activeNavClass = isStaging
+  ? 'bg-staging text-staging-foreground'
+  : 'bg-primary text-primary-foreground'
 
 // Admin sub-pages.
 // Survey Results moved to the Learning Chair's main nav. Notifications
@@ -55,6 +66,42 @@ const boardItems = [
   { to: '/board/scorecards', icon: BarChart3, label: 'Scorecards', permission: 'canViewScorecards' },
 ]
 
+// Member-section sub-pages. Every chair (except staff) is also a member,
+// so this section gives them a one-click path into their personal forum
+// experience without leaving the chair shell. Forum and Vendors are
+// expandable groups (they auto-expand when the user navigates to a
+// member route inside them, auto-collapse when they leave). Currently
+// links route into the Compass member-portal layout; retiring that
+// shell into the unified sidebar happens in a follow-on slice.
+const memberItems = [
+  {
+    to: '/portal/forum',
+    icon: Users,
+    label: 'Forum',
+    children: [
+      { to: '/portal/reflections', icon: Sparkles, label: 'Reflections' },
+      { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
+    ],
+  },
+  // Vendors is the broader catalog. SAPs (formal partners) don't get
+  // their own sidebar entry — inside /portal/vendors they rise to the
+  // top of each category and are flagged with a shield/badge so members
+  // see the "preferred / supported" partners first. See
+  // memory/project_vendors_vs_saps.md.
+  { to: '/portal/vendors', icon: Store, label: 'Vendors' },
+  { to: '/portal/calendar', icon: GraduationCap, label: 'Learning' },
+]
+
+// Roles that don't get a Member section in the sidebar. Staff are staff
+// (ED + Coordinator have no forum life inside the product). SAP contacts
+// have their own external-partner portal. Super-admin not-impersonating
+// is platform-level — switch into a chair role first to see member surfaces.
+const NON_MEMBER_ROLES = new Set([
+  'chapter_executive_director',
+  'chapter_experience_coordinator',
+  'sap_contact',
+])
+
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId, viewAsRegion, setViewAsRegion } = useAuth()
   const { activeChapter, allChapters } = useChapter()
@@ -62,6 +109,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
   const { resetAll: resetTourTips } = useTourTips()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Collapsible context switcher block (Chapter / FY / Switch Role).
   // Always defaults collapsed on page load — expansion is a temporary
@@ -95,6 +143,11 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const visibleBoard = hideChapterOps ? [] : boardItems.filter(item =>
     !item.permission || hasPermission(effectiveRole, item.permission)
   )
+
+  // Member section visibility: hidden for staff and SAP partner contacts;
+  // hidden for super-admin when not impersonating (they're not "in" a
+  // chapter as a member at the platform level).
+  const showMemberSection = !hideChapterOps && !NON_MEMBER_ROLES.has(effectiveRole)
 
   const handleSignOut = async () => {
     await signOut()
@@ -287,7 +340,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-primary text-primary-foreground'
+                    ? activeNavClass
                     : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                 }`
               }
@@ -311,7 +364,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
+                        ? activeNavClass
                         : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                     }`
                   }
@@ -338,7 +391,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
+                        ? activeNavClass
                         : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                     }`
                   }
@@ -347,6 +400,72 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   {label}
                 </NavLink>
               ))}
+            </>
+          )}
+
+          {/* Member section — every chair (except staff) is also a member.
+              Sits below the chair section so the chair's command center
+              stays the focal point; member surfaces are one click away
+              instead of buried in a separate Compass shell. Forum and
+              Vendors are expandable groups: they auto-expand whenever the
+              current route is inside the group, and auto-collapse when
+              the user navigates away. */}
+          {showMemberSection && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Member</p>
+              </div>
+              {memberItems.map((item) => {
+                const Icon = item.icon
+                const inGroup = item.children && (
+                  location.pathname === item.to ||
+                  item.children.some(c => c.to === location.pathname)
+                )
+                return (
+                  <div key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? activeNavClass
+                            : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                        }`
+                      }
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="flex-1">{item.label}</span>
+                      {item.children && (
+                        inGroup
+                          ? <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                          : <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                      )}
+                    </NavLink>
+                    {item.children && inGroup && (
+                      <div className="mt-1 mb-1 ml-4 pl-3 border-l border-sidebar-border space-y-1">
+                        {item.children.map(({ to: childTo, icon: ChildIcon, label: childLabel }) => (
+                          <NavLink
+                            key={childTo}
+                            to={childTo}
+                            onClick={onNavigate}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                                isActive
+                                  ? activeNavClass
+                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                              }`
+                            }
+                          >
+                            <ChildIcon className="h-3.5 w-3.5" />
+                            {childLabel}
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </>
           )}
 
@@ -366,21 +485,13 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             className={({ isActive }) =>
               `flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors ${
                 isActive
-                  ? 'bg-primary text-primary-foreground'
+                  ? activeNavClass
                   : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground'
               }`
             }
           >
             <MessageSquarePlus className="h-3.5 w-3.5" />
             Suggestion | Report Bug
-          </NavLink>
-          <NavLink
-            to="/portal"
-            onClick={onNavigate}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            Compass <span className="text-muted-foreground/70">(Member Portal)</span>
           </NavLink>
           <button
             onClick={resetTourTips}
@@ -400,7 +511,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 {profile?.full_name || 'User'}
               </p>
               <p className="text-[10px] text-muted-foreground/80 truncate">
-                {profile?.email || role || ''}
+                {profile?.email || ''}
               </p>
             </div>
             <button
@@ -412,6 +523,9 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </button>
           </div>
           <div className="mt-3 border-t border-sidebar-border pt-2 text-center">
+            {isStaging && (
+              <span className="text-[10px] font-semibold text-staging mr-1.5">staging</span>
+            )}
             <span className="text-[10px] text-muted-foreground">v{APP_VERSION}</span>
           </div>
         </div>

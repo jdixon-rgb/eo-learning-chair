@@ -233,6 +233,18 @@ export default function SettingsPage() {
           </div>
         </div>
         <div>
+          <label className="text-xs font-medium">Executive Director Email</label>
+          <Input
+            type="email"
+            value={chapter.executive_director_email || ''}
+            onChange={e => updateChapter({ executive_director_email: e.target.value })}
+            placeholder="ed@yourchapter.org"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Default recipient when a learning chair sends a speaker payment package (contract + W-9 + payment terms) to the ED.
+          </p>
+        </div>
+        <div>
           <label className="text-xs font-medium flex items-center gap-1.5">
             <Percent className="h-3 w-3" /> Speaker Fee Target
           </label>

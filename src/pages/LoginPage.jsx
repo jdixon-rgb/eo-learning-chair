@@ -10,6 +10,7 @@ import Wordmark from '@/components/Wordmark'
 import BetaTermsModal from '@/components/BetaTermsModal'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
 import { APP_VERSION } from '@/lib/version'
+import { isStaging } from '@/lib/env'
 
 // Phone-OTP sign-in is gated behind a Twilio toll-free verification
 // that's still in review. Until it clears, hide the "Use phone instead"
@@ -419,7 +420,7 @@ export default function LoginPage() {
             <span className="mx-2">·</span>
             <Link to="/terms" className="hover:text-foreground underline underline-offset-2">Terms</Link>
             <span className="mx-2">·</span>
-            <span>v{APP_VERSION}</span>
+            <span>{isStaging && <span className="font-semibold text-staging mr-1">staging</span>}v{APP_VERSION}</span>
           </div>
           <p className="text-muted-foreground/80 text-[11px]">
             {BUILDER.framing}

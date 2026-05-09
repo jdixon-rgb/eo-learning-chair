@@ -2,9 +2,8 @@ import { Link } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
-import { Users, GraduationCap, Store, Globe, ChevronRight, MessageSquarePlus, Activity } from 'lucide-react'
+import { Users, GraduationCap, Store, Globe, ChevronRight, Activity } from 'lucide-react'
 import { formatDateWithDay } from '@/lib/utils'
-import { APP_VERSION } from '@/lib/version'
 import NavigatorBroadcastCard from './NavigatorBroadcastCard'
 import ProfileFreshnessCard from './ProfileFreshnessCard'
 
@@ -34,7 +33,6 @@ export default function MemberPortalDashboard() {
       {/* Welcome */}
       <div className="text-center py-6">
         <h1 className="text-2xl md:text-3xl font-bold">Welcome, {firstName}</h1>
-        <p className="text-muted-foreground text-sm mt-1">Your Compass</p>
       </div>
 
       {/* Navigator broadcast check-in (visible only to active navigators with open broadcasts) */}
@@ -186,17 +184,6 @@ export default function MemberPortalDashboard() {
         </div>
       </div>
 
-      {/* Footer: Suggestion + Version */}
-      <div className="pt-4 border-t border-border/50 flex items-center justify-between">
-        <Link
-          to="/portal/feedback"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-        >
-          <MessageSquarePlus className="h-3.5 w-3.5" />
-          Suggestion | Report Bug
-        </Link>
-        <span className="text-[10px] text-muted-foreground/40">v{APP_VERSION}</span>
-      </div>
     </div>
   )
 }

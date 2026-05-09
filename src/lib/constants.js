@@ -43,6 +43,75 @@ export const SAP_CONTRIBUTION_TYPES = [
   { id: 'other', label: 'Other' },
 ]
 
+// Canonical SAP industries — used to populate the IndustryCombobox
+// so chapters don't end up with three spellings of the same thing
+// ("IT Services" / "Information Tech" / "Tech Services"). Free-form
+// entry is still allowed for one-offs, but any new entry shows up as
+// a suggestion to subsequent chairs once it's saved on a SAP.
+export const SAP_INDUSTRIES = [
+  'Accounting / CPA',
+  'AI / Machine Learning',
+  'Architecture',
+  'Audio & Visual',
+  'Banking',
+  'Business Coaching',
+  'Business Growth Specialist',
+  'Business Services',
+  'Catering',
+  'Commercial Real Estate',
+  'Construction',
+  'Consulting',
+  'Counseling',
+  'Engineering',
+  'Events / Hospitality',
+  'Executive Coaching',
+  'Executive Search / Recruiting',
+  'Financial Planning',
+  'Health Insurance / Benefits',
+  'Healthcare',
+  'Investment Banking / M&A',
+  'IT Services',
+  'Law',
+  'Logistics / Supply Chain',
+  'Manufacturing',
+  'Marketing / Advertising',
+  'Online Training Platform',
+  'Payroll',
+  'PEO',
+  'Photography',
+  'Printing',
+  'Private Membership',
+  'Property & Casualty Insurance',
+  'Public Relations',
+  'Real Estate',
+  'Software',
+  'Tax',
+  'Technology',
+  'Travel',
+  'Virtual Assistants',
+  'Wealth Management',
+  'Other',
+]
+
+// SAP prospect pipeline stages (a SAP with status='prospect' moves
+// through these on its way to becoming an active partner).
+export const SAP_PIPELINE_STAGES = [
+  { id: 'lead',         label: 'Lead',         color: '#94a3b8' },
+  { id: 'contacted',    label: 'Contacted',    color: '#64648c' },
+  { id: 'meeting',      label: 'Meeting',      color: '#3d46f2' },
+  { id: 'negotiating',  label: 'Negotiating',  color: '#fa653c' },
+  { id: 'signed',       label: 'Signed',       color: '#22c55e' },
+]
+
+// Renewal intent for an existing active SAP. Visible to SAP Chair
+// (set/edit), and rolled up to President / Executive Director views
+// so they know early which partner relationships are at risk.
+export const SAP_RENEWAL_STATUSES = [
+  { id: 'renewing',      label: 'Renewing',      color: '#22c55e' },
+  { id: 'uncertain',     label: 'Uncertain',     color: '#f59e0b' },
+  { id: 'not_renewing',  label: 'Not renewing',  color: '#dc2626' },
+]
+
 // Speaker pipeline stages
 export const PIPELINE_STAGES = [
   { id: 'researching', label: 'Researching', color: '#64648c' },
