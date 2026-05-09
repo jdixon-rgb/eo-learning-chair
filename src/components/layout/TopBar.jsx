@@ -26,7 +26,7 @@ export default function TopBar({ onMenuToggle }) {
   const canSeeNotifications = hasPermission(effectiveRole, 'canSendNotifications')
 
   return (
-    <header className="h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
+    <header className="w-full h-14 md:h-16 border-b border-border bg-white flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onMenuToggle}

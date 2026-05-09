@@ -51,9 +51,10 @@ export default function SAPPartnersPage() {
   const [search, setSearch] = useState('')
   const [invitedEmails, setInvitedEmails] = useState(new Set())
   const [expandedPartner, setExpandedPartner] = useState(null)
-  // Inner view mode for the Active board: renewal Kanban (default),
-  // tier-grouped cards, or flat list.
-  const [viewMode, setViewMode] = useState('renewal')
+  // Inner view mode for the Active board. List is the default —
+  // it's the most compact and most familiar; users can opt into
+  // Renewal Kanban or Tier View when they want a different lens.
+  const [viewMode, setViewMode] = useState('list')
 
   // Outer toggle — Active | Pipeline | Past — synced to ?view= so
   // links and back-button navigation work across the SAP lifecycle.
@@ -417,7 +418,7 @@ export default function SAPPartnersPage() {
                 : `${pastCount} past partner${pastCount !== 1 ? 's' : ''} on file`
           }
         />
-        <div className="flex gap-2 ml-auto items-center">
+        <div className="flex gap-2 ml-auto items-center flex-wrap">
           {(segment === 'active' || segment === 'past') && (
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -432,9 +433,9 @@ export default function SAPPartnersPage() {
           {segment === 'active' && (
             <>
               <Select value={viewMode} onChange={e => setViewMode(e.target.value)} className="w-36">
+                <option value="list">List View</option>
                 <option value="renewal">Renewal Kanban</option>
                 <option value="tiers">Tier View</option>
-                <option value="list">List View</option>
               </Select>
               <Button size="sm" onClick={openAddPartner}>
                 <Plus className="h-4 w-4" /> Add Partner

@@ -17,9 +17,12 @@ export default function AppLayout() {
   const handleNavigate = () => setMobileMenuOpen(false)
 
   return (
-    <div className="min-h-screen bg-background">
+    // overflow-x-hidden prevents stray content (wide tables, overshooting
+    // controls) from forcing the viewport to scroll horizontally, which
+    // would visually shrink the topbar relative to the body on mobile.
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} onNavigate={handleNavigate} />
-      <div className="md:ml-64">
+      <div className="md:ml-64 min-w-0">
         <TopBar onMenuToggle={() => setMobileMenuOpen(true)} />
         <ReadOnlyBanner />
         {dbError && (

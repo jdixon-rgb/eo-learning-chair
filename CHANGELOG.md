@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.94.2 — 2026-05-08
+
+### Fix: SAPs page mobile — full-width topbar + List as default view
+
+- The Active board now defaults to **List View** (most familiar /
+  most compact); Renewal Kanban and Tier View remain available via
+  the dropdown.
+- View dropdown order is List → Renewal Kanban → Tier View.
+- Topbar appeared visually shorter than the body on mobile because
+  rogue horizontal overflow inside the page was scrolling the
+  viewport. Added `overflow-x-hidden` on the layout container,
+  explicit `w-full` on the header, and `flex-wrap` on the SAPs page
+  controls subgroup so wide control rows wrap instead of pushing
+  the viewport.
+
+---
+
 ## v1.94.1 — 2026-05-08
 
 ### Fix: Renewal Kanban controls — explicit labels, mobile-friendly
