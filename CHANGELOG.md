@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.2 — 2026-05-08
+
+### Feature: Industry combobox — typeahead with allow-create
+
+The Industry field on Add Partner and Add Prospect forms is now a
+combobox instead of a free-text Input. Two purposes:
+
+1. **Don't end up with 18 spellings of the same thing.** Suggestions
+   come from a canonical `SAP_INDUSTRIES` list (~40 entries common
+   to chapter SAP rosters) PLUS any non-canonical industries already
+   in use across this chapter's existing SAPs — so chair-added
+   one-offs propagate forward.
+2. **Don't lock anyone out of legitimate edge cases.** Typing
+   something brand-new still works; an "Add as a new industry" row
+   appears at the bottom of the dropdown once it's clear nothing
+   matched. Subsequent chairs see that new entry as a suggestion.
+
+Substring match, case-insensitive; prefix matches sort first. Press
+Enter to accept the top suggestion or commit your typed value.
+
+---
+
 ## v1.95.1 — 2026-05-08
 
 ### Tweak: Rename SAP Chair sidebar entry → "Manage SAPs"

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import IndustryCombobox from '@/components/sap/IndustryCombobox'
 import { Plus, ArrowRight, ArrowLeft, CheckCircle2, Mail, Phone, Globe } from 'lucide-react'
 
 const emptyForm = {
@@ -200,10 +201,10 @@ export default function ProspectPipelineBoard() {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <div className="grid grid-cols-2 gap-3">
-              <Input
-                placeholder="Industry"
+              <IndustryCombobox
                 value={form.industry}
-                onChange={(e) => setForm({ ...form, industry: e.target.value })}
+                onChange={(v) => setForm({ ...form, industry: v })}
+                placeholder="Industry"
               />
               <Select value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value })}>
                 {SAP_TIERS.map(t => (

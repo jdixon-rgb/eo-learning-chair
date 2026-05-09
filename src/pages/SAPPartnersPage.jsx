@@ -5,6 +5,7 @@ import SAPRenewalControl from '@/components/SAPRenewalControl'
 import ProspectPipelineBoard from '@/components/sap/ProspectPipelineBoard'
 import RenewalKanbanBoard from '@/components/sap/RenewalKanbanBoard'
 import PastSAPsList from '@/components/sap/PastSAPsList'
+import IndustryCombobox from '@/components/sap/IndustryCombobox'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -588,13 +589,11 @@ export default function SAPPartnersPage() {
               </div>
               <div>
                 <label className="text-xs font-medium">Industry</label>
-                <Select value={partnerForm.industry} onChange={e => setPartnerForm(p => ({ ...p, industry: e.target.value }))}>
-                  <option value="">Select industry…</option>
-                  {VENDOR_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  {partnerForm.industry && !VENDOR_CATEGORIES.includes(partnerForm.industry) && (
-                    <option value={partnerForm.industry}>{partnerForm.industry} (legacy)</option>
-                  )}
-                </Select>
+                <IndustryCombobox
+                  value={partnerForm.industry}
+                  onChange={(v) => setPartnerForm(p => ({ ...p, industry: v }))}
+                  placeholder="Type or pick an industry"
+                />
               </div>
               <div>
                 <label className="text-xs font-medium">Tier</label>
