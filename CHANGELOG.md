@@ -17,6 +17,29 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.7 — 2026-05-09
+
+### Fix: Add/edit contacts directly from the partner edit dialog
+
+Tapping a SAP in List View opened the partner edit dialog with no
+way to manage contacts — that surface was only reachable by
+expanding a card in Tier View. Since forum-training is tracked
+per-contact (not per-company), the absence cut off a critical bit
+of the SAP Chair's job.
+
+The Edit Partner dialog now has a Contacts section at the bottom
+(only when editing an existing partner — new partners need to be
+saved first):
+
+- List of every contact with name, role, email, primary badge, and
+  a green "Forum trained" pill for those who have completed it.
+- **Add Contact** button → opens the existing contact dialog
+  layered on top, so partner context is preserved.
+- Tap any contact row to edit (toggle forum-trained, set the
+  training date, mark primary, edit email/phone, delete).
+
+---
+
 ## v1.95.6 — 2026-05-09
 
 ### Access: President-Elect can now see /partners and other admin views

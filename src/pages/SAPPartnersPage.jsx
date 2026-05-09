@@ -651,6 +651,64 @@ export default function SAPPartnersPage() {
                 <Textarea value={partnerForm.notes} onChange={e => setPartnerForm(p => ({ ...p, notes: e.target.value }))} placeholder="Internal notes..." rows={2} />
               </div>
             </div>
+
+            {/* Contacts (only when editing an existing partner — a brand-
+                new partner needs to be saved before contacts can attach). */}
+            {editPartner && (
+              <div className="mt-5 pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Contacts ({contactsForPartner(editPartner.id).length})
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => openAddContact(editPartner.id)}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Add Contact
+                  </Button>
+                </div>
+                {contactsForPartner(editPartner.id).length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-3">
+                    No contacts yet. Add one — that's where forum-training is tracked, since training is per-person, not per-company.
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {contactsForPartner(editPartner.id).map(c => (
+                      <div
+                        key={c.id}
+                        className="flex items-center gap-2 py-2 px-2 rounded hover:bg-accent/50 cursor-pointer group"
+                        onClick={() => openEditContact(c)}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-sm font-medium truncate">{c.name}</span>
+                            {c.is_primary && (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0">Primary</Badge>
+                            )}
+                            {c.forum_trained && (
+                              <span title="Forum trained" className="text-green-600 inline-flex items-center gap-0.5 text-[10px] font-medium">
+                                <GraduationCap className="h-3 w-3" />
+                                Forum trained
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {c.role || ''}{c.role && c.email ? ' · ' : ''}{c.email || ''}
+                          </div>
+                        </div>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2 pt-2">
               <Button onClick={handlePartnerSubmit} className="flex-1">{editPartner ? 'Save Changes' : 'Add Partner'}</Button>
               {editPartner && (
