@@ -28,6 +28,7 @@ export function ForumStoreProvider({ children }) {
   const [constitutions, setConstitutions] = useState(cached?.constitutions ?? [])
   const [constitutionVersions, setConstitutionVersions] = useState(cached?.constitutionVersions ?? [])
   const [constitutionRatifications, setConstitutionRatifications] = useState(cached?.constitutionRatifications ?? [])
+  const [healthAssessments, setHealthAssessments] = useState(cached?.healthAssessments ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -35,8 +36,8 @@ export function ForumStoreProvider({ children }) {
 
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications })
-  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications])
+    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, healthAssessments })
+  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, healthAssessments])
 
   useEffect(() => {
     if (prevChapterId.current !== activeChapterId) { hasFetched.current = false; prevChapterId.current = activeChapterId }
@@ -57,13 +58,14 @@ export function ForumStoreProvider({ children }) {
       if (c.constitutions) setConstitutions(c.constitutions)
       if (c.constitutionVersions) setConstitutionVersions(c.constitutionVersions)
       if (c.constitutionRatifications) setConstitutionRatifications(c.constitutionRatifications)
+      if (c.healthAssessments) setHealthAssessments(c.healthAssessments)
     }
     setLoading(true)
     hydrate()
 
     async function hydrate() {
       try {
-        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes] = await Promise.all([
+        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes, fhaRes] = await Promise.all([
           fetchByChapter('forum_role_assignments', activeChapterId),
           fetchByChapter('forum_documents', activeChapterId),
           fetchByChapter('forum_calendar_events', activeChapterId),
@@ -75,6 +77,7 @@ export function ForumStoreProvider({ children }) {
           fetchByChapter('forum_constitutions', activeChapterId),
           fetchByChapter('forum_constitution_versions', activeChapterId),
           fetchByChapter('forum_constitution_ratifications', activeChapterId),
+          fetchByChapter('forum_health_assessments', activeChapterId),
         ])
         if (rolesRes.data) setForumRoles(rolesRes.data)
         if (docsRes.data) setForumDocs(docsRes.data)
@@ -87,6 +90,7 @@ export function ForumStoreProvider({ children }) {
         if (constRes.data) setConstitutions(constRes.data)
         if (versRes.data) setConstitutionVersions(versRes.data)
         if (ratifyRes.data) setConstitutionRatifications(ratifyRes.data)
+        if (fhaRes.data) setHealthAssessments(fhaRes.data)
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
@@ -352,6 +356,55 @@ export function ForumStoreProvider({ children }) {
     dbWrite(() => deleteRow('forum_constitution_versions', versionId), 'delete:forum_constitution_versions')
   }, [dbWrite])
 
+  // ── Forum Health Assessments ────────────────────────────────
+  // One row per (forum_id, fiscal_year). Upsert by that pair so the
+  // dashboard's per-field edits don't need to know whether the row
+  // already exists.
+  const upsertHealthAssessment = useCallback((forumId, fiscalYear, patch, assessedByMemberId) => {
+    const existing = healthAssessments.find(
+      a => a.forum_id === forumId && a.fiscal_year === fiscalYear
+    )
+    const now = new Date().toISOString()
+    if (existing) {
+      const updates = { ...patch, updated_at: now }
+      if (assessedByMemberId) updates.assessed_by = assessedByMemberId
+      setHealthAssessments(prev =>
+        prev.map(a => a.id === existing.id ? { ...a, ...updates } : a)
+      )
+      dbWrite(
+        () => updateRow('forum_health_assessments', existing.id, updates),
+        'update:forum_health_assessments'
+      )
+      return { ...existing, ...updates }
+    }
+    const row = {
+      id: crypto.randomUUID(),
+      chapter_id: activeChapterId,
+      forum_id: forumId,
+      fiscal_year: fiscalYear,
+      lifecycle_stage: null,
+      lifecycle_note: '',
+      constitution_reviewed: null,
+      constitution_review_note: '',
+      one_pager_complete: null,
+      one_pager_note: '',
+      roles_assigned: null,
+      roles_note: '',
+      chair_notes: '',
+      handoff_narrative: '',
+      assessed_by: assessedByMemberId ?? null,
+      created_at: now,
+      updated_at: now,
+      ...patch,
+    }
+    setHealthAssessments(prev => [...prev, row])
+    dbWrite(
+      () => insertRow('forum_health_assessments', row),
+      'insert:forum_health_assessments'
+    )
+    return row
+  }, [activeChapterId, healthAssessments, dbWrite])
+
   const ratifyConstitutionVersion = useCallback((versionId, memberId) => {
     // Don't insert a duplicate ratification
     if (constitutionRatifications.some(r => r.version_id === versionId && r.member_id === memberId)) return
@@ -370,6 +423,7 @@ export function ForumStoreProvider({ children }) {
     forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory,
     agendas, agendaItems,
     constitutions, constitutionVersions, constitutionRatifications,
+    healthAssessments,
     loading, dbError, clearDbError: () => setDbError(null),
     addForumRole, updateForumRole, deleteForumRole,
     addForumCalEvent, updateForumCalEvent, deleteForumCalEvent,
@@ -381,6 +435,7 @@ export function ForumStoreProvider({ children }) {
     createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
     proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
     ratifyConstitutionVersion,
+    upsertHealthAssessment,
   }
 
   return createElement(ForumStoreContext.Provider, { value }, children)

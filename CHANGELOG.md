@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.1.0 — 2026-05-09
+
+### Feat: Forum Health Chair dashboard — checklist + handoff narrative
+
+The Forum Health Chair surface gets its first real dashboard. Each
+active forum now shows as a row with a Tuckman lifecycle stage chip,
+derived signals (constitution adopted? roles assigned this FY?
+historic departures), and an expandable per-FY assessment containing:
+
+- Lifecycle stage selector (forming / storming / norming / performing /
+  adjourning) with a free-text "why this stage" note.
+- Year checklist — tri-state toggles for *Constitution reviewed this
+  year*, *One-pager complete*, *Roles assigned*, each with its own
+  note field.
+- Chair notes (working journal, FY-scoped).
+- Handoff narrative — the gut-feel writeup the next chair reads first.
+
+New table `forum_health_assessments` (migration 085) with one row per
+(forum × fiscal_year). RLS lets chapter admins and the
+`forum_health_chair` role read/write — `forum_health_chair` isn't part
+of `is_chapter_admin` today, so the policy checks it explicitly rather
+than widening that helper across every other table.
+
+The dashboard at `/forum-health` replaces the prior stub. The data
+hydrates through `useForumStore`, so role-switching into
+Forum Health Chair drops you straight into a working assessment view.
+
 ## v2.0.4 — 2026-05-09
 
 ### Fix: Synthetic preview member always lands in a forum
