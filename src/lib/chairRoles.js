@@ -35,6 +35,7 @@ import {
   Globe2,
   GitBranch,
   Megaphone,
+  AlertTriangle,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -145,6 +146,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/forum-health', icon: Activity, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members' },
       { to: '/forum-health/comms', icon: Megaphone, label: 'Moderator Comms' },
     ],
   },
@@ -157,6 +159,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/forum-placement', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/forum-placement/leads', icon: UserPlus, label: 'Member Leads' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
     ],
   },

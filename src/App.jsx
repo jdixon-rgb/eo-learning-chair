@@ -71,6 +71,7 @@ import SpeakerLibraryDetailPage from '@/pages/library/SpeakerLibraryDetailPage'
 import FinanceDashboard from '@/pages/finance/FinanceDashboard'
 import ForumHealthDashboard from '@/pages/forum-health/ForumHealthDashboard'
 import ForumModeratorCommsPage from '@/pages/forum-health/ForumModeratorCommsPage'
+import AtRiskMembersPage from '@/pages/forum-health/AtRiskMembersPage'
 import ForumPlacementDashboard from '@/pages/forum-placement/ForumPlacementDashboard'
 import MemberLeadsPage from '@/pages/forum-placement/MemberLeadsPage'
 import VendorsPage from '@/pages/portal/VendorsPage'
@@ -222,6 +223,9 @@ function App() {
                 } />
                 <Route path="/forum-health/comms" element={
                   <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumModeratorCommsPage /></ProtectedRoute>
+                } />
+                <Route path="/forum-health/at-risk" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'forum_placement_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><AtRiskMembersPage /></ProtectedRoute>
                 } />
 
                 {/* Forum Placement Chair routes */}

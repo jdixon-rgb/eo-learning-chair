@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  Activity, AlertCircle, CheckCircle2, ChevronDown, ChevronUp,
+  Activity, AlertCircle, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp,
   ClipboardList, Megaphone, ScrollText, Users2, Sparkles,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -55,6 +55,7 @@ export default function ForumHealthDashboard() {
   const {
     healthAssessments, upsertHealthAssessment,
     forumRoles, forumHistory, constitutions, constitutionVersions,
+    atRiskEntries,
   } = useForumStore()
   const { user, profile } = useAuth()
   const [expanded, setExpanded] = useState(() => new Set())
@@ -104,7 +105,12 @@ export default function ForumHealthDashboard() {
       r => r.forum_id === forum.id && r.fiscal_year === activeFiscalYear
     ).length
 
-    return { a, currentMembers, departures, adoptedVersion, rolesThisFy }
+    // Open at-risk entries (status-only, persistent across FYs)
+    const atRiskOpen = atRiskEntries.filter(
+      e => e.forum_id === forum.id && e.status === 'open'
+    ).length
+
+    return { a, currentMembers, departures, adoptedVersion, rolesThisFy, atRiskOpen }
   }
 
   function toggleExpanded(forumId) {
@@ -183,7 +189,7 @@ export default function ForumHealthDashboard() {
       ) : (
         <div className="space-y-3">
           {activeForums.map(forum => {
-            const { a, currentMembers, departures, adoptedVersion, rolesThisFy } = rowsForForum(forum)
+            const { a, currentMembers, departures, adoptedVersion, rolesThisFy, atRiskOpen } = rowsForForum(forum)
             const isOpen = expanded.has(forum.id)
             const stage = a?.lifecycle_stage ?? null
 
@@ -206,6 +212,16 @@ export default function ForumHealthDashboard() {
                       <span>{currentMembers} member{currentMembers === 1 ? '' : 's'}</span>
                       {departures > 0 && (
                         <span className="text-rose-600">−{departures} historic departure{departures === 1 ? '' : 's'}</span>
+                      )}
+                      {atRiskOpen > 0 && (
+                        <Link
+                          to="/forum-health/at-risk"
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-rose-600 hover:underline"
+                        >
+                          <AlertTriangle className="h-3 w-3" />
+                          {atRiskOpen} at risk
+                        </Link>
                       )}
                     </div>
                   </div>
