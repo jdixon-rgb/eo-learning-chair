@@ -516,22 +516,26 @@ export default function SAPPartnersPage() {
           })}
         </div>
       ) : (
-        /* List View — mobile shows Partner / Industry / Tier; the
-           lower-priority columns (Type / Primary Contact / Contact
-           count / Forum Trained) appear on md:+ breakpoints. The
-           wrapper allows internal horizontal scroll as a fallback so
-           nothing is silently cropped if columns end up overflowing. */
-        <div className="rounded-xl border bg-card shadow-sm overflow-x-auto">
-          <table className="w-full text-left">
+        /* List View — all columns are always rendered. On screens
+           narrower than the table's min-width, the wrapper provides
+           horizontal swipe scrolling so the user can reach every
+           column. The min-width keeps cells from squishing into
+           unreadable columns; touchAction=pan-x pairs with the body's
+           overflow-x-hidden to make the swipe feel native. */
+        <div
+          className="rounded-xl border bg-card shadow-sm overflow-x-auto"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
+        >
+          <table className="w-full text-left min-w-[820px]">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="px-3 md:px-4 py-3 text-xs font-medium text-muted-foreground">Partner</th>
-                <th className="px-3 md:px-4 py-3 text-xs font-medium text-muted-foreground">Industry</th>
-                <th className="px-3 md:px-4 py-3 text-xs font-medium text-muted-foreground">Tier</th>
-                <th className="hidden md:table-cell px-4 py-3 text-xs font-medium text-muted-foreground">Type</th>
-                <th className="hidden md:table-cell px-4 py-3 text-xs font-medium text-muted-foreground">Primary Contact</th>
-                <th className="hidden md:table-cell px-4 py-3 text-center text-xs font-medium text-muted-foreground">Contacts</th>
-                <th className="hidden md:table-cell px-4 py-3 text-center text-xs font-medium text-muted-foreground">Forum Trained</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Partner</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Industry</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Tier</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Type</th>
+                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Primary Contact</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">Contacts</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">Forum Trained</th>
               </tr>
             </thead>
             <tbody>
@@ -543,24 +547,24 @@ export default function SAPPartnersPage() {
                 const contribType = SAP_CONTRIBUTION_TYPES.find(c => c.id === partner.contribution_type)
                 return (
                   <tr key={partner.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEditPartner(partner)}>
-                    <td className="px-3 md:px-4 py-3">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${tier?.color}20` }}>
                           <Building2 className="h-4 w-4" style={{ color: tier?.color }} />
                         </div>
-                        <span className="text-sm font-medium">{partner.name}</span>
+                        <span className="text-sm font-medium whitespace-nowrap">{partner.name}</span>
                       </div>
                     </td>
-                    <td className="px-3 md:px-4 py-3 text-sm text-muted-foreground">{partner.industry || '—'}</td>
-                    <td className="px-3 md:px-4 py-3">
+                    <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{partner.industry || '—'}</td>
+                    <td className="px-4 py-3">
                       <Badge variant="outline" className="text-[10px]" style={{ borderColor: tier?.color, color: tier?.color }}>
                         {tier?.label}
                       </Badge>
                     </td>
-                    <td className="hidden md:table-cell px-4 py-3 text-sm text-muted-foreground">{contribType?.label || '—'}</td>
-                    <td className="hidden md:table-cell px-4 py-3 text-sm">{primary?.name || '—'}</td>
-                    <td className="hidden md:table-cell px-4 py-3 text-sm text-center">{partnerContacts.length}</td>
-                    <td className="hidden md:table-cell px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{contribType?.label || '—'}</td>
+                    <td className="px-4 py-3 text-sm whitespace-nowrap">{primary?.name || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-center">{partnerContacts.length}</td>
+                    <td className="px-4 py-3 text-center">
                       {forumTrainedCount > 0 ? (
                         <span className="text-sm text-green-600 font-medium">{forumTrainedCount}</span>
                       ) : (

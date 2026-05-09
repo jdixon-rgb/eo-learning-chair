@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.5 — 2026-05-09
+
+### Fix: SAPs List View — all columns + horizontal swipe on mobile
+
+v1.95.4 hid the trailing four columns on small screens to make the
+table fit; that was the wrong call — the user wanted *all* columns
+accessible, not fewer. Reverted the column-hiding. The table now
+renders all seven columns at all breakpoints, with `min-w-[820px]`
+so columns don't collapse to an unreadable squish, and the wrapper's
+`overflow-x-auto` plus `touch-action: pan-x pan-y` gives a clean
+finger-swipe to reach Type / Primary Contact / Contacts / Forum
+Trained on phones.
+
+---
+
 ## v1.95.4 — 2026-05-09
 
 ### Fix: SAPs List View no longer crops content on mobile
