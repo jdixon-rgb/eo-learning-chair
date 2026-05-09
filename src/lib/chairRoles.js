@@ -202,6 +202,18 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/portal',
     navItems: [], // Member portal uses its own layout/nav, not the admin sidebar
   },
+  // Moderator is an *elevation* on top of the Member surface, not a
+  // standalone chair role. It only appears here so that super-admins
+  // and presidents can preview the moderator experience via "Switch
+  // role." When viewAsRole === 'moderator', useIsModerator() returns
+  // true and the Member sidebar gains the Moderator section. The
+  // homePath drops the previewer onto Moderator Events directly so
+  // they see the new surface without hunting for it.
+  moderator: {
+    title: 'Forum Moderator',
+    homePath: '/portal/moderator/events',
+    navItems: [], // Member sidebar + injected Moderator section drive the nav
+  },
 }
 
 // Elect roles map to their parent surface — if someone logs in as president_elect,

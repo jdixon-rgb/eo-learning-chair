@@ -5,6 +5,14 @@ import { useForumStore } from './forumStore'
 
 // "Is the current user a forum moderator anywhere in the chapter?"
 //
+// Honors the role-switcher: when a super-admin or president picks
+// "Forum Moderator" from the Switch role dropdown, viewAsRole flips to
+// 'moderator' and this hook returns true so the Moderator sidebar
+// section appears. That's a UI preview only — the previewer still
+// lacks the underlying chapter_member row, so writes will fail under
+// RLS. That's intentional (preview ≠ act on someone else's behalf).
+//
+//
 // Two signals collapse into a single answer:
 //   1. chapter_members.is_forum_moderator — legacy boolean flag set
 //      from the admin Members page. Forum-agnostic: just "this person
@@ -23,9 +31,14 @@ import { useForumStore } from './forumStore'
 // sidebar Moderator section is intentionally narrower so admins don't
 // see a "Moderator" pseudo-role they don't actually hold.)
 export function useIsModerator() {
-  const { profile } = useAuth()
+  const { profile, viewAsRole } = useAuth()
   const { chapterMembers } = useBoardStore()
   const { forumRoles } = useForumStore()
+
+  // Role-switcher preview short-circuit. When a super-admin / president
+  // picks "Forum Moderator" we treat the session as moderator without
+  // requiring a real chapter_members row — they're previewing the UI.
+  const previewing = viewAsRole === 'moderator'
 
   const member = useMemo(() => {
     const email = profile?.email?.toLowerCase()
@@ -50,7 +63,7 @@ export function useIsModerator() {
     return [...ids]
   }, [moderatedRoleAssignments, isFlagged, member])
 
-  const isModerator = isFlagged || moderatedRoleAssignments.length > 0
+  const isModerator = previewing || isFlagged || moderatedRoleAssignments.length > 0
 
-  return { isModerator, member, moderatedForumIds }
+  return { isModerator, member, moderatedForumIds, previewing }
 }

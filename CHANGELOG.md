@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.0.1 — 2026-05-09
+
+### Fix: Forum Moderator now appears in the role switcher
+
+Super-admins and presidents can now pick "Forum Moderator" from
+Switch role to preview the moderator experience without flipping a
+real chapter member's flag. Drops the previewer on `/portal/moderator/
+events` and renders the Moderator sidebar section. Preview-only —
+writes still fail under RLS, which is intentional.
+
 ## v2.0.0 — 2026-05-09
 
 ### Milestone: Moderator role — foundation slice
