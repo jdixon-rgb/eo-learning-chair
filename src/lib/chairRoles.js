@@ -100,6 +100,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/president',
     navItems: [
       { to: '/president', icon: Crown, label: 'Dashboard' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
@@ -111,6 +112,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/finance',
     navItems: [
       { to: '/finance', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
     ],
   },
@@ -124,6 +126,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/engagement',
     navItems: [
       { to: '/engagement', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/engagement/navigators', icon: Compass, label: 'Navigators' },
       { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/pairings', icon: UserCheck, label: 'Pairings' },
@@ -138,6 +141,7 @@ export const CHAIR_ROLE_CONFIGS = {
     // /board/forums admin page as the per-forum management surface.
     navItems: [
       { to: '/forum-health', icon: Activity, label: 'Dashboard' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
       { to: '/forum-health/comms', icon: Megaphone, label: 'Moderator Comms' },
     ],
@@ -149,6 +153,7 @@ export const CHAIR_ROLE_CONFIGS = {
     // membership, places members into forums.
     navItems: [
       { to: '/forum-placement', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/forum-placement/leads', icon: UserPlus, label: 'Member Leads' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
     ],

@@ -17,6 +17,53 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.97.0 — 2026-05-09
+
+### Feature: Unified Year Arc Calendar with cross-chair color coding
+
+Foundation for the chapter-wide collaboration story we've been
+designing: every chair (Learning, Engagement, Membership, Social,
+Forum, Finance, Board) can now appear on the same Year Arc Calendar,
+distinct from the others by color. Filter chips above the grid let
+any chair toggle which chairs' events they want to see — defaults to
+"all on" so conflicts (e.g., a navigator mixer scheduled the same
+week as a speaker) surface automatically.
+
+**What's new:**
+- New `events.owner_chair` field (migration 082) tagging each event
+  with the chair role responsible for it. Defaults to `'learning'`,
+  so every existing event keeps showing exactly as before.
+- New constant `EVENT_OWNER_CHAIRS` with the seven chair categories
+  and their distinct colors (indigo / emerald / amber / pink / violet
+  / teal / slate).
+- `/calendar` now shows a left-border accent on each event card in
+  the chair's color, plus a chair badge for non-Learning events.
+- Filter chips above the grid (`Show events from: Learning,
+  Engagement, Membership, …`). Click to toggle. State persists in
+  localStorage per chapter + fiscal year. Chips for chairs no chapter
+  event uses are hidden to avoid clutter.
+- Create-event dialog gains an *Owning Chair* selector so chairs
+  outside Learning can tag their events.
+- /calendar added to the sidebar nav for President, Finance Chair,
+  Engagement Chair, Forum Health Chair, and Forum Placement Chair —
+  each chair now has the unified calendar one click away. (SAP Chair
+  and the chapter staff roles already had it.)
+
+**Note on the migration queue:** 082 is committed but blocked behind
+the existing 078 → 080 ordering issue from prior work — 080's
+corrective drift fix needs to run before 078's RLS policy. Until
+that's unblocked the column won't exist on staging Supabase, and the
+client will fall back to defaulting every event's owner to
+`'learning'` (matching pre-feature behavior). Visual filters and
+color coding still work; non-Learning chair tags persist only after
+the queue clears.
+
+Files: `supabase/migrations/082_events_owner_chair.sql`,
+`src/lib/constants.js`, `src/pages/CalendarPage.jsx`,
+`src/lib/chairRoles.js`.
+
+---
+
 ## v1.96.1 — 2026-05-09
 
 ### Feature: Sponsorship amounts (current + renewal) — restricted

@@ -159,6 +159,24 @@ export const EVENT_TYPES = [
   { id: 'key_relationships', label: 'Key Relationships / SLP', icon: 'Heart', color: '#8b5cf6' },
 ]
 
+// Owning-chair categories on a chapter event. Orthogonal to event_type:
+// answers "which chair is responsible for this event," not "what kind of
+// programming is it." Drives the unified Year Arc Calendar's color coding
+// and per-chair filter chips so a Learning Chair can see when the
+// Engagement Chair has a navigator mixer scheduled the same week as a
+// speaker, etc. Defaults to 'learning' for any event without an explicit
+// owner — matches the historical behaviour where the calendar was a
+// Learning-Chair-only surface.
+export const EVENT_OWNER_CHAIRS = [
+  { id: 'learning',   label: 'Learning',   color: '#3d46f2' }, // indigo (matches primary)
+  { id: 'engagement', label: 'Engagement', color: '#10b981' }, // emerald
+  { id: 'membership', label: 'Membership', color: '#f59e0b' }, // amber
+  { id: 'social',     label: 'Social',     color: '#ec4899' }, // pink
+  { id: 'forum',      label: 'Forum',      color: '#8b5cf6' }, // violet
+  { id: 'finance',    label: 'Finance',    color: '#14b8a6' }, // teal
+  { id: 'board',      label: 'Board',      color: '#64748b' }, // slate
+]
+
 // Event status progression
 export const EVENT_STATUSES = [
   { id: 'planning', label: 'Planning', color: '#64648c' },
