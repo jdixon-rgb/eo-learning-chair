@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.97.3 — 2026-05-09
+
+### Hotfix: keep mock `chapter` scalar to prevent crash on first login
+
+v1.97.2 set the `chapter` store scalar to `null` for connected users
+without a cache. Multiple components (`TopBar`, `SettingsPage`,
+`EventsPage`, …) read `chapter.name` directly without null-guarding —
+which would crash on first paint for any chair logging in fresh (no
+prior cache). At 15+ invited chapters where most haven't signed in
+yet, this is an immediate footgun.
+
+Reverted just the `chapter` initial state to keep `mockChapter` as a
+brief-render placeholder. The chaptersData fetch hydrates it to the
+real chapter within a second. The mock chapter's name is misleading
+sub-second but survives nothing meaningful. Collections (events,
+speakers, SAPs, etc.) keep the v1.97.2 behavior — empty arrays for
+connected users so a fetch failure surfaces honestly via the dbError
+banner instead of fictional rows.
+
+---
+
 ## v1.97.2 — 2026-05-09
 
 ### Fix: Never render mock data to signed-in users
