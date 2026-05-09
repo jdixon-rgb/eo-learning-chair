@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.3 — 2026-05-08
+
+### Cleanup: Post-Compass-retirement polish
+
+Three small fixes that fell out of moving everyone onto the unified
+shell in v1.95.0:
+
+- **Portal page widths.** Member-portal pages were originally sized
+  for a centered max-w-5xl column inside the retired
+  MemberPortalLayout; in the unified shell they were stretching
+  awkwardly wide on desktop. AppLayout now applies max-w-5xl
+  centered ONLY on `/portal/*` routes — chair pages keep full width.
+- **MemberPortalDashboard.** Dropped the "Your Compass" subtitle
+  (Compass is gone) and the redundant page-bottom Suggestion +
+  version footer (the sidebar already provides both).
+- **Sidebar footer.** Fixed an undefined-variable reference
+  (`profile?.email || role || ''`) that would have thrown if a user's
+  profile email were ever missing — now just falls back to empty.
+
+---
+
 ## v1.95.2 — 2026-05-08
 
 ### Feature: Industry combobox — typeahead with allow-create

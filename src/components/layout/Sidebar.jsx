@@ -511,7 +511,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                 {profile?.full_name || 'User'}
               </p>
               <p className="text-[10px] text-muted-foreground/80 truncate">
-                {profile?.email || role || ''}
+                {profile?.email || ''}
               </p>
             </div>
             <button
