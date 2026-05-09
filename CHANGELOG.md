@@ -17,6 +17,348 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.97.3 — 2026-05-09
+
+### Hotfix: keep mock `chapter` scalar to prevent crash on first login
+
+v1.97.2 set the `chapter` store scalar to `null` for connected users
+without a cache. Multiple components (`TopBar`, `SettingsPage`,
+`EventsPage`, …) read `chapter.name` directly without null-guarding —
+which would crash on first paint for any chair logging in fresh (no
+prior cache). At 15+ invited chapters where most haven't signed in
+yet, this is an immediate footgun.
+
+Reverted just the `chapter` initial state to keep `mockChapter` as a
+brief-render placeholder. The chaptersData fetch hydrates it to the
+real chapter within a second. The mock chapter's name is misleading
+sub-second but survives nothing meaningful. Collections (events,
+speakers, SAPs, etc.) keep the v1.97.2 behavior — empty arrays for
+connected users so a fetch failure surfaces honestly via the dbError
+banner instead of fictional rows.
+
+---
+
+## v1.97.2 — 2026-05-09
+
+### Fix: Never render mock data to signed-in users
+
+When the live Supabase fetch failed, the dashboard store fell back to
+the mock data baked into `src/lib/mockData.js` — fictional event titles,
+mock SAPs, mock speakers — and rendered them as if they were the user's
+real chapter data. This was the root cause of today's prod incident
+where event names like "The Exponential Future" / "Music & the Mind"
+appeared on the dashboard while the actual events table held the user's
+correct data. The user reasonably assumed their data had been destroyed.
+
+It hadn't. The `events` SELECT was failing on prod due to a too-eager
+RLS policy I added in 080 (now dropped via 083); the dashboard then
+silently swapped in fictional content from `mockData.js` instead of
+showing an honest "couldn't load events" state.
+
+**Change:** mock data is now used as initial state ONLY when Supabase is
+not configured (i.e. local dev with no `.env.local`). For every signed-
+in user — staging, prod, anywhere with a real DB connection — the
+initial state is empty arrays / null, and the existing `dbError` banner
+is the user-visible signal when a fetch fails. Empty + banner is honest;
+fictional content is not.
+
+Connected users with cached data still see their cached state during
+fetch (UX unchanged for the happy path). Disconnected dev offline mode
+unchanged.
+
+### Process: migration playbook hardening
+
+`docs/MIGRATION_PLAYBOOK.md` updated with three guardrails to prevent
+recurrence at scale (50-country deployment risk):
+- Pre-push schema snapshot to `snapshots/` (gitignored).
+- Mandatory `notify pgrst, 'reload schema';` at the end of every migration.
+- New "RLS policy review checklist" — null-safety, multi-policy interaction,
+  prod-shaped data testing, embedded-select cascade awareness.
+
+---
+
+## v1.97.1 — 2026-05-09
+
+### Course-correct: Year Arc stays Learning-only; new Chapter Calendar for the board
+
+The 1.97.0 attempt unified everything onto the Year Arc — wrong call.
+Year Arc is the Learning Chair's externally-shared programming
+calendar (the one shared with SAPs and members), so it shouldn't be
+polluted by Engagement / Forum / Membership / etc. events.
+
+This release:
+- **Reverts** the 1.97.0 changes to `/calendar` (Year Arc): no more
+  filter chips, no chair color coding on event cards, no owning-chair
+  selector in the create dialog. Year Arc looks and behaves exactly
+  as it did pre-1.97.0.
+- **Adds** a new `/chapter-calendar` (*Chapter Calendar*) page —
+  board-internal cross-chair view designed for spotting scheduling
+  conflicts, not showcasing programming.
+  - Compact agenda-by-week layout (one row per event, not big cards)
+  - Color-coded by owning chair (left swatch + chair-color badge)
+  - Filter chips at the top to toggle which chairs' events show
+  - Same-week conflict callouts: any week containing 2+ events from
+    different chairs flags as "Multi-chair week — coordinate" with
+    an amber outline so the board sees collisions at a glance
+  - "Add event" button writes a minimal event (title, owning chair,
+    date, optional time/note) into the same `events` table the rest
+    of the app reads. Lets non-Learning chairs put their events on
+    the shared calendar without going through the Learning-Chair
+    workflow.
+- Surfaced in the sidebar for: Learning Chair (alongside Year Arc),
+  SAP Chair, Chapter Executive Director, Chapter Experience
+  Coordinator (all alongside Year Arc), plus President, Finance
+  Chair, Engagement Chair, Forum Health Chair, and Forum Placement
+  Chair (who don't see Year Arc).
+
+The infrastructure from 1.97.0 (`events.owner_chair` migration 082,
+`EVENT_OWNER_CHAIRS` constant) carries forward — it now powers the
+Chapter Calendar instead of cluttering Year Arc.
+
+Files: `src/pages/ChapterCalendarPage.jsx` (new),
+`src/pages/CalendarPage.jsx` (reverted),
+`src/lib/chairRoles.js` (sidebar wiring), `src/App.jsx` (route).
+
+---
+
+## v1.97.0 — 2026-05-09
+
+### Feature: Unified Year Arc Calendar with cross-chair color coding
+
+Foundation for the chapter-wide collaboration story we've been
+designing: every chair (Learning, Engagement, Membership, Social,
+Forum, Finance, Board) can now appear on the same Year Arc Calendar,
+distinct from the others by color. Filter chips above the grid let
+any chair toggle which chairs' events they want to see — defaults to
+"all on" so conflicts (e.g., a navigator mixer scheduled the same
+week as a speaker) surface automatically.
+
+**What's new:**
+- New `events.owner_chair` field (migration 082) tagging each event
+  with the chair role responsible for it. Defaults to `'learning'`,
+  so every existing event keeps showing exactly as before.
+- New constant `EVENT_OWNER_CHAIRS` with the seven chair categories
+  and their distinct colors (indigo / emerald / amber / pink / violet
+  / teal / slate).
+- `/calendar` now shows a left-border accent on each event card in
+  the chair's color, plus a chair badge for non-Learning events.
+- Filter chips above the grid (`Show events from: Learning,
+  Engagement, Membership, …`). Click to toggle. State persists in
+  localStorage per chapter + fiscal year. Chips for chairs no chapter
+  event uses are hidden to avoid clutter.
+- Create-event dialog gains an *Owning Chair* selector so chairs
+  outside Learning can tag their events.
+- /calendar added to the sidebar nav for President, Finance Chair,
+  Engagement Chair, Forum Health Chair, and Forum Placement Chair —
+  each chair now has the unified calendar one click away. (SAP Chair
+  and the chapter staff roles already had it.)
+
+**Note on the migration queue:** 082 is committed but blocked behind
+the existing 078 → 080 ordering issue from prior work — 080's
+corrective drift fix needs to run before 078's RLS policy. Until
+that's unblocked the column won't exist on staging Supabase, and the
+client will fall back to defaulting every event's owner to
+`'learning'` (matching pre-feature behavior). Visual filters and
+color coding still work; non-Learning chair tags persist only after
+the queue clears.
+
+Files: `supabase/migrations/082_events_owner_chair.sql`,
+`src/lib/constants.js`, `src/pages/CalendarPage.jsx`,
+`src/lib/chairRoles.js`.
+
+---
+
+## v1.96.1 — 2026-05-09
+
+### Feature: Sponsorship amounts (current + renewal) — restricted
+
+Two dollar fields now live on each SAP: **Current** (existing
+`annual_sponsorship`, what they're paying today) and a new
+**Renewal** (proposed amount for the next term). They can differ
+when a partner's tier or scope is changing, so the chair tracks the
+proposal alongside the historical figure.
+
+**Visibility is restricted.** Only these roles see the numbers:
+- SAP Chair (sets and edits)
+- President + President-Elect (chapter strategy on partners)
+- Executive Director (chapter operations and finance)
+- Super-admin (cross-chapter support)
+
+All other chairs — Learning, Engagement, CEC, Finance, Regional
+Expert, etc. — still see the partner roster but the dollar amounts
+are completely absent from their view (not blanked, not greyed —
+the form fields and card chips don't render at all).
+
+**Where they appear:**
+- Edit Partner dialog: two side-by-side input fields (gated).
+- Tier-view partner card (expanded): "Current $X" and "Renewal $Y"
+  badges sit at the top.
+- Renewal Kanban card: an inline line shows both numbers below the
+  industry / rating row.
+
+**Migration `081_sap_renewal_amount.sql`** adds the `renewal_amount`
+column. Push to staging Supabase before the new field persists.
+
+A new permission `canViewSAPAmounts` in `permissions.js` is the
+single source of truth.
+
+---
+
+## v1.96.0 — 2026-05-09
+
+### Feature: Industry filter + member ratings on SAP cards
+
+**Industry filter** — a new Filter button next to the search bar
+opens a multi-select dropdown of every industry currently in use
+across this chapter's active SAPs. Pick any number to narrow the
+view; a count badge on the button shows how many filters are active;
+a Clear link inside the panel resets. The filter only lists
+industries actually in use, so the menu stays tight as the roster
+evolves.
+
+**Member ratings** — each SAP card on the Tier view and the Renewal
+Kanban now shows the chapter's member-facing rating, Google-style:
+filled star + average + count in parens (e.g. ★ 4.6 (12)). The
+rating is drawn from the linked Vendor record (members rate SAPs
+through `/portal/vendors`); if no member has rated yet, the badge
+is hidden rather than showing a misleading 0.0.
+
+The two together let the SAP Chair answer "show me every Banking
+partner — and which ones do members actually love?" in one glance.
+
+---
+
+## v1.95.9 — 2026-05-09
+
+### Tweak: Drop List View — Tier becomes the Active default
+
+Three view modes was one too many. List View was the most recent
+addition and the least differentiated — Tier and Renewal Kanban
+already cover "scan everyone" and "renewal-management workflow."
+Removed the List option from the Active board's view dropdown.
+
+Tier View is the default — that's how chapters naturally think
+about their SAPs (Platinum / Gold / Silver / In-Kind). Renewal
+Kanban remains as the second mode for the chair's status work.
+
+---
+
+## v1.95.8 — 2026-05-09
+
+### Access: SAP edit rights → SAP Chair only
+
+Editing anything in the SAP module — partners, contacts (incl. forum
+training), renewal intent, prospect pipeline, archive/revive — is
+now reserved to the SAP Chair (and super-admin for support). Other
+roles (President, Learning Chair, ED, CEC, etc.) still see all the
+data but can no longer change it. The chair owns the data for their
+fiscal year; when the role rolls to a new chair, edit rights move
+with it automatically.
+
+Concretely hidden when the viewer isn't the SAP Chair:
+- Add Partner / Add Prospect buttons
+- Edit pencil on each partner card
+- Tap-to-edit on partner rows in List View
+- Add Contact / Edit Contact / Delete Contact controls
+- Renewal Kanban "Mark as" pills and Archive button
+- Prospect pipeline advance / promote / remove buttons
+- Past SAPs Re-engage / Delete record buttons
+
+A new permission `canEditSAPs` in `permissions.js` is the single
+source of truth (`['super_admin', 'sap_chair']`).
+
+### Feature: Capture a reason when marking a SAP "Not renewing"
+
+When the SAP Chair flips a partner to **Not renewing** — either via
+the Renewal Kanban "Mark as" pills or the chip on the partner card
+header — the app now prompts for the reason and saves it to the
+partner's `renewal_notes`. That note is the permanent record: it
+travels with the SAP into Past SAPs if they get archived, surfaces
+in the at-risk list on the President dashboard, and is visible to
+the next chair so the institutional "why" doesn't get lost.
+
+The Kanban surface uses an inline dialog with a textarea; the
+smaller chip uses `window.prompt` for a lighter-weight ask.
+Re-clicking "Not renewing" on a partner already in that state
+does nothing — the reason is already on file.
+
+---
+
+## v1.95.7 — 2026-05-09
+
+### Fix: Add/edit contacts directly from the partner edit dialog
+
+Tapping a SAP in List View opened the partner edit dialog with no
+way to manage contacts — that surface was only reachable by
+expanding a card in Tier View. Since forum-training is tracked
+per-contact (not per-company), the absence cut off a critical bit
+of the SAP Chair's job.
+
+The Edit Partner dialog now has a Contacts section at the bottom
+(only when editing an existing partner — new partners need to be
+saved first):
+
+- List of every contact with name, role, email, primary badge, and
+  a green "Forum trained" pill for those who have completed it.
+- **Add Contact** button → opens the existing contact dialog
+  layered on top, so partner context is preserved.
+- Tap any contact row to edit (toggle forum-trained, set the
+  training date, mark primary, edit email/phone, delete).
+
+---
+
+## v1.95.6 — 2026-05-09
+
+### Access: President-Elect can now see /partners and other admin views
+
+Added `president_elect` to `ADMIN_ROLES`. The role already had the
+admin sidebar layout and is logically the President's shadow, but the
+SAP Partners route (and the venues / budget / scenarios routes that
+share the same gate) were rejecting them. View-only — edit gates on
+the renewal Kanban remain restricted to SAP Chair / Executive Director
+/ Chapter Experience Coordinator.
+
+Files: `src/lib/permissions.js`
+
+---
+
+## v1.95.5 — 2026-05-09
+
+### Fix: SAPs List View — all columns + horizontal swipe on mobile
+
+v1.95.4 hid the trailing four columns on small screens to make the
+table fit; that was the wrong call — the user wanted *all* columns
+accessible, not fewer. Reverted the column-hiding. The table now
+renders all seven columns at all breakpoints, with `min-w-[820px]`
+so columns don't collapse to an unreadable squish, and the wrapper's
+`overflow-x-auto` plus `touch-action: pan-x pan-y` gives a clean
+finger-swipe to reach Type / Primary Contact / Contacts / Forum
+Trained on phones.
+
+---
+
+## v1.95.4 — 2026-05-09
+
+### Fix: SAPs List View no longer crops content on mobile
+
+The Active board's List view was a 7-column table inside a wrapper
+with `overflow-hidden`, so on mobile anything past the third column
+was silently cut off and there was no way to scroll to it.
+
+Two fixes:
+- The wrapper now allows internal horizontal scroll
+  (`overflow-x-auto`), so the table can swipe sideways inside its
+  card if content overflows.
+- Lower-priority columns (Type, Primary Contact, Contact count,
+  Forum Trained) are hidden on small screens. Mobile shows just
+  Partner, Industry, and Tier — which is what fits cleanly. All
+  columns return at the `md:` breakpoint and above.
+
+Tap any row to open the partner's edit dialog where every field is
+visible regardless of breakpoint.
+
+---
+
 ## v1.95.3 — 2026-05-08
 
 ### Cleanup: Post-Compass-retirement polish

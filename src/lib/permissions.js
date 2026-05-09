@@ -1,5 +1,7 @@
-// Admin roles that get full access (Learning-Chair-flavored permissions)
-export const ADMIN_ROLES = ['super_admin', 'president', 'learning_chair', 'sap_chair', 'chapter_experience_coordinator', 'chapter_executive_director']
+// Admin roles that get full access (Learning-Chair-flavored permissions).
+// president_elect shadows the president and gets the same admin route
+// access (read-only on most surfaces — edit gates are handled per-page).
+export const ADMIN_ROLES = ['super_admin', 'president', 'president_elect', 'learning_chair', 'sap_chair', 'chapter_experience_coordinator', 'chapter_executive_director']
 
 // Super admin only
 export const SUPER_ADMIN_ROLES = ['super_admin']
@@ -54,6 +56,18 @@ export const FEATURE_PERMISSIONS = {
   canManageFYBudget:     ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Partners (SAP) — visible to leadership, learning chairs, staff, and regional expert
   canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'regional_learning_chair_expert'],
+  // Editing SAPs — partners, contacts, renewal intent, prospect
+  // pipeline, archive/revive — is the SAP Chair's domain. Super-admin
+  // retained for cross-chapter support. Other roles view but don't
+  // edit, so the chair owns the data for their fiscal year.
+  canEditSAPs:           ['super_admin', 'sap_chair'],
+  // SAP sponsorship amounts (current + renewal) are sensitive — the
+  // SAP Chair (who manages them), the President / President-Elect
+  // (who set chapter strategy on partner relationships), and the
+  // Executive Director (who handles chapter operations & finance)
+  // can see the numbers. Other chairs cannot, even though they can
+  // see the partner roster itself.
+  canViewSAPAmounts:     ['super_admin', 'sap_chair', 'president', 'president_elect', 'chapter_executive_director'],
   // Public Speaker Library — shared cross-chapter catalog
   canViewSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Editing + reviewing mirror the SQL helper can_edit_speaker_library()

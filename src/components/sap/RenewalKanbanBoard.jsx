@@ -1,8 +1,15 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
 import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
+// canViewAmounts gates the sensitive sponsorship dollar values that
+// only the SAP Chair, President / President-Elect, and ED should see.
 import { SAP_RENEWAL_STATUSES, SAP_TIERS } from '@/lib/constants'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Mail, Phone, Globe, Archive, Check } from 'lucide-react'
+import SAPRating from '@/components/sap/SAPRating'
 
 // Renewal Kanban — four columns (Renewing | Uncertain | Not renewing
 // | Not set) for status='active' partners. The retention chair tags
@@ -19,7 +26,8 @@ const COLUMNS = [
 export default function RenewalKanbanBoard({ search = '' }) {
   const { partners, setRenewalStatus, archivePartner } = useSAPStore()
   const { effectiveRole } = useAuth()
-  const canEdit = ['super_admin', 'sap_chair', 'chapter_executive_director', 'chapter_experience_coordinator'].includes(effectiveRole)
+  const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
+  const canViewAmounts = hasPermission(effectiveRole, 'canViewSAPAmounts')
 
   const activePartners = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -47,9 +55,40 @@ export default function RenewalKanbanBoard({ search = '' }) {
     return map
   }, [activePartners])
 
+  // When the chair marks a partner Not Renewing, capture the reason
+  // and stamp it onto renewal_notes — that note is the permanent
+  // record. It travels with the SAP if/when they're archived to Past
+  // and is visible to the next chair so the institutional why
+  // doesn't get lost.
+  const [reasonTarget, setReasonTarget] = useState(null) // { sapId, name, prior }
+  const [reasonDraft, setReasonDraft] = useState('')
+
   const setStatus = (sapId, statusId) => {
     if (!canEdit) return
+    if (statusId === 'not_renewing') {
+      const partner = partners.find(p => p.id === sapId)
+      // If they're already not_renewing, treat re-clicking as a no-op
+      // rather than re-prompting (the reason is already on file).
+      if (partner?.renewal_status === 'not_renewing') return
+      setReasonTarget({ sapId, name: partner?.name || 'this partner', prior: partner?.renewal_notes || '' })
+      setReasonDraft(partner?.renewal_notes || '')
+      return
+    }
     setRenewalStatus(sapId, statusId, undefined)
+  }
+
+  const submitReason = () => {
+    if (!reasonTarget) return
+    const reason = reasonDraft.trim()
+    if (!reason) return
+    setRenewalStatus(reasonTarget.sapId, 'not_renewing', reason)
+    setReasonTarget(null)
+    setReasonDraft('')
+  }
+
+  const cancelReason = () => {
+    setReasonTarget(null)
+    setReasonDraft('')
   }
 
   const archive = (sapId, name) => {
@@ -59,6 +98,7 @@ export default function RenewalKanbanBoard({ search = '' }) {
   }
 
   return (
+    <>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {COLUMNS.map(col => {
         const list = byStatus.get(col.id) || []
@@ -96,8 +136,25 @@ export default function RenewalKanbanBoard({ search = '' }) {
                         </span>
                       )}
                     </div>
-                    {p.industry && (
-                      <div className="text-[11px] text-muted-foreground/80">{p.industry}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {p.industry && (
+                        <span className="text-[11px] text-muted-foreground/80">{p.industry}</span>
+                      )}
+                      <SAPRating sapId={p.id} />
+                    </div>
+                    {canViewAmounts && (p.annual_sponsorship != null || p.renewal_amount != null) && (
+                      <div className="flex flex-wrap gap-2 text-[11px]">
+                        {p.annual_sponsorship != null && p.annual_sponsorship !== '' && (
+                          <span className="text-muted-foreground">
+                            Current <span className="font-semibold text-foreground">${Number(p.annual_sponsorship).toLocaleString()}</span>
+                          </span>
+                        )}
+                        {p.renewal_amount != null && p.renewal_amount !== '' && (
+                          <span className="text-primary">
+                            Renewal <span className="font-semibold">${Number(p.renewal_amount).toLocaleString()}</span>
+                          </span>
+                        )}
+                      </div>
                     )}
                     <div className="flex flex-col gap-0.5 text-[11px] text-muted-foreground/80">
                       {p.contact_email && (
@@ -165,5 +222,34 @@ export default function RenewalKanbanBoard({ search = '' }) {
         )
       })}
     </div>
+
+    <Dialog open={!!reasonTarget} onOpenChange={(open) => { if (!open) cancelReason() }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Why isn't {reasonTarget?.name} renewing?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            This becomes part of the permanent record so a future SAP Chair
+            can see the context — even if the partner gets archived to
+            Past SAPs and re-engaged later.
+          </p>
+          <Textarea
+            value={reasonDraft}
+            onChange={(e) => setReasonDraft(e.target.value)}
+            placeholder="Reason — pricing, fit, change in their business, change in ours, etc."
+            rows={4}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={cancelReason}>Cancel</Button>
+            <Button onClick={submitReason} disabled={!reasonDraft.trim()}>
+              Save & mark Not renewing
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

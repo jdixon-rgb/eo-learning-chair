@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSAPStore } from '@/lib/sapStore'
+import { hasPermission } from '@/lib/permissions'
 import SAPRenewalControl from '@/components/SAPRenewalControl'
 import ProspectPipelineBoard from '@/components/sap/ProspectPipelineBoard'
 import RenewalKanbanBoard from '@/components/sap/RenewalKanbanBoard'
 import PastSAPsList from '@/components/sap/PastSAPsList'
 import IndustryCombobox from '@/components/sap/IndustryCombobox'
+import IndustryFilter from '@/components/sap/IndustryFilter'
+import SAPRating from '@/components/sap/SAPRating'
 import { useVendorStore, VENDOR_CATEGORIES } from '@/lib/vendorStore'
 import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
@@ -29,7 +32,7 @@ const emptyPartnerForm = {
   name: '', industry: '', tier: 'gold', status: 'active',
   description: '', contribution_type: 'sponsorship', contribution_description: '',
   contact_email: '', contact_phone: '', website: '',
-  annual_sponsorship: '', notes: '',
+  annual_sponsorship: '', renewal_amount: '', notes: '',
 }
 
 const emptyContactForm = {
@@ -46,16 +49,22 @@ export default function SAPPartnersPage() {
   } = useSAPStore()
   const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
   const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId, effectiveRole } = useAuth()
-  const canEditRenewal = ['super_admin', 'sap_chair', 'chapter_executive_director', 'chapter_experience_coordinator'].includes(effectiveRole)
+  const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
+  // The renewal chip in the partner-card header reuses the same gate.
+  const canEditRenewal = canEdit
+  // Sponsorship amounts are restricted: SAP Chair, President /
+  // President-Elect, and Executive Director only.
+  const canViewAmounts = hasPermission(effectiveRole, 'canViewSAPAmounts')
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
+  const [industryFilter, setIndustryFilter] = useState([])
   const [invitedEmails, setInvitedEmails] = useState(new Set())
   const [expandedPartner, setExpandedPartner] = useState(null)
-  // Inner view mode for the Active board. List is the default —
-  // it's the most compact and most familiar; users can opt into
-  // Renewal Kanban or Tier View when they want a different lens.
-  const [viewMode, setViewMode] = useState('list')
+  // Inner view mode for the Active board: Tier View (default — how
+  // chapters naturally think about SAPs) or Renewal Kanban (the
+  // chair's working surface for renewal-status management).
+  const [viewMode, setViewMode] = useState('tiers')
 
   // Outer toggle — Active | Prospect | Past — synced to ?view= so
   // links and back-button navigation work across the SAP lifecycle.
@@ -83,10 +92,20 @@ export default function SAPPartnersPage() {
   const activePartners = partners.filter(p => (p.status || 'active') === 'active')
   const inactivePartners = partners.filter(p => p.status === 'inactive')
 
-  const filtered = activePartners.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.industry?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = activePartners
+    .filter(p => {
+      if (industryFilter.length === 0) return true
+      const ind = (p.industry || '').toLowerCase()
+      return industryFilter.some(s => s.toLowerCase() === ind)
+    })
+    .filter(p => {
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        p.name.toLowerCase().includes(q)
+        || (p.industry || '').toLowerCase().includes(q)
+      )
+    })
 
   const tierCounts = SAP_TIERS.map(t => ({
     ...t,
@@ -114,6 +133,7 @@ export default function SAPPartnersPage() {
       contact_phone: partner.contact_phone || '',
       website: partner.website || '',
       annual_sponsorship: partner.annual_sponsorship || '',
+      renewal_amount: partner.renewal_amount || '',
       notes: partner.notes || '',
     })
     setShowPartnerForm(true)
@@ -124,6 +144,7 @@ export default function SAPPartnersPage() {
     const data = {
       ...partnerForm,
       annual_sponsorship: partnerForm.annual_sponsorship ? parseFloat(partnerForm.annual_sponsorship) : null,
+      renewal_amount: partnerForm.renewal_amount ? parseFloat(partnerForm.renewal_amount) : null,
     }
     if (editPartner) {
       updatePartner(editPartner.id, data)
@@ -243,9 +264,12 @@ export default function SAPPartnersPage() {
                 <Badge variant="outline" className="text-[10px] shrink-0">{contribType.label}</Badge>
               )}
             </div>
-            {partner.industry && (
-              <p className="text-xs text-muted-foreground truncate">{partner.industry}</p>
-            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              {partner.industry && (
+                <p className="text-xs text-muted-foreground truncate">{partner.industry}</p>
+              )}
+              <SAPRating sapId={partner.id} />
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {primary && (
@@ -258,18 +282,36 @@ export default function SAPPartnersPage() {
               <Users className="h-3 w-3 mr-1" />
               {partnerContacts.length}
             </Badge>
-            <button
-              className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-              onClick={(e) => { e.stopPropagation(); openEditPartner(partner) }}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
+            {canEdit && (
+              <button
+                className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); openEditPartner(partner) }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Expanded: contacts list */}
         {isExpanded && (
           <div className="border-t px-3 pb-3 pt-2">
+            {canViewAmounts && (partner.annual_sponsorship != null || partner.renewal_amount != null) && (
+              <div className="flex flex-wrap gap-3 mb-3 text-xs">
+                {partner.annual_sponsorship != null && partner.annual_sponsorship !== '' && (
+                  <div className="rounded-md bg-muted/50 px-2.5 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Current</div>
+                    <div className="font-semibold text-foreground">${Number(partner.annual_sponsorship).toLocaleString()}</div>
+                  </div>
+                )}
+                {partner.renewal_amount != null && partner.renewal_amount !== '' && (
+                  <div className="rounded-md bg-primary/5 border border-primary/20 px-2.5 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-primary">Renewal</div>
+                    <div className="font-semibold text-primary">${Number(partner.renewal_amount).toLocaleString()}</div>
+                  </div>
+                )}
+              </div>
+            )}
             {partner.description && (
               <p className="text-xs text-muted-foreground mb-2">{partner.description}</p>
             )}
@@ -288,9 +330,11 @@ export default function SAPPartnersPage() {
             <div className="mt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contacts</span>
-                <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => openAddContact(partner.id)}>
-                  <Plus className="h-3 w-3 mr-1" /> Contact
-                </Button>
+                {canEdit && (
+                  <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => openAddContact(partner.id)}>
+                    <Plus className="h-3 w-3 mr-1" /> Contact
+                  </Button>
+                )}
               </div>
               {partnerContacts.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic py-2">No contacts yet</p>
@@ -299,8 +343,8 @@ export default function SAPPartnersPage() {
                   {partnerContacts.map(c => (
                     <div
                       key={c.id}
-                      className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-accent/50 group cursor-pointer"
-                      onClick={() => openEditContact(c)}
+                      className={`flex items-center gap-2 py-1.5 px-2 rounded group ${canEdit ? 'hover:bg-accent/50 cursor-pointer' : ''}`}
+                      onClick={canEdit ? () => openEditContact(c) : undefined}
                     >
                       <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <User className="h-3 w-3 text-muted-foreground" />
@@ -363,15 +407,17 @@ export default function SAPPartnersPage() {
                         ) : c.email && invitedEmails.has(c.email.toLowerCase()) ? (
                           <span className="text-[9px] text-green-600 font-medium">Invited</span>
                         ) : null}
-                        <button
-                          className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-destructive cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (confirm(`Delete contact ${c.name}?`)) deleteContact(c.id)
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="p-0.5 opacity-0 group-hover:opacity-100 hover:text-destructive cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (confirm(`Delete contact ${c.name}?`)) deleteContact(c.id)
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -434,15 +480,19 @@ export default function SAPPartnersPage() {
             </div>
           )}
           {segment === 'active' && (
+            <IndustryFilter selected={industryFilter} onChange={setIndustryFilter} />
+          )}
+          {segment === 'active' && (
             <>
               <Select value={viewMode} onChange={e => setViewMode(e.target.value)} className="w-36">
-                <option value="list">List View</option>
-                <option value="renewal">Renewal Kanban</option>
                 <option value="tiers">Tier View</option>
+                <option value="renewal">Renewal Kanban</option>
               </Select>
-              <Button size="sm" onClick={openAddPartner}>
-                <Plus className="h-4 w-4" /> Add Partner
-              </Button>
+              {canEdit && (
+                <Button size="sm" onClick={openAddPartner}>
+                  <Plus className="h-4 w-4" /> Add Partner
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -487,10 +537,10 @@ export default function SAPPartnersPage() {
         ))}
       </div>
 
-      {/* Renewal Kanban (default for Active) */}
+      {/* Tier (default) or Renewal Kanban */}
       {viewMode === 'renewal' ? (
         <RenewalKanbanBoard search={search} />
-      ) : viewMode === 'tiers' ? (
+      ) : (
         <div className="space-y-6">
           {SAP_TIERS.map(tier => {
             const tierPartners = filtered.filter(p => p.tier === tier.id)
@@ -514,60 +564,6 @@ export default function SAPPartnersPage() {
               </div>
             )
           })}
-        </div>
-      ) : (
-        /* List View */
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Partner</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Industry</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Tier</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Primary Contact</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground">Contacts</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground">Forum Trained</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(partner => {
-                const primary = primaryContact(partner.id)
-                const partnerContacts = contactsForPartner(partner.id)
-                const forumTrainedCount = partnerContacts.filter(c => c.forum_trained).length
-                const tier = SAP_TIERS.find(t => t.id === partner.tier)
-                const contribType = SAP_CONTRIBUTION_TYPES.find(c => c.id === partner.contribution_type)
-                return (
-                  <tr key={partner.id} className="border-b hover:bg-accent/50 cursor-pointer" onClick={() => openEditPartner(partner)}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${tier?.color}20` }}>
-                          <Building2 className="h-4 w-4" style={{ color: tier?.color }} />
-                        </div>
-                        <span className="text-sm font-medium">{partner.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{partner.industry || '—'}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant="outline" className="text-[10px]" style={{ borderColor: tier?.color, color: tier?.color }}>
-                        {tier?.label}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{contribType?.label || '—'}</td>
-                    <td className="px-4 py-3 text-sm">{primary?.name || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-center">{partnerContacts.length}</td>
-                    <td className="px-4 py-3 text-center">
-                      {forumTrainedCount > 0 ? (
-                        <span className="text-sm text-green-600 font-medium">{forumTrainedCount}</span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">0</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
         </div>
       )}
 
@@ -626,10 +622,18 @@ export default function SAPPartnersPage() {
                 <label className="text-xs font-medium">Website</label>
                 <Input value={partnerForm.website} onChange={e => setPartnerForm(p => ({ ...p, website: e.target.value }))} placeholder="https://..." />
               </div>
-              <div>
-                <label className="text-xs font-medium">Annual Sponsorship ($)</label>
-                <Input type="number" value={partnerForm.annual_sponsorship} onChange={e => setPartnerForm(p => ({ ...p, annual_sponsorship: e.target.value }))} placeholder="Amount" />
-              </div>
+              {canViewAmounts && (
+                <>
+                  <div>
+                    <label className="text-xs font-medium">Current Sponsorship ($)</label>
+                    <Input type="number" value={partnerForm.annual_sponsorship} onChange={e => setPartnerForm(p => ({ ...p, annual_sponsorship: e.target.value }))} placeholder="What they pay now" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Renewal Amount ($)</label>
+                    <Input type="number" value={partnerForm.renewal_amount} onChange={e => setPartnerForm(p => ({ ...p, renewal_amount: e.target.value }))} placeholder="Proposed for next term" />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="text-xs font-medium">Company Email</label>
                 <Input value={partnerForm.contact_email} onChange={e => setPartnerForm(p => ({ ...p, contact_email: e.target.value }))} placeholder="info@company.com" />
@@ -643,6 +647,64 @@ export default function SAPPartnersPage() {
                 <Textarea value={partnerForm.notes} onChange={e => setPartnerForm(p => ({ ...p, notes: e.target.value }))} placeholder="Internal notes..." rows={2} />
               </div>
             </div>
+
+            {/* Contacts (only when editing an existing partner — a brand-
+                new partner needs to be saved before contacts can attach). */}
+            {editPartner && (
+              <div className="mt-5 pt-4 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Contacts ({contactsForPartner(editPartner.id).length})
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => openAddContact(editPartner.id)}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Add Contact
+                  </Button>
+                </div>
+                {contactsForPartner(editPartner.id).length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-3">
+                    No contacts yet. Add one — that's where forum-training is tracked, since training is per-person, not per-company.
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {contactsForPartner(editPartner.id).map(c => (
+                      <div
+                        key={c.id}
+                        className="flex items-center gap-2 py-2 px-2 rounded hover:bg-accent/50 cursor-pointer group"
+                        onClick={() => openEditContact(c)}
+                      >
+                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-sm font-medium truncate">{c.name}</span>
+                            {c.is_primary && (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0">Primary</Badge>
+                            )}
+                            {c.forum_trained && (
+                              <span title="Forum trained" className="text-green-600 inline-flex items-center gap-0.5 text-[10px] font-medium">
+                                <GraduationCap className="h-3 w-3" />
+                                Forum trained
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {c.role || ''}{c.role && c.email ? ' · ' : ''}{c.email || ''}
+                          </div>
+                        </div>
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2 pt-2">
               <Button onClick={handlePartnerSubmit} className="flex-1">{editPartner ? 'Save Changes' : 'Add Partner'}</Button>
               {editPartner && (

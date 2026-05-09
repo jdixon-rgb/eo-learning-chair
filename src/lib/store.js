@@ -35,15 +35,36 @@ export function StoreProvider({ children }) {
 
   const cached = loadCache(activeChapterId, activeFiscalYear)
 
-  // State - initialized from cache or mock data
+  // Mock COLLECTIONS (events, speakers, SAPs, etc.) are ONLY used as a
+  // fallback when running disconnected (no Supabase env configured —
+  // i.e. local dev with no DB). For real signed-in users on staging or
+  // prod, falling back to mock collections when a fetch fails would
+  // silently render fictional content (event titles, SAPs, speakers)
+  // that doesn't exist in their chapter — exactly the class of "looks
+  // like my data was destroyed" panic that broke trust on 2026-05-09.
+  // Connected users get cache → empty arrays → real data on hydrate.
+  // The dbError banner from a failed fetch is the user-facing signal,
+  // not a misleading fictional dataset.
+  //
+  // The `chapter` SCALAR is a different case: many components access
+  // `chapter.name` directly with no null guard (TopBar, SettingsPage,
+  // …). Initializing it to null would crash on first paint for any
+  // chair logging in without a cached chapter. The chaptersData fetch
+  // hydrates this to the real chapter within a second, so leaving the
+  // mock as a brief-render placeholder is safer than refactoring every
+  // consumer to be null-safe. The mock chapter's name is misleading for
+  // sub-second render but doesn't survive — collections are the actual
+  // multi-second risk.
+  const supabaseOn = isSupabaseConfigured()
+  const fallback = (mockValue) => supabaseOn ? [] : mockValue
   const [chapter, setChapter] = useState(cached?.chapter ?? mockChapter)
-  const [speakers, setSpeakers] = useState(cached?.speakers ?? mockSpeakers)
-  const [venues, setVenues] = useState(cached?.venues ?? mockVenues)
-  const [events, setEvents] = useState(cached?.events ?? mockEvents)
-  const [budgetItems, setBudgetItems] = useState(cached?.budgetItems ?? mockBudgetItems)
-  const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? mockContractChecklists)
-  const [saps, setSaps] = useState(cached?.saps ?? mockSAPs)
-  const [speakerPipeline, setSpeakerPipeline] = useState(cached?.speakerPipeline ?? mockSpeakerPipeline)
+  const [speakers, setSpeakers] = useState(cached?.speakers ?? fallback(mockSpeakers))
+  const [venues, setVenues] = useState(cached?.venues ?? fallback(mockVenues))
+  const [events, setEvents] = useState(cached?.events ?? fallback(mockEvents))
+  const [budgetItems, setBudgetItems] = useState(cached?.budgetItems ?? fallback(mockBudgetItems))
+  const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? fallback(mockContractChecklists))
+  const [saps, setSaps] = useState(cached?.saps ?? fallback(mockSAPs))
+  const [speakerPipeline, setSpeakerPipeline] = useState(cached?.speakerPipeline ?? fallback(mockSpeakerPipeline))
   const [scenarios, setScenarios] = useState(cached?.scenarios ?? [])
   const [eventDocuments, setEventDocuments] = useState(cached?.eventDocuments ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
@@ -188,15 +209,20 @@ export function StoreProvider({ children }) {
     }
   }, [])
 
-  // Reset to defaults (dev only - clears cache, refetches from DB)
+  // Reset to defaults (dev only - clears cache, refetches from DB).
+  // Connected (Supabase-on) callers get empty collections and a fresh
+  // refetch; disconnected callers get mock data so the offline dev
+  // surface stays populated. Chapter scalar stays as mock for safe-
+  // render (see init-state comment above).
   const resetToDefaults = useCallback(() => {
+    const on = isSupabaseConfigured()
     setChapter(mockChapter)
-    setSpeakers(mockSpeakers)
-    setVenues(mockVenues)
-    setEvents(mockEvents)
-    setBudgetItems(mockBudgetItems)
-    setContractChecklists(mockContractChecklists)
-    setSaps(mockSAPs)
+    setSpeakers(on ? [] : mockSpeakers)
+    setVenues(on ? [] : mockVenues)
+    setEvents(on ? [] : mockEvents)
+    setBudgetItems(on ? [] : mockBudgetItems)
+    setContractChecklists(on ? [] : mockContractChecklists)
+    setSaps(on ? [] : mockSAPs)
     setScenarios([])
     if (activeChapterId) localStorage.removeItem(storageKey(activeChapterId, activeFiscalYear))
   }, [activeChapterId, activeFiscalYear])

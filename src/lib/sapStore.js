@@ -135,6 +135,7 @@ export function SAPStoreProvider({ children }) {
       contact_phone: partner.contact_phone ?? '',
       website: partner.website ?? '',
       annual_sponsorship: partner.annual_sponsorship ?? null,
+      renewal_amount: partner.renewal_amount ?? null,
       notes: partner.notes ?? '',
       created_at: now,
       updated_at: now,

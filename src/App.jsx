@@ -17,6 +17,7 @@ import { PageHeaderProvider } from '@/lib/pageHeader'
 import AppLayout from '@/components/layout/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
 import CalendarPage from '@/pages/CalendarPage'
+import ChapterCalendarPage from '@/pages/ChapterCalendarPage'
 import SpeakersPage from '@/pages/SpeakersPage'
 import EventsPage from '@/pages/EventsPage'
 import EventDetailPage from '@/pages/EventDetailPage'
@@ -138,6 +139,7 @@ function App() {
               }>
                 <Route path="/" element={<ChairHome />} />
                 <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/chapter-calendar" element={<ChapterCalendarPage />} />
                 <Route path="/speakers" element={<SpeakersPage />} />
                 <Route path="/events" element={<EventsPage />} />
                 <Route path="/events/:id" element={<EventDetailPage />} />
