@@ -35,15 +35,25 @@ export function StoreProvider({ children }) {
 
   const cached = loadCache(activeChapterId, activeFiscalYear)
 
-  // State - initialized from cache or mock data
-  const [chapter, setChapter] = useState(cached?.chapter ?? mockChapter)
-  const [speakers, setSpeakers] = useState(cached?.speakers ?? mockSpeakers)
-  const [venues, setVenues] = useState(cached?.venues ?? mockVenues)
-  const [events, setEvents] = useState(cached?.events ?? mockEvents)
-  const [budgetItems, setBudgetItems] = useState(cached?.budgetItems ?? mockBudgetItems)
-  const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? mockContractChecklists)
-  const [saps, setSaps] = useState(cached?.saps ?? mockSAPs)
-  const [speakerPipeline, setSpeakerPipeline] = useState(cached?.speakerPipeline ?? mockSpeakerPipeline)
+  // Mock data is ONLY used as a fallback when running disconnected
+  // (no Supabase env configured — i.e. local dev with no DB). For real
+  // signed-in users on staging or prod, falling back to mock data when
+  // a fetch fails would silently render fictional content (event titles,
+  // SAPs, speakers) that doesn't exist in their chapter — exactly the
+  // class of "looks like my data was destroyed" panic that broke trust
+  // on 2026-05-09. Connected users get cache → empty state → real data
+  // on hydrate. The dbError banner from a failed fetch is the user-facing
+  // signal, not a misleading fictional dataset.
+  const supabaseOn = isSupabaseConfigured()
+  const fallback = (mockValue) => supabaseOn ? [] : mockValue
+  const [chapter, setChapter] = useState(cached?.chapter ?? (supabaseOn ? null : mockChapter))
+  const [speakers, setSpeakers] = useState(cached?.speakers ?? fallback(mockSpeakers))
+  const [venues, setVenues] = useState(cached?.venues ?? fallback(mockVenues))
+  const [events, setEvents] = useState(cached?.events ?? fallback(mockEvents))
+  const [budgetItems, setBudgetItems] = useState(cached?.budgetItems ?? fallback(mockBudgetItems))
+  const [contractChecklists, setContractChecklists] = useState(cached?.contractChecklists ?? fallback(mockContractChecklists))
+  const [saps, setSaps] = useState(cached?.saps ?? fallback(mockSAPs))
+  const [speakerPipeline, setSpeakerPipeline] = useState(cached?.speakerPipeline ?? fallback(mockSpeakerPipeline))
   const [scenarios, setScenarios] = useState(cached?.scenarios ?? [])
   const [eventDocuments, setEventDocuments] = useState(cached?.eventDocuments ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
@@ -188,15 +198,19 @@ export function StoreProvider({ children }) {
     }
   }, [])
 
-  // Reset to defaults (dev only - clears cache, refetches from DB)
+  // Reset to defaults (dev only - clears cache, refetches from DB).
+  // Connected (Supabase-on) callers get empty state and a fresh refetch;
+  // disconnected callers get mock data so the offline dev surface stays
+  // populated.
   const resetToDefaults = useCallback(() => {
-    setChapter(mockChapter)
-    setSpeakers(mockSpeakers)
-    setVenues(mockVenues)
-    setEvents(mockEvents)
-    setBudgetItems(mockBudgetItems)
-    setContractChecklists(mockContractChecklists)
-    setSaps(mockSAPs)
+    const on = isSupabaseConfigured()
+    setChapter(on ? null : mockChapter)
+    setSpeakers(on ? [] : mockSpeakers)
+    setVenues(on ? [] : mockVenues)
+    setEvents(on ? [] : mockEvents)
+    setBudgetItems(on ? [] : mockBudgetItems)
+    setContractChecklists(on ? [] : mockContractChecklists)
+    setSaps(on ? [] : mockSAPs)
     setScenarios([])
     if (activeChapterId) localStorage.removeItem(storageKey(activeChapterId, activeFiscalYear))
   }, [activeChapterId, activeFiscalYear])

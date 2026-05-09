@@ -17,6 +17,45 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.97.2 — 2026-05-09
+
+### Fix: Never render mock data to signed-in users
+
+When the live Supabase fetch failed, the dashboard store fell back to
+the mock data baked into `src/lib/mockData.js` — fictional event titles,
+mock SAPs, mock speakers — and rendered them as if they were the user's
+real chapter data. This was the root cause of today's prod incident
+where event names like "The Exponential Future" / "Music & the Mind"
+appeared on the dashboard while the actual events table held the user's
+correct data. The user reasonably assumed their data had been destroyed.
+
+It hadn't. The `events` SELECT was failing on prod due to a too-eager
+RLS policy I added in 080 (now dropped via 083); the dashboard then
+silently swapped in fictional content from `mockData.js` instead of
+showing an honest "couldn't load events" state.
+
+**Change:** mock data is now used as initial state ONLY when Supabase is
+not configured (i.e. local dev with no `.env.local`). For every signed-
+in user — staging, prod, anywhere with a real DB connection — the
+initial state is empty arrays / null, and the existing `dbError` banner
+is the user-visible signal when a fetch fails. Empty + banner is honest;
+fictional content is not.
+
+Connected users with cached data still see their cached state during
+fetch (UX unchanged for the happy path). Disconnected dev offline mode
+unchanged.
+
+### Process: migration playbook hardening
+
+`docs/MIGRATION_PLAYBOOK.md` updated with three guardrails to prevent
+recurrence at scale (50-country deployment risk):
+- Pre-push schema snapshot to `snapshots/` (gitignored).
+- Mandatory `notify pgrst, 'reload schema';` at the end of every migration.
+- New "RLS policy review checklist" — null-safety, multi-policy interaction,
+  prod-shaped data testing, embedded-select cascade awareness.
+
+---
+
 ## v1.97.1 — 2026-05-09
 
 ### Course-correct: Year Arc stays Learning-only; new Chapter Calendar for the board

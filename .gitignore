@@ -26,3 +26,7 @@ dist-ssr
 
 # Supabase CLI local cache (project-ref, CLI version pins, etc.)
 supabase/.temp/
+
+# Pre-push schema snapshots (created by docs/MIGRATION_PLAYBOOK.md before
+# every prod migration push). Local-only; not tracked.
+snapshots/

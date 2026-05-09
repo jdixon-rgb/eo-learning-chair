@@ -6,8 +6,33 @@ What to do when a Supabase migration goes sideways. One page. Read it before you
 
 1. **Push to staging first.** Run `supabase db push --linked --yes` against the staging project.
 2. **Smoke test the affected feature in the staging deploy.** Don't trust "the migration applied cleanly" — confirm the feature still works.
-3. **Re-link to prod**, then `supabase db push --linked --yes`.
-4. **Watch Sentry** for ~10 minutes after prod deploy. New errors that mention table/column names = you broke something.
+3. **Snapshot prod's schema before pushing.** One-liner:
+   ```sh
+   mkdir -p snapshots && supabase db dump --linked --schema public -f "snapshots/$(date +%Y%m%d_%H%M%S)_pre_push.sql"
+   ```
+   Costs nothing, gives a known-good restore point if a migration goes sideways. Snapshots dir is gitignored.
+4. **Re-link to prod**, then `supabase db push --linked --yes`.
+5. **Smoke-test prod immediately** — load the dashboard, hit `/partners`, refresh. If anything fails to load, treat it as a live incident. Don't wait for users to report it.
+6. **Watch Sentry** for ~10 minutes after prod deploy. New errors that mention table/column names = you broke something.
+
+## Every migration must reload PostgREST schema
+
+Append this line to the end of every migration file:
+
+```sql
+notify pgrst, 'reload schema';
+```
+
+Without it, PostgREST's cached schema can lag behind the DB until the next config reload, causing "column does not exist" errors and `select *` returning malformed responses on tables you just modified. This is a small cost to pay (no behavior change when nothing changed) for a meaningful reduction in "migration applied but the app says X is broken" reports.
+
+## RLS policy review checklist
+
+When adding any new `CREATE POLICY` to an existing table, confirm:
+
+1. **Does it coexist with the table's existing permissive policies?** Multiple permissive policies for the same operation are OR-ed *after* every USING clause is evaluated — an error in *any* policy fails the whole query, even if another would have granted access. Don't ship a policy that errors on ANY plausible row.
+2. **Is every column reference null-safe?** `col = ANY(arr)` where `arr` may be NULL evaluates to NULL (fine), but `ANY(arr)` where `arr` is missing entirely or contains NULL elements can throw on certain Postgres configs. Coalesce arrays to `'{}'::type[]` before comparison if there's any doubt.
+3. **Does it work against prod-shaped data, not just staging's smaller / synthetic dataset?** If staging doesn't have rows that exercise the policy's edge cases, the bug will surface on prod first. Test the SELECT against a representative row sample before merging.
+4. **What other tables embed-select this one?** PostgREST `select=*,fk_table(*)` queries fail entirely if the embedded table errors. Today (2026-05-09) a broken events policy cascaded to budget_items + contract_checklists fetches.
 
 ## When a prod migration fails midway
 
