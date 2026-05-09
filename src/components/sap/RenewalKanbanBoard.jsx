@@ -2,13 +2,14 @@ import { useMemo } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
 import { useAuth } from '@/lib/auth'
 import { SAP_RENEWAL_STATUSES, SAP_TIERS } from '@/lib/constants'
-import { Mail, Phone, Globe, Archive, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Mail, Phone, Globe, Archive, Check } from 'lucide-react'
 
 // Renewal Kanban — four columns (Renewing | Uncertain | Not renewing
 // | Not set) for status='active' partners. The retention chair tags
-// each card with a renewal intent; on the "Not renewing" column they
-// can Archive a partner (status → 'inactive') to move them into the
-// Past SAPs view for future re-engagement.
+// each card with a renewal intent via a row of explicit-label status
+// pills (works equally well on stacked mobile and side-by-side
+// desktop — no left/right arrows to interpret). On the "Not renewing"
+// column, an Archive action moves the partner into Past SAPs.
 
 const COLUMNS = [
   ...SAP_RENEWAL_STATUSES.map(s => ({ id: s.id, label: s.label, color: s.color })),
@@ -46,9 +47,9 @@ export default function RenewalKanbanBoard({ search = '' }) {
     return map
   }, [activePartners])
 
-  const moveToColumn = (sapId, columnId) => {
+  const setStatus = (sapId, statusId) => {
     if (!canEdit) return
-    setRenewalStatus(sapId, columnId, undefined)
+    setRenewalStatus(sapId, statusId, undefined)
   }
 
   const archive = (sapId, name) => {
@@ -59,10 +60,8 @@ export default function RenewalKanbanBoard({ search = '' }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      {COLUMNS.map((col, colIdx) => {
+      {COLUMNS.map(col => {
         const list = byStatus.get(col.id) || []
-        const isLeftmost = colIdx === 0
-        const isRightmost = colIdx === COLUMNS.length - 1
         const isNotRenewing = col.id === 'not_renewing'
         return (
           <div key={col.id ?? 'unset'} className="rounded-xl border border-border bg-card overflow-hidden">
@@ -84,10 +83,8 @@ export default function RenewalKanbanBoard({ search = '' }) {
               )}
               {list.map(p => {
                 const tier = SAP_TIERS.find(t => t.id === p.tier)
-                const prevCol = COLUMNS[colIdx - 1]
-                const nextCol = COLUMNS[colIdx + 1]
                 return (
-                  <div key={p.id} className="rounded-lg border border-border/70 bg-background p-2.5 space-y-1.5">
+                  <div key={p.id} className="rounded-lg border border-border/70 bg-background p-2.5 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="text-sm font-medium text-foreground line-clamp-2">{p.name}</div>
                       {tier && (
@@ -126,32 +123,36 @@ export default function RenewalKanbanBoard({ search = '' }) {
                       <div className="text-[11px] text-muted-foreground/70 italic line-clamp-2">{p.renewal_notes}</div>
                     )}
                     {canEdit && (
-                      <div className="flex items-center gap-1 pt-1">
-                        <button
-                          onClick={() => moveToColumn(p.id, prevCol?.id ?? null)}
-                          disabled={isLeftmost}
-                          className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={prevCol ? `Move to ${prevCol.label}` : ''}
-                        >
-                          <ArrowLeft className="h-3.5 w-3.5" />
-                        </button>
-                        {isNotRenewing ? (
+                      <div className="pt-1 space-y-1.5">
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
+                          Mark as
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {SAP_RENEWAL_STATUSES.map(s => {
+                            const selected = p.renewal_status === s.id
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() => setStatus(p.id, s.id)}
+                                className={`flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md border transition-colors ${selected ? '' : 'hover:bg-muted'}`}
+                                style={selected
+                                  ? { backgroundColor: s.color, borderColor: s.color, color: '#fff' }
+                                  : { borderColor: `${s.color}55`, color: s.color }}
+                                aria-pressed={selected}
+                              >
+                                {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+                                {s.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {isNotRenewing && (
                           <button
                             onClick={() => archive(p.id, p.name)}
-                            className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
+                            className="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium px-2 py-1.5 rounded-md bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 mt-1"
                           >
                             <Archive className="h-3.5 w-3.5" />
-                            Archive
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => moveToColumn(p.id, nextCol?.id ?? null)}
-                            disabled={isRightmost}
-                            className="flex-1 flex items-center justify-center gap-1 text-[11px] font-medium px-2 py-1 rounded bg-muted hover:bg-muted/70 text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed"
-                            title={nextCol ? `Move to ${nextCol.label}` : ''}
-                          >
-                            {nextCol?.label || ''}
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            Archive — Move to Past SAPs
                           </button>
                         )}
                       </div>

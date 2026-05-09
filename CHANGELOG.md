@@ -17,6 +17,24 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.94.1 — 2026-05-08
+
+### Fix: Renewal Kanban controls — explicit labels, mobile-friendly
+
+The arrow-based "advance / retreat" buttons on each renewal card
+were unreadable on mobile (where columns stack vertically, "left"
+and "right" lose their meaning) and the rightmost-column right
+button was a dead-end disabled state.
+
+Replaced with a "Mark as" pill row showing all three renewal
+statuses by name (Renewing / Uncertain / Not renewing). The current
+status is filled with its color; the others are tappable outlines.
+You always see exactly what state you're choosing — no inferring
+from arrow direction. The Archive action on the "Not renewing"
+column is now its own full-width button below the pills.
+
+---
+
 ## v1.94.0 — 2026-05-08
 
 ### Feature: Unified SAP lifecycle on /partners — Active | Pipeline | Past
