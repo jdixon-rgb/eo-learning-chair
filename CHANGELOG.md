@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.94.4 — 2026-05-08
+
+### Tweak: Rename "Pipeline" → "Prospect" in SAPs toggle
+
+The middle segment of the SAPs page is now labeled **Prospect**
+(matches `status='prospect'` and the user's mental model:
+**Active | Prospect | Past**). URL param is `?view=prospect`; the
+older `?view=pipeline` is still accepted as an alias so existing
+links keep working.
+
+---
+
 ## v1.94.3 — 2026-05-08
 
 ### Fix: Pin document to viewport width on mobile

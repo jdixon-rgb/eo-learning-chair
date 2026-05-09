@@ -56,10 +56,12 @@ export default function SAPPartnersPage() {
   // Renewal Kanban or Tier View when they want a different lens.
   const [viewMode, setViewMode] = useState('list')
 
-  // Outer toggle — Active | Pipeline | Past — synced to ?view= so
+  // Outer toggle — Active | Prospect | Past — synced to ?view= so
   // links and back-button navigation work across the SAP lifecycle.
+  // Older `?view=pipeline` URLs are accepted as an alias for prospect.
   const [searchParams, setSearchParams] = useSearchParams()
-  const segment = searchParams.get('view') || 'active'
+  const rawSegment = searchParams.get('view') || 'active'
+  const segment = rawSegment === 'pipeline' ? 'prospect' : rawSegment
   const setSegment = (next) => {
     const params = new URLSearchParams(searchParams)
     if (next === 'active') params.delete('view'); else params.set('view', next)
@@ -399,7 +401,7 @@ export default function SAPPartnersPage() {
 
   const segments = [
     { id: 'active', label: 'Active', count: activePartners.length },
-    { id: 'pipeline', label: 'Pipeline', count: prospectCount },
+    { id: 'prospect', label: 'Prospect', count: prospectCount },
     { id: 'past', label: 'Past', count: pastCount },
   ]
 
@@ -413,8 +415,8 @@ export default function SAPPartnersPage() {
           subtitle={
             segment === 'active'
               ? `${activePartners.length} active partner${activePartners.length !== 1 ? 's' : ''} \u00b7 ${contacts.length} contacts`
-              : segment === 'pipeline'
-                ? `${prospectCount} prospect${prospectCount !== 1 ? 's' : ''} in the pipeline`
+              : segment === 'prospect'
+                ? `${prospectCount} prospect${prospectCount !== 1 ? 's' : ''}`
                 : `${pastCount} past partner${pastCount !== 1 ? 's' : ''} on file`
           }
         />
@@ -445,7 +447,7 @@ export default function SAPPartnersPage() {
         </div>
       </div>
 
-      {/* Segmented toggle: Active | Pipeline | Past */}
+      {/* Segmented toggle: Active | Prospect | Past */}
       <div className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
         {segments.map(s => {
           const active = s.id === segment
@@ -464,8 +466,8 @@ export default function SAPPartnersPage() {
         })}
       </div>
 
-      {/* Pipeline (prospect Kanban) */}
-      {segment === 'pipeline' && <ProspectPipelineBoard />}
+      {/* Prospect Kanban */}
+      {segment === 'prospect' && <ProspectPipelineBoard />}
 
       {/* Past SAPs (institutional memory + re-engage) */}
       {segment === 'past' && <PastSAPsList search={search} />}
