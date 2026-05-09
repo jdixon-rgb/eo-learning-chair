@@ -4,7 +4,9 @@ import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
 import { useStore } from '@/lib/store'
+import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { isStaging } from '@/lib/env'
 import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParkingLotEntry, deleteParkingLotEntry } from '@/lib/reflectionsStore'
 import { lazy, Suspense } from 'react'
 import {
@@ -35,7 +37,8 @@ const EVENT_TYPE_LABELS = {
 }
 
 export default function ForumHomePage() {
-  const { user, profile, isAdmin, isSuperAdmin } = useAuth()
+  const { user, profile, isAdmin, isSuperAdmin, viewAsRole } = useAuth()
+  const { activeChapter } = useChapter()
   const { chapterMembers, forums, loading: boardLoading } = useBoardStore()
   const { forumRoles, forumCalendar, forumDocs, sapInterest, sapRatings, forumHistory,
     agendas, agendaItems,
@@ -76,24 +79,70 @@ export default function ForumHomePage() {
   const [showAddParkingLot, setShowAddParkingLot] = useState(false)
   const [activeTool, setActiveTool] = useState(null) // null = tools list, 'reflections' = inline reflections
   const [pageError, setPageError] = useState(null)
+  const [isSynthetic, setIsSynthetic] = useState(false)
+
+  // STAGING-ONLY synthetic-member fallback. Hard-gated on `isStaging`
+  // — production code paths are NEVER reached. The synthetic identity
+  // lets a super-admin / role-switcher preview member-side surfaces
+  // (Forum, Reflections, Lifeline) without owning a real
+  // chapter_members row. Reads work because RLS lets super-admins
+  // through; writes that depend on a real member.id will still fail
+  // (intentional — preview ≠ acting on someone's behalf).
+  //
+  // Why not on prod: the privacy rule is sacred — previewing a role
+  // must NEVER expose anyone else's private content. A synthetic
+  // identity in prod would be either confusing (real-looking but
+  // fake) or risky (collides with someone's real data). Staging has
+  // no real members worth protecting, so synthetic is safe there.
+  function buildStagingSynthetic() {
+    if (!isStaging) return null
+    if (!activeChapter?.id) return null
+    if (!(isSuperAdmin || viewAsRole === 'moderator' || viewAsRole === 'member')) return null
+    const firstForum = forums.find(f => f.is_active && f.chapter_id === activeChapter.id)
+    return {
+      id: null, // intentionally null — flags writes that need a real row
+      chapter_id: activeChapter.id,
+      first_name: profile?.full_name?.split(' ')[0] || 'Preview',
+      last_name: '(staging)',
+      name: `${profile?.full_name || 'Preview'} (staging preview)`,
+      email: email,
+      forum: firstForum?.name || '',
+      __synthetic: true,
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
     async function init() {
       setLoading(true)
       const { data: m } = await loadCurrentMember(email)
-      if (!cancelled) {
-        setMember(m)
-        if (m?.forum && m?.chapter_id) {
-          const { data } = await loadParkingLot(m.chapter_id, m.forum)
-          if (!cancelled) setParkingLot(data)
+      if (cancelled) return
+      let resolved = m
+      if (!resolved) {
+        const synthetic = buildStagingSynthetic()
+        if (synthetic) {
+          resolved = synthetic
+          setIsSynthetic(true)
         }
-        setLoading(false)
+      } else {
+        setIsSynthetic(false)
       }
+      setMember(resolved)
+      if (resolved?.forum && resolved?.chapter_id && resolved.id) {
+        // Skip parking-lot load for synthetic members (no member.id =
+        // RLS would reject anyway, and there's nothing for them to load).
+        const { data } = await loadParkingLot(resolved.chapter_id, resolved.forum)
+        if (!cancelled) setParkingLot(data)
+      }
+      setLoading(false)
     }
     if (email) init()
     return () => { cancelled = true }
-  }, [email])
+    // activeChapter, forums, viewAsRole, isSuperAdmin all feed the
+    // synthetic builder — re-run when they change so the fallback
+    // can attach as soon as the chapter+forum data lands.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, activeChapter?.id, forums.length, viewAsRole, isSuperAdmin])
 
   async function refreshParkingLot() {
     if (!member?.chapter_id || !member?.forum) return
@@ -191,6 +240,15 @@ export default function ForumHomePage() {
 
   return (
     <div className="space-y-6">
+      {isSynthetic && (
+        <div className="rounded-lg border border-staging/40 bg-staging/10 px-4 py-2.5 text-xs text-staging">
+          <strong className="font-semibold">Staging preview.</strong>{' '}
+          You don't have a real chapter-member record, so this view is using a
+          synthetic identity tied to <strong>{member.forum || 'no forum'}</strong>{' '}
+          in <strong>{activeChapter?.name}</strong>. Reads work; writes that need
+          a real member row will fail. This banner only appears on staging.
+        </div>
+      )}
       <div className="text-center py-4">
         <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
         <button

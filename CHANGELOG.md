@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.0.3 — 2026-05-09
+
+### Fix: Staging-only synthetic member for previewing member-side surfaces
+
+When a super-admin (or someone using "Switch role" → Forum Moderator)
+opens a member-side surface like `/portal/forum`, they were hitting
+"Member profile not found" because they don't own a real
+`chapter_members` row. Now, **on staging only**, a synthetic identity
+tied to the active chapter + first active forum auto-fills so the
+page renders and previews work end-to-end.
+
+**Production is unchanged.** The fallback is hard-gated on
+`isStaging` (resolved at build time from `VITE_APP_ENV`). On prod,
+the original "Member profile not found" path runs unchanged — the
+privacy rule stays sacred, no synthetic identity ever materializes.
+
+A clearly-labeled "Staging preview" banner renders at the top of the
+page whenever the synthetic identity is in use, so there's no
+mistaking it for real data. Reads work; writes that depend on a real
+`member.id` will fail (intentional — preview ≠ acting on someone's
+behalf).
+
 ## v2.0.2 — 2026-05-09
 
 ### Fix: Sidebar section order — Moderator above Member
