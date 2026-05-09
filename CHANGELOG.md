@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.0.2 — 2026-05-09
+
+### Fix: Sidebar section order — Moderator above Member
+
+Section order is now strictly specificity-descending: role nav,
+Admin, Board, Moderator, Member. The Moderator section was
+previously rendering below Member, which buried the specialized
+items the user actually wanted to act on.
+
 ## v2.0.1 — 2026-05-09
 
 ### Fix: Forum Moderator now appears in the role switcher
