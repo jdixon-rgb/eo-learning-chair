@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.0.4 — 2026-05-09
+
+### Fix: Synthetic preview member always lands in a forum
+
+Follow-up to v2.0.3. When the staging chapter has no real forums (or
+they haven't loaded yet), the synthetic preview member's `forum`
+field was empty, which tripped the "You're not in a forum yet" gate
+on `/portal/forum`. Now the synthetic always assigns a forum name —
+the chapter's first active forum if one exists, otherwise the
+fictitious "Preview Forum" — so the page renders end-to-end.
+
+Production unchanged — still hard-gated on `isStaging`.
+
 ## v2.0.3 — 2026-05-09
 
 ### Fix: Staging-only synthetic member for previewing member-side surfaces

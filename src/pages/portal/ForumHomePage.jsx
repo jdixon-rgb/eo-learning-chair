@@ -98,7 +98,16 @@ export default function ForumHomePage() {
     if (!isStaging) return null
     if (!activeChapter?.id) return null
     if (!(isSuperAdmin || viewAsRole === 'moderator' || viewAsRole === 'member')) return null
-    const firstForum = forums.find(f => f.is_active && f.chapter_id === activeChapter.id)
+    // Prefer a real active forum so the preview surfaces real test
+    // data (roles, calendar entries, agendas) when it exists. If the
+    // chapter has no forums, fall back to a fictitious name —
+    // ForumHomePage's `effectiveForum` already handles unknown
+    // forum names gracefully (renders the shell, just with empty
+    // data sections). Either way we always produce a non-empty
+    // forum string so the "You're not in a forum yet" gate doesn't
+    // trigger.
+    const firstForum = forums.find(f => f.is_active)
+    const forumName = firstForum?.name || 'Preview Forum'
     return {
       id: null, // intentionally null — flags writes that need a real row
       chapter_id: activeChapter.id,
@@ -106,7 +115,7 @@ export default function ForumHomePage() {
       last_name: '(staging)',
       name: `${profile?.full_name || 'Preview'} (staging preview)`,
       email: email,
-      forum: firstForum?.name || '',
+      forum: forumName,
       __synthetic: true,
     }
   }
