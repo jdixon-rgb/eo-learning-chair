@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.4 — 2026-05-09
+
+### Fix: SAPs List View no longer crops content on mobile
+
+The Active board's List view was a 7-column table inside a wrapper
+with `overflow-hidden`, so on mobile anything past the third column
+was silently cut off and there was no way to scroll to it.
+
+Two fixes:
+- The wrapper now allows internal horizontal scroll
+  (`overflow-x-auto`), so the table can swipe sideways inside its
+  card if content overflows.
+- Lower-priority columns (Type, Primary Contact, Contact count,
+  Forum Trained) are hidden on small screens. Mobile shows just
+  Partner, Industry, and Tier — which is what fits cleanly. All
+  columns return at the `md:` breakpoint and above.
+
+Tap any row to open the partner's edit dialog where every field is
+visible regardless of breakpoint.
+
+---
+
 ## v1.95.3 — 2026-05-08
 
 ### Cleanup: Post-Compass-retirement polish
