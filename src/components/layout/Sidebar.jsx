@@ -84,14 +84,12 @@ const memberItems = [
       { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
     ],
   },
-  {
-    to: '/portal/vendors',
-    icon: Store,
-    label: 'Vendors',
-    children: [
-      { to: '/portal/partners', icon: Handshake, label: 'SAPs' },
-    ],
-  },
+  // Vendors is the broader catalog. SAPs (formal partners) don't get
+  // their own sidebar entry — inside /portal/vendors they rise to the
+  // top of each category and are flagged with a shield/badge so members
+  // see the "preferred / supported" partners first. See
+  // memory/project_vendors_vs_saps.md.
+  { to: '/portal/vendors', icon: Store, label: 'Vendors' },
   { to: '/portal/calendar', icon: GraduationCap, label: 'Learning' },
 ]
 

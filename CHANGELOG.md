@@ -17,6 +17,25 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.93.2 — 2026-05-08
+
+### Tweak: Vendors as a single Member entry (no SAPs sub-item)
+
+The SAPs sub-item under Vendors goes away — Vendors is the broader
+catalog and SAPs are a subset. Surfacing both as separate sidebar
+entries was redundant. Going forward, when a member opens Vendors and
+picks a category, SAPs (formal partners) will rise to the top of the
+category and be flagged with a shield badge so the preferred/supported
+partners are visually obvious. (In-page priority + badge treatment
+inside `VendorsPage.jsx` is TBD; this commit is just the sidebar
+simplification.)
+
+The existing `/portal/partners` page remains for SAP Chair workflows
+and members declaring SAP-specific interest — it just isn't a top-level
+member-nav entry anymore.
+
+---
+
 ## v1.93.1 — 2026-05-08
 
 ### Tweak: Member section nav restructure
