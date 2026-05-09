@@ -1,5 +1,7 @@
-// Admin roles that get full access (Learning-Chair-flavored permissions)
-export const ADMIN_ROLES = ['super_admin', 'president', 'learning_chair', 'sap_chair', 'chapter_experience_coordinator', 'chapter_executive_director']
+// Admin roles that get full access (Learning-Chair-flavored permissions).
+// president_elect shadows the president and gets the same admin route
+// access (read-only on most surfaces — edit gates are handled per-page).
+export const ADMIN_ROLES = ['super_admin', 'president', 'president_elect', 'learning_chair', 'sap_chair', 'chapter_experience_coordinator', 'chapter_executive_director']
 
 // Super admin only
 export const SUPER_ADMIN_ROLES = ['super_admin']

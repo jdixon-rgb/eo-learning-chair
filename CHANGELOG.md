@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.6 — 2026-05-09
+
+### Access: President-Elect can now see /partners and other admin views
+
+Added `president_elect` to `ADMIN_ROLES`. The role already had the
+admin sidebar layout and is logically the President's shadow, but the
+SAP Partners route (and the venues / budget / scenarios routes that
+share the same gate) were rejecting them. View-only — edit gates on
+the renewal Kanban remain restricted to SAP Chair / Executive Director
+/ Chapter Experience Coordinator.
+
+Files: `src/lib/permissions.js`
+
+---
+
 ## v1.95.5 — 2026-05-09
 
 ### Fix: SAPs List View — all columns + horizontal swipe on mobile
