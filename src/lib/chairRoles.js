@@ -90,8 +90,8 @@ export const CHAIR_ROLE_CONFIGS = {
     title: 'SAP Chair',
     homePath: '/partners',
     navItems: [
-      // /partners now hosts a segmented toggle: Active | Pipeline | Past
-      { to: '/partners', icon: Handshake, label: 'SAPs' },
+      // /partners hosts a segmented toggle: Active | Prospect | Past
+      { to: '/partners', icon: Handshake, label: 'Manage SAPs' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
     ],
   },

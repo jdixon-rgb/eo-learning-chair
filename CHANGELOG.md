@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.1 — 2026-05-08
+
+### Tweak: Rename SAP Chair sidebar entry → "Manage SAPs"
+
+The SAP Chair's sidebar entry now reads **Manage SAPs** instead of
+"SAPs" — clearer that this is where the chair does the work of
+managing the partner roster (Active / Prospect / Past), not just
+where they look at it.
+
+---
+
 ## v1.95.0 — 2026-05-08
 
 ### Feature: One shell for everyone — Compass top-nav layout retired
