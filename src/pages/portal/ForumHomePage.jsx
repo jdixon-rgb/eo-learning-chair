@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
@@ -57,7 +57,21 @@ export default function ForumHomePage() {
   const email = user?.email || profile?.email
   const [member, setMember] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('parking')
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Tab can be deep-linked from the sidebar Moderator section
+  // (e.g. /portal/forum?tab=agenda jumps straight to the agenda tab).
+  // Falls back to 'parking' for any unknown / missing value.
+  const validTabs = ['parking', 'tools', 'agenda', 'calendar', 'constitution', 'partners', 'members', 'history']
+  const initialTab = validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking'
+  const [tab, setTabState] = useState(initialTab)
+  // Keep ?tab= in sync when the user clicks a tab so refresh / share
+  // preserves the intended view.
+  const setTab = (next) => {
+    setTabState(next)
+    const params = new URLSearchParams(searchParams)
+    if (next === 'parking') params.delete('tab'); else params.set('tab', next)
+    setSearchParams(params, { replace: true })
+  }
   const [parkingLot, setParkingLot] = useState([])
   const [showAddParkingLot, setShowAddParkingLot] = useState(false)
   const [activeTool, setActiveTool] = useState(null) // null = tools list, 'reflections' = inline reflections

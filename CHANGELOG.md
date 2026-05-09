@@ -17,6 +17,65 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.100.0 — 2026-05-09
+
+### Feature: Moderator role — foundation slice
+
+Forum moderators now get a dedicated **Moderator** section in the
+sidebar that only renders when the current user actually moderates a
+forum. Treated like a board role: surfaces menu items the average
+member never sees.
+
+**Sidebar items (moderator-only):**
+- Forum Agenda → deep-links into `/portal/forum?tab=agenda` with
+  edit affordances (existing ForumHomePage already gates writes on
+  `isModerator`)
+- Forum Calendar → `?tab=calendar`
+- Forum Members & Roles → `?tab=members`
+- Moderator Events → new dedicated page (see below)
+
+**New surface — Moderator Events** (`/portal/moderator/events`).
+Chapter-wide, moderator-only calendar for the meetings every
+moderator is expected to attend:
+- Monthly moderator meetings (hosted by the Moderator chair or the
+  Forum Health Chair)
+- Annual summit (per regional location — region tag stored on the
+  event so a traveling moderator can see summits beyond their home
+  chapter's region)
+- Catch-all "other" type for ad-hoc training, intros, etc.
+Full CRUD on `moderator_events` with type, host role, region,
+location, virtual link, start/end times.
+
+**Schema (migration 084):**
+- `moderator_events` table with chapter-scoped RLS — visible to
+  moderators + chapter admins, hidden from non-moderator members.
+- New helper function `current_member_is_moderator()` powering
+  the RLS policies. Checks both the legacy
+  `chapter_members.is_forum_moderator` boolean flag and the
+  fiscal-year-scoped `forum_role_assignments.role = 'moderator'`
+  pipeline.
+- Self-heals the legacy `chapter_members.is_forum_moderator`
+  column (migration 006 was tracked in history but the column was
+  missing on the staging DB — same drift class as the SAP fix in
+  migration 080).
+
+**Hook:** `useIsModerator()` returns `{ isModerator, member,
+moderatedForumIds }`. Powers the sidebar visibility and any future
+moderator-aware view.
+
+**Tab deep-linking:** `ForumHomePage` now reads `?tab=` from the
+URL (and writes to it on tab clicks) so the sidebar can deep-link
+into specific tabs and the URL stays shareable / refresh-safe.
+
+**Out of scope for this slice (deliberate):**
+- Edit affordances on the existing forum tabs already exist; this
+  PR doesn't touch the tab content itself.
+- A separate moderator dashboard at `/portal/moderator` (the
+  events page is the only sub-route for now). Lands when there's
+  more than one thing to surface there.
+- Moderator-specific notifications / alerts (Forum Health Chair's
+  Moderator Comms surface stays the broadcast channel).
+
 ## v1.99.0 — 2026-05-09
 
 ### Feature: New brand identity — Aperture mark + DM Sans wordmark

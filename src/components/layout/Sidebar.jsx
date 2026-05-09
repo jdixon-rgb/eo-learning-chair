@@ -5,6 +5,7 @@ import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import { useSAPStore } from '@/lib/sapStore'
+import { useIsModerator } from '@/lib/useIsModerator'
 import { useTourTips } from '@/lib/useTourTips'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
@@ -28,6 +29,9 @@ import {
   GraduationCap,
   BarChart3,
   ClipboardCheck,
+  ClipboardList,
+  Calendar as CalendarIcon,
+  CalendarDays,
   Eye,
   ChevronDown,
   ChevronUp,
@@ -102,11 +106,27 @@ const NON_MEMBER_ROLES = new Set([
   'sap_contact',
 ])
 
+// Moderator section — only renders when useIsModerator() returns true.
+// Treated like a board role: the moderator gets menu items the average
+// member never sees (forum agenda, forum calendar, forum members &
+// roles management) plus the back-of-house moderator events calendar
+// for monthly moderator meetings + annual regional summit.
+//
+// Forum sub-items deep-link into the existing ForumHomePage tabs via
+// ?tab=. Moderator Events is a separate, moderator-only surface.
+const moderatorItems = [
+  { to: '/portal/forum?tab=agenda', icon: ClipboardList, label: 'Forum Agenda' },
+  { to: '/portal/forum?tab=calendar', icon: CalendarIcon, label: 'Forum Calendar' },
+  { to: '/portal/forum?tab=members', icon: Users2, label: 'Forum Members & Roles' },
+  { to: '/portal/moderator/events', icon: CalendarDays, label: 'Moderator Events' },
+]
+
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId, viewAsRegion, setViewAsRegion } = useAuth()
   const { activeChapter, allChapters } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
+  const { isModerator } = useIsModerator()
   const { resetAll: resetTourTips } = useTourTips()
   const navigate = useNavigate()
   const location = useLocation()
@@ -148,6 +168,13 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   // hidden for super-admin when not impersonating (they're not "in" a
   // chapter as a member at the platform level).
   const showMemberSection = !hideChapterOps && !NON_MEMBER_ROLES.has(effectiveRole)
+
+  // Moderator section: only when this user actually moderates a forum.
+  // Hidden for staff / SAP contacts / non-impersonating super-admin
+  // (they have no member identity in this chapter context). Admins are
+  // intentionally NOT auto-shown — they get into moderator views via
+  // role-switching, not by virtue of admin status.
+  const showModeratorSection = !hideChapterOps && !NON_MEMBER_ROLES.has(effectiveRole) && isModerator
 
   const handleSignOut = async () => {
     await signOut()
@@ -464,6 +491,47 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                       </div>
                     )}
                   </div>
+                )
+              })}
+            </>
+          )}
+
+          {/* Moderator section — sits below Member because moderation
+              is a hat the same person wears, not a separate identity.
+              Forum sub-items deep-link into existing ForumHomePage tabs
+              with edit affordances already gated on isModerator inside
+              that page. Moderator Events is the new moderator-only
+              calendar (monthly meetings + annual regional summit). */}
+          {showModeratorSection && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Moderator</p>
+              </div>
+              {moderatorItems.map(({ to, icon: Icon, label }) => {
+                // Match active state by pathname only — query params
+                // (?tab=agenda etc.) are how we deep-link, but NavLink's
+                // built-in isActive doesn't read them. Compare manually.
+                const [path, query] = to.split('?')
+                const params = new URLSearchParams(query || '')
+                const tabParam = params.get('tab')
+                const currentParams = new URLSearchParams(location.search)
+                const isActive = location.pathname === path && (
+                  tabParam ? currentParams.get('tab') === tabParam : !currentParams.get('tab')
+                )
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={onNavigate}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? activeNavClass
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {label}
+                  </NavLink>
                 )
               })}
             </>

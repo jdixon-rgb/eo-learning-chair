@@ -38,6 +38,7 @@ import SurveyPage from '@/pages/portal/SurveyPage'
 import ReflectionsPage from '@/pages/portal/ReflectionsPage'
 import LifelinePage from '@/pages/portal/LifelinePage'
 import ForumHomePage from '@/pages/portal/ForumHomePage'
+import ModeratorEventsPage from '@/pages/portal/ModeratorEventsPage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import StaffManagementPage from '@/pages/admin/StaffManagementPage'
 import SLPManagementPage from '@/pages/admin/SLPManagementPage'
@@ -277,6 +278,7 @@ function App() {
                 <Route path="/portal/survey" element={<SurveyPage />} />
                 <Route path="/portal/reflections" element={<ReflectionsPage />} />
                 <Route path="/portal/forum" element={<ForumHomePage />} />
+                <Route path="/portal/moderator/events" element={<ModeratorEventsPage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
                 <Route path="/portal/partners" element={<MemberSAPInterestPage />} />
