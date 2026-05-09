@@ -210,7 +210,12 @@ export const CHAIR_ROLE_CONFIGS = {
   // homePath drops the previewer onto Moderator Events directly so
   // they see the new surface without hunting for it.
   moderator: {
-    title: 'Forum Moderator',
+    // Title is just "Moderator" (not "Forum Moderator") to avoid the
+    // role-switcher reading like a fourth Forum tier alongside Forum
+    // Health Chair and Forum Placement Chair. In context the role
+    // belongs to a forum, but the surfacing in the sidebar should
+    // stand on its own.
+    title: 'Moderator',
     homePath: '/portal/moderator/events',
     navItems: [], // Member sidebar + injected Moderator section drive the nav
   },

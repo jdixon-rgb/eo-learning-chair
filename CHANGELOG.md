@@ -17,6 +17,14 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.1.1 — 2026-05-09
+
+### Fix: Role switcher label — "Moderator" instead of "Forum Moderator"
+
+Avoids reading like a fourth Forum tier alongside Forum Health Chair
+and Forum Placement Chair. The role still belongs to a forum in
+context — only the sidebar/role-switcher label is shortened.
+
 ## v2.1.0 — 2026-05-09
 
 ### Feat: Forum Health Chair dashboard — checklist + handoff narrative
