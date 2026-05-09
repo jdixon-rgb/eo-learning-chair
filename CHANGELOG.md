@@ -17,6 +17,34 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.0 — 2026-05-08
+
+### Feature: One shell for everyone — Compass top-nav layout retired
+
+Every signed-in human now sees the same chrome — the unified sidebar
+shell. Members, chairs, moderators all use the same nav with the same
+sign-out, the same chapter / FY / role context block, the same footer.
+No more popping between the Compass top-nav and the chair sidebar
+depending on whether you clicked Forum or Year Arc.
+
+**Changes:**
+- `/portal/*` routes (Forum, Reflections, Lifeline, Vendors, Partners,
+  Calendar, Notifications, Profile, Survey, Feedback) now render inside
+  `AppLayout` instead of the retired `MemberPortalLayout`.
+- The duplicate "Compass (Member Portal)" link in the sidebar footer is
+  gone — those surfaces are reachable directly from the Member section
+  in the main nav.
+- `MemberPortalLayout.jsx` deleted.
+- A regular member with no chair role sees the Member section + footer
+  (their chair-role config has empty navItems, so the chair section is
+  empty for them — clean and intentional).
+
+The PORTAL_ROLES gate still excludes regional_learning_chair_expert
+from member-private content (reflections, lifeline, forum) — privacy
+behavior is unchanged.
+
+---
+
 ## v1.94.4 — 2026-05-08
 
 ### Tweak: Rename "Pipeline" → "Prospect" in SAPs toggle

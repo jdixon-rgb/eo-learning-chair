@@ -10,7 +10,6 @@ import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
 import { useState } from 'react'
 import {
-  Globe,
   X,
   LogOut,
   Shield,
@@ -493,14 +492,6 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           >
             <MessageSquarePlus className="h-3.5 w-3.5" />
             Suggestion | Report Bug
-          </NavLink>
-          <NavLink
-            to="/portal"
-            onClick={onNavigate}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            Compass <span className="text-muted-foreground/70">(Member Portal)</span>
           </NavLink>
           <button
             onClick={resetTourTips}

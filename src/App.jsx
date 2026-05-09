@@ -30,7 +30,6 @@ import AccessNeededPage from '@/pages/AccessNeededPage'
 import PrivacyPolicy from '@/pages/PrivacyPolicy'
 import TermsOfService from '@/pages/TermsOfService'
 import MemberCalendarPage from '@/pages/MemberCalendarPage'
-import MemberPortalLayout from '@/components/layout/MemberPortalLayout'
 import MemberPortalDashboard from '@/pages/portal/MemberPortalDashboard'
 import MemberNotificationsPage from '@/pages/portal/MemberNotificationsPage'
 import MemberProfilePage from '@/pages/portal/MemberProfilePage'
@@ -261,10 +260,14 @@ function App() {
                 } />
               </Route>
 
-              {/* Member Portal routes (dark-themed top nav layout) */}
+              {/* Member routes — render inside the unified sidebar shell.
+                  Compass had its own top-nav layout; we retired it so every
+                  signed-in human sees the same chrome. The PORTAL_ROLES gate
+                  still excludes regional_learning_chair_expert from member-
+                  private content (reflections, lifeline, forum). */}
               <Route element={
                 <ProtectedRoute allowedRoles={PORTAL_ROLES}>
-                  <MemberPortalLayout />
+                  <AppLayout />
                 </ProtectedRoute>
               }>
                 <Route path="/portal" element={<MemberPortalDashboard />} />
