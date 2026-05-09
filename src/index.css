@@ -140,6 +140,17 @@
   * {
     @apply border-border;
   }
+  html, body {
+    /* Pin the document to viewport width. Without this, mobile browsers
+       (Chrome iOS, Safari) will widen the viewport to fit any element
+       that exceeds it, which makes top-anchored chrome (the TopBar)
+       appear to "shrink" relative to the screen while the body
+       horizontally scrolls. The AppLayout container also has
+       overflow-x-hidden — this is the belt-and-suspenders safeguard. */
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     margin: 0;

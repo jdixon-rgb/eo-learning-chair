@@ -17,6 +17,22 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.94.3 — 2026-05-08
+
+### Fix: Pin document to viewport width on mobile
+
+The TopBar still appeared narrower than the body on mobile Chrome
+because mobile browsers expand the viewport to fit any horizontally-
+overflowing element, leaving top-anchored chrome (the TopBar)
+visually "short" relative to the screen.
+
+Added `width: 100%; max-width: 100vw; overflow-x: hidden` on `html`
+and `body`. Combined with the AppLayout container's overflow guard
+from v1.94.2, this prevents any rogue wide content anywhere in the
+app from pushing the viewport sideways.
+
+---
+
 ## v1.94.2 — 2026-05-08
 
 ### Fix: SAPs page mobile — full-width topbar + List as default view
