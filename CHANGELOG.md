@@ -17,6 +17,47 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.98.0 — 2026-05-09
+
+### Feature: Sentry capture for silent errors
+
+Today's prod incident — events/saps/budget_items/contract_checklists
+fetches failing for hours due to migration 080's overly-eager RLS
+policies — left **zero trace in Sentry**. The Sentry SDK was
+initialized and the React ErrorBoundary was mounted, but every silent-
+recovery catch block in the data layer was `console.warn` only. Errors
+the app caught and gracefully recovered from (with cached data + a
+"Failed to load" banner) never bubbled up to telemetry. We learned
+about the incident from a freaked-out user, not from monitoring.
+
+**New helper:** `src/lib/monitoring.js#captureSilentError(label, err, ctx)`
+normalizes any error (thrown Error or PostgREST `{error: {...}}`
+response) into a Sentry-ingestible exception with consistent tagging
+(`label`, `chapter_id`, `fiscal_year`, etc.) for filtering across
+chapters and operations.
+
+**Wired into the silent-recovery paths:**
+- `store.js`: `safeFetch` (per-table read failure), `dbWrite` (write
+  failure), aggregate `store:hydrate-partial` and `store:hydrate-fatal`
+  events, file-upload paths.
+- `boardStore.js`: hydrate (partial + fatal), `boardWrite`, and the
+  member-invite batch-sync path.
+- `lifelineStore.js`: photo upload (storage error) and photo-row update
+  (DB error) — both already had user-facing fallbacks but lacked
+  telemetry.
+
+**Effect at scale:** an incident like today's now produces Sentry
+events within seconds of the first failed fetch, with chapter_id and
+fiscal_year tags so the on-call can immediately see "is this hitting
+one chapter or many?" Notification rules in Sentry can page on these
+without code changes.
+
+What this does NOT yet do: catch bugs that only manifest under
+authenticated sessions, or wire Sentry → SMS/PagerDuty (that's a
+configuration step inside Sentry itself, not code).
+
+---
+
 ## v1.97.3 — 2026-05-09
 
 ### Hotfix: keep mock `chapter` scalar to prevent crash on first login
