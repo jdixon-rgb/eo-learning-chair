@@ -5,6 +5,7 @@ import { mockChapter, mockSpeakers, mockVenues, mockEvents, mockBudgetItems, moc
 import { supabase } from './supabase'
 import { useChapter } from './chapter'
 import { useFiscalYear } from './fiscalYearContext'
+import { captureSilentError } from './monitoring'
 
 // localStorage cache for offline fallback (key is per-chapter, per-fiscal-year)
 function storageKey(chapterId, fiscalYear) {
@@ -112,18 +113,22 @@ export function StoreProvider({ children }) {
     async function hydrate() {
       const failedTables = []
 
-      // Helper: fetch a table, return data or null on failure
+      // Helper: fetch a table, return data or null on failure.
+      // Failures are reported to Sentry via captureSilentError so we get
+      // telemetry instead of only console.warn (the 2026-05-09 incident
+      // hid here for hours because nobody was watching the console).
       async function safeFetch(name, fetchFn) {
+        const ctx = { table: name, chapter_id: activeChapterId, fiscal_year: String(activeFiscalYear || '') }
         try {
           const res = await fetchFn()
           if (res.error) {
-            console.warn(`Failed to fetch ${name}:`, res.error)
+            captureSilentError(`fetch:${name}`, res.error, ctx)
             failedTables.push(name)
             return null
           }
           return res.data
         } catch (err) {
-          console.warn(`Failed to fetch ${name}:`, err)
+          captureSilentError(`fetch:${name}`, err, ctx)
           failedTables.push(name)
           return null
         }
@@ -178,13 +183,24 @@ export function StoreProvider({ children }) {
         if (docsData) setEventDocuments(docsData)
 
         if (failedTables.length > 0) {
-          console.error('Tables that failed to load:', failedTables)
+          // Each individual safeFetch already reported via captureSilentError.
+          // Add an aggregate event so Sentry shows "the dashboard load lost
+          // N tables" as a single signal instead of forcing the on-call to
+          // correlate per-table events.
+          captureSilentError('store:hydrate-partial', new Error(`Failed: ${failedTables.join(', ')}`), {
+            failed: failedTables.join(','),
+            chapter_id: activeChapterId,
+            fiscal_year: String(activeFiscalYear || ''),
+          })
           setDbError(`Failed to load: ${failedTables.join(', ')}. Other data loaded OK.`)
         } else {
           setDbError(null)
         }
       } catch (err) {
-        console.error('Failed to fetch from Supabase:', err)
+        captureSilentError('store:hydrate-fatal', err, {
+          chapter_id: activeChapterId,
+          fiscal_year: String(activeFiscalYear || ''),
+        })
         setDbError('Could not connect to database. Using cached data.')
       } finally {
         setLoading(false)
@@ -192,22 +208,24 @@ export function StoreProvider({ children }) {
     }
   }, [activeChapterId, isChapterReady, activeFiscalYear, isFiscalYearReady])
 
-  // Helper: fire Supabase write in background, log errors
+  // Helper: fire Supabase write in background, log errors.
+  // Write failures are reported to Sentry — same reasoning as safeFetch.
   const dbWrite = useCallback(async (fn, label = 'unknown') => {
     if (!isSupabaseConfigured()) return
+    const ctx = { label, chapter_id: activeChapterId, fiscal_year: String(activeFiscalYear || '') }
     try {
       const result = await fn()
       if (result?.error) {
         const msg = result.error?.message || result.error?.details || JSON.stringify(result.error)
-        console.error(`[dbWrite:${label}] Supabase error:`, msg, result.error)
+        captureSilentError(`write:${label}`, result.error, ctx)
         setDbError(`Save failed (${label}): ${msg}`)
       }
       return result
     } catch (err) {
-      console.error(`[dbWrite:${label}] Exception:`, err)
+      captureSilentError(`write:${label}`, err, ctx)
       setDbError(`Save failed (${label}): ${err.message}`)
     }
-  }, [])
+  }, [activeChapterId, activeFiscalYear])
 
   // Reset to defaults (dev only - clears cache, refetches from DB).
   // Connected (Supabase-on) callers get empty collections and a fresh
@@ -592,10 +610,11 @@ export function StoreProvider({ children }) {
     // Optimistic add with uploading flag
     setEventDocuments(prev => [...prev, { ...row, _uploading: true }])
 
+    const uploadCtx = { chapter_id: activeChapterId, storage_path: storagePath, file_name: file.name }
     try {
       const uploadRes = await uploadFile('event-documents', storagePath, file)
       if (uploadRes?.error) {
-        console.error('File upload error:', uploadRes.error)
+        captureSilentError('upload:event-document-file', uploadRes.error, uploadCtx)
         setEventDocuments(prev => prev.filter(d => d.id !== id))
         setDbError('Failed to upload file.')
         return null
@@ -603,7 +622,7 @@ export function StoreProvider({ children }) {
 
       const insertRes = await insertRow('event_documents', row)
       if (insertRes?.error) {
-        console.error('Document insert error:', insertRes.error)
+        captureSilentError('upload:event-document-row', insertRes.error, uploadCtx)
         setDbError('Failed to save document record.')
       }
 
@@ -611,7 +630,7 @@ export function StoreProvider({ children }) {
       setEventDocuments(prev => prev.map(d => d.id === id ? { ...row } : d))
       return row
     } catch (err) {
-      console.error('Document upload failed:', err)
+      captureSilentError('upload:event-document-exception', err, uploadCtx)
       setEventDocuments(prev => prev.filter(d => d.id !== id))
       setDbError('Failed to upload document.')
       return null

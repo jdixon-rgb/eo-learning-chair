@@ -4,6 +4,7 @@ import { fetchByChapter, insertRow, updateRow, deleteRow } from './db'
 import { useChapter } from './chapter'
 import { useFiscalYear } from './fiscalYearContext'
 import { CHAIR_ROLES } from './constants'
+import { captureSilentError } from './monitoring'
 
 const BoardStoreContext = createContext(null)
 
@@ -95,7 +96,11 @@ export function BoardStoreProvider({ children }) {
         const errors = coreResults.filter(r => r.error).map(r => r.error)
 
         if (errors.length > 0) {
-          console.error('Board store fetch errors:', errors)
+          captureSilentError('boardStore:hydrate-partial', new Error(`${errors.length} fetches failed`), {
+            chapter_id: activeChapterId,
+            fiscal_year: String(activeFiscalYear || ''),
+            errors: errors.map(e => e?.message || JSON.stringify(e)).join(' | '),
+          })
           setDbError('Some board data failed to load.')
           setLoading(false)
           return
@@ -111,7 +116,10 @@ export function BoardStoreProvider({ children }) {
         if (checkinsRes?.data) setProfileCheckins(checkinsRes.data)
         setDbError(null)
       } catch (err) {
-        console.error('Board store hydrate failed:', err)
+        captureSilentError('boardStore:hydrate-fatal', err, {
+          chapter_id: activeChapterId,
+          fiscal_year: String(activeFiscalYear || ''),
+        })
         setDbError('Could not load board data.')
       } finally {
         setLoading(false)
@@ -121,19 +129,20 @@ export function BoardStoreProvider({ children }) {
 
   const dbWrite = useCallback(async (fn, label = 'unknown') => {
     if (!isSupabaseConfigured()) return
+    const ctx = { label, chapter_id: activeChapterId, fiscal_year: String(activeFiscalYear || '') }
     try {
       const result = await fn()
       if (result?.error) {
         const msg = result.error?.message || result.error?.details || JSON.stringify(result.error)
-        console.error(`[boardWrite:${label}] Supabase error:`, msg, result.error)
+        captureSilentError(`boardWrite:${label}`, result.error, ctx)
         setDbError(`Save failed (${label}): ${msg}`)
       }
       return result
     } catch (err) {
-      console.error(`[boardWrite:${label}] Exception:`, err)
+      captureSilentError(`boardWrite:${label}`, err, ctx)
       setDbError(`Save failed (${label}): ${err.message}`)
     }
-  }, [])
+  }, [activeChapterId, activeFiscalYear])
 
   // ── Chair Report CRUD ──
   const addChairReport = useCallback((report) => {
@@ -313,7 +322,7 @@ export function BoardStoreProvider({ children }) {
       const { error } = await supabase
         .from('member_invites')
         .upsert(batch, { onConflict: 'email', ignoreDuplicates: true })
-      if (error) console.error('syncMemberInvites batch error:', error)
+      if (error) captureSilentError('boardStore:syncMemberInvites-batch', error, { chapter_id: activeChapterId })
     }
   }, [activeChapterId])
 

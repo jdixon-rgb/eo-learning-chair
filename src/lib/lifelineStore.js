@@ -7,6 +7,7 @@
 
 import { supabase, isSupabaseConfigured } from './supabase'
 import { uploadFile, deleteFile, getSignedDownloadUrl } from './db'
+import { captureSilentError } from './monitoring'
 
 export const LIFELINE_PHOTO_BUCKET = 'lifeline-photos'
 export const LIFELINE_PHOTO_MAX_BYTES = 5 * 1024 * 1024
@@ -436,7 +437,7 @@ export async function setLifeEventPhoto(eventId, userId, file, oldPath) {
   const path = buildPhotoPath(userId, eventId, file)
   const { error: upErr } = await uploadFile(LIFELINE_PHOTO_BUCKET, path, file)
   if (upErr) {
-    console.error('[lifeline] photo upload failed', upErr)
+    captureSilentError('upload:lifeline-photo-file', upErr, { event_id: eventId, path })
     return { data: null, error: describeError(upErr, 'Upload failed') }
   }
 
@@ -452,7 +453,7 @@ export async function setLifeEventPhoto(eventId, userId, file, oldPath) {
     .single()
 
   if (error) {
-    console.error('[lifeline] photo row update failed', error)
+    captureSilentError('upload:lifeline-photo-row', error, { event_id: eventId, path })
     // Roll back the upload so we don't orphan the new object.
     await deleteFile(LIFELINE_PHOTO_BUCKET, path)
     return { data: null, error: describeError(error, 'Could not save photo') }
