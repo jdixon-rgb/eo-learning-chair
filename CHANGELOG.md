@@ -17,9 +17,13 @@ Displayed in the app sidebar footer.
 
 ---
 
-## v1.100.0 — 2026-05-09
+## v2.0.0 — 2026-05-09
 
-### Feature: Moderator role — foundation slice
+### Milestone: Moderator role — foundation slice
+
+Major milestone bump. The moderator role is the first non-board-but-
+treated-like-board role to land in OurChapter OS, and it sets the
+pattern for the broader chair-elevation model going forward.
 
 Forum moderators now get a dedicated **Moderator** section in the
 sidebar that only renders when the current user actually moderates a
