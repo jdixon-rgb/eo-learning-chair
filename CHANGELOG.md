@@ -17,6 +17,53 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.94.0 — 2026-05-08
+
+### Feature: Unified SAP lifecycle on /partners — Active | Pipeline | Past
+
+The SAPs page now spans the full partner lifecycle behind one nav
+entry, with a segmented toggle at the top and a Kanban-everywhere UX.
+
+**Active** — renewal Kanban (Renewing | Uncertain | Not renewing |
+Not set) is now the default view for active partners. Tier and List
+views remain as alternatives via a sub-toggle. The SAP Chair drags
+cards between renewal columns; cards in "Not renewing" gain an
+**Archive** action that moves the partner into Past SAPs (status →
+'inactive') without losing any history.
+
+**Pipeline** — five-column prospect Kanban (Lead → Contacted →
+Meeting → Negotiating → Signed) lifted out of the standalone page
+into a reusable component embedded as the second segment.
+
+**Past SAPs** — new institutional-memory archive. When an active
+partner declines to renew, archiving them lands here with their full
+record preserved (contact, last sponsorship amount, contribution
+type, notes, archive date). A **Re-engage** button drops them back
+into the prospect pipeline as a Lead so a future SAP Chair can
+restart the conversation when something changes — "look, what's
+changed; we'd love to have you back."
+
+**Routing:** the segment is URL-synced via `?view=pipeline` or
+`?view=past`; deep links and bookmarks survive. The standalone
+`/partners/pipeline` route now redirects to the toggle.
+
+**Nav:** the duplicate "Pipeline" sidebar entry on the SAP Chair
+surface is gone — one "SAPs" entry now covers all three lifecycle
+states.
+
+**Store:** new `archivePartner` (active → inactive) and
+`revivePartnerToProspect` (inactive → prospect:lead) methods.
+
+### Context: SAP Chair role split
+
+Recorded but not yet implemented — the single SAP Chair role is
+being conceptually split into a retention-focused chair (lives on
+Active) and an acquisition-focused chair (lives on Pipeline). Today's
+toggle supports the split workflow without the role refactor; the
+new role definitions are deferred until naming is decided.
+
+---
+
 ## v1.93.2 — 2026-05-08
 
 ### Tweak: Vendors as a single Member entry (no SAPs sub-item)

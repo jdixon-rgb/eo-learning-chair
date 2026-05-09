@@ -364,6 +364,24 @@ export function SAPStoreProvider({ children }) {
     dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:promote')
   }, [dbWrite])
 
+  // Archive an active SAP that's not renewing — preserves the full
+  // record so a future chair can revisit them. status flips to
+  // 'inactive'; clears renewal_status since it no longer applies.
+  const archivePartner = useCallback((sapId) => {
+    const updates = { status: 'inactive', renewal_status: null, updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:archive')
+  }, [dbWrite])
+
+  // Re-engage a past SAP — drop them back into the prospect pipeline
+  // as a Lead. All historical fields (contact, sponsorship amount,
+  // contribution type, notes) are preserved.
+  const revivePartnerToProspect = useCallback((sapId) => {
+    const updates = { status: 'prospect', pipeline_stage: 'lead', updated_at: new Date().toISOString() }
+    setPartners(prev => prev.map(p => p.id === sapId ? { ...p, ...updates } : p))
+    dbWrite(() => updateRow('saps', sapId, updates), 'update:saps:revive')
+  }, [dbWrite])
+
   // ── Renewal Intent (active SAPs only) ────────────────────────
   // SAP Chair sets one of: 'renewing' | 'uncertain' | 'not_renewing'.
   // Surfaces in President / Executive Director dashboards so leadership
@@ -443,7 +461,7 @@ export function SAPStoreProvider({ children }) {
     engagementsForEvent, engagementsForContact, engagementsForSAP,
     memberInterest, toggleMemberInterest, interestedMembersForSAP, isMemberInterestedInSAP,
     addProspect, advancePipelineStage, promoteProspectToActive,
-    setRenewalStatus,
+    setRenewalStatus, archivePartner, revivePartnerToProspect,
   }
 
   return createElement(SAPStoreContext.Provider, { value }, children)
