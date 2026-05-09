@@ -17,6 +17,45 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.99.0 — 2026-05-09
+
+### Feature: New brand identity — Aperture mark + DM Sans wordmark
+
+Implements v1 of the OurChapter OS visual identity from the Claude
+Design handoff. Replaces the previous text-only wordmark.
+
+**The mark — "Aperture"** — a thick ring with a precise notch.
+Reads simultaneously as the "O" of OurChapter, a camera aperture,
+a port, a precision dial. The notch is what makes it deliberate
+(not just a circle); below 16px the notch disappears, so don't
+render below that. New `<ApertureMark>` component renders the SVG
+with `currentColor` so callers can theme it through Tailwind text
+utilities.
+
+**The wordmark** — DM Sans, "OurChapter" in ink + a softer "OS" in
+muted-foreground. Aperture mark sits to the left, English green
+(`--color-community: #1a5c3a`) on production, orange staging
+accent on the staging environment so the env signal is visible
+everywhere the lockup appears (sidebar header, login, portal
+footers, etc.).
+
+**Favicons** — production gets the white aperture on an English
+green tile; staging gets it on the orange staging tile. Browser
+tabs now show the new mark in both environments and the existing
+runtime swap (`isStaging`) keeps them properly distinct.
+
+**Type system** — DM Sans (display, with `opsz` axis) and
+JetBrains Mono (technical labels) join Roboto (body) via Google
+Fonts. New `--font-display` and `--font-mono` theme tokens — use
+`font-display` and `font-mono` Tailwind utilities going forward.
+
+**Out of scope this round** — the rest of the app's primary color
+stays céruléen for now. The brand identity is anchored on English
+green in the lockup; rotating the rest of the UI to green is a
+follow-on decision.
+
+---
+
 ## v1.98.0 — 2026-05-09
 
 ### Feature: Sentry capture for silent errors

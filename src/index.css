@@ -2,6 +2,12 @@
 
 @theme {
   --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
+  /* Display font for the wordmark and brand surfaces. DM Sans is the
+     identity-system pairing — humanist, warmer than Roboto, with the
+     opsz axis tuned for tight wordmark settings. */
+  --font-display: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  /* Monospace for technical labels (eyebrows, IDs, version stamps). */
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* ─────────────────────────────────────────────────────────
      OurChapter OS — Le Corbusier "Polychromie Architecturale"
