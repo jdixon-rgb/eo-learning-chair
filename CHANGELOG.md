@@ -17,6 +17,50 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.97.1 — 2026-05-09
+
+### Course-correct: Year Arc stays Learning-only; new Chapter Calendar for the board
+
+The 1.97.0 attempt unified everything onto the Year Arc — wrong call.
+Year Arc is the Learning Chair's externally-shared programming
+calendar (the one shared with SAPs and members), so it shouldn't be
+polluted by Engagement / Forum / Membership / etc. events.
+
+This release:
+- **Reverts** the 1.97.0 changes to `/calendar` (Year Arc): no more
+  filter chips, no chair color coding on event cards, no owning-chair
+  selector in the create dialog. Year Arc looks and behaves exactly
+  as it did pre-1.97.0.
+- **Adds** a new `/chapter-calendar` (*Chapter Calendar*) page —
+  board-internal cross-chair view designed for spotting scheduling
+  conflicts, not showcasing programming.
+  - Compact agenda-by-week layout (one row per event, not big cards)
+  - Color-coded by owning chair (left swatch + chair-color badge)
+  - Filter chips at the top to toggle which chairs' events show
+  - Same-week conflict callouts: any week containing 2+ events from
+    different chairs flags as "Multi-chair week — coordinate" with
+    an amber outline so the board sees collisions at a glance
+  - "Add event" button writes a minimal event (title, owning chair,
+    date, optional time/note) into the same `events` table the rest
+    of the app reads. Lets non-Learning chairs put their events on
+    the shared calendar without going through the Learning-Chair
+    workflow.
+- Surfaced in the sidebar for: Learning Chair (alongside Year Arc),
+  SAP Chair, Chapter Executive Director, Chapter Experience
+  Coordinator (all alongside Year Arc), plus President, Finance
+  Chair, Engagement Chair, Forum Health Chair, and Forum Placement
+  Chair (who don't see Year Arc).
+
+The infrastructure from 1.97.0 (`events.owner_chair` migration 082,
+`EVENT_OWNER_CHAIRS` constant) carries forward — it now powers the
+Chapter Calendar instead of cluttering Year Arc.
+
+Files: `src/pages/ChapterCalendarPage.jsx` (new),
+`src/pages/CalendarPage.jsx` (reverted),
+`src/lib/chairRoles.js` (sidebar wiring), `src/App.jsx` (route).
+
+---
+
 ## v1.97.0 — 2026-05-09
 
 ### Feature: Unified Year Arc Calendar with cross-chair color coding

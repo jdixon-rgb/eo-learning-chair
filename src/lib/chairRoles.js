@@ -41,6 +41,7 @@ import {
 const LEARNING_CHAIR_NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+  { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
   { to: '/speakers', icon: Users, label: 'Speakers' },
   { to: '/library/speakers', icon: BookOpen, label: 'Speaker Library', permission: 'canViewSpeakerLibrary' },
   { to: '/events', icon: CalendarDays, label: 'Events' },
@@ -93,6 +94,7 @@ export const CHAIR_ROLE_CONFIGS = {
       // /partners hosts a segmented toggle: Active | Prospect | Past
       { to: '/partners', icon: Handshake, label: 'Manage SAPs' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
     ],
   },
   president: {
@@ -100,7 +102,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/president',
     navItems: [
       { to: '/president', icon: Crown, label: 'Dashboard' },
-      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
@@ -112,7 +114,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/finance',
     navItems: [
       { to: '/finance', icon: LayoutDashboard, label: 'Dashboard' },
-      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
     ],
   },
@@ -126,7 +128,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/engagement',
     navItems: [
       { to: '/engagement', icon: LayoutDashboard, label: 'Dashboard' },
-      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/engagement/navigators', icon: Compass, label: 'Navigators' },
       { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/pairings', icon: UserCheck, label: 'Pairings' },
@@ -141,7 +143,7 @@ export const CHAIR_ROLE_CONFIGS = {
     // /board/forums admin page as the per-forum management surface.
     navItems: [
       { to: '/forum-health', icon: Activity, label: 'Dashboard' },
-      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
       { to: '/forum-health/comms', icon: Megaphone, label: 'Moderator Comms' },
     ],
@@ -153,7 +155,7 @@ export const CHAIR_ROLE_CONFIGS = {
     // membership, places members into forums.
     navItems: [
       { to: '/forum-placement', icon: LayoutDashboard, label: 'Dashboard' },
-      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/forum-placement/leads', icon: UserPlus, label: 'Member Leads' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
     ],
@@ -163,6 +165,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/president',
     navItems: [
       { to: '/president', icon: Briefcase, label: 'Chapter Dashboard' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/speakers', icon: Users, label: 'Speakers' },
       { to: '/events', icon: CalendarDays, label: 'Events' },
@@ -178,6 +181,7 @@ export const CHAIR_ROLE_CONFIGS = {
     homePath: '/president',
     navItems: [
       { to: '/president', icon: Briefcase, label: 'Chapter Dashboard' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/speakers', icon: Users, label: 'Speakers' },
       { to: '/events', icon: CalendarDays, label: 'Events' },

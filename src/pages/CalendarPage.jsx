@@ -1,12 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
-import { useChapter } from '@/lib/chapter'
 import TourTip from '@/components/TourTip'
 import { useBoardStore } from '@/lib/boardStore'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
-import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS, EVENT_OWNER_CHAIRS } from '@/lib/constants'
+import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
 import { formatCurrency, formatDateWithDay, formatTime } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
 import PageHeader from '@/lib/pageHeader'
@@ -18,82 +17,18 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Calendar, MapPin, Wallet, Handshake, Route } from 'lucide-react'
 
-// localStorage key for the owner-chair filter chip state. Per chapter +
-// FY so a chair switching contexts doesn't carry filters across.
-function chairFilterKey(chapterId, fiscalYear) {
-  return `eo-calendar-chair-filters-${chapterId || 'na'}-${fiscalYear || 'na'}`
-}
-
 export default function CalendarPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
-  const { activeChapterId } = useChapter()
   const { activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const incomingPresident = activePresidentName || chapter.president_name || ''
   const [createMonth, setCreateMonth] = useState(null)
-  const [newEvent, setNewEvent] = useState({ title: '', event_type: 'traditional', event_format: 'keynote', owner_chair: 'learning', theme_connection: '', event_date: '', expected_attendance: '' })
-
-  // Owner-chair filter chips. Default: all chairs visible. Persist per
-  // chapter+FY so refreshing keeps the chair's last filter.
-  const [chairFilter, setChairFilter] = useState(() => {
-    if (typeof window === 'undefined') return new Set(EVENT_OWNER_CHAIRS.map(c => c.id))
-    try {
-      const raw = localStorage.getItem(chairFilterKey(activeChapterId, activeFiscalYear))
-      if (raw) {
-        const arr = JSON.parse(raw)
-        if (Array.isArray(arr)) return new Set(arr)
-      }
-    } catch { /* corrupt cache */ }
-    return new Set(EVENT_OWNER_CHAIRS.map(c => c.id))
-  })
-
-  // Re-prime when chapter or FY changes
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(chairFilterKey(activeChapterId, activeFiscalYear))
-      if (raw) {
-        const arr = JSON.parse(raw)
-        if (Array.isArray(arr)) {
-          setChairFilter(new Set(arr))
-          return
-        }
-      }
-    } catch { /* corrupt cache */ }
-    setChairFilter(new Set(EVENT_OWNER_CHAIRS.map(c => c.id)))
-  }, [activeChapterId, activeFiscalYear])
-
-  // Persist filter changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(chairFilterKey(activeChapterId, activeFiscalYear), JSON.stringify([...chairFilter]))
-    } catch { /* storage full */ }
-  }, [chairFilter, activeChapterId, activeFiscalYear])
-
-  const toggleChair = (id) => {
-    setChairFilter(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  // Distinct chairs that actually have events on the calendar — used to
-  // suppress chips for chairs no chapter has used yet (cleaner UX).
-  const chairsInUse = useMemo(() => {
-    const used = new Set()
-    for (const e of events) used.add(e.owner_chair || 'learning')
-    return used
-  }, [events])
-
-  const filteredEvents = useMemo(() => {
-    return events.filter(e => chairFilter.has(e.owner_chair || 'learning'))
-  }, [events, chairFilter])
+  const [newEvent, setNewEvent] = useState({ title: '', event_type: 'traditional', event_format: 'keynote', theme_connection: '', event_date: '', expected_attendance: '' })
 
   const eventsByMonth = {}
-  filteredEvents.forEach(e => {
+  events.forEach(e => {
     if (e.month_index != null) {
       if (!eventsByMonth[e.month_index]) eventsByMonth[e.month_index] = []
       eventsByMonth[e.month_index].push(e)
@@ -118,7 +53,7 @@ export default function CalendarPage() {
       strategic_importance: STRATEGIC_MAP[createMonth]?.label.toLowerCase().replace(' ', '_'),
     })
     setCreateMonth(null)
-    setNewEvent({ title: '', event_type: 'traditional', event_format: 'keynote', owner_chair: 'learning', theme_connection: '', event_date: '', expected_attendance: '' })
+    setNewEvent({ title: '', event_type: 'traditional', event_format: 'keynote', theme_connection: '', event_date: '', expected_attendance: '' })
   }
 
   return (
@@ -140,33 +75,6 @@ export default function CalendarPage() {
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-warm" /> KICKOFF / RENEWAL / CLOSE</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-primary" /> MOMENTUM / SUSTAIN</div>
         <div className="flex items-center gap-1"><div className="w-3 h-3 rounded bg-gray-400" /> NO EVENT (Holiday)</div>
-      </div>
-
-      {/* Owner-chair filter chips. Click to toggle visibility of each
-          chair's events on the calendar. Default = all on; persists in
-          localStorage per chapter + FY. Hidden chairs that no chapter
-          event uses, to avoid clutter when most chairs aren't using
-          the calendar yet. */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Show events from</span>
-        {EVENT_OWNER_CHAIRS.filter(c => chairsInUse.has(c.id) || c.id === 'learning').map(c => {
-          const on = chairFilter.has(c.id)
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => toggleChair(c.id)}
-              className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors ${on ? '' : 'opacity-40 hover:opacity-70'}`}
-              style={on
-                ? { backgroundColor: `${c.color}1a`, borderColor: c.color, color: c.color }
-                : { borderColor: '#cbd5e1', color: '#64748b' }}
-              aria-pressed={on}
-            >
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: on ? c.color : '#cbd5e1' }} />
-              {c.label}
-            </button>
-          )
-        })}
       </div>
 
       {/* Calendar Grid */}
@@ -201,7 +109,6 @@ export default function CalendarPage() {
                     {monthEvents.map(event => {
                       const eventType = EVENT_TYPES.find(t => t.id === event.event_type)
                       const eventFormat = EVENT_FORMATS.find(f => f.id === event.event_format)
-                      const ownerChair = EVENT_OWNER_CHAIRS.find(c => c.id === (event.owner_chair || 'learning'))
                       const budget = getEventBudget(event.id)
                       const eventSAPs = (event.sap_ids || []).map(sid => (saps || []).find(s => s.id === sid)).filter(Boolean)
                       const primarySpeaker = speakers.find(s => s.id === event.speaker_id)
@@ -212,18 +119,12 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={event.id}
-                          className="rounded-lg border border-border p-3 pl-3.5 hover:border-primary hover:shadow-sm cursor-pointer transition-all relative"
-                          style={{ borderLeftWidth: 4, borderLeftColor: ownerChair?.color || '#3d46f2' }}
+                          className="rounded-lg border border-border p-3 hover:border-primary hover:shadow-sm cursor-pointer transition-all"
                           onClick={() => navigate(`/events/${event.id}`)}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <h4 className="text-sm font-semibold leading-tight">{event.title}</h4>
                             <div className="flex flex-col gap-0.5 items-end shrink-0">
-                              {ownerChair && ownerChair.id !== 'learning' && (
-                                <Badge variant="outline" className="text-[9px]" style={{ borderColor: ownerChair.color, color: ownerChair.color }}>
-                                  {ownerChair.label}
-                                </Badge>
-                              )}
                               {eventFormat && (
                                 <Badge variant="outline" className="text-[9px]" style={{ borderColor: eventFormat.color, color: eventFormat.color }}>
                                   {eventFormat.label}
@@ -315,20 +216,6 @@ export default function CalendarPage() {
                 value={newEvent.title}
                 onChange={e => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
               />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Owning Chair</label>
-              <Select
-                value={newEvent.owner_chair}
-                onChange={e => setNewEvent(prev => ({ ...prev, owner_chair: e.target.value }))}
-              >
-                {EVENT_OWNER_CHAIRS.map(c => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
-                ))}
-              </Select>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Which chair is running this event. Drives color coding and lets other chairs filter the calendar to just what they care about.
-              </p>
             </div>
             <div>
               <label className="text-sm font-medium">Event Type</label>
