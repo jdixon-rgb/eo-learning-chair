@@ -55,10 +55,10 @@ export default function SAPPartnersPage() {
   const [search, setSearch] = useState('')
   const [invitedEmails, setInvitedEmails] = useState(new Set())
   const [expandedPartner, setExpandedPartner] = useState(null)
-  // Inner view mode for the Active board. List is the default —
-  // it's the most compact and most familiar; users can opt into
-  // Renewal Kanban or Tier View when they want a different lens.
-  const [viewMode, setViewMode] = useState('list')
+  // Inner view mode for the Active board: Tier View (default — how
+  // chapters naturally think about SAPs) or Renewal Kanban (the
+  // chair's working surface for renewal-status management).
+  const [viewMode, setViewMode] = useState('tiers')
 
   // Outer toggle — Active | Prospect | Past — synced to ?view= so
   // links and back-button navigation work across the SAP lifecycle.
@@ -445,9 +445,8 @@ export default function SAPPartnersPage() {
           {segment === 'active' && (
             <>
               <Select value={viewMode} onChange={e => setViewMode(e.target.value)} className="w-36">
-                <option value="list">List View</option>
-                <option value="renewal">Renewal Kanban</option>
                 <option value="tiers">Tier View</option>
+                <option value="renewal">Renewal Kanban</option>
               </Select>
               {canEdit && (
                 <Button size="sm" onClick={openAddPartner}>
@@ -498,10 +497,10 @@ export default function SAPPartnersPage() {
         ))}
       </div>
 
-      {/* Renewal Kanban (default for Active) */}
+      {/* Tier (default) or Renewal Kanban */}
       {viewMode === 'renewal' ? (
         <RenewalKanbanBoard search={search} />
-      ) : viewMode === 'tiers' ? (
+      ) : (
         <div className="space-y-6">
           {SAP_TIERS.map(tier => {
             const tierPartners = filtered.filter(p => p.tier === tier.id)
@@ -525,72 +524,6 @@ export default function SAPPartnersPage() {
               </div>
             )
           })}
-        </div>
-      ) : (
-        /* List View — all columns are always rendered. On screens
-           narrower than the table's min-width, the wrapper provides
-           horizontal swipe scrolling so the user can reach every
-           column. The min-width keeps cells from squishing into
-           unreadable columns; touchAction=pan-x pairs with the body's
-           overflow-x-hidden to make the swipe feel native. */
-        <div
-          className="rounded-xl border bg-card shadow-sm overflow-x-auto"
-          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y' }}
-        >
-          <table className="w-full text-left min-w-[820px]">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Partner</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Industry</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Tier</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Type</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">Primary Contact</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">Contacts</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground whitespace-nowrap">Forum Trained</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(partner => {
-                const primary = primaryContact(partner.id)
-                const partnerContacts = contactsForPartner(partner.id)
-                const forumTrainedCount = partnerContacts.filter(c => c.forum_trained).length
-                const tier = SAP_TIERS.find(t => t.id === partner.tier)
-                const contribType = SAP_CONTRIBUTION_TYPES.find(c => c.id === partner.contribution_type)
-                return (
-                  <tr
-                    key={partner.id}
-                    className={`border-b ${canEdit ? 'hover:bg-accent/50 cursor-pointer' : ''}`}
-                    onClick={canEdit ? () => openEditPartner(partner) : undefined}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${tier?.color}20` }}>
-                          <Building2 className="h-4 w-4" style={{ color: tier?.color }} />
-                        </div>
-                        <span className="text-sm font-medium whitespace-nowrap">{partner.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{partner.industry || '—'}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant="outline" className="text-[10px]" style={{ borderColor: tier?.color, color: tier?.color }}>
-                        {tier?.label}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{contribType?.label || '—'}</td>
-                    <td className="px-4 py-3 text-sm whitespace-nowrap">{primary?.name || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-center">{partnerContacts.length}</td>
-                    <td className="px-4 py-3 text-center">
-                      {forumTrainedCount > 0 ? (
-                        <span className="text-sm text-green-600 font-medium">{forumTrainedCount}</span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">0</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
         </div>
       )}
 

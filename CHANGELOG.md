@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.95.9 — 2026-05-09
+
+### Tweak: Drop List View — Tier becomes the Active default
+
+Three view modes was one too many. List View was the most recent
+addition and the least differentiated — Tier and Renewal Kanban
+already cover "scan everyone" and "renewal-management workflow."
+Removed the List option from the Active board's view dropdown.
+
+Tier View is the default — that's how chapters naturally think
+about their SAPs (Platinum / Gold / Silver / In-Kind). Renewal
+Kanban remains as the second mode for the chair's status work.
+
+---
+
 ## v1.95.8 — 2026-05-09
 
 ### Access: SAP edit rights → SAP Chair only
