@@ -61,6 +61,13 @@ export const FEATURE_PERMISSIONS = {
   // retained for cross-chapter support. Other roles view but don't
   // edit, so the chair owns the data for their fiscal year.
   canEditSAPs:           ['super_admin', 'sap_chair'],
+  // SAP sponsorship amounts (current + renewal) are sensitive — the
+  // SAP Chair (who manages them), the President / President-Elect
+  // (who set chapter strategy on partner relationships), and the
+  // Executive Director (who handles chapter operations & finance)
+  // can see the numbers. Other chairs cannot, even though they can
+  // see the partner roster itself.
+  canViewSAPAmounts:     ['super_admin', 'sap_chair', 'president', 'president_elect', 'chapter_executive_director'],
   // Public Speaker Library — shared cross-chapter catalog
   canViewSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Editing + reviewing mirror the SQL helper can_edit_speaker_library()

@@ -32,7 +32,7 @@ const emptyPartnerForm = {
   name: '', industry: '', tier: 'gold', status: 'active',
   description: '', contribution_type: 'sponsorship', contribution_description: '',
   contact_email: '', contact_phone: '', website: '',
-  annual_sponsorship: '', notes: '',
+  annual_sponsorship: '', renewal_amount: '', notes: '',
 }
 
 const emptyContactForm = {
@@ -52,6 +52,9 @@ export default function SAPPartnersPage() {
   const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
   // The renewal chip in the partner-card header reuses the same gate.
   const canEditRenewal = canEdit
+  // Sponsorship amounts are restricted: SAP Chair, President /
+  // President-Elect, and Executive Director only.
+  const canViewAmounts = hasPermission(effectiveRole, 'canViewSAPAmounts')
   const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
@@ -130,6 +133,7 @@ export default function SAPPartnersPage() {
       contact_phone: partner.contact_phone || '',
       website: partner.website || '',
       annual_sponsorship: partner.annual_sponsorship || '',
+      renewal_amount: partner.renewal_amount || '',
       notes: partner.notes || '',
     })
     setShowPartnerForm(true)
@@ -140,6 +144,7 @@ export default function SAPPartnersPage() {
     const data = {
       ...partnerForm,
       annual_sponsorship: partnerForm.annual_sponsorship ? parseFloat(partnerForm.annual_sponsorship) : null,
+      renewal_amount: partnerForm.renewal_amount ? parseFloat(partnerForm.renewal_amount) : null,
     }
     if (editPartner) {
       updatePartner(editPartner.id, data)
@@ -291,6 +296,22 @@ export default function SAPPartnersPage() {
         {/* Expanded: contacts list */}
         {isExpanded && (
           <div className="border-t px-3 pb-3 pt-2">
+            {canViewAmounts && (partner.annual_sponsorship != null || partner.renewal_amount != null) && (
+              <div className="flex flex-wrap gap-3 mb-3 text-xs">
+                {partner.annual_sponsorship != null && partner.annual_sponsorship !== '' && (
+                  <div className="rounded-md bg-muted/50 px-2.5 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Current</div>
+                    <div className="font-semibold text-foreground">${Number(partner.annual_sponsorship).toLocaleString()}</div>
+                  </div>
+                )}
+                {partner.renewal_amount != null && partner.renewal_amount !== '' && (
+                  <div className="rounded-md bg-primary/5 border border-primary/20 px-2.5 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-primary">Renewal</div>
+                    <div className="font-semibold text-primary">${Number(partner.renewal_amount).toLocaleString()}</div>
+                  </div>
+                )}
+              </div>
+            )}
             {partner.description && (
               <p className="text-xs text-muted-foreground mb-2">{partner.description}</p>
             )}
@@ -601,10 +622,18 @@ export default function SAPPartnersPage() {
                 <label className="text-xs font-medium">Website</label>
                 <Input value={partnerForm.website} onChange={e => setPartnerForm(p => ({ ...p, website: e.target.value }))} placeholder="https://..." />
               </div>
-              <div>
-                <label className="text-xs font-medium">Annual Sponsorship ($)</label>
-                <Input type="number" value={partnerForm.annual_sponsorship} onChange={e => setPartnerForm(p => ({ ...p, annual_sponsorship: e.target.value }))} placeholder="Amount" />
-              </div>
+              {canViewAmounts && (
+                <>
+                  <div>
+                    <label className="text-xs font-medium">Current Sponsorship ($)</label>
+                    <Input type="number" value={partnerForm.annual_sponsorship} onChange={e => setPartnerForm(p => ({ ...p, annual_sponsorship: e.target.value }))} placeholder="What they pay now" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Renewal Amount ($)</label>
+                    <Input type="number" value={partnerForm.renewal_amount} onChange={e => setPartnerForm(p => ({ ...p, renewal_amount: e.target.value }))} placeholder="Proposed for next term" />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="text-xs font-medium">Company Email</label>
                 <Input value={partnerForm.contact_email} onChange={e => setPartnerForm(p => ({ ...p, contact_email: e.target.value }))} placeholder="info@company.com" />

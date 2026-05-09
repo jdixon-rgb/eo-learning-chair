@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { useSAPStore } from '@/lib/sapStore'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
+// canViewAmounts gates the sensitive sponsorship dollar values that
+// only the SAP Chair, President / President-Elect, and ED should see.
 import { SAP_RENEWAL_STATUSES, SAP_TIERS } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -25,6 +27,7 @@ export default function RenewalKanbanBoard({ search = '' }) {
   const { partners, setRenewalStatus, archivePartner } = useSAPStore()
   const { effectiveRole } = useAuth()
   const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
+  const canViewAmounts = hasPermission(effectiveRole, 'canViewSAPAmounts')
 
   const activePartners = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -139,6 +142,20 @@ export default function RenewalKanbanBoard({ search = '' }) {
                       )}
                       <SAPRating sapId={p.id} />
                     </div>
+                    {canViewAmounts && (p.annual_sponsorship != null || p.renewal_amount != null) && (
+                      <div className="flex flex-wrap gap-2 text-[11px]">
+                        {p.annual_sponsorship != null && p.annual_sponsorship !== '' && (
+                          <span className="text-muted-foreground">
+                            Current <span className="font-semibold text-foreground">${Number(p.annual_sponsorship).toLocaleString()}</span>
+                          </span>
+                        )}
+                        {p.renewal_amount != null && p.renewal_amount !== '' && (
+                          <span className="text-primary">
+                            Renewal <span className="font-semibold">${Number(p.renewal_amount).toLocaleString()}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div className="flex flex-col gap-0.5 text-[11px] text-muted-foreground/80">
                       {p.contact_email && (
                         <a href={`mailto:${p.contact_email}`} className="flex items-center gap-1 hover:text-primary truncate">

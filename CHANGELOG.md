@@ -17,6 +17,42 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v1.96.1 — 2026-05-09
+
+### Feature: Sponsorship amounts (current + renewal) — restricted
+
+Two dollar fields now live on each SAP: **Current** (existing
+`annual_sponsorship`, what they're paying today) and a new
+**Renewal** (proposed amount for the next term). They can differ
+when a partner's tier or scope is changing, so the chair tracks the
+proposal alongside the historical figure.
+
+**Visibility is restricted.** Only these roles see the numbers:
+- SAP Chair (sets and edits)
+- President + President-Elect (chapter strategy on partners)
+- Executive Director (chapter operations and finance)
+- Super-admin (cross-chapter support)
+
+All other chairs — Learning, Engagement, CEC, Finance, Regional
+Expert, etc. — still see the partner roster but the dollar amounts
+are completely absent from their view (not blanked, not greyed —
+the form fields and card chips don't render at all).
+
+**Where they appear:**
+- Edit Partner dialog: two side-by-side input fields (gated).
+- Tier-view partner card (expanded): "Current $X" and "Renewal $Y"
+  badges sit at the top.
+- Renewal Kanban card: an inline line shows both numbers below the
+  industry / rating row.
+
+**Migration `081_sap_renewal_amount.sql`** adds the `renewal_amount`
+column. Push to staging Supabase before the new field persists.
+
+A new permission `canViewSAPAmounts` in `permissions.js` is the
+single source of truth.
+
+---
+
 ## v1.96.0 — 2026-05-09
 
 ### Feature: Industry filter + member ratings on SAP cards
