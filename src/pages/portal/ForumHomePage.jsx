@@ -87,6 +87,14 @@ export default function ForumHomePage({ focusTab }) {
   const validTabs = ['parking', 'tools', 'agenda', 'calendar', 'constitution', 'partners', 'members', 'history']
   const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking')
   const [tab, setTabState] = useState(initialTab)
+  // Navigating between focus routes (e.g. /portal/moderator/agenda →
+  // /portal/moderator/constitution) reuses the same ForumHomePage
+  // instance, so the tab state from first mount would otherwise stick
+  // and the wrong tab content would render. Sync tab to focusTab on
+  // every prop change.
+  useEffect(() => {
+    if (focusTab) setTabState(focusTab)
+  }, [focusTab])
   const setTab = (next) => {
     setTabState(next)
     if (focusTab) return

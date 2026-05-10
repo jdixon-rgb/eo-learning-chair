@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.5.2 — 2026-05-10
+
+### Fix: Moderator focus routes now switch tabs when you navigate
+
+v2.5.1 added dedicated routes for the moderator sidebar items but they
+all rendered the same content — whichever tab loaded first stuck. The
+routes share one `ForumHomePage` instance, so the internal `tab` state
+from first mount never updated when `focusTab` prop changed. Added a
+sync effect so the tab follows the route.
+
 ## v2.5.1 — 2026-05-10
 
 ### Fix: Moderator sidebar items are now first-class pages
