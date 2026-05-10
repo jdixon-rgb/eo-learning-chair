@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.6.1 — 2026-05-10
+
+### Fix: Forum calendar groups events by month
+
+The forum calendar's flat chronological list now groups events under
+month-labeled cards, borrowing the visual chunking from the Year Arc
+in the Learning Chair (without the strategic-phase scaffolding, which
+is Learning-Chair specific). Empty months don't render. Easier to
+absorb at a glance: see the months, then the dates that fall within.
+
 ## v2.6.0 — 2026-05-10
 
 ### Feat: Import constitution from PDF (Claude-backed)

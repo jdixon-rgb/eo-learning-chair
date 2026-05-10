@@ -742,6 +742,28 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
       })
   }, [events])
 
+  // Bucket events by calendar month so the calendar reads like the
+  // Year Arc — month label as a section header, events for that month
+  // grouped underneath. Empty months simply don't render. Borrows the
+  // visual chunking from CalendarPage without the strategic-phase
+  // scaffolding (which is Learning-Chair specific).
+  const eventsByMonth = useMemo(() => {
+    const buckets = new Map()
+    for (const e of allEvents) {
+      const dateStr = e.starts_at || e.event_date
+      if (!dateStr) continue
+      const d = new Date(dateStr)
+      if (Number.isNaN(d.getTime())) continue
+      const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`
+      const label = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+      if (!buckets.has(key)) buckets.set(key, { label, events: [] })
+      buckets.get(key).events.push(e)
+    }
+    return [...buckets.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([_, v]) => v)
+  }, [allEvents])
+
   return (
     <div className="space-y-4">
       {isModerator && (
@@ -785,34 +807,43 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
         </div>
       )}
 
-      {allEvents.length === 0 ? (
+      {eventsByMonth.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground/70 text-sm">No events scheduled.</div>
       ) : (
-        <div className="space-y-2">
-          {allEvents.map(e => {
-            // Prefer starts_at/ends_at; fall back to event_date for legacy rows.
-            const startLabel = e.starts_at ? fmtEventTime(e.starts_at) : e.event_date
-            const endLabel = e.ends_at ? fmtEventTime(e.ends_at) : ''
-            const range = endLabel && endLabel !== startLabel ? `${startLabel} – ${endLabel}` : startLabel
-            return (
-              <div key={e.id} className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">{e.title}</span>
-                    <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
-                      {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">{range}{e.location ? ` · ${e.location}` : ''}</p>
-                </div>
-                {isModerator && (
-                  <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
+        <div className="space-y-4">
+          {eventsByMonth.map(({ label, events: monthEvents }) => (
+            <div key={label} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-4 py-2 bg-muted/40 border-b border-border">
+                <h3 className="text-sm font-bold tracking-wide">{label}</h3>
               </div>
-            )
-          })}
+              <div className="p-3 space-y-2">
+                {monthEvents.map(e => {
+                  // Prefer starts_at/ends_at; fall back to event_date for legacy rows.
+                  const startLabel = e.starts_at ? fmtEventTime(e.starts_at) : e.event_date
+                  const endLabel = e.ends_at ? fmtEventTime(e.ends_at) : ''
+                  const range = endLabel && endLabel !== startLabel ? `${startLabel} – ${endLabel}` : startLabel
+                  return (
+                    <div key={e.id} className="rounded-lg border border-border/60 bg-muted/20 px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">{e.title}</span>
+                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
+                            {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5">{range}{e.location ? ` · ${e.location}` : ''}</p>
+                      </div>
+                      {isModerator && (
+                        <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
