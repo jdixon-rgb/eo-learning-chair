@@ -17,6 +17,37 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.4.0 — 2026-05-10
+
+### Feat: Per-clause constitution review with annotations
+
+A new layer above ratification. Each forum member now sees every
+clause of the proposed (or adopted) constitution with their own
+"reviewed" checkbox and an optional annotation field for flagging the
+clause as a group-discussion item.
+
+The moderator gets an aggregated **Discussion items** panel at the top
+of the constitution view: every annotated clause with the member name
+and what they wrote. Use it to drive a focused conversation before
+opening the version for unanimous ratification — ratification still
+works the same way, this just makes the pre-ratification feedback
+explicit instead of "did everyone read it?"
+
+The Forum Health Chair gets a read-only signal that the activity
+happened. The dashboard's "Constitution reviewed this year" checklist
+row now shows derived activity (e.g. "7/10 reviewing clauses · 3
+discussion items") with a deep-link to a new `/forum-health/
+constitution/:forumId` viewer that renders the constitution plus
+each clause's review counts and annotations — all read-only. The
+chair never participates in the per-clause review; the moderator
+owns that workflow.
+
+DB: new `forum_constitution_clause_reviews` table — one row per
+(version × member × section), with `reviewed boolean` and `annotation
+text`.
+
+---
+
 ## v2.3.0 — 2026-05-09
 
 ### Feat: At-Risk Members ledger — co-owned by Health + Placement chairs

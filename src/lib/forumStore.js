@@ -28,6 +28,7 @@ export function ForumStoreProvider({ children }) {
   const [constitutions, setConstitutions] = useState(cached?.constitutions ?? [])
   const [constitutionVersions, setConstitutionVersions] = useState(cached?.constitutionVersions ?? [])
   const [constitutionRatifications, setConstitutionRatifications] = useState(cached?.constitutionRatifications ?? [])
+  const [clauseReviews, setClauseReviews] = useState(cached?.clauseReviews ?? [])
   const [healthAssessments, setHealthAssessments] = useState(cached?.healthAssessments ?? [])
   const [atRiskEntries, setAtRiskEntries] = useState(cached?.atRiskEntries ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
@@ -37,8 +38,8 @@ export function ForumStoreProvider({ children }) {
 
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, healthAssessments, atRiskEntries })
-  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, healthAssessments, atRiskEntries])
+    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, clauseReviews, healthAssessments, atRiskEntries })
+  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, clauseReviews, healthAssessments, atRiskEntries])
 
   useEffect(() => {
     if (prevChapterId.current !== activeChapterId) { hasFetched.current = false; prevChapterId.current = activeChapterId }
@@ -59,6 +60,7 @@ export function ForumStoreProvider({ children }) {
       if (c.constitutions) setConstitutions(c.constitutions)
       if (c.constitutionVersions) setConstitutionVersions(c.constitutionVersions)
       if (c.constitutionRatifications) setConstitutionRatifications(c.constitutionRatifications)
+      if (c.clauseReviews) setClauseReviews(c.clauseReviews)
       if (c.healthAssessments) setHealthAssessments(c.healthAssessments)
       if (c.atRiskEntries) setAtRiskEntries(c.atRiskEntries)
     }
@@ -67,7 +69,7 @@ export function ForumStoreProvider({ children }) {
 
     async function hydrate() {
       try {
-        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes, fhaRes, farRes] = await Promise.all([
+        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes, reviewRes, fhaRes, farRes] = await Promise.all([
           fetchByChapter('forum_role_assignments', activeChapterId),
           fetchByChapter('forum_documents', activeChapterId),
           fetchByChapter('forum_calendar_events', activeChapterId),
@@ -79,6 +81,7 @@ export function ForumStoreProvider({ children }) {
           fetchByChapter('forum_constitutions', activeChapterId),
           fetchByChapter('forum_constitution_versions', activeChapterId),
           fetchByChapter('forum_constitution_ratifications', activeChapterId),
+          fetchByChapter('forum_constitution_clause_reviews', activeChapterId),
           fetchByChapter('forum_health_assessments', activeChapterId),
           fetchByChapter('forum_at_risk_entries', activeChapterId),
         ])
@@ -93,6 +96,7 @@ export function ForumStoreProvider({ children }) {
         if (constRes.data) setConstitutions(constRes.data)
         if (versRes.data) setConstitutionVersions(versRes.data)
         if (ratifyRes.data) setConstitutionRatifications(ratifyRes.data)
+        if (reviewRes.data) setClauseReviews(reviewRes.data)
         if (fhaRes.data) setHealthAssessments(fhaRes.data)
         if (farRes.data) setAtRiskEntries(farRes.data)
       } catch (err) {
@@ -475,6 +479,45 @@ export function ForumStoreProvider({ children }) {
     dbWrite(() => deleteRow('forum_at_risk_entries', id), 'delete:forum_at_risk_entries')
   }, [dbWrite])
 
+  // ── Per-clause Constitution Review ──────────────────────────
+  // Layer above ratification: members check off each clause and/or
+  // leave an annotation. Moderator aggregates annotations as a
+  // discussion list before opening for ratification. One row per
+  // (version × member × section).
+  const upsertClauseReview = useCallback((versionId, memberId, sectionId, patch) => {
+    const existing = clauseReviews.find(
+      r => r.version_id === versionId && r.member_id === memberId && r.section_id === sectionId
+    )
+    const now = new Date().toISOString()
+    if (existing) {
+      const updates = { ...patch, updated_at: now }
+      setClauseReviews(prev => prev.map(r => r.id === existing.id ? { ...r, ...updates } : r))
+      dbWrite(
+        () => updateRow('forum_constitution_clause_reviews', existing.id, updates),
+        'update:forum_constitution_clause_reviews'
+      )
+      return { ...existing, ...updates }
+    }
+    const row = {
+      id: crypto.randomUUID(),
+      chapter_id: activeChapterId,
+      version_id: versionId,
+      member_id: memberId,
+      section_id: sectionId,
+      reviewed: false,
+      annotation: '',
+      created_at: now,
+      updated_at: now,
+      ...patch,
+    }
+    setClauseReviews(prev => [...prev, row])
+    dbWrite(
+      () => insertRow('forum_constitution_clause_reviews', row),
+      'insert:forum_constitution_clause_reviews'
+    )
+    return row
+  }, [activeChapterId, clauseReviews, dbWrite])
+
   const ratifyConstitutionVersion = useCallback((versionId, memberId) => {
     // Don't insert a duplicate ratification
     if (constitutionRatifications.some(r => r.version_id === versionId && r.member_id === memberId)) return
@@ -493,6 +536,7 @@ export function ForumStoreProvider({ children }) {
     forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory,
     agendas, agendaItems,
     constitutions, constitutionVersions, constitutionRatifications,
+    clauseReviews,
     healthAssessments,
     atRiskEntries,
     loading, dbError, clearDbError: () => setDbError(null),
@@ -506,6 +550,7 @@ export function ForumStoreProvider({ children }) {
     createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
     proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
     ratifyConstitutionVersion,
+    upsertClauseReview,
     upsertHealthAssessment,
     addAtRiskEntry, updateAtRiskEntry, resolveAtRiskEntry,
     reopenAtRiskEntry, touchAtRiskReviewed, deleteAtRiskEntry,

@@ -49,10 +49,10 @@ export default function ForumHomePage() {
     addHistoryMember, deleteHistoryMember,
     addAgenda, updateAgenda, deleteAgenda,
     addAgendaItem, updateAgendaItem, deleteAgendaItem,
-    constitutions, constitutionVersions, constitutionRatifications,
+    constitutions, constitutionVersions, constitutionRatifications, clauseReviews,
     createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
     proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
-    ratifyConstitutionVersion,
+    ratifyConstitutionVersion, upsertClauseReview,
   } = useForumStore()
   const { events: chapterEvents, saps } = useStore()
   const { activeFiscalYear } = useFiscalYear()
@@ -421,6 +421,7 @@ export default function ForumHomePage() {
           constitutions={constitutions}
           versions={constitutionVersions}
           ratifications={constitutionRatifications}
+          clauseReviews={clauseReviews}
           onCreateDraft={() => createConstitutionDraft(effectiveForum?.id, member.id)}
           onProposeAmendment={() => proposeAmendment(effectiveForum?.id, member.id)}
           onUpdateVersion={updateConstitutionVersion}
@@ -428,6 +429,7 @@ export default function ForumHomePage() {
           onAdoptVersion={adoptConstitutionVersion}
           onDeleteVersion={deleteConstitutionVersion}
           onRatify={(versionId) => ratifyConstitutionVersion(versionId, member.id)}
+          onUpsertClauseReview={(versionId, sectionId, patch) => upsertClauseReview(versionId, member.id, sectionId, patch)}
         />
       )}
 
@@ -784,9 +786,10 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
 // ────────────────────────────────────────────────────────────
 function ConstitutionTab({
   forum, memberId, forumMembers, isModerator,
-  constitutions, versions, ratifications,
+  constitutions, versions, ratifications, clauseReviews,
   onCreateDraft, onProposeAmendment, onUpdateVersion,
   onProposeVersion, onAdoptVersion, onDeleteVersion, onRatify,
+  onUpsertClauseReview,
 }) {
   const constitution = useMemo(
     () => constitutions.find(c => c.forum_id === forum?.id),
@@ -867,11 +870,13 @@ function ConstitutionTab({
           memberId={memberId}
           forumMembers={forumMembers}
           ratifications={ratifications.filter(r => r.version_id === targetVersion.id)}
+          clauseReviews={(clauseReviews || []).filter(r => r.version_id === targetVersion.id)}
           onUpdate={onUpdateVersion}
           onPropose={onProposeVersion}
           onAdopt={onAdoptVersion}
           onDelete={onDeleteVersion}
           onRatify={onRatify}
+          onUpsertClauseReview={onUpsertClauseReview}
         />
       )}
     </div>
@@ -895,10 +900,39 @@ function VersionPill({ label, active, color, onClick }) {
 }
 
 function ConstitutionVersionView({
-  version, isModerator, memberId, forumMembers, ratifications,
-  onUpdate, onPropose, onAdopt, onDelete, onRatify,
+  version, isModerator, memberId, forumMembers, ratifications, clauseReviews,
+  onUpdate, onPropose, onAdopt, onDelete, onRatify, onUpsertClauseReview,
 }) {
   const canEdit = isModerator && version.status === 'draft'
+  // Per-clause review only makes sense on a stable version (not draft).
+  const reviewsEnabled = version.status !== 'draft' && !!onUpsertClauseReview && !!memberId
+  const myReviewBySection = useMemo(() => {
+    const m = new Map()
+    for (const r of (clauseReviews || [])) if (r.member_id === memberId) m.set(r.section_id, r)
+    return m
+  }, [clauseReviews, memberId])
+  const reviewsBySection = useMemo(() => {
+    const m = new Map()
+    for (const r of (clauseReviews || [])) {
+      if (!m.has(r.section_id)) m.set(r.section_id, [])
+      m.get(r.section_id).push(r)
+    }
+    return m
+  }, [clauseReviews])
+  const memberName = useMemo(() => {
+    const m = new Map()
+    for (const x of forumMembers) m.set(x.id, x.name)
+    return m
+  }, [forumMembers])
+  // Discussion items: any review with a non-empty annotation, grouped by section.
+  const discussionBySection = useMemo(() => {
+    const out = []
+    for (const section of (Array.isArray(version.sections) ? version.sections : [])) {
+      const annotated = (reviewsBySection.get(section.id) || []).filter(r => (r.annotation || '').trim().length > 0)
+      if (annotated.length > 0) out.push({ section, annotations: annotated })
+    }
+    return out
+  }, [version.sections, reviewsBySection])
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(version.title || '')
   const [preamble, setPreamble] = useState(version.preamble || '')
@@ -1110,18 +1144,63 @@ function ConstitutionVersionView({
             {version.preamble && (
               <p className="text-sm text-foreground/80 whitespace-pre-wrap italic">{version.preamble}</p>
             )}
+            {isModerator && reviewsEnabled && discussionBySection.length > 0 && (
+              <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4">
+                <p className="text-sm font-semibold text-warm">Discussion items raised by the forum</p>
+                <p className="text-xs text-warm/80 mt-0.5 mb-3">
+                  Members flagged {discussionBySection.length} clause{discussionBySection.length === 1 ? '' : 's'} for group discussion.
+                </p>
+                <div className="space-y-3">
+                  {discussionBySection.map(({ section, annotations }) => {
+                    const idx = sections.findIndex(s => s.id === section.id)
+                    return (
+                      <div key={section.id} className="rounded-lg border border-amber-400/30 bg-amber-500/5 p-3">
+                        <div className="text-xs font-semibold text-warm mb-1.5">
+                          {idx + 1}. {section.heading || <span className="italic text-warm/70">Untitled section</span>}
+                        </div>
+                        <ul className="space-y-1.5">
+                          {annotations.map(r => (
+                            <li key={r.id} className="text-xs text-foreground/85">
+                              <span className="text-warm/80 font-medium">{memberName.get(r.member_id) || 'Member'}:</span>{' '}
+                              <span className="whitespace-pre-wrap">{r.annotation}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             {sections.length === 0 ? (
               <p className="text-xs text-muted-foreground/60 italic">No content yet.</p>
             ) : (
               <div className="space-y-4">
-                {sections.map((section, idx) => (
-                  <div key={section.id}>
-                    <h3 className="text-sm font-semibold text-foreground mb-1">
-                      {idx + 1}. {section.heading || <span className="text-muted-foreground/60 italic">Untitled section</span>}
-                    </h3>
-                    {section.body && <p className="text-sm text-foreground/80 whitespace-pre-wrap">{section.body}</p>}
-                  </div>
-                ))}
+                {sections.map((section, idx) => {
+                  const all = reviewsBySection.get(section.id) || []
+                  const reviewedCount = all.filter(r => r.reviewed).length
+                  const annotationCount = all.filter(r => (r.annotation || '').trim().length > 0).length
+                  const mine = myReviewBySection.get(section.id)
+                  return (
+                    <div key={section.id}>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">
+                        {idx + 1}. {section.heading || <span className="text-muted-foreground/60 italic">Untitled section</span>}
+                      </h3>
+                      {section.body && <p className="text-sm text-foreground/80 whitespace-pre-wrap">{section.body}</p>}
+                      {reviewsEnabled && (
+                        <ClauseReviewRow
+                          versionId={version.id}
+                          sectionId={section.id}
+                          mine={mine}
+                          reviewedCount={reviewedCount}
+                          annotationCount={annotationCount}
+                          totalMembers={forumMembers.length}
+                          onUpsertClauseReview={onUpsertClauseReview}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
             {version.status === 'adopted' && version.adopted_at && (
@@ -1130,6 +1209,50 @@ function ConstitutionVersionView({
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+// Per-clause review row: my checkbox + my private annotation, plus a
+// public count of reviewers and discussion-flag count for this clause.
+// Annotation saves on blur to avoid hammering the DB on every keystroke.
+function ClauseReviewRow({ versionId, sectionId, mine, reviewedCount, annotationCount, totalMembers, onUpsertClauseReview }) {
+  const [draft, setDraft] = useState(mine?.annotation ?? '')
+  useEffect(() => { setDraft(mine?.annotation ?? '') }, [mine?.id, mine?.annotation])
+  const reviewed = !!mine?.reviewed
+  const handleToggle = () => {
+    onUpsertClauseReview(versionId, sectionId, { reviewed: !reviewed })
+  }
+  const handleAnnotationCommit = () => {
+    if ((draft || '') === (mine?.annotation || '')) return
+    onUpsertClauseReview(versionId, sectionId, { annotation: draft })
+  }
+  return (
+    <div className="mt-2 rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={handleToggle}
+          className={`text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border ${reviewed
+            ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+            : 'border-border bg-muted/30 text-muted-foreground/80 hover:text-foreground'}`}
+          aria-pressed={reviewed}
+        >
+          {reviewed ? '✓ I reviewed this' : 'Mark reviewed'}
+        </button>
+        <span className="text-[10px] text-muted-foreground/70">
+          {reviewedCount}/{totalMembers || 0} reviewed
+          {annotationCount > 0 ? ` · ${annotationCount} flagged for discussion` : ''}
+        </span>
+      </div>
+      <textarea
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={handleAnnotationCommit}
+        rows={2}
+        placeholder="Flag this clause for group discussion (optional)"
+        className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground placeholder-white/30"
+      />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   Activity, AlertCircle, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp,
-  ClipboardList, Megaphone, ScrollText, Users2, Sparkles,
+  ClipboardList, ExternalLink, Megaphone, ScrollText, Users2, Sparkles,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useBoardStore } from '@/lib/boardStore'
@@ -54,7 +54,7 @@ export default function ForumHealthDashboard() {
   const { forums, chapterMembers } = useBoardStore()
   const {
     healthAssessments, upsertHealthAssessment,
-    forumRoles, forumHistory, constitutions, constitutionVersions,
+    forumRoles, forumHistory, constitutions, constitutionVersions, clauseReviews,
     atRiskEntries,
   } = useForumStore()
   const { user, profile } = useAuth()
@@ -99,6 +99,25 @@ export default function ForumHealthDashboard() {
           v => v.constitution_id === constitution.id && v.status === 'adopted'
         )
       : null
+    const proposedVersion = constitution
+      ? constitutionVersions.find(
+          v => v.constitution_id === constitution.id && v.status === 'proposed'
+        )
+      : null
+    // Per-clause review activity (the layer above ratification). The
+    // chair just needs to see that members engaged — the moderator owns
+    // the workflow.
+    const reviewVersion = proposedVersion || adoptedVersion || null
+    const reviewsForVersion = reviewVersion
+      ? (clauseReviews || []).filter(r => r.version_id === reviewVersion.id)
+      : []
+    const reviewerIds = new Set()
+    let annotationCount = 0
+    for (const r of reviewsForVersion) {
+      if (r.reviewed || (r.annotation || '').trim()) reviewerIds.add(r.member_id)
+      if ((r.annotation || '').trim()) annotationCount++
+    }
+    const reviewerCount = reviewerIds.size
 
     // Role coverage this FY
     const rolesThisFy = forumRoles.filter(
@@ -110,7 +129,11 @@ export default function ForumHealthDashboard() {
       e => e.forum_id === forum.id && e.status === 'open'
     ).length
 
-    return { a, currentMembers, departures, adoptedVersion, rolesThisFy, atRiskOpen }
+    return {
+      a, currentMembers, departures, adoptedVersion, proposedVersion,
+      reviewVersion, reviewerCount, annotationCount,
+      rolesThisFy, atRiskOpen,
+    }
   }
 
   function toggleExpanded(forumId) {
@@ -189,7 +212,11 @@ export default function ForumHealthDashboard() {
       ) : (
         <div className="space-y-3">
           {activeForums.map(forum => {
-            const { a, currentMembers, departures, adoptedVersion, rolesThisFy, atRiskOpen } = rowsForForum(forum)
+            const {
+              a, currentMembers, departures, adoptedVersion, proposedVersion,
+              reviewVersion, reviewerCount, annotationCount,
+              rolesThisFy, atRiskOpen,
+            } = rowsForForum(forum)
             const isOpen = expanded.has(forum.id)
             const stage = a?.lifecycle_stage ?? null
 
@@ -276,7 +303,31 @@ export default function ForumHealthDashboard() {
                         note={a?.constitution_review_note ?? ''}
                         onValueChange={v => patch(forum.id, { constitution_reviewed: v })}
                         onNoteChange={n => patch(forum.id, { constitution_review_note: n })}
-                      />
+                      >
+                        {reviewVersion && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                              {reviewerCount}/{currentMembers} reviewing clauses
+                              {proposedVersion ? ' (proposed)' : ''}
+                            </span>
+                            {annotationCount > 0 && (
+                              <span className="inline-flex items-center gap-1 text-amber-700">
+                                <AlertTriangle className="h-3 w-3" />
+                                {annotationCount} discussion item{annotationCount === 1 ? '' : 's'}
+                              </span>
+                            )}
+                            <Link
+                              to={`/forum-health/constitution/${forum.id}`}
+                              className="inline-flex items-center gap-1 text-primary hover:underline ml-auto"
+                            >
+                              <ScrollText className="h-3 w-3" />
+                              View constitution
+                              <ExternalLink className="h-2.5 w-2.5" />
+                            </Link>
+                          </div>
+                        )}
+                      </ChecklistRow>
                       <ChecklistRow
                         title="One-pager complete"
                         hint="Forum's purpose / norms one-pager is on file"
@@ -365,7 +416,7 @@ function SectionLabel({ children }) {
   return <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</div>
 }
 
-function ChecklistRow({ title, hint, value, note, onValueChange, onNoteChange }) {
+function ChecklistRow({ title, hint, value, note, onValueChange, onNoteChange, children }) {
   return (
     <div className="rounded-md border bg-background p-3">
       <div className="flex items-start justify-between gap-3">
@@ -381,6 +432,7 @@ function ChecklistRow({ title, hint, value, note, onValueChange, onNoteChange })
         value={note}
         onChange={e => onNoteChange(e.target.value)}
       />
+      {children}
     </div>
   )
 }
