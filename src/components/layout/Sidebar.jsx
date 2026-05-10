@@ -110,16 +110,17 @@ const NON_MEMBER_ROLES = new Set([
 // Moderator section — only renders when useIsModerator() returns true.
 // Treated like a board role: the moderator gets menu items the average
 // member never sees (forum agenda, forum calendar, forum members &
-// roles management) plus the back-of-house moderator events calendar
-// for monthly moderator meetings + annual regional summit.
+// roles, manage constitution) plus the back-of-house moderator events
+// calendar for monthly moderator meetings + annual regional summit.
 //
-// Forum sub-items deep-link into the existing ForumHomePage tabs via
-// ?tab=. Moderator Events is a separate, moderator-only surface.
+// Each forum sub-item is its own dedicated route that renders
+// ForumHomePage in `focusTab` mode — single tab, page-specific
+// header, no nested tab strip. Moderator Events is a separate page.
 const moderatorItems = [
-  { to: '/portal/forum?tab=agenda', icon: ClipboardList, label: 'Forum Agenda' },
-  { to: '/portal/forum?tab=calendar', icon: CalendarIcon, label: 'Forum Calendar' },
-  { to: '/portal/forum?tab=members', icon: Users2, label: 'Forum Members & Roles' },
-  { to: '/portal/forum?tab=constitution', icon: ScrollText, label: 'Manage Constitution' },
+  { to: '/portal/moderator/agenda', icon: ClipboardList, label: 'Forum Agenda' },
+  { to: '/portal/moderator/calendar', icon: CalendarIcon, label: 'Forum Calendar' },
+  { to: '/portal/moderator/members', icon: Users2, label: 'Forum Members & Roles' },
+  { to: '/portal/moderator/constitution', icon: ScrollText, label: 'Manage Constitution' },
   { to: '/portal/moderator/events', icon: CalendarDays, label: 'Moderator Events' },
 ]
 
@@ -447,33 +448,23 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               <div className="pt-4 pb-2 px-3">
                 <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Moderator</p>
               </div>
-              {moderatorItems.map(({ to, icon: Icon, label }) => {
-                // Match active state by pathname only — query params
-                // (?tab=agenda etc.) are how we deep-link, but NavLink's
-                // built-in isActive doesn't read them. Compare manually.
-                const [path, query] = to.split('?')
-                const params = new URLSearchParams(query || '')
-                const tabParam = params.get('tab')
-                const currentParams = new URLSearchParams(location.search)
-                const isActive = location.pathname === path && (
-                  tabParam ? currentParams.get('tab') === tabParam : !currentParams.get('tab')
-                )
-                return (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    onClick={onNavigate}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              {moderatorItems.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       isActive
                         ? activeNavClass
                         : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </NavLink>
-                )
-              })}
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
             </>
           )}
 
@@ -494,12 +485,6 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                   location.pathname === item.to ||
                   item.children.some(c => c.to === location.pathname)
                 )
-                // When the user is on /portal/forum with a moderator-
-                // elevated tab open (agenda / calendar / members), the
-                // Moderator section's deep-link is the more-specific
-                // match. Suppress the Member > Forum highlight in that
-                // case so only ONE row is highlighted at a time.
-                const moderatorTabActive = item.to === '/portal/forum' && ['agenda', 'calendar', 'members'].includes(new URLSearchParams(location.search).get('tab'))
                 return (
                   <div key={item.to}>
                     <NavLink
@@ -507,7 +492,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                       onClick={onNavigate}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                          isActive && !moderatorTabActive
+                          isActive
                             ? activeNavClass
                             : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                         }`

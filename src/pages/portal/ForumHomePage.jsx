@@ -13,6 +13,7 @@ import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
   Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download,
 } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
 
 // jsPDF is a heavy dep; load on first download click rather than on every Forum page view.
 async function downloadConstitutionPdfLazy(args) {
@@ -21,6 +22,17 @@ async function downloadConstitutionPdfLazy(args) {
 }
 
 const ReflectionsPage = lazy(() => import('./ReflectionsPage'))
+
+// Moderator-focused, single-tab routes (e.g. /portal/moderator/agenda)
+// reuse this page in `focusTab` mode: the big forum header + tab strip
+// are suppressed and a PageHeader takes their place. Subtitles are
+// computed against the current forum name at render time.
+const FOCUS_HEADERS = {
+  agenda: { title: 'Forum Agenda', subtitleFn: (f) => `Plan and run meetings for ${f}.` },
+  calendar: { title: 'Forum Calendar', subtitleFn: (f) => `Events for ${f}: meetings, retreats, SAP visits, socials.` },
+  members: { title: 'Forum Members & Roles', subtitleFn: (f) => `Members of ${f} and the rotating roles they hold this fiscal year.` },
+  constitution: { title: 'Manage Constitution', subtitleFn: (f) => `Draft, ratify, and amend the constitution for ${f}.` },
+}
 
 const FORUM_ROLE_LABELS = {
   moderator: 'Moderator',
@@ -42,7 +54,7 @@ const EVENT_TYPE_LABELS = {
   other: 'Other',
 }
 
-export default function ForumHomePage() {
+export default function ForumHomePage({ focusTab }) {
   const { user, profile, isAdmin, isSuperAdmin, viewAsRole } = useAuth()
   const { activeChapter } = useChapter()
   const { chapterMembers, forums, loading: boardLoading } = useBoardStore()
@@ -67,16 +79,17 @@ export default function ForumHomePage() {
   const [member, setMember] = useState(null)
   const [loading, setLoading] = useState(true)
   const [searchParams, setSearchParams] = useSearchParams()
-  // Tab can be deep-linked from the sidebar Moderator section
-  // (e.g. /portal/forum?tab=agenda jumps straight to the agenda tab).
-  // Falls back to 'parking' for any unknown / missing value.
+  // Tab can be deep-linked via ?tab= on the standard /portal/forum
+  // route, or forced to a single tab via the `focusTab` prop on the
+  // moderator-focused routes (/portal/moderator/agenda, etc.). In
+  // focus mode the chrome (forum hero + tab strip) is hidden and the
+  // page renders only that tab — no URL syncing needed.
   const validTabs = ['parking', 'tools', 'agenda', 'calendar', 'constitution', 'partners', 'members', 'history']
-  const initialTab = validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking'
+  const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking')
   const [tab, setTabState] = useState(initialTab)
-  // Keep ?tab= in sync when the user clicks a tab so refresh / share
-  // preserves the intended view.
   const setTab = (next) => {
     setTabState(next)
+    if (focusTab) return
     const params = new URLSearchParams(searchParams)
     if (next === 'parking') params.delete('tab'); else params.set('tab', next)
     setSearchParams(params, { replace: true })
@@ -264,16 +277,23 @@ export default function ForumHomePage() {
           a real member row will fail. This banner only appears on staging.
         </div>
       )}
-      <div className="text-center py-4">
-        <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
-        <button
-          type="button"
-          onClick={() => setTab('members')}
-          className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
-        >
-          {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
-        </button>
-      </div>
+      {focusTab ? (
+        <PageHeader
+          title={FOCUS_HEADERS[focusTab]?.title || ''}
+          subtitle={FOCUS_HEADERS[focusTab]?.subtitleFn(member.forum)}
+        />
+      ) : (
+        <div className="text-center py-4">
+          <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
+          <button
+            type="button"
+            onClick={() => setTab('members')}
+            className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
+          >
+            {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
+          </button>
+        </div>
+      )}
 
       {pageError && (
         <div className="flex items-start justify-between gap-3 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
@@ -288,7 +308,9 @@ export default function ForumHomePage() {
         </div>
       )}
 
-      {/* Tab nav */}
+      {/* Tab nav — hidden in moderator focus mode (single tab forced
+          via the route, no need for the strip). */}
+      {!focusTab && (
       <div className="flex flex-wrap justify-center gap-1 border-b border-border">
         {tabs.map(t => (
           <button
@@ -303,6 +325,7 @@ export default function ForumHomePage() {
           </button>
         ))}
       </div>
+      )}
 
       {/* Tab content */}
       {tab === 'calendar' && (

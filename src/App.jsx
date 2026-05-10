@@ -286,6 +286,10 @@ function App() {
                 <Route path="/portal/survey" element={<SurveyPage />} />
                 <Route path="/portal/reflections" element={<ReflectionsPage />} />
                 <Route path="/portal/forum" element={<ForumHomePage />} />
+                <Route path="/portal/moderator/agenda" element={<ForumHomePage focusTab="agenda" />} />
+                <Route path="/portal/moderator/calendar" element={<ForumHomePage focusTab="calendar" />} />
+                <Route path="/portal/moderator/members" element={<ForumHomePage focusTab="members" />} />
+                <Route path="/portal/moderator/constitution" element={<ForumHomePage focusTab="constitution" />} />
                 <Route path="/portal/moderator/events" element={<ModeratorEventsPage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />

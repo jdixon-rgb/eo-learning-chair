@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.5.1 — 2026-05-10
+
+### Fix: Moderator sidebar items are now first-class pages
+
+Clicking **Forum Agenda**, **Forum Calendar**, **Forum Members & Roles**,
+or **Manage Constitution** in the Moderator sidebar now lands directly
+on that view, with its own page header — no more dumping the moderator
+on the Forum overview where they had to click the same tab again.
+
+Each item gets a dedicated route under `/portal/moderator/*` that
+renders the existing forum view in a new "focus mode": single tab,
+nested tab strip suppressed, page-specific title and subtitle in the
+top bar. The non-moderator `/portal/forum` page is unchanged — it
+keeps the full tabbed experience for regular forum members.
+
 ## v2.5.0 — 2026-05-10
 
 ### Feat: Constitution PDF download + Moderator sidebar entry
