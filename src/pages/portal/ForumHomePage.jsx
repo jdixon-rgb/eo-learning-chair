@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
@@ -11,7 +11,7 @@ import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParking
 import { lazy, Suspense } from 'react'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download, Loader2, FileUp,
 } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
 
@@ -845,6 +845,82 @@ function ConstitutionTab({
   const [viewing, setViewing] = useState('current') // 'current' | 'draft' | 'proposed'
   const targetVersion = viewing === 'draft' ? draft : viewing === 'proposed' ? proposed : (adopted || proposed || draft)
 
+  // ── PDF import (Claude-backed extraction → draft) ─────────────
+  const fileInputRef = useRef(null)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState(null)
+
+  const triggerFilePicker = () => {
+    setImportError(null)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChosen = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+    if (file.type !== 'application/pdf') {
+      setImportError('Please select a PDF.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setImportError('PDF must be under 10 MB.')
+      return
+    }
+    // If a draft has content, confirm before overwriting it.
+    if (draft) {
+      const hasContent = (draft.preamble && draft.preamble.trim()) || (Array.isArray(draft.sections) && draft.sections.length > 0)
+      if (hasContent && !confirm('Replace the current draft with the parsed PDF? Existing draft text will be lost.')) {
+        return
+      }
+    }
+    setImporting(true)
+    try {
+      const buf = await file.arrayBuffer()
+      const bytes = new Uint8Array(buf)
+      let binary = ''
+      const CHUNK = 0x8000
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK))
+      }
+      const pdfBase64 = btoa(binary)
+      const res = await fetch('/api/constitution/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfBase64, fileName: file.name }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
+      if (!Array.isArray(data.sections) || data.sections.length === 0) {
+        setImportError("No sections detected. Is this a forum constitution?")
+        return
+      }
+      const sections = data.sections.map(s => ({
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+        heading: s.heading || '',
+        body: s.body || '',
+      }))
+      let target = draft
+      if (!target) {
+        target = onCreateDraft()
+        if (!target?.id) {
+          setImportError('Could not create a draft to import into.')
+          return
+        }
+      }
+      onUpdateVersion(target.id, {
+        title: data.title || target.title || 'Forum Constitution',
+        preamble: data.preamble || '',
+        sections,
+      })
+      setViewing('draft')
+    } catch (err) {
+      setImportError(err?.message || 'Import failed.')
+    } finally {
+      setImporting(false)
+    }
+  }
+
   // Empty state: no constitution yet
   if (!constitution || forumVersions.length === 0) {
     return (
@@ -852,9 +928,29 @@ function ConstitutionTab({
         <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
         <p className="text-muted-foreground text-sm mb-4">No constitution yet for this forum.</p>
         {isModerator ? (
-          <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
-            <Plus className="h-4 w-4" /> Create draft
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
+              <Plus className="h-4 w-4" /> Create draft
+            </button>
+            <button
+              onClick={triggerFilePicker}
+              disabled={importing}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90 disabled:opacity-50"
+            >
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+              {importing ? 'Parsing PDF…' : 'Import from PDF'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={handleFileChosen}
+            />
+            {importError && (
+              <p className="basis-full text-xs text-red-400 mt-2">{importError}</p>
+            )}
+          </div>
         ) : (
           <p className="text-xs text-muted-foreground/60">Your moderator hasn't started one yet.</p>
         )}
@@ -900,6 +996,17 @@ function ConstitutionTab({
             <Download className="h-3.5 w-3.5" /> Download PDF
           </button>
         )}
+        {isModerator && !proposed && (
+          <button
+            onClick={triggerFilePicker}
+            disabled={importing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90 disabled:opacity-50"
+            title={draft ? 'Replace the draft with content parsed from a PDF' : 'Create a draft from a PDF'}
+          >
+            {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+            {importing ? 'Parsing PDF…' : 'Import from PDF'}
+          </button>
+        )}
         {isModerator && adopted && !draft && !proposed && (
           <button
             onClick={onProposeAmendment}
@@ -909,6 +1016,21 @@ function ConstitutionTab({
           </button>
         )}
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleFileChosen}
+      />
+      {importError && (
+        <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-center justify-between gap-2">
+          <span>{importError}</span>
+          <button onClick={() => setImportError(null)} className="text-red-300/70 hover:text-red-200" aria-label="Dismiss">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {targetVersion && (
         <ConstitutionVersionView

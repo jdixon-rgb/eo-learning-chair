@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.6.0 — 2026-05-10
+
+### Feat: Import constitution from PDF (Claude-backed)
+
+A moderator can now bring an existing PDF constitution into the app
+in one click. Visible on the Manage Constitution surface (and the
+member-side Constitution tab when the moderator is signed in):
+
+- **Empty state:** "Import from PDF" sits next to "Create draft."
+- **Existing constitution:** "Import from PDF" appears in the version
+  controls bar when there's no proposed-and-pending-ratification
+  version. It either populates a fresh draft or replaces the current
+  draft (with a confirm if the draft already has content).
+
+**How it works.** The browser reads the PDF, sends it base64 to
+`/api/constitution/parse` (a new Vercel serverless function), which
+hands the document to Claude Sonnet 4.6 with extraction instructions
+and gets back a structured `{ title, preamble, sections }` JSON. The
+moderator then edits whatever needs cleanup and proposes the draft
+for ratification — nothing publishes automatically. Digital PDFs only
+(no OCR yet); 10 MB cap.
+
+Reuses the same Vercel `/api/` + `ANTHROPIC_API_KEY` pattern that
+already powers the contract parser and venue auto-lookup.
+
+---
+
 ## v2.5.4 — 2026-05-10
 
 ### Fix: Forum role display order
