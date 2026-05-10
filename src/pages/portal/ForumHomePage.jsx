@@ -11,8 +11,14 @@ import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParking
 import { lazy, Suspense } from 'react'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download,
 } from 'lucide-react'
+
+// jsPDF is a heavy dep; load on first download click rather than on every Forum page view.
+async function downloadConstitutionPdfLazy(args) {
+  const { downloadConstitutionPdf } = await import('@/lib/constitutionPdf')
+  downloadConstitutionPdf(args)
+}
 
 const ReflectionsPage = lazy(() => import('./ReflectionsPage'))
 
@@ -853,6 +859,15 @@ function ConstitutionTab({
           />
         )}
         <div className="flex-1" />
+        {targetVersion && (
+          <button
+            onClick={() => downloadConstitutionPdfLazy({ version: targetVersion, forumName: forum?.name })}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90"
+            title="Download this version as a PDF"
+          >
+            <Download className="h-3.5 w-3.5" /> Download PDF
+          </button>
+        )}
         {isModerator && adopted && !draft && !proposed && (
           <button
             onClick={onProposeAmendment}
@@ -866,6 +881,7 @@ function ConstitutionTab({
       {targetVersion && (
         <ConstitutionVersionView
           version={targetVersion}
+          forumName={forum?.name}
           isModerator={isModerator}
           memberId={memberId}
           forumMembers={forumMembers}
@@ -900,7 +916,7 @@ function VersionPill({ label, active, color, onClick }) {
 }
 
 function ConstitutionVersionView({
-  version, isModerator, memberId, forumMembers, ratifications, clauseReviews,
+  version, forumName, isModerator, memberId, forumMembers, ratifications, clauseReviews,
   onUpdate, onPropose, onAdopt, onDelete, onRatify, onUpsertClauseReview,
 }) {
   const canEdit = isModerator && version.status === 'draft'

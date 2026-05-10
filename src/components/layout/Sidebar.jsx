@@ -30,6 +30,7 @@ import {
   BarChart3,
   ClipboardCheck,
   ClipboardList,
+  ScrollText,
   Calendar as CalendarIcon,
   CalendarDays,
   Eye,
@@ -118,6 +119,7 @@ const moderatorItems = [
   { to: '/portal/forum?tab=agenda', icon: ClipboardList, label: 'Forum Agenda' },
   { to: '/portal/forum?tab=calendar', icon: CalendarIcon, label: 'Forum Calendar' },
   { to: '/portal/forum?tab=members', icon: Users2, label: 'Forum Members & Roles' },
+  { to: '/portal/forum?tab=constitution', icon: ScrollText, label: 'Manage Constitution' },
   { to: '/portal/moderator/events', icon: CalendarDays, label: 'Moderator Events' },
 ]
 

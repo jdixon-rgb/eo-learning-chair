@@ -17,6 +17,32 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.5.0 — 2026-05-10
+
+### Feat: Constitution PDF download + Moderator sidebar entry
+
+The constitution can now be downloaded as a PDF at any time. Adopted,
+proposed, and draft versions all export — header shows forum name +
+status (e.g. "Adopted v2 · May 8, 2026"), preamble in italics, then
+each numbered section with heading + body. Page numbers in the
+footer. Filename slug is forum-constitution-vN-status.pdf.
+
+The generator is `src/lib/constitutionPdf.js`, mirrors the jsPDF +
+auto-paginating writer pattern from `reflectionsPdf.js`, and is
+dynamic-imported on first click so the ~390 KB jspdf chunk doesn't
+weigh down the main bundle.
+
+Buttons added to two surfaces:
+  - Member/moderator constitution tab (`/portal/forum?tab=constitution`)
+  - Forum Health Chair read-only viewer (`/forum-health/constitution/:forumId`)
+
+**Sidebar:** added a **Manage Constitution** entry under the Moderator
+section that deep-links to `/portal/forum?tab=constitution`. Sits
+alongside Forum Agenda / Forum Calendar / Forum Members & Roles /
+Moderator Events.
+
+---
+
 ## v2.4.0 — 2026-05-10
 
 ### Feat: Per-clause constitution review with annotations

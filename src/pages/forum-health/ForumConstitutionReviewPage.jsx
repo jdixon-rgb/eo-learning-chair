@@ -1,9 +1,14 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ScrollText, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, ScrollText, AlertTriangle, CheckCircle2, Download } from 'lucide-react'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
 import PageHeader from '@/lib/pageHeader'
+
+async function downloadConstitutionPdfLazy(args) {
+  const { downloadConstitutionPdf } = await import('@/lib/constitutionPdf')
+  downloadConstitutionPdf(args)
+}
 
 // Read-only viewer for the Forum Health Chair. Shows the latest stable
 // constitution version (proposed if pending, else adopted) with each
@@ -92,7 +97,17 @@ export default function ForumConstitutionReviewPage() {
         title={`${forum.name} — constitution review`}
         subtitle="Read-only view. Per-clause review activity is owned by the moderator."
       />
-      <BackLink />
+      <div className="flex flex-wrap items-center gap-3">
+        <BackLink />
+        <button
+          type="button"
+          onClick={() => downloadConstitutionPdfLazy({ version: target, forumName: forum.name })}
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border bg-card hover:bg-muted text-xs"
+        >
+          <Download className="h-3 w-3" />
+          Download PDF
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Tile label="Status" value={target.status === 'proposed' ? 'Proposed' : 'Adopted'} />
