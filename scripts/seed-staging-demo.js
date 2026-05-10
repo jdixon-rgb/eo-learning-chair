@@ -267,13 +267,19 @@ async function main() {
           fiscal_year: FY,
         })
       }
-      // Last FY history: rotate the moderator pipeline forward so the
-      // forum has visible "history" — last year's mod-elect is this
-      // year's mod, etc.
-      const rotation = { moderator: 'moderator_elect', moderator_elect: 'moderator_elect_elect' }
+      // Last FY history: the moderator pipeline rotates forward each
+      // year — this year's moderator was last year's moderator_elect,
+      // this year's elect was last year's elect_elect. This year's
+      // elect_elect is new to the pipeline, so they get no last-FY
+      // row. Non-pipeline roles (timer / retreat_planner / social /
+      // technology) are simplified as "held the same role last year"
+      // — turnover happens in real life but this is enough texture
+      // for a demo. Unique constraint is (forum_id, role, fy), so
+      // every (forum, role) tuple appears at most once per FY here.
+      const PREV_ROLE = { moderator: 'moderator_elect', moderator_elect: 'moderator_elect_elect' }
       for (const m of forum.members) {
-        const prevRole = Object.entries(rotation).find(([_, v]) => v === m.role)?.[0] || (m.role === 'moderator_elect_elect' ? null : m.role)
-        if (!prevRole) continue
+        if (m.role === 'moderator_elect_elect') continue
+        const prevRole = PREV_ROLE[m.role] || m.role
         rows.push({
           chapter_id: CHAPTER_ID,
           forum_id: FORUM_IDS[forum.key],
