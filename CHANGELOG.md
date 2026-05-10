@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.6.2 — 2026-05-10
+
+### Fix: Import-from-PDF was hidden when a proposed version existed
+
+The Import-from-PDF button was gated on `!proposed` — too restrictive.
+Importing always creates or replaces a draft, which is a separate
+version row from proposed, so it can never overwrite ratification
+signatures. Now the button is visible whenever the moderator is
+signed in. Tooltip clarifies that import doesn't affect adopted or
+proposed versions.
+
+---
+
 ## v2.6.1 — 2026-05-10
 
 ### Fix: Forum calendar groups events by month

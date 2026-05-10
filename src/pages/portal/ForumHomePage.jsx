@@ -1027,12 +1027,16 @@ function ConstitutionTab({
             <Download className="h-3.5 w-3.5" /> Download PDF
           </button>
         )}
-        {isModerator && !proposed && (
+        {isModerator && (
           <button
             onClick={triggerFilePicker}
             disabled={importing}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90 disabled:opacity-50"
-            title={draft ? 'Replace the draft with content parsed from a PDF' : 'Create a draft from a PDF'}
+            title={
+              draft
+                ? 'Replace the draft with content parsed from a PDF'
+                : 'Create a draft from a PDF (does not affect adopted or proposed versions)'
+            }
           >
             {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
             {importing ? 'Parsing PDF…' : 'Import from PDF'}
