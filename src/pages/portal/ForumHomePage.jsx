@@ -45,7 +45,7 @@ const FORUM_ROLE_LABELS = {
   social: 'Social',
 }
 
-const FORUM_ROLE_ORDER = ['moderator', 'moderator_elect', 'moderator_elect_elect', 'timer', 'technology', 'retreat_planner', 'social']
+const FORUM_ROLE_ORDER = ['moderator', 'moderator_elect', 'moderator_elect_elect', 'timer', 'retreat_planner', 'social', 'technology']
 
 const EVENT_TYPE_LABELS = {
   meeting: 'Meeting',

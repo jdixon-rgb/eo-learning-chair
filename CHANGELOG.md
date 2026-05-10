@@ -17,6 +17,15 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.5.4 — 2026-05-10
+
+### Fix: Forum role display order
+
+After the rotating moderator track (Moderator → Moderator Elect →
+Moderator Elect-Elect → Timer), the remaining roles now display in
+the correct order: Retreat Planner, Social, Technology. Affects the
+Members tab role chips and the role-assignment dropdown.
+
 ## v2.5.3 — 2026-05-10
 
 ### Feat: Manage Parking Lot in the Moderator sidebar
