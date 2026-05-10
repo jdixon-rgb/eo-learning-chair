@@ -31,6 +31,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   ScrollText,
+  Pin,
   Calendar as CalendarIcon,
   CalendarDays,
   Eye,
@@ -119,6 +120,7 @@ const NON_MEMBER_ROLES = new Set([
 const moderatorItems = [
   { to: '/portal/moderator/agenda', icon: ClipboardList, label: 'Forum Agenda' },
   { to: '/portal/moderator/calendar', icon: CalendarIcon, label: 'Forum Calendar' },
+  { to: '/portal/moderator/parking', icon: Pin, label: 'Manage Parking Lot' },
   { to: '/portal/moderator/members', icon: Users2, label: 'Forum Members & Roles' },
   { to: '/portal/moderator/constitution', icon: ScrollText, label: 'Manage Constitution' },
   { to: '/portal/moderator/events', icon: CalendarDays, label: 'Moderator Events' },

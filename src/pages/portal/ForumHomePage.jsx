@@ -30,6 +30,7 @@ const ReflectionsPage = lazy(() => import('./ReflectionsPage'))
 const FOCUS_HEADERS = {
   agenda: { title: 'Forum Agenda', subtitleFn: (f) => `Plan and run meetings for ${f}.` },
   calendar: { title: 'Forum Calendar', subtitleFn: (f) => `Events for ${f}: meetings, retreats, SAP visits, socials.` },
+  parking: { title: 'Manage Parking Lot', subtitleFn: (f) => `Topics ${f} wants to come back to in a future meeting.` },
   members: { title: 'Forum Members & Roles', subtitleFn: (f) => `Members of ${f} and the rotating roles they hold this fiscal year.` },
   constitution: { title: 'Manage Constitution', subtitleFn: (f) => `Draft, ratify, and amend the constitution for ${f}.` },
 }

@@ -288,6 +288,7 @@ function App() {
                 <Route path="/portal/forum" element={<ForumHomePage />} />
                 <Route path="/portal/moderator/agenda" element={<ForumHomePage focusTab="agenda" />} />
                 <Route path="/portal/moderator/calendar" element={<ForumHomePage focusTab="calendar" />} />
+                <Route path="/portal/moderator/parking" element={<ForumHomePage focusTab="parking" />} />
                 <Route path="/portal/moderator/members" element={<ForumHomePage focusTab="members" />} />
                 <Route path="/portal/moderator/constitution" element={<ForumHomePage focusTab="constitution" />} />
                 <Route path="/portal/moderator/events" element={<ModeratorEventsPage />} />

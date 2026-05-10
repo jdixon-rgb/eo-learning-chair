@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.5.3 — 2026-05-10
+
+### Feat: Manage Parking Lot in the Moderator sidebar
+
+Adds a "Manage Parking Lot" entry to the Moderator section, sitting
+between Forum Calendar and Forum Members & Roles. Lands on the
+existing parking lot view in focus mode (its own header, no nested
+tab strip), giving the moderator a direct path to the place where
+deferred topics live between meetings.
+
 ## v2.5.2 — 2026-05-10
 
 ### Fix: Moderator focus routes now switch tabs when you navigate
