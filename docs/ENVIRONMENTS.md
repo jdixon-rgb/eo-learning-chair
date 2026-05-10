@@ -18,13 +18,18 @@ Migrations always run against staging first. Only after a clean staging run do t
 
 ## Env vars
 
-See `.env.example` at the repo root. Three keys:
+See `.env.example` at the repo root. Client-side keys (Vite-injected, prefixed `VITE_`):
 
 - `VITE_APP_ENV` — one of `production | staging | development`. Drives Sentry tagging.
 - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — point at the matching Supabase project.
 - `VITE_SENTRY_DSN` — same DSN across envs; the `environment` tag distinguishes them in Sentry.
 
-In Vercel, set these under **Settings → Environment Variables**, scoped to the matching environment (Production vs Preview).
+Server-side keys (used by `/api/*` Vercel serverless functions, **never** prefixed `VITE_`):
+
+- `ANTHROPIC_API_KEY` — required by `/api/contracts/parse`, `/api/venues/lookup`, `/api/constitution/parse`. Same key is fine across envs.
+- `GOOGLE_PLACES_API_KEY` — optional, augments venue auto-lookup with photos / verified addresses.
+
+In Vercel, set these under **Settings → Environment Variables**. **Important:** scope each key to **both Production *and* Preview** (the `staging` branch deploys are previews, so a Production-only scope leaves staging broken). For client-side keys with different values per env (Supabase URL/anon key), set the production value scoped to Production and the staging value scoped to Preview.
 
 ## Switching local dev between environments
 
