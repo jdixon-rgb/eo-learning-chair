@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { useChapter } from '@/lib/chapter'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { loadCurrentMember } from '@/lib/reflectionsStore'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,12 @@ const SLP_INVITE_LABEL = {
 // admin-controlled.
 export default function MemberProfilePage() {
   const { user, profile } = useAuth()
+  const { activeChapterId } = useChapter()
   const email = user?.email || profile?.email
+  // For super-admins (no chapter_id on profile) and chapter-bound roles
+  // alike, the chapter the new member record should live in is whichever
+  // chapter the user is currently viewing.
+  const bootstrapChapterId = profile?.chapter_id || activeChapterId
   const navigate = useNavigate()
 
   const [member, setMember] = useState(null)
@@ -125,25 +131,25 @@ export default function MemberProfilePage() {
 
   const handleCreateMember = async () => {
     setCreateError('')
-    if (!profile?.chapter_id) {
-      setCreateError("Your profile isn't linked to a chapter yet — ask a super-admin to set one.")
+    if (!bootstrapChapterId) {
+      setCreateError("No chapter selected — pick one in the chapter switcher first.")
       return
     }
-    const memberEmail = (email || profile.email || '').toLowerCase().trim()
+    const memberEmail = (email || profile?.email || '').toLowerCase().trim()
     if (!memberEmail) {
       setCreateError('No email on your account to use as the member email.')
       return
     }
-    const fullName = profile.full_name || memberEmail
+    const fullName = profile?.full_name || memberEmail
     const [firstGuess, ...rest] = fullName.split(/\s+/)
     setCreating(true)
     const insert = {
-      chapter_id: profile.chapter_id,
+      chapter_id: bootstrapChapterId,
       name: fullName,
       first_name: firstGuess || '',
       last_name: rest.join(' '),
       email: memberEmail,
-      phone: profile.phone || '',
+      phone: profile?.phone || '',
       status: 'active',
     }
     const { error: err } = await supabase.from('chapter_members').insert(insert)
@@ -271,7 +277,7 @@ export default function MemberProfilePage() {
   }
 
   if (!member) {
-    const canBootstrap = profile?.chapter_id && !NON_MEMBER_ROLES.has(profile?.role)
+    const canBootstrap = !!bootstrapChapterId && !NON_MEMBER_ROLES.has(profile?.role)
     return (
       <div className="max-w-md mx-auto text-center py-12">
         <h1 className="text-xl font-bold">We couldn't find your member profile</h1>
@@ -294,7 +300,7 @@ export default function MemberProfilePage() {
           </div>
         )}
         <Link to="/portal" className="inline-block mt-4 text-sm text-community hover:underline">
-          ← Back to Compass
+          ← Back to home
         </Link>
       </div>
     )

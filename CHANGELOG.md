@@ -17,6 +17,53 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.6 — 2026-05-11
+
+### Fix: "Create my member record" button didn't appear for super-admins
+
+The empty-state gate on `/portal/profile` required `profile.chapter_id`
+to be truthy, which it never is for super-admins (they're platform-
+level and pick a chapter via the switcher). Now the page also accepts
+the active chapter from `useChapter()` — so a super-admin viewing
+EO Demoland sees the Create button and the new chapter_members row
+lands in EO Demoland. Chapter-bound roles are unaffected.
+
+---
+
+## v2.7.5 — 2026-05-11
+
+### Feature: Parking Lot is now a member-visible Forum tool
+
+The left-nav Forum group is now permanently expanded so Reflections,
+Lifeline, and the new Parking Lot are all visible the moment a
+member signs in — no more "click Forum to discover what's inside."
+A new `/portal/parking` page gives every member a private view of
+their own parking-lot items (scoped to `author_member_id === me`),
+matching the privacy rule that members see their own topics while
+moderators continue to see everyone's at `/portal/moderator/parking`.
+
+### Privacy fix: Reflections Parking Lot tab no longer exposes forum mates' items
+
+The Parking Lot tab inside Reflections previously defaulted to
+"Everyone" and let any member browse every forum mate's parking-lot
+items. That violated the member-private bar that Reflections and
+Lifeline already hold. The tab now filters strictly to the current
+member's items, drops the Author column, drops the per-member
+filter dropdown, and removes the Author re-assignment field from
+the edit modal. Forum-wide visibility stays where it belongs — on
+the moderator surface at `/portal/moderator/parking`.
+
+### Cleanup: removed "Compass" wording from the UI
+
+"Compass" was an internal product name we used for the member
+portal, but it isn't EO vernacular and was leaking into UI strings
+("Back to Compass" on the empty-state, SLP admin help text). Those
+references are now plain language. The lucide-react `Compass`
+*icon* used on the Navigators page is unchanged — that's an icon
+shape, not the product term.
+
+---
+
 ## v2.7.4 — 2026-05-11
 
 ### Feature: Bootstrap your own member record from /portal/profile
