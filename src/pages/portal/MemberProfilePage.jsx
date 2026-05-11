@@ -5,7 +5,15 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { loadCurrentMember } from '@/lib/reflectionsStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, Save, Check, Loader2, Heart } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Save, Check, Loader2, Heart, Mail } from 'lucide-react'
+
+const SLP_INVITE_LABEL = {
+  not_invited: 'Not invited',
+  pending:     'Invite sent',
+  active:      'Login active',
+  revoked:     'Revoked',
+}
 
 // Member self-edit profile page. Lives in the Member Portal under
 // /portal/profile. Backed by `chapter_members` — the member can update
@@ -44,10 +52,14 @@ export default function MemberProfilePage() {
     dietary_restrictions: '',
     allergies: '',
     notes: '',
+    email: '',
+    phone: '',
   })
   const [slpSaving, setSlpSaving] = useState(false)
   const [slpSavedAt, setSlpSavedAt] = useState(null)
   const [slpError, setSlpError] = useState('')
+  const [slpInviting, setSlpInviting] = useState(false)
+  const [slpInviteMsg, setSlpInviteMsg] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -92,6 +104,8 @@ export default function MemberProfilePage() {
                 dietary_restrictions: slpRow.dietary_restrictions || '',
                 allergies: slpRow.allergies || '',
                 notes: slpRow.notes || '',
+                email: slpRow.email || '',
+                phone: slpRow.phone || '',
               })
             }
           }
@@ -159,6 +173,8 @@ export default function MemberProfilePage() {
       dietary_restrictions: slpForm.dietary_restrictions,
       allergies: slpForm.allergies,
       notes: slpForm.notes,
+      email: slpForm.email.trim().toLowerCase() || null,
+      phone: slpForm.phone.trim() || null,
     }
 
     if (isSupabaseConfigured()) {
@@ -180,6 +196,39 @@ export default function MemberProfilePage() {
     setSlpSaving(false)
     setSlpSavedAt(Date.now())
     setTimeout(() => setSlpSavedAt(null), 3000)
+  }
+
+  const handleInviteSlp = async () => {
+    if (!slp?.id) {
+      setSlpInviteMsg('Save the SLP record first, then invite.')
+      return
+    }
+    const inviteEmail = slpForm.email.trim().toLowerCase()
+    if (!inviteEmail) {
+      setSlpInviteMsg('Add an email for your SLP, then invite.')
+      return
+    }
+    setSlpInviting(true)
+    setSlpInviteMsg('')
+    if (isSupabaseConfigured()) {
+      const { error: err } = await supabase.rpc('invite_slp', {
+        p_slp_id: slp.id,
+        p_email: inviteEmail,
+        p_phone: slpForm.phone.trim() || null,
+      })
+      if (err) {
+        setSlpInviteMsg(`Invite failed: ${err.message}`)
+        setSlpInviting(false)
+        return
+      }
+      // Refresh the local SLP row so the status pill updates.
+      const { data: refreshed } = await supabase
+        .from('slps').select('*').eq('id', slp.id).maybeSingle()
+      if (refreshed) setSlp(refreshed)
+    }
+    setSlpInviting(false)
+    setSlpInviteMsg('Invite recorded. Your SLP can sign in at the same login page using their email.')
+    setTimeout(() => setSlpInviteMsg(''), 6000)
   }
 
   if (loading) {
@@ -390,6 +439,57 @@ export default function MemberProfilePage() {
             </span>
           )}
           {slpError && <span className="text-sm text-destructive">{slpError}</span>}
+        </div>
+
+        {/* Invite SLP to their own login. Optional — only matters
+            if your chapter runs SLP forums. Adding email/phone here
+            does NOT invite; the explicit button does. */}
+        <div className="border-t border-border pt-4 mt-2 space-y-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">Invite to their own login</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
+                If your chapter runs an SLP forum, your SLP needs their own login to join it. They sign in at the same page you do, using their own email.
+              </p>
+            </div>
+            <Badge variant="outline" className="text-[10px] whitespace-nowrap">
+              {SLP_INVITE_LABEL[slp?.invite_status || 'not_invited']}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">SLP email</label>
+              <Input
+                type="email"
+                value={slpForm.email}
+                onChange={e => setSlpForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="their.email@example.com"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">SLP phone (optional)</label>
+              <Input
+                value={slpForm.phone}
+                onChange={e => setSlpForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={handleInviteSlp}
+              disabled={slpInviting || !slp?.id || !slpForm.email.trim()}
+            >
+              {slpInviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+              {slp?.invite_status === 'pending' || slp?.invite_status === 'active'
+                ? 'Re-send invite'
+                : 'Invite SLP'}
+            </Button>
+            {slpInviteMsg && (
+              <span className="text-xs text-muted-foreground">{slpInviteMsg}</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -17,6 +17,51 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.0 — 2026-05-11
+
+### Feature: SLP forums — foundation (Wave 1, admin-side)
+
+Schema and admin-side UI for Significant Life Partner forums. SLPs
+are a distinct population from chapter members. They get the same
+forum experience members get, but their data lives in a parallel
+slice of the database so the two populations never mix.
+
+**Schema (migrations 089-093):**
+- `forums.population` (`'member' | 'slp'`) scopes each forum to one
+  population. Existing forums backfill to `'member'`.
+- `slps` table gains `forum`, `email`, `phone`, `profile_id`,
+  `invite_status`, `invited_at`. The unique index on `lower(email)`
+  prevents two SLPs from claiming the same login.
+- New parallel personal-data tables: `slp_private`,
+  `slp_life_events`, `slp_reflections`, `slp_parking_lot_entries`,
+  `slp_constitution_ratifications`. Same shape as the member
+  equivalents, keyed by `slps.id`.
+- RLS helpers `current_slp_id()` and `current_slp_forum()` join
+  via `slps.profile_id = auth.uid()` and bake in the active-linked-
+  member check — if the linked member is not active, the helpers
+  return NULL and the SLP drops out of every forum-scoped view.
+- New profile role `'slp'`. `handle_new_user` links an incoming SLP
+  invite back to its `slps` row via `profile_id`.
+- New RPC `invite_slp(p_slp_id, p_email, p_phone)` records the
+  invite + flips `invite_status` to `'pending'`.
+
+**UI:**
+- Add Forum form (board page) gains a Member/SLP toggle.
+- SLP forum cards show a small `SLP` badge.
+- SLP Management page (admin) gains a forum-assignment dropdown
+  per SLP and an invite-status pill.
+- Member profile SLP card gains email + phone fields and an
+  Invite button. Inviting an SLP records contact info + drops a
+  `member_invites` row with `role='slp'`.
+
+**Not in this release (Wave 2):** the SLP-facing app experience.
+An invited SLP can claim an account but has no SLP-specific
+navigation yet; they will land on member surfaces that may show
+empty data because they have no `chapter_members` row. Hold off
+on inviting SLPs to production until Wave 2 lands.
+
+---
+
 ## v2.6.2 — 2026-05-10
 
 ### Fix: Import-from-PDF was hidden when a proposed version existed

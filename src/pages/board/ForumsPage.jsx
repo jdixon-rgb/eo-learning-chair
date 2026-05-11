@@ -26,6 +26,7 @@ const emptyForum = {
   health_score: 7,
   health_notes: '',
   is_active: true,
+  population: 'member',
 }
 
 export default function ForumsPage() {
@@ -93,6 +94,25 @@ export default function ForumsPage() {
             <div>
               <label className="text-xs font-medium text-muted-foreground">Forum Name</label>
               <Input className="mt-1" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g., Forum Alpha" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Population</label>
+              <div className="mt-1 flex rounded-md border bg-background p-0.5 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, population: 'member' })}
+                  className={`flex-1 px-3 py-1.5 rounded ${form.population === 'member' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Member
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, population: 'slp' })}
+                  className={`flex-1 px-3 py-1.5 rounded ${form.population === 'slp' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  SLP
+                </button>
+              </div>
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground">Moderator</label>
@@ -188,7 +208,12 @@ export default function ForumsPage() {
                     {forum.health_score ?? '-'}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">{forum.name}</h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-semibold text-sm">{forum.name}</h3>
+                      {forum.population === 'slp' && (
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-pink-300 text-pink-700 bg-pink-50">SLP</Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{getHealthLabel(forum.health_score || 0)}</p>
                   </div>
                 </div>
