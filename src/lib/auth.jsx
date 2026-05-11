@@ -13,6 +13,7 @@ const VIEW_AS_REGION_KEY = 'eo-view-as-region'
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [slp, setSlp] = useState(null)
   const [loading, setLoading] = useState(true)
   const [viewAsRole, setViewAsRoleState] = useState(() => {
     try { return localStorage.getItem(VIEW_AS_STORAGE_KEY) || null } catch { return null }
@@ -62,6 +63,24 @@ export function AuthProvider({ children }) {
     }
 
     if (!error && data) setProfile(data)
+
+    // SLP and SLP Chair users have no chapter_members row of their
+    // own. Pull their slps row by profile_id so downstream code can
+    // read slp.id / slp.forum without an extra round-trip. RLS lets
+    // them read their own row; the active-linked-member rule is
+    // enforced server-side in current_slp_id() / is_slp_admin()
+    // for write paths.
+    if (data?.role === 'slp' || data?.role === 'slp_chair') {
+      const { data: slpRow } = await supabase
+        .from('slps')
+        .select('id, forum, chapter_id, name, member_id, invite_status')
+        .eq('profile_id', userId)
+        .maybeSingle()
+      setSlp(slpRow || null)
+    } else {
+      setSlp(null)
+    }
+
     const [terms, acked] = await Promise.all([
       fetchCurrentBetaTerms(),
       hasAckedCurrentBetaTerms(),
@@ -159,6 +178,7 @@ export function AuthProvider({ children }) {
     if (supabase) await supabase.auth.signOut()
     setSession(null)
     setProfile(null)
+    setSlp(null)
   }
 
   const role = profile?.role ?? null
@@ -252,6 +272,16 @@ export function AuthProvider({ children }) {
     isBoardMember: !!role && ['super_admin', 'president', 'board_liaison', 'chapter_experience_coordinator', 'chapter_executive_director'].includes(role),
     isMember: role === 'member',
     isSAPContact: role === 'sap_contact',
+    isSLP: role === 'slp',
+    isSLPChair: role === 'slp_chair',
+    slp,
+    slpId: slp?.id ?? null,
+    slpForum: slp?.forum || null,
+    // 'member' for chapter members, 'slp' for significant life partners
+    // (including SLP Chair — they ARE an SLP themselves), null for
+    // staff / chair / admin roles that don't have a personal-data slice
+    // of their own.
+    userPopulation: (role === 'slp' || role === 'slp_chair') ? 'slp' : (role === 'member' ? 'member' : null),
     sapContactId: effectiveSapContactId,
     viewAsSapContactId,
     setViewAsSapContactId,

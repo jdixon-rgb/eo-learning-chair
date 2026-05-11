@@ -58,7 +58,61 @@ const FORUM_IDS = {
   pinnacle:  '22222222-2222-4222-9222-000000000003',
   riverstone:'22222222-2222-4222-9222-000000000004',
   summit:    '22222222-2222-4222-9222-000000000005',
+  heartland: '22222222-2222-4222-9222-000000000006',
+  sunbloom:  '22222222-2222-4222-9222-000000000007',
 }
+
+// SLP forums — population='slp'. Sized small on purpose: two forums
+// covers the "yes, this is its own population" point without bloating
+// the demo. Members are SLPs whose linked chapter member is in one of
+// the EO forums below; the assignment is by index-pair (Aurora +
+// Catalyst SLPs go to Heartland, Pinnacle + Riverstone SLPs go to
+// Sunbloom, Summit SLPs stay unassigned to show the empty state).
+const SLP_FORUMS = [
+  { key: 'heartland', name: 'Heartland SLP Forum', founded: '2018', covers: ['aurora', 'catalyst'] },
+  { key: 'sunbloom',  name: 'Sunbloom SLP Forum',  founded: '2020', covers: ['pinnacle', 'riverstone'] },
+]
+
+// One SLP per chapter member. Different first names so admins can
+// visually separate member from SLP at a glance. Relationship mix is
+// realistic — mostly spouse, some partner / fiance.
+const SLP_NAMES = [
+  { first: 'Cara',     relationship_type: 'spouse' },
+  { first: 'Devin',    relationship_type: 'partner' },
+  { first: 'Linnea',   relationship_type: 'spouse' },
+  { first: 'Mateus',   relationship_type: 'spouse' },
+  { first: 'Sofie',    relationship_type: 'spouse' },
+  { first: 'Asher',    relationship_type: 'partner' },
+  { first: 'Indira',   relationship_type: 'spouse' },
+  { first: 'Esme',     relationship_type: 'spouse' },
+  { first: 'Bram',     relationship_type: 'spouse' },
+  { first: 'Tessa',    relationship_type: 'fiance' },
+  { first: 'Konrad',   relationship_type: 'spouse' },
+  { first: 'Liesel',   relationship_type: 'spouse' },
+  { first: 'Wells',    relationship_type: 'spouse' },
+  { first: 'Anjali',   relationship_type: 'partner' },
+  { first: 'Padraic',  relationship_type: 'spouse' },
+  { first: 'Galen',    relationship_type: 'spouse' },
+  { first: 'Senna',    relationship_type: 'spouse' },
+  { first: 'Iris',     relationship_type: 'spouse' },
+  { first: 'Owen',     relationship_type: 'spouse' },
+  { first: 'Pia',      relationship_type: 'spouse' },
+  { first: 'Vesper',   relationship_type: 'partner' },
+  { first: 'Hollis',   relationship_type: 'spouse' },
+  { first: 'Auden',    relationship_type: 'spouse' },
+  { first: 'Mira',     relationship_type: 'spouse' },
+  { first: 'Calder',   relationship_type: 'partner' },
+  { first: 'Saskia',   relationship_type: 'spouse' },
+  { first: 'Beckett',  relationship_type: 'spouse' },
+  { first: 'Juno',     relationship_type: 'spouse' },
+  { first: 'Tariq',    relationship_type: 'spouse' },
+  { first: 'Larkin',   relationship_type: 'fiance' },
+  { first: 'Ronan',    relationship_type: 'spouse' },
+  { first: 'Yara',     relationship_type: 'spouse' },
+  { first: 'Quinn',    relationship_type: 'partner' },
+  { first: 'Wynn',     relationship_type: 'spouse' },
+  { first: 'Ada',      relationship_type: 'spouse' },
+]
 
 // Member layout per forum: 7 members, one per role.
 // Fully fictional names — no resemblance to real people intended.
@@ -250,9 +304,69 @@ async function main() {
       founded_year: f.founded,
       moderator_name: `${f.members[0].first} ${f.members[0].last}`,
       moderator_email: `${f.members[0].first.toLowerCase()}.${f.members[0].last.toLowerCase()}@demoland.example`,
+      population: 'member',
     }))
     const r = await sb.from('forums').insert(rows)
     check(r, 'insert forums')
+  })
+
+  await step(`Insert ${SLP_FORUMS.length} SLP forums`, async () => {
+    const rows = SLP_FORUMS.map(f => ({
+      id: FORUM_IDS[f.key],
+      chapter_id: CHAPTER_ID,
+      name: f.name,
+      meeting_cadence: 'monthly',
+      member_count: 0,
+      health_score: 7,
+      is_active: true,
+      founded_year: f.founded,
+      moderator_name: '',
+      moderator_email: '',
+      population: 'slp',
+    }))
+    const r = await sb.from('forums').insert(rows)
+    check(r, 'insert SLP forums')
+  })
+
+  // SLPs — one per member. Email left blank for most rows (the
+  // realistic state for a chapter that hasn't invited SLPs yet).
+  // A few rows get an email + invite_status='pending' to demo the
+  // "invited but hasn't claimed login" state.
+  await step('Insert SLPs (one per member)', async () => {
+    // forum.key -> slp_forum.name lookup. Members whose forum isn't
+    // covered get an empty forum field (unassigned).
+    const forumAssignment = {}
+    for (const slpForum of SLP_FORUMS) {
+      for (const coverKey of slpForum.covers) {
+        forumAssignment[coverKey] = slpForum.name
+      }
+    }
+
+    const slpRows = []
+    let nameIdx = 0
+    for (const forum of FORUMS) {
+      for (const m of forum.members) {
+        const slpName = SLP_NAMES[nameIdx % SLP_NAMES.length]
+        nameIdx += 1
+        const memberId = memberByForumAndRole[forum.key][m.role]
+        // Invite a handful of SLPs to demo the status flow.
+        const inviteThisOne = nameIdx % 9 === 0
+        slpRows.push({
+          chapter_id: CHAPTER_ID,
+          member_id: memberId,
+          name: `${slpName.first} ${m.last}`,
+          relationship_type: slpName.relationship_type,
+          forum: forumAssignment[forum.key] || '',
+          email: inviteThisOne
+            ? `${slpName.first.toLowerCase()}.${m.last.toLowerCase()}@demoland.example`
+            : null,
+          invite_status: inviteThisOne ? 'pending' : 'not_invited',
+          invited_at: inviteThisOne ? new Date().toISOString() : null,
+        })
+      }
+    }
+    const r = await sb.from('slps').insert(slpRows)
+    check(r, 'insert slps')
   })
 
   await step('Insert role assignments (current + previous FY)', async () => {
@@ -459,9 +573,10 @@ async function main() {
   })
 
   console.log('\nDone. Demo chapter ready:')
-  console.log(`  Chapter: EO Demoland (${CHAPTER_ID})`)
-  console.log(`  Forums:  ${FORUMS.length}`)
-  console.log(`  Members: ${memberRows.length}`)
+  console.log(`  Chapter:    EO Demoland (${CHAPTER_ID})`)
+  console.log(`  Forums:     ${FORUMS.length} (member) + ${SLP_FORUMS.length} (SLP)`)
+  console.log(`  Members:    ${memberRows.length}`)
+  console.log(`  SLPs:       ${memberRows.length} (one per member)`)
   console.log('\nSwitch into "EO Demoland" via the super-admin chapter selector to test.')
 }
 

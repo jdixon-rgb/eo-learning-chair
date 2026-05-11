@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.1 — 2026-05-11
+
+### Wave 2A: SLP Chair role + auth context + demo data
+
+Foundation for the SLP-facing app experience. No user-visible UI
+change yet — these are the plumbing layers Wave 2B builds on.
+
+- **Migration 094: `slp_chair` role.** Added to `profiles.role` and
+  `member_invites.role` check lists. Unlike every other chair, the
+  SLP Chair has no `chapter_members` row — they are themselves an
+  SLP (one row in `slps`) with their auth identity carrying
+  `role='slp_chair'`. `is_slp_admin()` grants them admin access to
+  the `slps` table, but only when their own slps row has an active
+  linked chapter member. If the chair's EO-member partner leaves,
+  the chair role lapses — same rule we apply to ordinary SLPs.
+- **`is_slp_chair()` helper.** Lightweight check for app/UI gating.
+- **Auth context.** `useAuth()` now exposes `isSLP`, `isSLPChair`,
+  `slp` (the slps row), `slpId`, `slpForum`, and `userPopulation`
+  (`'member' | 'slp' | null`). The provider fetches the slps row
+  by `profile_id` for any user whose role is `slp` or `slp_chair`.
+- **EO Demoland seed.** The staging demo chapter now seeds two SLP
+  forums (Heartland, Sunbloom), 35 SLPs (one per member), and a
+  handful of pending invites — enough texture to demo the SLP
+  Management + Invite surfaces without touching real data.
+
+---
+
 ## v2.7.0 — 2026-05-11
 
 ### Feature: SLP forums — foundation (Wave 1, admin-side)
