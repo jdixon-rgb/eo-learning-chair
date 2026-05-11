@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.2 — 2026-05-11
+
+### Fix: SLP Chair didn't appear in the role-switcher dropdown
+
+Migration 094 added the `slp_chair` role at the DB layer but the
+UI's chair-role registry (`src/lib/chairRoles.js`) didn't have a
+matching entry, so the role-switcher dropdown (and admin sidebar
+access list) didn't know about it. Added an SLP Chair entry with
+homePath `/admin/slps` and a minimal nav (SLPs + Forums + Chapter
+Calendar), plus added `slp_chair` to `ADMIN_LAYOUT_ROLES` so the
+chair gets the admin sidebar at all. Dedicated SLP-Chair-specific
+surfaces (SLP-only Forums page, etc.) land in Wave 2B.
+
+---
+
 ## v2.7.1 — 2026-05-11
 
 ### Wave 2A: SLP Chair role + auth context + demo data

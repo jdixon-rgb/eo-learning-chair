@@ -89,7 +89,7 @@ export const REGIONAL_ROLES = ['regional_learning_chair_expert']
 export const SPEAKER_LIBRARY_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator']
 
 // All roles that can access the admin layout (sidebar)
-export const ADMIN_LAYOUT_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison', 'forum_health_chair', 'forum_placement_chair']
+export const ADMIN_LAYOUT_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', 'slp_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison', 'forum_health_chair', 'forum_placement_chair']
 
 // All roles that can access the member portal.
 // Regional oversight roles are explicitly excluded — forum / reflections /

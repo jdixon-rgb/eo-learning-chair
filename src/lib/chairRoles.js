@@ -98,6 +98,20 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
     ],
   },
+  slp_chair: {
+    title: 'SLP Chair',
+    // Lands on SLP Management — that's the chair's primary surface
+    // (manage SLP roster + forum assignments + invites). /board/forums
+    // shows the SLP-population forums alongside member forums; for now
+    // the population badge in the card is the differentiator. A
+    // dedicated SLP Forums page lands in Wave 2B.
+    homePath: '/admin/slps',
+    navItems: [
+      { to: '/admin/slps', icon: Heart, label: 'SLPs' },
+      { to: '/board/forums', icon: Users2, label: 'Forums' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
+    ],
+  },
   president: {
     title: 'President',
     homePath: '/president',
