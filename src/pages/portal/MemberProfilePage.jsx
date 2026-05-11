@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
@@ -6,7 +6,13 @@ import { loadCurrentMember } from '@/lib/reflectionsStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Save, Check, Loader2, Heart, Mail } from 'lucide-react'
+import { ArrowLeft, Save, Check, Loader2, Heart, Mail, UserPlus } from 'lucide-react'
+
+// Roles that don't have a chapter_members row by design (they live in
+// other tables: slps, sap_contacts, or are region-scoped). Don't offer
+// "create my member record" to these — they'd end up with a row that
+// shouldn't exist.
+const NON_MEMBER_ROLES = new Set(['slp', 'slp_chair', 'sap_contact', 'regional_learning_chair_expert', 'demo_user'])
 
 const SLP_INVITE_LABEL = {
   not_invited: 'Not invited',
@@ -60,66 +66,91 @@ export default function MemberProfilePage() {
   const [slpError, setSlpError] = useState('')
   const [slpInviting, setSlpInviting] = useState(false)
   const [slpInviteMsg, setSlpInviteMsg] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
 
-  useEffect(() => {
-    let cancelled = false
-    async function init() {
-      setLoading(true)
-      const { data } = await loadCurrentMember(email)
-      if (!cancelled && data) {
-        // loadCurrentMember only selects a subset — re-fetch the full row
-        // so we get phone, company, industry, eo_join_date, notes.
-        if (isSupabaseConfigured()) {
-          const { data: full } = await supabase
-            .from('chapter_members')
-            .select('*')
-            .eq('id', data.id)
-            .single()
-          if (!cancelled && full) {
-            setMember(full)
-            setForm({
-              first_name: full.first_name || '',
-              last_name: full.last_name || '',
-              email: full.email || '',
-              phone: full.phone || '',
-              company: full.company || '',
-              industry: full.industry || '',
-              eo_join_date: full.eo_join_date || '',
-              notes: full.notes || '',
-            })
-            // Load SLP if one exists for this member
-            const { data: slpRow } = await supabase
-              .from('slps')
-              .select('*')
-              .eq('member_id', full.id)
-              .maybeSingle()
-            if (!cancelled && slpRow) {
-              setSlp(slpRow)
-              setSlpForm({
-                name: slpRow.name || '',
-                relationship_type: slpRow.relationship_type || 'spouse',
-                dob: slpRow.dob || '',
-                anniversary: slpRow.anniversary || '',
-                kids: slpRow.kids || '',
-                dietary_restrictions: slpRow.dietary_restrictions || '',
-                allergies: slpRow.allergies || '',
-                notes: slpRow.notes || '',
-                email: slpRow.email || '',
-                phone: slpRow.phone || '',
-              })
-            }
-          }
-        } else {
-          setMember(data)
+  const loadMember = useCallback(async () => {
+    if (!email) { setLoading(false); return }
+    setLoading(true)
+    const { data } = await loadCurrentMember(email)
+    if (!data) { setLoading(false); return }
+    // loadCurrentMember only selects a subset — re-fetch the full row
+    // so we get phone, company, industry, eo_join_date, notes.
+    if (isSupabaseConfigured()) {
+      const { data: full } = await supabase
+        .from('chapter_members')
+        .select('*')
+        .eq('id', data.id)
+        .single()
+      if (full) {
+        setMember(full)
+        setForm({
+          first_name: full.first_name || '',
+          last_name: full.last_name || '',
+          email: full.email || '',
+          phone: full.phone || '',
+          company: full.company || '',
+          industry: full.industry || '',
+          eo_join_date: full.eo_join_date || '',
+          notes: full.notes || '',
+        })
+        const { data: slpRow } = await supabase
+          .from('slps')
+          .select('*')
+          .eq('member_id', full.id)
+          .maybeSingle()
+        if (slpRow) {
+          setSlp(slpRow)
+          setSlpForm({
+            name: slpRow.name || '',
+            relationship_type: slpRow.relationship_type || 'spouse',
+            dob: slpRow.dob || '',
+            anniversary: slpRow.anniversary || '',
+            kids: slpRow.kids || '',
+            dietary_restrictions: slpRow.dietary_restrictions || '',
+            allergies: slpRow.allergies || '',
+            notes: slpRow.notes || '',
+            email: slpRow.email || '',
+            phone: slpRow.phone || '',
+          })
         }
-        setLoading(false)
-      } else if (!cancelled) {
-        setLoading(false)
       }
+    } else {
+      setMember(data)
     }
-    if (email) init()
-    return () => { cancelled = true }
+    setLoading(false)
   }, [email])
+
+  useEffect(() => { loadMember() }, [loadMember])
+
+  const handleCreateMember = async () => {
+    setCreateError('')
+    if (!profile?.chapter_id) {
+      setCreateError("Your profile isn't linked to a chapter yet — ask a super-admin to set one.")
+      return
+    }
+    const memberEmail = (email || profile.email || '').toLowerCase().trim()
+    if (!memberEmail) {
+      setCreateError('No email on your account to use as the member email.')
+      return
+    }
+    const fullName = profile.full_name || memberEmail
+    const [firstGuess, ...rest] = fullName.split(/\s+/)
+    setCreating(true)
+    const insert = {
+      chapter_id: profile.chapter_id,
+      name: fullName,
+      first_name: firstGuess || '',
+      last_name: rest.join(' '),
+      email: memberEmail,
+      phone: profile.phone || '',
+      status: 'active',
+    }
+    const { error: err } = await supabase.from('chapter_members').insert(insert)
+    setCreating(false)
+    if (err) { setCreateError(`Couldn't create member record: ${err.message}`); return }
+    await loadMember()
+  }
 
   const handleSave = async () => {
     if (!member?.id) return
@@ -240,12 +271,28 @@ export default function MemberProfilePage() {
   }
 
   if (!member) {
+    const canBootstrap = profile?.chapter_id && !NON_MEMBER_ROLES.has(profile?.role)
     return (
       <div className="max-w-md mx-auto text-center py-12">
         <h1 className="text-xl font-bold">We couldn't find your member profile</h1>
         <p className="text-sm text-muted-foreground mt-2">
-          Your account isn't linked to a chapter member record yet. Contact your chapter admin.
+          Your account isn't linked to a chapter member record yet.
+          {canBootstrap
+            ? ' You can create one now from the info on your account.'
+            : ' Contact your chapter admin.'}
         </p>
+        {canBootstrap && (
+          <div className="mt-4 space-y-3">
+            <Button onClick={handleCreateMember} disabled={creating}>
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+              Create my member record
+            </Button>
+            {createError && <p className="text-xs text-destructive">{createError}</p>}
+            <p className="text-[11px] text-muted-foreground/80">
+              Uses your account email + name. You can edit everything once it exists.
+            </p>
+          </div>
+        )}
         <Link to="/portal" className="inline-block mt-4 text-sm text-community hover:underline">
           ← Back to Compass
         </Link>

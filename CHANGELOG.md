@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.4 — 2026-05-11
+
+### Feature: Bootstrap your own member record from /portal/profile
+
+If a signed-in user with a chapter-scoped role visits their profile
+page and has no `chapter_members` row yet, they now see a "Create
+my member record" button instead of the "contact your admin" dead
+end. The button inserts a row using the email + full_name + phone
+already on their profile, then re-loads the page so the form
+populates and they can fill in the rest (company, industry, SLP,
+photo when that lands). Roles that don't have a chapter_members
+row by design (`slp`, `slp_chair`, `sap_contact`,
+`regional_learning_chair_expert`, `demo_user`) still see the
+admin-contact message — they live in other tables.
+
+---
+
 ## v2.7.3 — 2026-05-11
 
 ### Feature: Click your name in the sidebar to open your profile
