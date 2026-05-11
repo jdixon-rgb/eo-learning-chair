@@ -1,4 +1,4 @@
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -569,17 +569,22 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           </button>
         </div>
 
-        {/* Footer: User info + Sign out */}
+        {/* Footer: User info (click → My Profile) + Sign out */}
         <div className="p-4 border-t border-sidebar-border">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              to="/portal/profile"
+              onClick={onNavigate}
+              title="My profile (photo, SLP, contact info)"
+              className="min-w-0 flex-1 -m-1 p-1 rounded-lg hover:bg-sidebar-accent transition-colors"
+            >
               <p className="text-xs font-medium text-sidebar-foreground truncate">
                 {profile?.full_name || 'User'}
               </p>
               <p className="text-[10px] text-muted-foreground/80 truncate">
                 {profile?.email || ''}
               </p>
-            </div>
+            </Link>
             <button
               onClick={handleSignOut}
               title="Sign out"

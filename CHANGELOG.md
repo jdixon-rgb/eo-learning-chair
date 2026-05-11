@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.3 — 2026-05-11
+
+### Feature: Click your name in the sidebar to open your profile
+
+The footer of the left-hand sidebar shows the signed-in user's name
+and email. It was previously not clickable, so the only way to
+reach `/portal/profile` (photo upload, contact info, SLP card) was
+to know the URL. The name/email block now links to that page on
+click — same conventional pattern as Slack, Gmail, GitHub. Sign
+Out stays as a separate icon button on the right.
+
+---
+
 ## v2.7.2 — 2026-05-11
 
 ### Fix: SLP Chair didn't appear in the role-switcher dropdown
