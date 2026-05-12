@@ -4,7 +4,7 @@ import { useBoardStore } from '@/lib/boardStore'
 import { FISCAL_MONTHS, STRATEGIC_MAP, BUDGET_CATEGORIES } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
 import PageHeader from '@/lib/pageHeader'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
@@ -27,6 +27,7 @@ export default function ScenarioPage() {
     scenarios, addScenario, updateScenario, deleteScenario, updateEvent,
   } = useStore()
   const { getChairBudget } = useBoardStore()
+  const formatCurrency = useFormatCurrency()
 
   // Scenario Planner is a Learning Chair tool — budget anchors to the
   // chair's FY allocation, not the chapter total.

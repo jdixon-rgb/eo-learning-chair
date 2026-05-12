@@ -11,7 +11,7 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { getFiscalYearOptions } from '@/lib/fiscalYear'
 import { useChapter } from '@/lib/chapter'
@@ -38,6 +38,7 @@ export default function SettingsPage() {
     getMemberName, getMemberEmail, upsertStaffInvite,
   } = useBoardStore()
   const { role } = useAuth()
+  const formatCurrency = useFormatCurrency()
   const { activeChapter } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
   const canEditChapterName = hasPermission(role, 'canEditChapterConfig')

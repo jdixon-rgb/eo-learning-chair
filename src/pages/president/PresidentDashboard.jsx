@@ -6,7 +6,7 @@ import { getChairConfig } from '@/lib/chairRoles'
 import TourTip from '@/components/TourTip'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
 import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
@@ -22,6 +22,7 @@ export default function PresidentDashboard() {
   const { partners: sapPartners } = useSAPStore()
   const { activeFiscalYear } = useFiscalYear()
   const { effectiveRole } = useAuth()
+  const formatCurrency = useFormatCurrency()
 
   // Heading adapts to viewer's role — CED/CEC see "Chapter Dashboard", President sees "President Dashboard"
   const isChapterStaff = effectiveRole === 'chapter_executive_director' || effectiveRole === 'chapter_experience_coordinator'

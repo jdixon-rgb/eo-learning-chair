@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import TourTip from '@/components/TourTip'
 import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB, SPEAKER_PIPELINE_FIELDS } from '@/lib/constants'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -46,6 +46,7 @@ export default function SpeakersPage() {
   const { effectiveRole } = useAuth()
   const canViewFees = hasPermission(effectiveRole, 'canViewSpeakerFees')
   const { activeFiscalYear } = useFiscalYear()
+  const formatCurrency = useFormatCurrency()
   const [activeTab, setActiveTab] = useState('pipeline')
   const [showForm, setShowForm] = useState(false)
   const [editSpeaker, setEditSpeaker] = useState(null)

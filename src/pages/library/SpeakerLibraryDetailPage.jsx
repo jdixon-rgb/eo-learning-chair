@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import PageHeader from '@/lib/pageHeader'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import EditLibrarySpeakerDialog from '@/components/library/EditLibrarySpeakerDialog'
 
 // Field labels used in the revision-history rendering. Anything not
@@ -43,6 +44,7 @@ export default function SpeakerLibraryDetailPage() {
   const canEdit = hasPermission(effectiveRole, 'canEditSpeakerLibrary')
   const canReview = hasPermission(effectiveRole, 'canReviewSpeakers')
   const canImport = hasPermission(effectiveRole, 'canImportFromLibrary')
+  const formatCurrency = useFormatCurrency()
 
   const [speaker, setSpeaker] = useState(null)
   const [reviews, setReviews] = useState([])

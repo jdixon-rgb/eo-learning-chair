@@ -3,7 +3,7 @@ import { useStore } from '@/lib/store'
 import { VENUE_PIPELINE_STAGES, AV_QUALITY, ARCHIVE_REASONS } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
 import PageHeader from '@/lib/pageHeader'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { Button } from '@/components/ui/button'
@@ -72,6 +72,7 @@ function StarRating({ value, onChange, size = 'sm', readonly = false }) {
 export default function VenuesPage() {
   const { chapter, venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent, archiveVenue, restoreVenue } = useStore()
   const { activeFiscalYear } = useFiscalYear()
+  const formatCurrency = useFormatCurrency()
   const [showForm, setShowForm] = useState(false)
   const [editVenue, setEditVenue] = useState(null)
   const [form, setForm] = useState(emptyForm)

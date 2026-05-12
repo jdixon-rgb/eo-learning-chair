@@ -93,7 +93,7 @@ export default async function handler(req, res) {
 
   const [{ data: speaker }, { data: chapter }] = await Promise.all([
     supabaseService.from('speakers').select('id, name, topic, contact_email, agency_name').eq('id', pipeline.speaker_id).single(),
-    supabaseService.from('chapters').select('id, name').eq('id', pipeline.chapter_id).single(),
+    supabaseService.from('chapters').select('id, name, currency').eq('id', pipeline.chapter_id).single(),
   ])
   if (!speaker || !chapter) {
     return res.status(404).json({ error: 'Speaker or chapter not found' })
@@ -184,9 +184,9 @@ function buildHtml({ chapter, speaker, event, pipeline, note, sender }) {
     speaker.topic && ['Topic', speaker.topic],
     speaker.agency_name && ['Agency', speaker.agency_name],
     event?.name && ['Event', event.name + (event.event_date ? ` (${formatDate(event.event_date)})` : '')],
-    fee && ['Total fee', formatMoney(fee)],
-    pipeline.deposit_amount && ['Deposit', formatMoney(pipeline.deposit_amount) + (pipeline.deposit_due_date ? ` — due ${formatDate(pipeline.deposit_due_date)}` : '')],
-    pipeline.final_payment_amount && ['Final payment', formatMoney(pipeline.final_payment_amount) + (pipeline.final_payment_due_date ? ` — due ${formatDate(pipeline.final_payment_due_date)}` : '')],
+    fee && ['Total fee', formatMoney(fee, chapter.currency)],
+    pipeline.deposit_amount && ['Deposit', formatMoney(pipeline.deposit_amount, chapter.currency) + (pipeline.deposit_due_date ? ` — due ${formatDate(pipeline.deposit_due_date)}` : '')],
+    pipeline.final_payment_amount && ['Final payment', formatMoney(pipeline.final_payment_amount, chapter.currency) + (pipeline.final_payment_due_date ? ` — due ${formatDate(pipeline.final_payment_due_date)}` : '')],
   ].filter(Boolean)
 
   const rowsHtml = rows.map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;color:#666;font-size:13px;vertical-align:top;white-space:nowrap;">${escapeHtml(k)}</td><td style="padding:6px 0;font-size:14px;color:#111;">${escapeHtml(String(v))}</td></tr>`).join('')
@@ -221,9 +221,9 @@ function buildText({ chapter, speaker, event, pipeline, note, sender }) {
     speaker.topic && `Topic:          ${speaker.topic}`,
     speaker.agency_name && `Agency:         ${speaker.agency_name}`,
     event?.name && `Event:          ${event.name}${event.event_date ? ` (${formatDate(event.event_date)})` : ''}`,
-    fee && `Total fee:      ${formatMoney(fee)}`,
-    pipeline.deposit_amount && `Deposit:        ${formatMoney(pipeline.deposit_amount)}${pipeline.deposit_due_date ? ` — due ${formatDate(pipeline.deposit_due_date)}` : ''}`,
-    pipeline.final_payment_amount && `Final payment:  ${formatMoney(pipeline.final_payment_amount)}${pipeline.final_payment_due_date ? ` — due ${formatDate(pipeline.final_payment_due_date)}` : ''}`,
+    fee && `Total fee:      ${formatMoney(fee, chapter.currency)}`,
+    pipeline.deposit_amount && `Deposit:        ${formatMoney(pipeline.deposit_amount, chapter.currency)}${pipeline.deposit_due_date ? ` — due ${formatDate(pipeline.deposit_due_date)}` : ''}`,
+    pipeline.final_payment_amount && `Final payment:  ${formatMoney(pipeline.final_payment_amount, chapter.currency)}${pipeline.final_payment_due_date ? ` — due ${formatDate(pipeline.final_payment_due_date)}` : ''}`,
   ].filter(Boolean)
   if (pipeline.payment_terms_notes) {
     lines.push('', 'Payment notes:', pipeline.payment_terms_notes)
@@ -235,9 +235,18 @@ function buildText({ chapter, speaker, event, pipeline, note, sender }) {
   return lines.join('\n')
 }
 
-function formatMoney(n) {
+function formatMoney(n, currency = 'USD') {
   if (typeof n !== 'number') return ''
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+  const code = currency || 'USD'
+  const locale = code === 'USD' ? 'en-US'
+               : code === 'EUR' ? 'de-DE'
+               : code === 'GBP' ? 'en-GB'
+               : code === 'CNY' ? 'zh-CN'
+               : code === 'JPY' ? 'ja-JP'
+               : code === 'AUD' ? 'en-AU'
+               : code === 'CAD' ? 'en-CA'
+               : 'en-US'
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: code, maximumFractionDigits: 0 }).format(n)
 }
 
 function formatDate(s) {
