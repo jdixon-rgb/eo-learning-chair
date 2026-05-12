@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.9 — 2026-05-12
+
+### Ops: CNY-currency staging demo chapter
+
+Added `scripts/seed-staging-demo-foreign.js` — a companion to
+`seed-staging-demo.js` that seeds "EO Demoland-Foreign" with
+`currency: CNY` and enough speakers/venues/events/budget items/SAPs
+to visually verify the v2.7.8 currency fix across every money-display
+surface. Hard-pinned to staging, idempotent. No user-visible app
+change; bumped to keep version-per-push traceability.
+
+---
+
 ## v2.7.8 — 2026-05-12
 
 ### Fix: chapter currency now applied everywhere, not just the dashboard
