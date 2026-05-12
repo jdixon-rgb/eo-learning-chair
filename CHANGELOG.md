@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.13 — 2026-05-12
+
+### Polish: "SAPs" → "SAP Interest" inside the Forum context
+
+Inside a forum the tab is about which SAPs *this forum* wants to host
+or visit — that's interest, not the partner roster itself. Renamed
+the sidebar child under Forum and the in-page tab label from "SAPs"
+to "SAP Interest". The chapter-level SAPs nav (/partners) stays
+"SAPs" since that page is the actual partner roster.
+
+---
+
 ## v2.7.12 — 2026-05-12
 
 ### Feature: Forum sidebar group now lists every forum surface as a child

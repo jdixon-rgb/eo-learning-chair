@@ -111,7 +111,7 @@ const memberItems = [
       { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
       { to: '/portal/parking', icon: Pin, label: 'Parking Lot' },
       { to: '/portal/forum?tab=members', icon: Users2, label: 'Members' },
-      { to: '/portal/forum?tab=partners', icon: Handshake, label: 'SAPs' },
+      { to: '/portal/forum?tab=partners', icon: Handshake, label: 'SAP Interest' },
       { to: '/portal/forum?tab=constitution', icon: ScrollText, label: 'Constitution' },
       { to: '/portal/forum?tab=calendar', icon: CalendarIcon, label: 'Calendar' },
       { to: '/portal/forum?tab=agenda', icon: ClipboardList, label: 'Agenda' },

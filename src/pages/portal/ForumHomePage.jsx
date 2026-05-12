@@ -270,7 +270,7 @@ export default function ForumHomePage({ focusTab }) {
     { key: 'agenda', label: 'Agenda', icon: ClipboardList },
     { key: 'calendar', label: 'Calendar', icon: Calendar },
     { key: 'constitution', label: 'Constitution', icon: FileText },
-    { key: 'partners', label: 'SAPs', icon: Handshake },
+    { key: 'partners', label: 'SAP Interest', icon: Handshake },
     { key: 'members', label: 'Members', icon: Users },
     { key: 'history', label: 'History', icon: History },
   ]
