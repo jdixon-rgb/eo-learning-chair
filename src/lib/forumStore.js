@@ -28,6 +28,9 @@ export function ForumStoreProvider({ children }) {
   const [constitutions, setConstitutions] = useState(cached?.constitutions ?? [])
   const [constitutionVersions, setConstitutionVersions] = useState(cached?.constitutionVersions ?? [])
   const [constitutionRatifications, setConstitutionRatifications] = useState(cached?.constitutionRatifications ?? [])
+  const [clauseReviews, setClauseReviews] = useState(cached?.clauseReviews ?? [])
+  const [healthAssessments, setHealthAssessments] = useState(cached?.healthAssessments ?? [])
+  const [atRiskEntries, setAtRiskEntries] = useState(cached?.atRiskEntries ?? [])
   const [loading, setLoading] = useState(isSupabaseConfigured())
   const [dbError, setDbError] = useState(null)
   const hasFetched = useRef(false)
@@ -35,8 +38,8 @@ export function ForumStoreProvider({ children }) {
 
   useEffect(() => {
     if (!activeChapterId) return
-    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications })
-  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications])
+    saveCache(activeChapterId, { forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, clauseReviews, healthAssessments, atRiskEntries })
+  }, [activeChapterId, forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory, agendas, agendaItems, constitutions, constitutionVersions, constitutionRatifications, clauseReviews, healthAssessments, atRiskEntries])
 
   useEffect(() => {
     if (prevChapterId.current !== activeChapterId) { hasFetched.current = false; prevChapterId.current = activeChapterId }
@@ -57,13 +60,16 @@ export function ForumStoreProvider({ children }) {
       if (c.constitutions) setConstitutions(c.constitutions)
       if (c.constitutionVersions) setConstitutionVersions(c.constitutionVersions)
       if (c.constitutionRatifications) setConstitutionRatifications(c.constitutionRatifications)
+      if (c.clauseReviews) setClauseReviews(c.clauseReviews)
+      if (c.healthAssessments) setHealthAssessments(c.healthAssessments)
+      if (c.atRiskEntries) setAtRiskEntries(c.atRiskEntries)
     }
     setLoading(true)
     hydrate()
 
     async function hydrate() {
       try {
-        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes] = await Promise.all([
+        const [rolesRes, docsRes, calRes, intRes, ratRes, histRes, agendaRes, itemsRes, constRes, versRes, ratifyRes, reviewRes, fhaRes, farRes] = await Promise.all([
           fetchByChapter('forum_role_assignments', activeChapterId),
           fetchByChapter('forum_documents', activeChapterId),
           fetchByChapter('forum_calendar_events', activeChapterId),
@@ -75,6 +81,9 @@ export function ForumStoreProvider({ children }) {
           fetchByChapter('forum_constitutions', activeChapterId),
           fetchByChapter('forum_constitution_versions', activeChapterId),
           fetchByChapter('forum_constitution_ratifications', activeChapterId),
+          fetchByChapter('forum_constitution_clause_reviews', activeChapterId),
+          fetchByChapter('forum_health_assessments', activeChapterId),
+          fetchByChapter('forum_at_risk_entries', activeChapterId),
         ])
         if (rolesRes.data) setForumRoles(rolesRes.data)
         if (docsRes.data) setForumDocs(docsRes.data)
@@ -87,6 +96,9 @@ export function ForumStoreProvider({ children }) {
         if (constRes.data) setConstitutions(constRes.data)
         if (versRes.data) setConstitutionVersions(versRes.data)
         if (ratifyRes.data) setConstitutionRatifications(ratifyRes.data)
+        if (reviewRes.data) setClauseReviews(reviewRes.data)
+        if (fhaRes.data) setHealthAssessments(fhaRes.data)
+        if (farRes.data) setAtRiskEntries(farRes.data)
       } catch (err) {
         setDbError(err.message || String(err))
       } finally {
@@ -352,6 +364,160 @@ export function ForumStoreProvider({ children }) {
     dbWrite(() => deleteRow('forum_constitution_versions', versionId), 'delete:forum_constitution_versions')
   }, [dbWrite])
 
+  // ── Forum Health Assessments ────────────────────────────────
+  // One row per (forum_id, fiscal_year). Upsert by that pair so the
+  // dashboard's per-field edits don't need to know whether the row
+  // already exists.
+  const upsertHealthAssessment = useCallback((forumId, fiscalYear, patch, assessedByMemberId) => {
+    const existing = healthAssessments.find(
+      a => a.forum_id === forumId && a.fiscal_year === fiscalYear
+    )
+    const now = new Date().toISOString()
+    if (existing) {
+      const updates = { ...patch, updated_at: now }
+      if (assessedByMemberId) updates.assessed_by = assessedByMemberId
+      setHealthAssessments(prev =>
+        prev.map(a => a.id === existing.id ? { ...a, ...updates } : a)
+      )
+      dbWrite(
+        () => updateRow('forum_health_assessments', existing.id, updates),
+        'update:forum_health_assessments'
+      )
+      return { ...existing, ...updates }
+    }
+    const row = {
+      id: crypto.randomUUID(),
+      chapter_id: activeChapterId,
+      forum_id: forumId,
+      fiscal_year: fiscalYear,
+      lifecycle_stage: null,
+      lifecycle_note: '',
+      constitution_reviewed: null,
+      constitution_review_note: '',
+      one_pager_complete: null,
+      one_pager_note: '',
+      roles_assigned: null,
+      roles_note: '',
+      chair_notes: '',
+      handoff_narrative: '',
+      assessed_by: assessedByMemberId ?? null,
+      created_at: now,
+      updated_at: now,
+      ...patch,
+    }
+    setHealthAssessments(prev => [...prev, row])
+    dbWrite(
+      () => insertRow('forum_health_assessments', row),
+      'insert:forum_health_assessments'
+    )
+    return row
+  }, [activeChapterId, healthAssessments, dbWrite])
+
+  // ── At-Risk Member Entries ──────────────────────────────────
+  // Co-owned by Forum Health Chair + Forum Placement Chair. One open
+  // entry per (forum × member); resolved entries pile up as history.
+  const addAtRiskEntry = useCallback((entry, createdByMemberId) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const row = {
+      id,
+      chapter_id: activeChapterId,
+      risk_level: 'medium',
+      reasons: [],
+      notes: '',
+      better_fit_note: '',
+      recommended_action: null,
+      status: 'open',
+      resolution_outcome: '',
+      last_reviewed_at: now,
+      created_by: createdByMemberId ?? null,
+      created_at: now,
+      updated_at: now,
+      ...entry,
+    }
+    setAtRiskEntries(prev => [...prev, row])
+    dbWrite(() => insertRow('forum_at_risk_entries', row), 'insert:forum_at_risk_entries')
+    return row
+  }, [activeChapterId, dbWrite])
+
+  const updateAtRiskEntry = useCallback((id, patch) => {
+    const updates = { ...patch, updated_at: new Date().toISOString() }
+    setAtRiskEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))
+    dbWrite(() => updateRow('forum_at_risk_entries', id, updates), 'update:forum_at_risk_entries')
+  }, [dbWrite])
+
+  const resolveAtRiskEntry = useCallback((id, resolutionOutcome) => {
+    const now = new Date().toISOString()
+    const updates = {
+      status: 'resolved',
+      resolution_outcome: resolutionOutcome || '',
+      updated_at: now,
+    }
+    setAtRiskEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))
+    dbWrite(() => updateRow('forum_at_risk_entries', id, updates), 'resolve:forum_at_risk_entries')
+  }, [dbWrite])
+
+  const reopenAtRiskEntry = useCallback((id) => {
+    const updates = {
+      status: 'open',
+      resolution_outcome: '',
+      updated_at: new Date().toISOString(),
+    }
+    setAtRiskEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))
+    dbWrite(() => updateRow('forum_at_risk_entries', id, updates), 'reopen:forum_at_risk_entries')
+  }, [dbWrite])
+
+  const touchAtRiskReviewed = useCallback((id) => {
+    const now = new Date().toISOString()
+    const updates = { last_reviewed_at: now, updated_at: now }
+    setAtRiskEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e))
+    dbWrite(() => updateRow('forum_at_risk_entries', id, updates), 'review:forum_at_risk_entries')
+  }, [dbWrite])
+
+  const deleteAtRiskEntry = useCallback((id) => {
+    setAtRiskEntries(prev => prev.filter(e => e.id !== id))
+    dbWrite(() => deleteRow('forum_at_risk_entries', id), 'delete:forum_at_risk_entries')
+  }, [dbWrite])
+
+  // ── Per-clause Constitution Review ──────────────────────────
+  // Layer above ratification: members check off each clause and/or
+  // leave an annotation. Moderator aggregates annotations as a
+  // discussion list before opening for ratification. One row per
+  // (version × member × section).
+  const upsertClauseReview = useCallback((versionId, memberId, sectionId, patch) => {
+    const existing = clauseReviews.find(
+      r => r.version_id === versionId && r.member_id === memberId && r.section_id === sectionId
+    )
+    const now = new Date().toISOString()
+    if (existing) {
+      const updates = { ...patch, updated_at: now }
+      setClauseReviews(prev => prev.map(r => r.id === existing.id ? { ...r, ...updates } : r))
+      dbWrite(
+        () => updateRow('forum_constitution_clause_reviews', existing.id, updates),
+        'update:forum_constitution_clause_reviews'
+      )
+      return { ...existing, ...updates }
+    }
+    const row = {
+      id: crypto.randomUUID(),
+      chapter_id: activeChapterId,
+      version_id: versionId,
+      member_id: memberId,
+      section_id: sectionId,
+      reviewed: false,
+      annotation: '',
+      created_at: now,
+      updated_at: now,
+      ...patch,
+    }
+    setClauseReviews(prev => [...prev, row])
+    dbWrite(
+      () => insertRow('forum_constitution_clause_reviews', row),
+      'insert:forum_constitution_clause_reviews'
+    )
+    return row
+  }, [activeChapterId, clauseReviews, dbWrite])
+
   const ratifyConstitutionVersion = useCallback((versionId, memberId) => {
     // Don't insert a duplicate ratification
     if (constitutionRatifications.some(r => r.version_id === versionId && r.member_id === memberId)) return
@@ -370,6 +536,9 @@ export function ForumStoreProvider({ children }) {
     forumRoles, forumDocs, forumCalendar, sapInterest, sapRatings, forumHistory,
     agendas, agendaItems,
     constitutions, constitutionVersions, constitutionRatifications,
+    clauseReviews,
+    healthAssessments,
+    atRiskEntries,
     loading, dbError, clearDbError: () => setDbError(null),
     addForumRole, updateForumRole, deleteForumRole,
     addForumCalEvent, updateForumCalEvent, deleteForumCalEvent,
@@ -381,6 +550,10 @@ export function ForumStoreProvider({ children }) {
     createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
     proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
     ratifyConstitutionVersion,
+    upsertClauseReview,
+    upsertHealthAssessment,
+    addAtRiskEntry, updateAtRiskEntry, resolveAtRiskEntry,
+    reopenAtRiskEntry, touchAtRiskReviewed, deleteAtRiskEntry,
   }
 
   return createElement(ForumStoreContext.Provider, { value }, children)

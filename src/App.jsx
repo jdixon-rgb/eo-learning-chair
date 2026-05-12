@@ -38,6 +38,7 @@ import SurveyPage from '@/pages/portal/SurveyPage'
 import ReflectionsPage from '@/pages/portal/ReflectionsPage'
 import LifelinePage from '@/pages/portal/LifelinePage'
 import ForumHomePage from '@/pages/portal/ForumHomePage'
+import ModeratorEventsPage from '@/pages/portal/ModeratorEventsPage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
 import StaffManagementPage from '@/pages/admin/StaffManagementPage'
 import SLPManagementPage from '@/pages/admin/SLPManagementPage'
@@ -70,6 +71,8 @@ import SpeakerLibraryDetailPage from '@/pages/library/SpeakerLibraryDetailPage'
 import FinanceDashboard from '@/pages/finance/FinanceDashboard'
 import ForumHealthDashboard from '@/pages/forum-health/ForumHealthDashboard'
 import ForumModeratorCommsPage from '@/pages/forum-health/ForumModeratorCommsPage'
+import AtRiskMembersPage from '@/pages/forum-health/AtRiskMembersPage'
+import ForumConstitutionReviewPage from '@/pages/forum-health/ForumConstitutionReviewPage'
 import ForumPlacementDashboard from '@/pages/forum-placement/ForumPlacementDashboard'
 import MemberLeadsPage from '@/pages/forum-placement/MemberLeadsPage'
 import VendorsPage from '@/pages/portal/VendorsPage'
@@ -222,6 +225,12 @@ function App() {
                 <Route path="/forum-health/comms" element={
                   <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumModeratorCommsPage /></ProtectedRoute>
                 } />
+                <Route path="/forum-health/at-risk" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'forum_placement_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><AtRiskMembersPage /></ProtectedRoute>
+                } />
+                <Route path="/forum-health/constitution/:forumId" element={
+                  <ProtectedRoute allowedRoles={['super_admin', 'forum_health_chair', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']}><ForumConstitutionReviewPage /></ProtectedRoute>
+                } />
 
                 {/* Forum Placement Chair routes */}
                 <Route path="/forum-placement" element={
@@ -277,6 +286,12 @@ function App() {
                 <Route path="/portal/survey" element={<SurveyPage />} />
                 <Route path="/portal/reflections" element={<ReflectionsPage />} />
                 <Route path="/portal/forum" element={<ForumHomePage />} />
+                <Route path="/portal/moderator/agenda" element={<ForumHomePage focusTab="agenda" />} />
+                <Route path="/portal/moderator/calendar" element={<ForumHomePage focusTab="calendar" />} />
+                <Route path="/portal/moderator/parking" element={<ForumHomePage focusTab="parking" />} />
+                <Route path="/portal/moderator/members" element={<ForumHomePage focusTab="members" />} />
+                <Route path="/portal/moderator/constitution" element={<ForumHomePage focusTab="constitution" />} />
+                <Route path="/portal/moderator/events" element={<ModeratorEventsPage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
                 <Route path="/portal/partners" element={<MemberSAPInterestPage />} />

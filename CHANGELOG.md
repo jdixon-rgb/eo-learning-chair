@@ -17,6 +17,551 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.7 — 2026-05-12
+
+### Fix: New speaker save failed with "deposit_amount column not found"
+
+The Shanghai Learning Chair hit "Save failed (insert:speakers): Could not
+find the 'deposit_amount' column of 'speakers' in the schema cache" when
+adding the first speaker to his FY 2025–2026 pipeline. Root cause: the
+new-speaker path in `store.addSpeaker` was destructuring only the
+*original* pipeline fields (pipeline_stage, fit_score, fee_estimated,
+fee_actual, contract_*, w9_*, notes) and letting everything else fall
+into the speakers insert. When migrations 052 and 077 added
+`fee_*_private`, `deposit_*`, `final_payment_*`, and `payment_terms_notes`
+to `speaker_pipeline`, those fields started leaking into the speakers
+table insert and PostgREST rejected them.
+
+Edit-flow already split fields correctly via a local `PIPELINE_FIELDS`
+list, so existing speakers worked — only *creating* a new speaker
+broke. That's why it hadn't surfaced before: most chapters created
+their speakers months ago.
+
+Fix: lifted the field list to a shared `SPEAKER_PIPELINE_FIELDS`
+constant in `src/lib/constants.js` and made both `SpeakersPage` and
+`store.addSpeaker` use it as the single source of truth. Pipeline-
+field values the user enters at create-time now actually persist to
+`speaker_pipeline` instead of being silently dropped.
+
+---
+
+## v2.7.6 — 2026-05-11
+
+### Fix: "Create my member record" button didn't appear for super-admins
+
+The empty-state gate on `/portal/profile` required `profile.chapter_id`
+to be truthy, which it never is for super-admins (they're platform-
+level and pick a chapter via the switcher). Now the page also accepts
+the active chapter from `useChapter()` — so a super-admin viewing
+EO Demoland sees the Create button and the new chapter_members row
+lands in EO Demoland. Chapter-bound roles are unaffected.
+
+---
+
+## v2.7.5 — 2026-05-11
+
+### Feature: Parking Lot is now a member-visible Forum tool
+
+The left-nav Forum group is now permanently expanded so Reflections,
+Lifeline, and the new Parking Lot are all visible the moment a
+member signs in — no more "click Forum to discover what's inside."
+A new `/portal/parking` page gives every member a private view of
+their own parking-lot items (scoped to `author_member_id === me`),
+matching the privacy rule that members see their own topics while
+moderators continue to see everyone's at `/portal/moderator/parking`.
+
+### Privacy fix: Reflections Parking Lot tab no longer exposes forum mates' items
+
+The Parking Lot tab inside Reflections previously defaulted to
+"Everyone" and let any member browse every forum mate's parking-lot
+items. That violated the member-private bar that Reflections and
+Lifeline already hold. The tab now filters strictly to the current
+member's items, drops the Author column, drops the per-member
+filter dropdown, and removes the Author re-assignment field from
+the edit modal. Forum-wide visibility stays where it belongs — on
+the moderator surface at `/portal/moderator/parking`.
+
+### Cleanup: removed "Compass" wording from the UI
+
+"Compass" was an internal product name we used for the member
+portal, but it isn't EO vernacular and was leaking into UI strings
+("Back to Compass" on the empty-state, SLP admin help text). Those
+references are now plain language. The lucide-react `Compass`
+*icon* used on the Navigators page is unchanged — that's an icon
+shape, not the product term.
+
+---
+
+## v2.7.4 — 2026-05-11
+
+### Feature: Bootstrap your own member record from /portal/profile
+
+If a signed-in user with a chapter-scoped role visits their profile
+page and has no `chapter_members` row yet, they now see a "Create
+my member record" button instead of the "contact your admin" dead
+end. The button inserts a row using the email + full_name + phone
+already on their profile, then re-loads the page so the form
+populates and they can fill in the rest (company, industry, SLP,
+photo when that lands). Roles that don't have a chapter_members
+row by design (`slp`, `slp_chair`, `sap_contact`,
+`regional_learning_chair_expert`, `demo_user`) still see the
+admin-contact message — they live in other tables.
+
+---
+
+## v2.7.3 — 2026-05-11
+
+### Feature: Click your name in the sidebar to open your profile
+
+The footer of the left-hand sidebar shows the signed-in user's name
+and email. It was previously not clickable, so the only way to
+reach `/portal/profile` (photo upload, contact info, SLP card) was
+to know the URL. The name/email block now links to that page on
+click — same conventional pattern as Slack, Gmail, GitHub. Sign
+Out stays as a separate icon button on the right.
+
+---
+
+## v2.7.2 — 2026-05-11
+
+### Fix: SLP Chair didn't appear in the role-switcher dropdown
+
+Migration 094 added the `slp_chair` role at the DB layer but the
+UI's chair-role registry (`src/lib/chairRoles.js`) didn't have a
+matching entry, so the role-switcher dropdown (and admin sidebar
+access list) didn't know about it. Added an SLP Chair entry with
+homePath `/admin/slps` and a minimal nav (SLPs + Forums + Chapter
+Calendar), plus added `slp_chair` to `ADMIN_LAYOUT_ROLES` so the
+chair gets the admin sidebar at all. Dedicated SLP-Chair-specific
+surfaces (SLP-only Forums page, etc.) land in Wave 2B.
+
+---
+
+## v2.7.1 — 2026-05-11
+
+### Wave 2A: SLP Chair role + auth context + demo data
+
+Foundation for the SLP-facing app experience. No user-visible UI
+change yet — these are the plumbing layers Wave 2B builds on.
+
+- **Migration 094: `slp_chair` role.** Added to `profiles.role` and
+  `member_invites.role` check lists. Unlike every other chair, the
+  SLP Chair has no `chapter_members` row — they are themselves an
+  SLP (one row in `slps`) with their auth identity carrying
+  `role='slp_chair'`. `is_slp_admin()` grants them admin access to
+  the `slps` table, but only when their own slps row has an active
+  linked chapter member. If the chair's EO-member partner leaves,
+  the chair role lapses — same rule we apply to ordinary SLPs.
+- **`is_slp_chair()` helper.** Lightweight check for app/UI gating.
+- **Auth context.** `useAuth()` now exposes `isSLP`, `isSLPChair`,
+  `slp` (the slps row), `slpId`, `slpForum`, and `userPopulation`
+  (`'member' | 'slp' | null`). The provider fetches the slps row
+  by `profile_id` for any user whose role is `slp` or `slp_chair`.
+- **EO Demoland seed.** The staging demo chapter now seeds two SLP
+  forums (Heartland, Sunbloom), 35 SLPs (one per member), and a
+  handful of pending invites — enough texture to demo the SLP
+  Management + Invite surfaces without touching real data.
+
+---
+
+## v2.7.0 — 2026-05-11
+
+### Feature: SLP forums — foundation (Wave 1, admin-side)
+
+Schema and admin-side UI for Significant Life Partner forums. SLPs
+are a distinct population from chapter members. They get the same
+forum experience members get, but their data lives in a parallel
+slice of the database so the two populations never mix.
+
+**Schema (migrations 089-093):**
+- `forums.population` (`'member' | 'slp'`) scopes each forum to one
+  population. Existing forums backfill to `'member'`.
+- `slps` table gains `forum`, `email`, `phone`, `profile_id`,
+  `invite_status`, `invited_at`. The unique index on `lower(email)`
+  prevents two SLPs from claiming the same login.
+- New parallel personal-data tables: `slp_private`,
+  `slp_life_events`, `slp_reflections`, `slp_parking_lot_entries`,
+  `slp_constitution_ratifications`. Same shape as the member
+  equivalents, keyed by `slps.id`.
+- RLS helpers `current_slp_id()` and `current_slp_forum()` join
+  via `slps.profile_id = auth.uid()` and bake in the active-linked-
+  member check — if the linked member is not active, the helpers
+  return NULL and the SLP drops out of every forum-scoped view.
+- New profile role `'slp'`. `handle_new_user` links an incoming SLP
+  invite back to its `slps` row via `profile_id`.
+- New RPC `invite_slp(p_slp_id, p_email, p_phone)` records the
+  invite + flips `invite_status` to `'pending'`.
+
+**UI:**
+- Add Forum form (board page) gains a Member/SLP toggle.
+- SLP forum cards show a small `SLP` badge.
+- SLP Management page (admin) gains a forum-assignment dropdown
+  per SLP and an invite-status pill.
+- Member profile SLP card gains email + phone fields and an
+  Invite button. Inviting an SLP records contact info + drops a
+  `member_invites` row with `role='slp'`.
+
+**Not in this release (Wave 2):** the SLP-facing app experience.
+An invited SLP can claim an account but has no SLP-specific
+navigation yet; they will land on member surfaces that may show
+empty data because they have no `chapter_members` row. Hold off
+on inviting SLPs to production until Wave 2 lands.
+
+---
+
+## v2.6.2 — 2026-05-10
+
+### Fix: Import-from-PDF was hidden when a proposed version existed
+
+The Import-from-PDF button was gated on `!proposed` — too restrictive.
+Importing always creates or replaces a draft, which is a separate
+version row from proposed, so it can never overwrite ratification
+signatures. Now the button is visible whenever the moderator is
+signed in. Tooltip clarifies that import doesn't affect adopted or
+proposed versions.
+
+---
+
+## v2.6.1 — 2026-05-10
+
+### Fix: Forum calendar groups events by month
+
+The forum calendar's flat chronological list now groups events under
+month-labeled cards, borrowing the visual chunking from the Year Arc
+in the Learning Chair (without the strategic-phase scaffolding, which
+is Learning-Chair specific). Empty months don't render. Easier to
+absorb at a glance: see the months, then the dates that fall within.
+
+## v2.6.0 — 2026-05-10
+
+### Feat: Import constitution from PDF (Claude-backed)
+
+A moderator can now bring an existing PDF constitution into the app
+in one click. Visible on the Manage Constitution surface (and the
+member-side Constitution tab when the moderator is signed in):
+
+- **Empty state:** "Import from PDF" sits next to "Create draft."
+- **Existing constitution:** "Import from PDF" appears in the version
+  controls bar when there's no proposed-and-pending-ratification
+  version. It either populates a fresh draft or replaces the current
+  draft (with a confirm if the draft already has content).
+
+**How it works.** The browser reads the PDF, sends it base64 to
+`/api/constitution/parse` (a new Vercel serverless function), which
+hands the document to Claude Sonnet 4.6 with extraction instructions
+and gets back a structured `{ title, preamble, sections }` JSON. The
+moderator then edits whatever needs cleanup and proposes the draft
+for ratification — nothing publishes automatically. Digital PDFs only
+(no OCR yet); 10 MB cap.
+
+Reuses the same Vercel `/api/` + `ANTHROPIC_API_KEY` pattern that
+already powers the contract parser and venue auto-lookup.
+
+---
+
+## v2.5.4 — 2026-05-10
+
+### Fix: Forum role display order
+
+After the rotating moderator track (Moderator → Moderator Elect →
+Moderator Elect-Elect → Timer), the remaining roles now display in
+the correct order: Retreat Planner, Social, Technology. Affects the
+Members tab role chips and the role-assignment dropdown.
+
+## v2.5.3 — 2026-05-10
+
+### Feat: Manage Parking Lot in the Moderator sidebar
+
+Adds a "Manage Parking Lot" entry to the Moderator section, sitting
+between Forum Calendar and Forum Members & Roles. Lands on the
+existing parking lot view in focus mode (its own header, no nested
+tab strip), giving the moderator a direct path to the place where
+deferred topics live between meetings.
+
+## v2.5.2 — 2026-05-10
+
+### Fix: Moderator focus routes now switch tabs when you navigate
+
+v2.5.1 added dedicated routes for the moderator sidebar items but they
+all rendered the same content — whichever tab loaded first stuck. The
+routes share one `ForumHomePage` instance, so the internal `tab` state
+from first mount never updated when `focusTab` prop changed. Added a
+sync effect so the tab follows the route.
+
+## v2.5.1 — 2026-05-10
+
+### Fix: Moderator sidebar items are now first-class pages
+
+Clicking **Forum Agenda**, **Forum Calendar**, **Forum Members & Roles**,
+or **Manage Constitution** in the Moderator sidebar now lands directly
+on that view, with its own page header — no more dumping the moderator
+on the Forum overview where they had to click the same tab again.
+
+Each item gets a dedicated route under `/portal/moderator/*` that
+renders the existing forum view in a new "focus mode": single tab,
+nested tab strip suppressed, page-specific title and subtitle in the
+top bar. The non-moderator `/portal/forum` page is unchanged — it
+keeps the full tabbed experience for regular forum members.
+
+## v2.5.0 — 2026-05-10
+
+### Feat: Constitution PDF download + Moderator sidebar entry
+
+The constitution can now be downloaded as a PDF at any time. Adopted,
+proposed, and draft versions all export — header shows forum name +
+status (e.g. "Adopted v2 · May 8, 2026"), preamble in italics, then
+each numbered section with heading + body. Page numbers in the
+footer. Filename slug is forum-constitution-vN-status.pdf.
+
+The generator is `src/lib/constitutionPdf.js`, mirrors the jsPDF +
+auto-paginating writer pattern from `reflectionsPdf.js`, and is
+dynamic-imported on first click so the ~390 KB jspdf chunk doesn't
+weigh down the main bundle.
+
+Buttons added to two surfaces:
+  - Member/moderator constitution tab (`/portal/forum?tab=constitution`)
+  - Forum Health Chair read-only viewer (`/forum-health/constitution/:forumId`)
+
+**Sidebar:** added a **Manage Constitution** entry under the Moderator
+section that deep-links to `/portal/forum?tab=constitution`. Sits
+alongside Forum Agenda / Forum Calendar / Forum Members & Roles /
+Moderator Events.
+
+---
+
+## v2.4.0 — 2026-05-10
+
+### Feat: Per-clause constitution review with annotations
+
+A new layer above ratification. Each forum member now sees every
+clause of the proposed (or adopted) constitution with their own
+"reviewed" checkbox and an optional annotation field for flagging the
+clause as a group-discussion item.
+
+The moderator gets an aggregated **Discussion items** panel at the top
+of the constitution view: every annotated clause with the member name
+and what they wrote. Use it to drive a focused conversation before
+opening the version for unanimous ratification — ratification still
+works the same way, this just makes the pre-ratification feedback
+explicit instead of "did everyone read it?"
+
+The Forum Health Chair gets a read-only signal that the activity
+happened. The dashboard's "Constitution reviewed this year" checklist
+row now shows derived activity (e.g. "7/10 reviewing clauses · 3
+discussion items") with a deep-link to a new `/forum-health/
+constitution/:forumId` viewer that renders the constitution plus
+each clause's review counts and annotations — all read-only. The
+chair never participates in the per-clause review; the moderator
+owns that workflow.
+
+DB: new `forum_constitution_clause_reviews` table — one row per
+(version × member × section), with `reviewed boolean` and `annotation
+text`.
+
+---
+
+## v2.3.0 — 2026-05-09
+
+### Feat: At-Risk Members ledger — co-owned by Health + Placement chairs
+
+New surface at `/forum-health/at-risk` that captures the qualitative
+chair-in-the-head knowledge from forum seedings and ongoing health
+checks: who showed up wavering, who's disengaged, who might fit better
+elsewhere. Survives chair handoffs.
+
+Each entry holds: risk level (low/medium/high), reason chips
+(no-show, on-the-fence call, disengaged, culture fit, attendance, life
+pressure, considering exit, other), free-text notes, "better fit"
+note, and a recommended action (watch / coach / reassess / reassign /
+plan exit). Workflow buttons: mark reviewed (touches `last_reviewed_at`),
+edit, resolve with outcome, reopen, delete. One open entry per (forum
+× member); resolved entries pile up as history.
+
+Added to both **Forum Health Chair** and **Forum Placement Chair**
+sidebars — same page, both chairs read/write. The forum-health
+dashboard card now shows an "N at risk" badge with deep-link.
+
+Migration 086 (`forum_at_risk_entries`) with partial unique index
+guaranteeing one open per (forum × member). RLS admits
+`forum_health_chair` and `forum_placement_chair` explicitly alongside
+chapter admins, same scope-tight pattern as 085.
+
+## v2.2.1 — 2026-05-09
+
+### Fix: Forum calendar events — start/end datetimes + cleaner form
+
+The forum calendar was asking moderators to type the fiscal year by
+hand, only accepted a single date (no time, no end), and rendered two
+unlabeled placeholder fields.
+
+- **Start + End datetime fields** replace the single date input.
+  Multi-day events (retreats, summits) can now be expressed properly.
+- **Fiscal year input dropped** from the form — auto-derived from the
+  start date (FY runs Aug 1–Jul 31).
+- **Every input now has a clear label** so nothing reads as a blank
+  ghost field.
+- **Sidebar double-highlight** fixed: when on /portal/forum with a
+  moderator-elevated tab (agenda / calendar / members), only the
+  Moderator section's matching item highlights — not also the
+  Member > Forum entry.
+
+**Schema:** migration 087 adds `starts_at` + `ends_at` (timestamptz)
+to `forum_calendar_events`. Backfilled from `event_date` for existing
+rows. `event_date` stays populated on new writes for backward
+compatibility with code that reads it directly.
+
+## v2.1.1 — 2026-05-09
+
+### Fix: Role switcher label — "Moderator" instead of "Forum Moderator"
+
+Avoids reading like a fourth Forum tier alongside Forum Health Chair
+and Forum Placement Chair. The role still belongs to a forum in
+context — only the sidebar/role-switcher label is shortened.
+
+## v2.1.0 — 2026-05-09
+
+### Feat: Forum Health Chair dashboard — checklist + handoff narrative
+
+The Forum Health Chair surface gets its first real dashboard. Each
+active forum now shows as a row with a Tuckman lifecycle stage chip,
+derived signals (constitution adopted? roles assigned this FY?
+historic departures), and an expandable per-FY assessment containing:
+
+- Lifecycle stage selector (forming / storming / norming / performing /
+  adjourning) with a free-text "why this stage" note.
+- Year checklist — tri-state toggles for *Constitution reviewed this
+  year*, *One-pager complete*, *Roles assigned*, each with its own
+  note field.
+- Chair notes (working journal, FY-scoped).
+- Handoff narrative — the gut-feel writeup the next chair reads first.
+
+New table `forum_health_assessments` (migration 085) with one row per
+(forum × fiscal_year). RLS lets chapter admins and the
+`forum_health_chair` role read/write — `forum_health_chair` isn't part
+of `is_chapter_admin` today, so the policy checks it explicitly rather
+than widening that helper across every other table.
+
+The dashboard at `/forum-health` replaces the prior stub. The data
+hydrates through `useForumStore`, so role-switching into
+Forum Health Chair drops you straight into a working assessment view.
+
+## v2.0.4 — 2026-05-09
+
+### Fix: Synthetic preview member always lands in a forum
+
+Follow-up to v2.0.3. When the staging chapter has no real forums (or
+they haven't loaded yet), the synthetic preview member's `forum`
+field was empty, which tripped the "You're not in a forum yet" gate
+on `/portal/forum`. Now the synthetic always assigns a forum name —
+the chapter's first active forum if one exists, otherwise the
+fictitious "Preview Forum" — so the page renders end-to-end.
+
+Production unchanged — still hard-gated on `isStaging`.
+
+## v2.0.3 — 2026-05-09
+
+### Fix: Staging-only synthetic member for previewing member-side surfaces
+
+When a super-admin (or someone using "Switch role" → Forum Moderator)
+opens a member-side surface like `/portal/forum`, they were hitting
+"Member profile not found" because they don't own a real
+`chapter_members` row. Now, **on staging only**, a synthetic identity
+tied to the active chapter + first active forum auto-fills so the
+page renders and previews work end-to-end.
+
+**Production is unchanged.** The fallback is hard-gated on
+`isStaging` (resolved at build time from `VITE_APP_ENV`). On prod,
+the original "Member profile not found" path runs unchanged — the
+privacy rule stays sacred, no synthetic identity ever materializes.
+
+A clearly-labeled "Staging preview" banner renders at the top of the
+page whenever the synthetic identity is in use, so there's no
+mistaking it for real data. Reads work; writes that depend on a real
+`member.id` will fail (intentional — preview ≠ acting on someone's
+behalf).
+
+## v2.0.2 — 2026-05-09
+
+### Fix: Sidebar section order — Moderator above Member
+
+Section order is now strictly specificity-descending: role nav,
+Admin, Board, Moderator, Member. The Moderator section was
+previously rendering below Member, which buried the specialized
+items the user actually wanted to act on.
+
+## v2.0.1 — 2026-05-09
+
+### Fix: Forum Moderator now appears in the role switcher
+
+Super-admins and presidents can now pick "Forum Moderator" from
+Switch role to preview the moderator experience without flipping a
+real chapter member's flag. Drops the previewer on `/portal/moderator/
+events` and renders the Moderator sidebar section. Preview-only —
+writes still fail under RLS, which is intentional.
+
+## v2.0.0 — 2026-05-09
+
+### Milestone: Moderator role — foundation slice
+
+Major milestone bump. The moderator role is the first non-board-but-
+treated-like-board role to land in OurChapter OS, and it sets the
+pattern for the broader chair-elevation model going forward.
+
+Forum moderators now get a dedicated **Moderator** section in the
+sidebar that only renders when the current user actually moderates a
+forum. Treated like a board role: surfaces menu items the average
+member never sees.
+
+**Sidebar items (moderator-only):**
+- Forum Agenda → deep-links into `/portal/forum?tab=agenda` with
+  edit affordances (existing ForumHomePage already gates writes on
+  `isModerator`)
+- Forum Calendar → `?tab=calendar`
+- Forum Members & Roles → `?tab=members`
+- Moderator Events → new dedicated page (see below)
+
+**New surface — Moderator Events** (`/portal/moderator/events`).
+Chapter-wide, moderator-only calendar for the meetings every
+moderator is expected to attend:
+- Monthly moderator meetings (hosted by the Moderator chair or the
+  Forum Health Chair)
+- Annual summit (per regional location — region tag stored on the
+  event so a traveling moderator can see summits beyond their home
+  chapter's region)
+- Catch-all "other" type for ad-hoc training, intros, etc.
+Full CRUD on `moderator_events` with type, host role, region,
+location, virtual link, start/end times.
+
+**Schema (migration 084):**
+- `moderator_events` table with chapter-scoped RLS — visible to
+  moderators + chapter admins, hidden from non-moderator members.
+- New helper function `current_member_is_moderator()` powering
+  the RLS policies. Checks both the legacy
+  `chapter_members.is_forum_moderator` boolean flag and the
+  fiscal-year-scoped `forum_role_assignments.role = 'moderator'`
+  pipeline.
+- Self-heals the legacy `chapter_members.is_forum_moderator`
+  column (migration 006 was tracked in history but the column was
+  missing on the staging DB — same drift class as the SAP fix in
+  migration 080).
+
+**Hook:** `useIsModerator()` returns `{ isModerator, member,
+moderatedForumIds }`. Powers the sidebar visibility and any future
+moderator-aware view.
+
+**Tab deep-linking:** `ForumHomePage` now reads `?tab=` from the
+URL (and writes to it on tab clicks) so the sidebar can deep-link
+into specific tabs and the URL stays shareable / refresh-safe.
+
+**Out of scope for this slice (deliberate):**
+- Edit affordances on the existing forum tabs already exist; this
+  PR doesn't touch the tab content itself.
+- A separate moderator dashboard at `/portal/moderator` (the
+  events page is the only sub-route for now). Lands when there's
+  more than one thing to surface there.
+- Moderator-specific notifications / alerts (Forum Health Chair's
+  Moderator Comms surface stays the broadcast channel).
+
 ## v1.99.0 — 2026-05-09
 
 ### Feature: New brand identity — Aperture mark + DM Sans wordmark

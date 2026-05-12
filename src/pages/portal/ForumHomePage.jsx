@@ -1,18 +1,39 @@
-import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
 import { useStore } from '@/lib/store'
+import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { isStaging } from '@/lib/env'
 import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParkingLotEntry, deleteParkingLotEntry } from '@/lib/reflectionsStore'
 import { lazy, Suspense } from 'react'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download, Loader2, FileUp,
 } from 'lucide-react'
+import PageHeader from '@/lib/pageHeader'
+
+// jsPDF is a heavy dep; load on first download click rather than on every Forum page view.
+async function downloadConstitutionPdfLazy(args) {
+  const { downloadConstitutionPdf } = await import('@/lib/constitutionPdf')
+  downloadConstitutionPdf(args)
+}
 
 const ReflectionsPage = lazy(() => import('./ReflectionsPage'))
+
+// Moderator-focused, single-tab routes (e.g. /portal/moderator/agenda)
+// reuse this page in `focusTab` mode: the big forum header + tab strip
+// are suppressed and a PageHeader takes their place. Subtitles are
+// computed against the current forum name at render time.
+const FOCUS_HEADERS = {
+  agenda: { title: 'Forum Agenda', subtitleFn: (f) => `Plan and run meetings for ${f}.` },
+  calendar: { title: 'Forum Calendar', subtitleFn: (f) => `Events for ${f}: meetings, retreats, SAP visits, socials.` },
+  parking: { title: 'Manage Parking Lot', subtitleFn: (f) => `Topics ${f} wants to come back to in a future meeting.` },
+  members: { title: 'Forum Members & Roles', subtitleFn: (f) => `Members of ${f} and the rotating roles they hold this fiscal year.` },
+  constitution: { title: 'Manage Constitution', subtitleFn: (f) => `Draft, ratify, and amend the constitution for ${f}.` },
+}
 
 const FORUM_ROLE_LABELS = {
   moderator: 'Moderator',
@@ -24,7 +45,7 @@ const FORUM_ROLE_LABELS = {
   social: 'Social',
 }
 
-const FORUM_ROLE_ORDER = ['moderator', 'moderator_elect', 'moderator_elect_elect', 'timer', 'technology', 'retreat_planner', 'social']
+const FORUM_ROLE_ORDER = ['moderator', 'moderator_elect', 'moderator_elect_elect', 'timer', 'retreat_planner', 'social', 'technology']
 
 const EVENT_TYPE_LABELS = {
   meeting: 'Meeting',
@@ -34,8 +55,9 @@ const EVENT_TYPE_LABELS = {
   other: 'Other',
 }
 
-export default function ForumHomePage() {
-  const { user, profile, isAdmin, isSuperAdmin } = useAuth()
+export default function ForumHomePage({ focusTab }) {
+  const { user, profile, isAdmin, isSuperAdmin, viewAsRole } = useAuth()
+  const { activeChapter } = useChapter()
   const { chapterMembers, forums, loading: boardLoading } = useBoardStore()
   const { forumRoles, forumCalendar, forumDocs, sapInterest, sapRatings, forumHistory,
     agendas, agendaItems,
@@ -46,10 +68,10 @@ export default function ForumHomePage() {
     addHistoryMember, deleteHistoryMember,
     addAgenda, updateAgenda, deleteAgenda,
     addAgendaItem, updateAgendaItem, deleteAgendaItem,
-    constitutions, constitutionVersions, constitutionRatifications,
+    constitutions, constitutionVersions, constitutionRatifications, clauseReviews,
     createConstitutionDraft, proposeAmendment, updateConstitutionVersion,
     proposeConstitutionVersion, adoptConstitutionVersion, deleteConstitutionVersion,
-    ratifyConstitutionVersion,
+    ratifyConstitutionVersion, upsertClauseReview,
   } = useForumStore()
   const { events: chapterEvents, saps } = useStore()
   const { activeFiscalYear } = useFiscalYear()
@@ -57,29 +79,107 @@ export default function ForumHomePage() {
   const email = user?.email || profile?.email
   const [member, setMember] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('parking')
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Tab can be deep-linked via ?tab= on the standard /portal/forum
+  // route, or forced to a single tab via the `focusTab` prop on the
+  // moderator-focused routes (/portal/moderator/agenda, etc.). In
+  // focus mode the chrome (forum hero + tab strip) is hidden and the
+  // page renders only that tab — no URL syncing needed.
+  const validTabs = ['parking', 'tools', 'agenda', 'calendar', 'constitution', 'partners', 'members', 'history']
+  const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking')
+  const [tab, setTabState] = useState(initialTab)
+  // Navigating between focus routes (e.g. /portal/moderator/agenda →
+  // /portal/moderator/constitution) reuses the same ForumHomePage
+  // instance, so the tab state from first mount would otherwise stick
+  // and the wrong tab content would render. Sync tab to focusTab on
+  // every prop change.
+  useEffect(() => {
+    if (focusTab) setTabState(focusTab)
+  }, [focusTab])
+  const setTab = (next) => {
+    setTabState(next)
+    if (focusTab) return
+    const params = new URLSearchParams(searchParams)
+    if (next === 'parking') params.delete('tab'); else params.set('tab', next)
+    setSearchParams(params, { replace: true })
+  }
   const [parkingLot, setParkingLot] = useState([])
   const [showAddParkingLot, setShowAddParkingLot] = useState(false)
   const [activeTool, setActiveTool] = useState(null) // null = tools list, 'reflections' = inline reflections
   const [pageError, setPageError] = useState(null)
+  const [isSynthetic, setIsSynthetic] = useState(false)
+
+  // STAGING-ONLY synthetic-member fallback. Hard-gated on `isStaging`
+  // — production code paths are NEVER reached. The synthetic identity
+  // lets a super-admin / role-switcher preview member-side surfaces
+  // (Forum, Reflections, Lifeline) without owning a real
+  // chapter_members row. Reads work because RLS lets super-admins
+  // through; writes that depend on a real member.id will still fail
+  // (intentional — preview ≠ acting on someone's behalf).
+  //
+  // Why not on prod: the privacy rule is sacred — previewing a role
+  // must NEVER expose anyone else's private content. A synthetic
+  // identity in prod would be either confusing (real-looking but
+  // fake) or risky (collides with someone's real data). Staging has
+  // no real members worth protecting, so synthetic is safe there.
+  function buildStagingSynthetic() {
+    if (!isStaging) return null
+    if (!activeChapter?.id) return null
+    if (!(isSuperAdmin || viewAsRole === 'moderator' || viewAsRole === 'member')) return null
+    // Prefer a real active forum so the preview surfaces real test
+    // data (roles, calendar entries, agendas) when it exists. If the
+    // chapter has no forums, fall back to a fictitious name —
+    // ForumHomePage's `effectiveForum` already handles unknown
+    // forum names gracefully (renders the shell, just with empty
+    // data sections). Either way we always produce a non-empty
+    // forum string so the "You're not in a forum yet" gate doesn't
+    // trigger.
+    const firstForum = forums.find(f => f.is_active)
+    const forumName = firstForum?.name || 'Preview Forum'
+    return {
+      id: null, // intentionally null — flags writes that need a real row
+      chapter_id: activeChapter.id,
+      first_name: profile?.full_name?.split(' ')[0] || 'Preview',
+      last_name: '(staging)',
+      name: `${profile?.full_name || 'Preview'} (staging preview)`,
+      email: email,
+      forum: forumName,
+      __synthetic: true,
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
     async function init() {
       setLoading(true)
       const { data: m } = await loadCurrentMember(email)
-      if (!cancelled) {
-        setMember(m)
-        if (m?.forum && m?.chapter_id) {
-          const { data } = await loadParkingLot(m.chapter_id, m.forum)
-          if (!cancelled) setParkingLot(data)
+      if (cancelled) return
+      let resolved = m
+      if (!resolved) {
+        const synthetic = buildStagingSynthetic()
+        if (synthetic) {
+          resolved = synthetic
+          setIsSynthetic(true)
         }
-        setLoading(false)
+      } else {
+        setIsSynthetic(false)
       }
+      setMember(resolved)
+      if (resolved?.forum && resolved?.chapter_id && resolved.id) {
+        // Skip parking-lot load for synthetic members (no member.id =
+        // RLS would reject anyway, and there's nothing for them to load).
+        const { data } = await loadParkingLot(resolved.chapter_id, resolved.forum)
+        if (!cancelled) setParkingLot(data)
+      }
+      setLoading(false)
     }
     if (email) init()
     return () => { cancelled = true }
-  }, [email])
+    // activeChapter, forums, viewAsRole, isSuperAdmin all feed the
+    // synthetic builder — re-run when they change so the fallback
+    // can attach as soon as the chapter+forum data lands.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, activeChapter?.id, forums.length, viewAsRole, isSuperAdmin])
 
   async function refreshParkingLot() {
     if (!member?.chapter_id || !member?.forum) return
@@ -177,16 +277,32 @@ export default function ForumHomePage() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center py-4">
-        <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
-        <button
-          type="button"
-          onClick={() => setTab('members')}
-          className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
-        >
-          {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
-        </button>
-      </div>
+      {isSynthetic && (
+        <div className="rounded-lg border border-staging/40 bg-staging/10 px-4 py-2.5 text-xs text-staging">
+          <strong className="font-semibold">Staging preview.</strong>{' '}
+          You don't have a real chapter-member record, so this view is using a
+          synthetic identity tied to <strong>{member.forum || 'no forum'}</strong>{' '}
+          in <strong>{activeChapter?.name}</strong>. Reads work; writes that need
+          a real member row will fail. This banner only appears on staging.
+        </div>
+      )}
+      {focusTab ? (
+        <PageHeader
+          title={FOCUS_HEADERS[focusTab]?.title || ''}
+          subtitle={FOCUS_HEADERS[focusTab]?.subtitleFn(member.forum)}
+        />
+      ) : (
+        <div className="text-center py-4">
+          <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
+          <button
+            type="button"
+            onClick={() => setTab('members')}
+            className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
+          >
+            {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
+          </button>
+        </div>
+      )}
 
       {pageError && (
         <div className="flex items-start justify-between gap-3 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-200">
@@ -201,7 +317,9 @@ export default function ForumHomePage() {
         </div>
       )}
 
-      {/* Tab nav */}
+      {/* Tab nav — hidden in moderator focus mode (single tab forced
+          via the route, no need for the strip). */}
+      {!focusTab && (
       <div className="flex flex-wrap justify-center gap-1 border-b border-border">
         {tabs.map(t => (
           <button
@@ -216,6 +334,7 @@ export default function ForumHomePage() {
           </button>
         ))}
       </div>
+      )}
 
       {/* Tab content */}
       {tab === 'calendar' && (
@@ -340,6 +459,7 @@ export default function ForumHomePage() {
           constitutions={constitutions}
           versions={constitutionVersions}
           ratifications={constitutionRatifications}
+          clauseReviews={clauseReviews}
           onCreateDraft={() => createConstitutionDraft(effectiveForum?.id, member.id)}
           onProposeAmendment={() => proposeAmendment(effectiveForum?.id, member.id)}
           onUpdateVersion={updateConstitutionVersion}
@@ -347,6 +467,7 @@ export default function ForumHomePage() {
           onAdoptVersion={adoptConstitutionVersion}
           onDeleteVersion={deleteConstitutionVersion}
           onRatify={(versionId) => ratifyConstitutionVersion(versionId, member.id)}
+          onUpsertClauseReview={(versionId, sectionId, patch) => upsertClauseReview(versionId, member.id, sectionId, patch)}
         />
       )}
 
@@ -553,22 +674,95 @@ function MembersTab({ forumMembers, currentMemberId, forumId, roles, isModerator
 // ────────────────────────────────────────────────────────────
 // Calendar Tab
 // ────────────────────────────────────────────────────────────
+// Derive EO fiscal year ("FY2027") from a JS Date.
+// FY runs Aug 1–Jul 31; the FY label uses the year that contains the
+// July end-date. (e.g. Aug 2026 → FY2027; Jul 2027 → FY2027.)
+function deriveFiscalYear(date) {
+  if (!date) return ''
+  const d = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(d.getTime())) return ''
+  const month = d.getMonth() // 0-indexed; Jan=0, Aug=7
+  const year = d.getFullYear()
+  return `FY${month >= 7 ? year + 1 : year}`
+}
+
+// Convert a Date to the local-time string a <input type="datetime-local"> wants.
+function toLocalInput(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fmtEventTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  })
+}
+
 function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) {
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ title: '', event_date: '', event_type: 'meeting', location: '', notes: '', fiscal_year: '' })
+  // Empty form: title + type + start/end datetime + location.
+  // Fiscal year is auto-derived from starts_at; we don't ask the user
+  // to type it.
+  const emptyForm = { title: '', event_type: 'meeting', starts_at: '', ends_at: '', location: '' }
+  const [form, setForm] = useState(emptyForm)
 
   const handleAdd = () => {
-    if (!form.title || !form.event_date) return
-    onAdd({ forum_id: forum.id, ...form })
+    if (!form.title || !form.starts_at) return
+    const startsIso = new Date(form.starts_at).toISOString()
+    const endsIso = form.ends_at ? new Date(form.ends_at).toISOString() : null
+    onAdd({
+      forum_id: forum.id,
+      title: form.title,
+      event_type: form.event_type,
+      // Keep event_date populated for backward compatibility with code
+      // that reads it directly. Same source of truth as starts_at.
+      event_date: form.starts_at.slice(0, 10),
+      starts_at: startsIso,
+      ends_at: endsIso,
+      location: form.location,
+      fiscal_year: deriveFiscalYear(form.starts_at),
+    })
     setShowAdd(false)
-    setForm({ title: '', event_date: '', event_type: 'meeting', location: '', notes: '', fiscal_year: '' })
+    setForm(emptyForm)
   }
 
-  // Forum events only
+  // Forum events only — sort by starts_at when present, else event_date.
   const allEvents = useMemo(() => {
     return events.map(e => ({ ...e, source: 'forum' }))
-      .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''))
+      .sort((a, b) => {
+        const ka = a.starts_at || a.event_date || ''
+        const kb = b.starts_at || b.event_date || ''
+        return ka.localeCompare(kb)
+      })
   }, [events])
+
+  // Bucket events by calendar month so the calendar reads like the
+  // Year Arc — month label as a section header, events for that month
+  // grouped underneath. Empty months simply don't render. Borrows the
+  // visual chunking from CalendarPage without the strategic-phase
+  // scaffolding (which is Learning-Chair specific).
+  const eventsByMonth = useMemo(() => {
+    const buckets = new Map()
+    for (const e of allEvents) {
+      const dateStr = e.starts_at || e.event_date
+      if (!dateStr) continue
+      const d = new Date(dateStr)
+      if (Number.isNaN(d.getTime())) continue
+      const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`
+      const label = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+      if (!buckets.has(key)) buckets.set(key, { label, events: [] })
+      buckets.get(key).events.push(e)
+    }
+    return [...buckets.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([_, v]) => v)
+  }, [allEvents])
 
   return (
     <div className="space-y-4">
@@ -582,42 +776,72 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
 
       {showAdd && (
         <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-          <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Event title" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
-          <div className="grid grid-cols-2 gap-3">
-            <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
-            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+          <div>
+            <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Title</label>
+            <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Q3 retreat" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Type</label>
+            <select value={form.event_type} onChange={e => setForm(f => ({ ...f, event_type: e.target.value }))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground">
               {Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card">{v}</option>)}
             </select>
           </div>
-          <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Location (optional)" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
-          <input type="text" value={form.fiscal_year} onChange={e => setForm(f => ({ ...f, fiscal_year: e.target.value }))} placeholder="FY2028" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Starts</label>
+              <input type="datetime-local" value={form.starts_at} onChange={e => setForm(f => ({ ...f, starts_at: e.target.value, ends_at: f.ends_at || e.target.value }))} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Ends</label>
+              <input type="datetime-local" value={form.ends_at} onChange={e => setForm(f => ({ ...f, ends_at: e.target.value }))} min={form.starts_at} className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Location <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span></label>
+            <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Venue, address, or virtual link" className="w-full bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-white/30" />
+          </div>
           <div className="flex gap-2 justify-end">
             <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">Cancel</button>
-            <button onClick={handleAdd} disabled={!form.title || !form.event_date} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
+            <button onClick={handleAdd} disabled={!form.title || !form.starts_at} className="px-3 py-1.5 rounded-lg text-xs bg-primary text-white disabled:opacity-40">Add</button>
           </div>
         </div>
       )}
 
-      {allEvents.length === 0 ? (
+      {eventsByMonth.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground/70 text-sm">No events scheduled.</div>
       ) : (
-        <div className="space-y-2">
-          {allEvents.map(e => (
-            <div key={e.id} className="rounded-xl border border-border bg-muted/30 px-4 py-3 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">{e.title}</span>
-                  <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
-                    {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground/70 mt-0.5">{e.event_date}{e.location ? ` · ${e.location}` : ''}</p>
+        <div className="space-y-4">
+          {eventsByMonth.map(({ label, events: monthEvents }) => (
+            <div key={label} className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="px-4 py-2 bg-muted/40 border-b border-border">
+                <h3 className="text-sm font-bold tracking-wide">{label}</h3>
               </div>
-              {isModerator && (
-                <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
+              <div className="p-3 space-y-2">
+                {monthEvents.map(e => {
+                  // Prefer starts_at/ends_at; fall back to event_date for legacy rows.
+                  const startLabel = e.starts_at ? fmtEventTime(e.starts_at) : e.event_date
+                  const endLabel = e.ends_at ? fmtEventTime(e.ends_at) : ''
+                  const range = endLabel && endLabel !== startLabel ? `${startLabel} – ${endLabel}` : startLabel
+                  return (
+                    <div key={e.id} className="rounded-lg border border-border/60 bg-muted/20 px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">{e.title}</span>
+                          <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted/30 text-muted-foreground/70">
+                            {EVENT_TYPE_LABELS[e.event_type] || e.event_type}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5">{range}{e.location ? ` · ${e.location}` : ''}</p>
+                      </div>
+                      {isModerator && (
+                        <button onClick={() => onDelete(e.id)} className="text-muted-foreground/60 hover:text-red-400">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           ))}
         </div>
@@ -631,9 +855,10 @@ function CalendarTab({ forum, events, isModerator, onAdd, onUpdate, onDelete }) 
 // ────────────────────────────────────────────────────────────
 function ConstitutionTab({
   forum, memberId, forumMembers, isModerator,
-  constitutions, versions, ratifications,
+  constitutions, versions, ratifications, clauseReviews,
   onCreateDraft, onProposeAmendment, onUpdateVersion,
   onProposeVersion, onAdoptVersion, onDeleteVersion, onRatify,
+  onUpsertClauseReview,
 }) {
   const constitution = useMemo(
     () => constitutions.find(c => c.forum_id === forum?.id),
@@ -651,6 +876,82 @@ function ConstitutionTab({
   const [viewing, setViewing] = useState('current') // 'current' | 'draft' | 'proposed'
   const targetVersion = viewing === 'draft' ? draft : viewing === 'proposed' ? proposed : (adopted || proposed || draft)
 
+  // ── PDF import (Claude-backed extraction → draft) ─────────────
+  const fileInputRef = useRef(null)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState(null)
+
+  const triggerFilePicker = () => {
+    setImportError(null)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChosen = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+    if (file.type !== 'application/pdf') {
+      setImportError('Please select a PDF.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setImportError('PDF must be under 10 MB.')
+      return
+    }
+    // If a draft has content, confirm before overwriting it.
+    if (draft) {
+      const hasContent = (draft.preamble && draft.preamble.trim()) || (Array.isArray(draft.sections) && draft.sections.length > 0)
+      if (hasContent && !confirm('Replace the current draft with the parsed PDF? Existing draft text will be lost.')) {
+        return
+      }
+    }
+    setImporting(true)
+    try {
+      const buf = await file.arrayBuffer()
+      const bytes = new Uint8Array(buf)
+      let binary = ''
+      const CHUNK = 0x8000
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK))
+      }
+      const pdfBase64 = btoa(binary)
+      const res = await fetch('/api/constitution/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pdfBase64, fileName: file.name }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`)
+      if (!Array.isArray(data.sections) || data.sections.length === 0) {
+        setImportError("No sections detected. Is this a forum constitution?")
+        return
+      }
+      const sections = data.sections.map(s => ({
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+        heading: s.heading || '',
+        body: s.body || '',
+      }))
+      let target = draft
+      if (!target) {
+        target = onCreateDraft()
+        if (!target?.id) {
+          setImportError('Could not create a draft to import into.')
+          return
+        }
+      }
+      onUpdateVersion(target.id, {
+        title: data.title || target.title || 'Forum Constitution',
+        preamble: data.preamble || '',
+        sections,
+      })
+      setViewing('draft')
+    } catch (err) {
+      setImportError(err?.message || 'Import failed.')
+    } finally {
+      setImporting(false)
+    }
+  }
+
   // Empty state: no constitution yet
   if (!constitution || forumVersions.length === 0) {
     return (
@@ -658,9 +959,29 @@ function ConstitutionTab({
         <FileText className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
         <p className="text-muted-foreground text-sm mb-4">No constitution yet for this forum.</p>
         {isModerator ? (
-          <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
-            <Plus className="h-4 w-4" /> Create draft
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button onClick={onCreateDraft} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white">
+              <Plus className="h-4 w-4" /> Create draft
+            </button>
+            <button
+              onClick={triggerFilePicker}
+              disabled={importing}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90 disabled:opacity-50"
+            >
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+              {importing ? 'Parsing PDF…' : 'Import from PDF'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={handleFileChosen}
+            />
+            {importError && (
+              <p className="basis-full text-xs text-red-400 mt-2">{importError}</p>
+            )}
+          </div>
         ) : (
           <p className="text-xs text-muted-foreground/60">Your moderator hasn't started one yet.</p>
         )}
@@ -697,6 +1018,30 @@ function ConstitutionTab({
           />
         )}
         <div className="flex-1" />
+        {targetVersion && (
+          <button
+            onClick={() => downloadConstitutionPdfLazy({ version: targetVersion, forumName: forum?.name })}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90"
+            title="Download this version as a PDF"
+          >
+            <Download className="h-3.5 w-3.5" /> Download PDF
+          </button>
+        )}
+        {isModerator && (
+          <button
+            onClick={triggerFilePicker}
+            disabled={importing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-muted/30 hover:bg-muted/50 border border-border text-foreground/90 disabled:opacity-50"
+            title={
+              draft
+                ? 'Replace the draft with content parsed from a PDF'
+                : 'Create a draft from a PDF (does not affect adopted or proposed versions)'
+            }
+          >
+            {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileUp className="h-3.5 w-3.5" />}
+            {importing ? 'Parsing PDF…' : 'Import from PDF'}
+          </button>
+        )}
         {isModerator && adopted && !draft && !proposed && (
           <button
             onClick={onProposeAmendment}
@@ -706,19 +1051,37 @@ function ConstitutionTab({
           </button>
         )}
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleFileChosen}
+      />
+      {importError && (
+        <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-center justify-between gap-2">
+          <span>{importError}</span>
+          <button onClick={() => setImportError(null)} className="text-red-300/70 hover:text-red-200" aria-label="Dismiss">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {targetVersion && (
         <ConstitutionVersionView
           version={targetVersion}
+          forumName={forum?.name}
           isModerator={isModerator}
           memberId={memberId}
           forumMembers={forumMembers}
           ratifications={ratifications.filter(r => r.version_id === targetVersion.id)}
+          clauseReviews={(clauseReviews || []).filter(r => r.version_id === targetVersion.id)}
           onUpdate={onUpdateVersion}
           onPropose={onProposeVersion}
           onAdopt={onAdoptVersion}
           onDelete={onDeleteVersion}
           onRatify={onRatify}
+          onUpsertClauseReview={onUpsertClauseReview}
         />
       )}
     </div>
@@ -742,10 +1105,39 @@ function VersionPill({ label, active, color, onClick }) {
 }
 
 function ConstitutionVersionView({
-  version, isModerator, memberId, forumMembers, ratifications,
-  onUpdate, onPropose, onAdopt, onDelete, onRatify,
+  version, forumName, isModerator, memberId, forumMembers, ratifications, clauseReviews,
+  onUpdate, onPropose, onAdopt, onDelete, onRatify, onUpsertClauseReview,
 }) {
   const canEdit = isModerator && version.status === 'draft'
+  // Per-clause review only makes sense on a stable version (not draft).
+  const reviewsEnabled = version.status !== 'draft' && !!onUpsertClauseReview && !!memberId
+  const myReviewBySection = useMemo(() => {
+    const m = new Map()
+    for (const r of (clauseReviews || [])) if (r.member_id === memberId) m.set(r.section_id, r)
+    return m
+  }, [clauseReviews, memberId])
+  const reviewsBySection = useMemo(() => {
+    const m = new Map()
+    for (const r of (clauseReviews || [])) {
+      if (!m.has(r.section_id)) m.set(r.section_id, [])
+      m.get(r.section_id).push(r)
+    }
+    return m
+  }, [clauseReviews])
+  const memberName = useMemo(() => {
+    const m = new Map()
+    for (const x of forumMembers) m.set(x.id, x.name)
+    return m
+  }, [forumMembers])
+  // Discussion items: any review with a non-empty annotation, grouped by section.
+  const discussionBySection = useMemo(() => {
+    const out = []
+    for (const section of (Array.isArray(version.sections) ? version.sections : [])) {
+      const annotated = (reviewsBySection.get(section.id) || []).filter(r => (r.annotation || '').trim().length > 0)
+      if (annotated.length > 0) out.push({ section, annotations: annotated })
+    }
+    return out
+  }, [version.sections, reviewsBySection])
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(version.title || '')
   const [preamble, setPreamble] = useState(version.preamble || '')
@@ -957,18 +1349,63 @@ function ConstitutionVersionView({
             {version.preamble && (
               <p className="text-sm text-foreground/80 whitespace-pre-wrap italic">{version.preamble}</p>
             )}
+            {isModerator && reviewsEnabled && discussionBySection.length > 0 && (
+              <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4">
+                <p className="text-sm font-semibold text-warm">Discussion items raised by the forum</p>
+                <p className="text-xs text-warm/80 mt-0.5 mb-3">
+                  Members flagged {discussionBySection.length} clause{discussionBySection.length === 1 ? '' : 's'} for group discussion.
+                </p>
+                <div className="space-y-3">
+                  {discussionBySection.map(({ section, annotations }) => {
+                    const idx = sections.findIndex(s => s.id === section.id)
+                    return (
+                      <div key={section.id} className="rounded-lg border border-amber-400/30 bg-amber-500/5 p-3">
+                        <div className="text-xs font-semibold text-warm mb-1.5">
+                          {idx + 1}. {section.heading || <span className="italic text-warm/70">Untitled section</span>}
+                        </div>
+                        <ul className="space-y-1.5">
+                          {annotations.map(r => (
+                            <li key={r.id} className="text-xs text-foreground/85">
+                              <span className="text-warm/80 font-medium">{memberName.get(r.member_id) || 'Member'}:</span>{' '}
+                              <span className="whitespace-pre-wrap">{r.annotation}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             {sections.length === 0 ? (
               <p className="text-xs text-muted-foreground/60 italic">No content yet.</p>
             ) : (
               <div className="space-y-4">
-                {sections.map((section, idx) => (
-                  <div key={section.id}>
-                    <h3 className="text-sm font-semibold text-foreground mb-1">
-                      {idx + 1}. {section.heading || <span className="text-muted-foreground/60 italic">Untitled section</span>}
-                    </h3>
-                    {section.body && <p className="text-sm text-foreground/80 whitespace-pre-wrap">{section.body}</p>}
-                  </div>
-                ))}
+                {sections.map((section, idx) => {
+                  const all = reviewsBySection.get(section.id) || []
+                  const reviewedCount = all.filter(r => r.reviewed).length
+                  const annotationCount = all.filter(r => (r.annotation || '').trim().length > 0).length
+                  const mine = myReviewBySection.get(section.id)
+                  return (
+                    <div key={section.id}>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">
+                        {idx + 1}. {section.heading || <span className="text-muted-foreground/60 italic">Untitled section</span>}
+                      </h3>
+                      {section.body && <p className="text-sm text-foreground/80 whitespace-pre-wrap">{section.body}</p>}
+                      {reviewsEnabled && (
+                        <ClauseReviewRow
+                          versionId={version.id}
+                          sectionId={section.id}
+                          mine={mine}
+                          reviewedCount={reviewedCount}
+                          annotationCount={annotationCount}
+                          totalMembers={forumMembers.length}
+                          onUpsertClauseReview={onUpsertClauseReview}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
             {version.status === 'adopted' && version.adopted_at && (
@@ -977,6 +1414,50 @@ function ConstitutionVersionView({
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+// Per-clause review row: my checkbox + my private annotation, plus a
+// public count of reviewers and discussion-flag count for this clause.
+// Annotation saves on blur to avoid hammering the DB on every keystroke.
+function ClauseReviewRow({ versionId, sectionId, mine, reviewedCount, annotationCount, totalMembers, onUpsertClauseReview }) {
+  const [draft, setDraft] = useState(mine?.annotation ?? '')
+  useEffect(() => { setDraft(mine?.annotation ?? '') }, [mine?.id, mine?.annotation])
+  const reviewed = !!mine?.reviewed
+  const handleToggle = () => {
+    onUpsertClauseReview(versionId, sectionId, { reviewed: !reviewed })
+  }
+  const handleAnnotationCommit = () => {
+    if ((draft || '') === (mine?.annotation || '')) return
+    onUpsertClauseReview(versionId, sectionId, { annotation: draft })
+  }
+  return (
+    <div className="mt-2 rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={handleToggle}
+          className={`text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border ${reviewed
+            ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+            : 'border-border bg-muted/30 text-muted-foreground/80 hover:text-foreground'}`}
+          aria-pressed={reviewed}
+        >
+          {reviewed ? '✓ I reviewed this' : 'Mark reviewed'}
+        </button>
+        <span className="text-[10px] text-muted-foreground/70">
+          {reviewedCount}/{totalMembers || 0} reviewed
+          {annotationCount > 0 ? ` · ${annotationCount} flagged for discussion` : ''}
+        </span>
+      </div>
+      <textarea
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={handleAnnotationCommit}
+        rows={2}
+        placeholder="Flag this clause for group discussion (optional)"
+        className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground placeholder-white/30"
+      />
     </div>
   )
 }

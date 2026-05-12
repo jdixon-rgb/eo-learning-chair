@@ -6,6 +6,7 @@ import { supabase } from './supabase'
 import { useChapter } from './chapter'
 import { useFiscalYear } from './fiscalYearContext'
 import { captureSilentError } from './monitoring'
+import { SPEAKER_PIPELINE_FIELDS } from './constants'
 
 // localStorage cache for offline fallback (key is per-chapter, per-fiscal-year)
 function storageKey(chapterId, fiscalYear) {
@@ -250,19 +251,24 @@ export function StoreProvider({ children }) {
   const addSpeaker = useCallback(async (speakerData) => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
-    const { pipeline_stage, fit_score, fee_estimated, fee_actual,
-            contract_storage_path, contract_file_name, w9_storage_path,
-            w9_file_name, notes, ...libraryData } = speakerData
-    const newSpeaker = { ...libraryData, id, chapter_id: activeChapterId, pipeline_stage: pipeline_stage || 'researching', created_at: now, updated_at: now }
+    // Split incoming form data into the speakers (library) row and the
+    // speaker_pipeline (per-FY) row. Any field listed in SPEAKER_PIPELINE_FIELDS
+    // belongs on speaker_pipeline; everything else stays on speakers.
+    const libraryData = {}
+    const pipelineFields = {}
+    for (const [key, val] of Object.entries(speakerData)) {
+      if (SPEAKER_PIPELINE_FIELDS.includes(key)) pipelineFields[key] = val
+      else libraryData[key] = val
+    }
+    const stage = pipelineFields.pipeline_stage || 'researching'
+    const newSpeaker = { ...libraryData, id, chapter_id: activeChapterId, pipeline_stage: stage, created_at: now, updated_at: now }
     const pipelineId = crypto.randomUUID()
     const pipelineEntry = {
       id: pipelineId, speaker_id: id, chapter_id: activeChapterId,
       fiscal_year: activeFiscalYear,
-      pipeline_stage: pipeline_stage || 'researching',
-      fit_score: fit_score ?? null, fee_estimated: fee_estimated ?? null, fee_actual: fee_actual ?? null,
-      contract_storage_path: contract_storage_path ?? null, contract_file_name: contract_file_name ?? null,
-      w9_storage_path: w9_storage_path ?? null, w9_file_name: w9_file_name ?? null,
-      notes: notes ?? '', created_at: now, updated_at: now,
+      ...pipelineFields,
+      pipeline_stage: stage,
+      created_at: now, updated_at: now,
     }
     // Optimistic local update
     setSpeakers(prev => [...prev, newSpeaker])

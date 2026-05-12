@@ -35,6 +35,7 @@ import {
   Globe2,
   GitBranch,
   Megaphone,
+  AlertTriangle,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -97,6 +98,20 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
     ],
   },
+  slp_chair: {
+    title: 'SLP Chair',
+    // Lands on SLP Management — that's the chair's primary surface
+    // (manage SLP roster + forum assignments + invites). /board/forums
+    // shows the SLP-population forums alongside member forums; for now
+    // the population badge in the card is the differentiator. A
+    // dedicated SLP Forums page lands in Wave 2B.
+    homePath: '/admin/slps',
+    navItems: [
+      { to: '/admin/slps', icon: Heart, label: 'SLPs' },
+      { to: '/board/forums', icon: Users2, label: 'Forums' },
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
+    ],
+  },
   president: {
     title: 'President',
     homePath: '/president',
@@ -145,6 +160,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/forum-health', icon: Activity, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members' },
       { to: '/forum-health/comms', icon: Megaphone, label: 'Moderator Comms' },
     ],
   },
@@ -157,6 +173,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/forum-placement', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/forum-placement/leads', icon: UserPlus, label: 'Member Leads' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members' },
       { to: '/board/forums', icon: Users2, label: 'Forums', permission: 'canManageForums' },
     ],
   },
@@ -201,6 +218,23 @@ export const CHAIR_ROLE_CONFIGS = {
     title: 'Member',
     homePath: '/portal',
     navItems: [], // Member portal uses its own layout/nav, not the admin sidebar
+  },
+  // Moderator is an *elevation* on top of the Member surface, not a
+  // standalone chair role. It only appears here so that super-admins
+  // and presidents can preview the moderator experience via "Switch
+  // role." When viewAsRole === 'moderator', useIsModerator() returns
+  // true and the Member sidebar gains the Moderator section. The
+  // homePath drops the previewer onto Moderator Events directly so
+  // they see the new surface without hunting for it.
+  moderator: {
+    // Title is just "Moderator" (not "Forum Moderator") to avoid the
+    // role-switcher reading like a fourth Forum tier alongside Forum
+    // Health Chair and Forum Placement Chair. In context the role
+    // belongs to a forum, but the surfacing in the sidebar should
+    // stand on its own.
+    title: 'Moderator',
+    homePath: '/portal/moderator/events',
+    navItems: [], // Member sidebar + injected Moderator section drive the nav
   },
 }
 

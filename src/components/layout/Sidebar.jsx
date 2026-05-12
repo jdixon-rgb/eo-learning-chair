@@ -1,10 +1,11 @@
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { hasPermission } from '@/lib/permissions'
 import { getChairConfig, SWITCHABLE_CHAIR_ROLES, CHAIR_ROLE_CONFIGS } from '@/lib/chairRoles'
 import { useSAPStore } from '@/lib/sapStore'
+import { useIsModerator } from '@/lib/useIsModerator'
 import { useTourTips } from '@/lib/useTourTips'
 import FiscalYearSwitcher from '@/components/FiscalYearSwitcher'
 import ChapterSwitcher from '@/components/ChapterSwitcher'
@@ -28,6 +29,11 @@ import {
   GraduationCap,
   BarChart3,
   ClipboardCheck,
+  ClipboardList,
+  ScrollText,
+  Pin,
+  Calendar as CalendarIcon,
+  CalendarDays,
   Eye,
   ChevronDown,
   ChevronUp,
@@ -102,11 +108,30 @@ const NON_MEMBER_ROLES = new Set([
   'sap_contact',
 ])
 
+// Moderator section — only renders when useIsModerator() returns true.
+// Treated like a board role: the moderator gets menu items the average
+// member never sees (forum agenda, forum calendar, forum members &
+// roles, manage constitution) plus the back-of-house moderator events
+// calendar for monthly moderator meetings + annual regional summit.
+//
+// Each forum sub-item is its own dedicated route that renders
+// ForumHomePage in `focusTab` mode — single tab, page-specific
+// header, no nested tab strip. Moderator Events is a separate page.
+const moderatorItems = [
+  { to: '/portal/moderator/agenda', icon: ClipboardList, label: 'Forum Agenda' },
+  { to: '/portal/moderator/calendar', icon: CalendarIcon, label: 'Forum Calendar' },
+  { to: '/portal/moderator/parking', icon: Pin, label: 'Manage Parking Lot' },
+  { to: '/portal/moderator/members', icon: Users2, label: 'Forum Members & Roles' },
+  { to: '/portal/moderator/constitution', icon: ScrollText, label: 'Manage Constitution' },
+  { to: '/portal/moderator/events', icon: CalendarDays, label: 'Moderator Events' },
+]
+
 export default function Sidebar({ isOpen, onClose, onNavigate }) {
   const { profile, effectiveRole, signOut, isSuperAdmin, isPresident, canSwitchRoles, isImpersonating, viewAsRole, setViewAsRole, viewAsSapContactId, setViewAsSapContactId, viewAsRegion, setViewAsRegion } = useAuth()
   const { activeChapter, allChapters } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
+  const { isModerator } = useIsModerator()
   const { resetAll: resetTourTips } = useTourTips()
   const navigate = useNavigate()
   const location = useLocation()
@@ -148,6 +173,13 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
   // hidden for super-admin when not impersonating (they're not "in" a
   // chapter as a member at the platform level).
   const showMemberSection = !hideChapterOps && !NON_MEMBER_ROLES.has(effectiveRole)
+
+  // Moderator section: only when this user actually moderates a forum.
+  // Hidden for staff / SAP contacts / non-impersonating super-admin
+  // (they have no member identity in this chapter context). Admins are
+  // intentionally NOT auto-shown — they get into moderator views via
+  // role-switching, not by virtue of admin status.
+  const showModeratorSection = !hideChapterOps && !NON_MEMBER_ROLES.has(effectiveRole) && isModerator
 
   const handleSignOut = async () => {
     await signOut()
@@ -403,13 +435,47 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
             </>
           )}
 
-          {/* Member section — every chair (except staff) is also a member.
-              Sits below the chair section so the chair's command center
-              stays the focal point; member surfaces are one click away
-              instead of buried in a separate Compass shell. Forum and
-              Vendors are expandable groups: they auto-expand whenever the
-              current route is inside the group, and auto-collapse when
-              the user navigates away. */}
+          {/* Moderator section — sits ABOVE Member per the sidebar
+              ordering rule: role-specific items at top, board surfaces,
+              moderator surfaces, then member surfaces last. Moderator
+              is a hat (not a separate identity) but more specialized
+              than the universal Member section, so it gets the
+              specialized slot just above Member. Forum sub-items
+              deep-link into existing ForumHomePage tabs with edit
+              affordances already gated on isModerator inside that
+              page. Moderator Events is the new moderator-only calendar
+              (monthly meetings + annual regional summit). */}
+          {showModeratorSection && (
+            <>
+              <div className="pt-4 pb-2 px-3">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Moderator</p>
+              </div>
+              {moderatorItems.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActive
+                        ? activeNavClass
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                    }`
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </NavLink>
+              ))}
+            </>
+          )}
+
+          {/* Member section — sits LAST per the sidebar ordering rule.
+              Every chair (except staff) is also a member, so this
+              section is the universal floor under everything else.
+              Forum and Vendors are expandable groups: they auto-expand
+              whenever the current route is inside the group, and
+              auto-collapse when the user navigates away. */}
           {showMemberSection && (
             <>
               <div className="pt-4 pb-2 px-3">
@@ -503,17 +569,22 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
           </button>
         </div>
 
-        {/* Footer: User info + Sign out */}
+        {/* Footer: User info (click → My Profile) + Sign out */}
         <div className="p-4 border-t border-sidebar-border">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              to="/portal/profile"
+              onClick={onNavigate}
+              title="My profile (photo, SLP, contact info)"
+              className="min-w-0 flex-1 -m-1 p-1 rounded-lg hover:bg-sidebar-accent transition-colors"
+            >
               <p className="text-xs font-medium text-sidebar-foreground truncate">
                 {profile?.full_name || 'User'}
               </p>
               <p className="text-[10px] text-muted-foreground/80 truncate">
                 {profile?.email || ''}
               </p>
-            </div>
+            </Link>
             <button
               onClick={handleSignOut}
               title="Sign out"

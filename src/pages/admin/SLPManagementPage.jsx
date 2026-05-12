@@ -6,6 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import PageHeader from '@/lib/pageHeader'
 
+// Inline status pill mirroring slps.invite_status values.
+const INVITE_STATUS_STYLE = {
+  not_invited: { label: 'Not invited', cls: 'border-muted-foreground/30 text-muted-foreground' },
+  pending:     { label: 'Invited',     cls: 'border-amber-300 text-amber-700 bg-amber-50' },
+  active:      { label: 'Active',      cls: 'border-emerald-300 text-emerald-700 bg-emerald-50' },
+  revoked:     { label: 'Revoked',     cls: 'border-muted-foreground/40 text-muted-foreground line-through' },
+}
+
 // Format a YYYY-MM-DD date as e.g. "Mar 19, 1967". Returns '—' when null.
 function fmtDate(d) {
   if (!d) return '—'
@@ -19,27 +27,54 @@ function fmtDate(d) {
 export default function SLPManagementPage() {
   const { activeChapterId } = useChapter()
   const [rows, setRows] = useState([])
+  const [slpForums, setSlpForums] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
   const fetchRows = useCallback(async () => {
     if (!isSupabaseConfigured() || !activeChapterId) { setLoading(false); return }
     setLoading(true)
-    const { data, error } = await supabase
-      .from('slps')
-      .select(`
-        id, name, relationship_type, dob, anniversary, kids,
-        dietary_restrictions, allergies, notes, created_at,
-        member:chapter_members!inner ( id, name, email )
-      `)
-      .eq('chapter_id', activeChapterId)
-      .order('name', { ascending: true })
+    const [{ data, error }, { data: forumData }] = await Promise.all([
+      supabase
+        .from('slps')
+        .select(`
+          id, name, relationship_type, dob, anniversary, kids,
+          dietary_restrictions, allergies, notes, forum, email, phone,
+          invite_status, invited_at, created_at,
+          member:chapter_members!inner ( id, name, email )
+        `)
+        .eq('chapter_id', activeChapterId)
+        .order('name', { ascending: true }),
+      supabase
+        .from('forums')
+        .select('id, name, is_active, population')
+        .eq('chapter_id', activeChapterId)
+        .eq('population', 'slp')
+        .eq('is_active', true)
+        .order('name', { ascending: true }),
+    ])
     if (error) console.error('load SLPs error:', error)
     setRows(data || [])
+    setSlpForums(forumData || [])
     setLoading(false)
   }, [activeChapterId])
 
   useEffect(() => { fetchRows() }, [fetchRows])
+
+  // Update slps.forum (admin can move an SLP between SLP forums).
+  // Empty string = unassigned. RLS allows is_slp_admin to update.
+  const handleForumChange = async (row, nextForum) => {
+    const prev = row.forum || ''
+    setRows(rs => rs.map(r => r.id === row.id ? { ...r, forum: nextForum } : r))
+    const { error } = await supabase
+      .from('slps')
+      .update({ forum: nextForum, updated_at: new Date().toISOString() })
+      .eq('id', row.id)
+    if (error) {
+      setRows(rs => rs.map(r => r.id === row.id ? { ...r, forum: prev } : r))
+      alert(`Forum update failed: ${error.message}`)
+    }
+  }
 
   const handleDelete = async (row) => {
     const memberName = row.member?.name || 'this member'
@@ -85,6 +120,8 @@ export default function SLPManagementPage() {
               <tr className="border-b bg-muted/30">
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Member</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">SLP</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Forum</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Invite</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Relationship</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">DOB</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Anniversary</th>
@@ -96,15 +133,32 @@ export default function SLPManagementPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…</td></tr>
+                <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                <tr><td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
                   {rows.length === 0 ? 'No SLPs on file yet. Members add their own partner info from their profile.' : 'No SLPs match your search.'}
                 </td></tr>
-              ) : filtered.map(r => (
+              ) : filtered.map(r => {
+                const inviteStyle = INVITE_STATUS_STYLE[r.invite_status || 'not_invited']
+                return (
                 <tr key={r.id} className="border-b last:border-0 group hover:bg-muted/20">
                   <td className="px-4 py-3 text-sm font-medium">{r.member?.name || <span className="text-muted-foreground italic">Unknown</span>}</td>
                   <td className="px-4 py-3 text-sm">{r.name || <span className="text-muted-foreground italic">—</span>}</td>
+                  <td className="px-4 py-3 text-sm">
+                    <select
+                      value={r.forum || ''}
+                      onChange={(e) => handleForumChange(r, e.target.value)}
+                      className="rounded-md border bg-background px-2 py-1 text-xs"
+                    >
+                      <option value="">—</option>
+                      {slpForums.map(f => (
+                        <option key={f.id} value={f.name}>{f.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <Badge variant="outline" className={`text-[10px] ${inviteStyle.cls}`}>{inviteStyle.label}</Badge>
+                  </td>
                   <td className="px-4 py-3 text-sm">
                     <Badge variant="outline" className="text-[10px] capitalize">{r.relationship_type || '—'}</Badge>
                   </td>
@@ -133,7 +187,7 @@ export default function SLPManagementPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
