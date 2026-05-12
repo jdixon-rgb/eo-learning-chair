@@ -86,7 +86,11 @@ export default function ForumHomePage({ focusTab }) {
   // focus mode the chrome (forum hero + tab strip) is hidden and the
   // page renders only that tab — no URL syncing needed.
   const validTabs = ['parking', 'tools', 'agenda', 'calendar', 'constitution', 'partners', 'members', 'history']
-  const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking')
+  // Default tab on /portal/forum (no ?tab=) is 'members' — it's the
+  // safest forum-public view to land on. The old default was 'parking',
+  // but that rendered the moderator-style forum-wide parking lot
+  // (everyone's items), which leaked across the member privacy line.
+  const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'members')
   const [tab, setTabState] = useState(initialTab)
   // Navigating between focus routes (e.g. /portal/moderator/agenda →
   // /portal/moderator/constitution) reuses the same ForumHomePage
@@ -100,7 +104,7 @@ export default function ForumHomePage({ focusTab }) {
     setTabState(next)
     if (focusTab) return
     const params = new URLSearchParams(searchParams)
-    if (next === 'parking') params.delete('tab'); else params.set('tab', next)
+    if (next === 'members') params.delete('tab'); else params.set('tab', next)
     setSearchParams(params, { replace: true })
   }
   const [parkingLot, setParkingLot] = useState([])
@@ -264,17 +268,6 @@ export default function ForumHomePage({ focusTab }) {
     )
   }
 
-  const tabs = [
-    { key: 'parking', label: 'Parking Lot', icon: Pin },
-    { key: 'tools', label: 'Tools', icon: BookOpen },
-    { key: 'agenda', label: 'Agenda', icon: ClipboardList },
-    { key: 'calendar', label: 'Calendar', icon: Calendar },
-    { key: 'constitution', label: 'Constitution', icon: FileText },
-    { key: 'partners', label: 'SAP Interest', icon: Handshake },
-    { key: 'members', label: 'Members', icon: Users },
-    { key: 'history', label: 'History', icon: History },
-  ]
-
   return (
     <div className="space-y-6">
       {isSynthetic && (
@@ -319,26 +312,10 @@ export default function ForumHomePage({ focusTab }) {
         </div>
       )}
 
-      {/* Tab nav — hidden in moderator focus mode (single tab forced
-          via the route, no need for the strip). */}
-      {!focusTab && (
-      <div className="flex flex-wrap justify-center gap-1 border-b border-border">
-        {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-3 text-xs font-medium flex items-center gap-1.5 border-b-2 transition-colors ${
-              tab === t.key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <t.icon className="h-3.5 w-3.5" />
-            {t.label}
-          </button>
-        ))}
-      </div>
-      )}
-
-      {/* Tab content */}
+      {/* Tab content — the in-page tab strip used to live here but
+          the left-nav Forum group now owns navigation between
+          surfaces. Each sidebar child deep-links via ?tab=… and
+          this page reads that param to render the right block. */}
       {tab === 'calendar' && (
         <CalendarTab
           forum={effectiveForum}

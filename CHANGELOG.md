@@ -17,6 +17,25 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.14 — 2026-05-12
+
+### Cleanup: in-page Forum tab strip removed; default landing is Members
+
+The Forum page rendered a horizontal tab strip (Parking Lot, Tools,
+Agenda, Calendar, Constitution, SAP Interest, Members, History)
+across the top of its content. The left-nav Forum group now owns
+all that navigation, so the in-page strip was duplicative. Removed.
+
+Side-effect fix: the default tab when landing on `/portal/forum`
+with no `?tab=` was `parking`, which rendered the forum-wide
+moderator-flavored Parking Lot view (everyone's items). That
+violated the member-private rule. New default is `members`, which
+is forum-public and the natural "home" view for a forum.
+
+Sidebar active-state default tab updated to match.
+
+---
+
 ## v2.7.13 — 2026-05-12
 
 ### Polish: "SAPs" → "SAP Interest" inside the Forum context

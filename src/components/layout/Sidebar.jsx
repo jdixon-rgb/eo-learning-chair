@@ -55,7 +55,7 @@ const activeNavClass = isStaging
 
 // Default tab for /portal/forum when no ?tab= is present. Mirrors the
 // initialTab logic in ForumHomePage.
-const FORUM_DEFAULT_TAB = 'parking'
+const FORUM_DEFAULT_TAB = 'members'
 
 // Children that deep-link via query string (e.g. /portal/forum?tab=members)
 // need active-state matching that considers the tab param, not just the
