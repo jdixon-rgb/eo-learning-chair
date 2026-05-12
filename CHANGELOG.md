@@ -17,6 +17,34 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.7 — 2026-05-12
+
+### Fix: New speaker save failed with "deposit_amount column not found"
+
+The Shanghai Learning Chair hit "Save failed (insert:speakers): Could not
+find the 'deposit_amount' column of 'speakers' in the schema cache" when
+adding the first speaker to his FY 2025–2026 pipeline. Root cause: the
+new-speaker path in `store.addSpeaker` was destructuring only the
+*original* pipeline fields (pipeline_stage, fit_score, fee_estimated,
+fee_actual, contract_*, w9_*, notes) and letting everything else fall
+into the speakers insert. When migrations 052 and 077 added
+`fee_*_private`, `deposit_*`, `final_payment_*`, and `payment_terms_notes`
+to `speaker_pipeline`, those fields started leaking into the speakers
+table insert and PostgREST rejected them.
+
+Edit-flow already split fields correctly via a local `PIPELINE_FIELDS`
+list, so existing speakers worked — only *creating* a new speaker
+broke. That's why it hadn't surfaced before: most chapters created
+their speakers months ago.
+
+Fix: lifted the field list to a shared `SPEAKER_PIPELINE_FIELDS`
+constant in `src/lib/constants.js` and made both `SpeakersPage` and
+`store.addSpeaker` use it as the single source of truth. Pipeline-
+field values the user enters at create-time now actually persist to
+`speaker_pipeline` instead of being silently dropped.
+
+---
+
 ## v2.7.6 — 2026-05-11
 
 ### Fix: "Create my member record" button didn't appear for super-admins

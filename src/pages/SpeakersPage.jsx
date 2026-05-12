@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import TourTip from '@/components/TourTip'
-import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB } from '@/lib/constants'
+import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB, SPEAKER_PIPELINE_FIELDS } from '@/lib/constants'
 import { formatCurrency } from '@/lib/utils'
 import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
 import { useChapter } from '@/lib/chapter'
@@ -57,14 +57,6 @@ export default function SpeakersPage() {
   const [showSendPackage, setShowSendPackage] = useState(false)
   const contractInputRef = useRef(null)
   const w9InputRef = useRef(null)
-
-  // Pipeline-specific fields that live on speaker_pipeline, not speakers
-  const PIPELINE_FIELDS = ['pipeline_stage', 'fit_score', 'fee_estimated', 'fee_actual',
-    'fee_estimated_private', 'fee_actual_private',
-    'contract_storage_path', 'contract_file_name', 'w9_storage_path', 'w9_file_name', 'notes',
-    'deposit_amount', 'deposit_due_date',
-    'final_payment_amount', 'final_payment_due_date',
-    'payment_terms_notes']
 
   const handleDocUpload = useCallback(async (file, docType) => {
     if (!editSpeaker?._pipeline_id) return
@@ -163,7 +155,7 @@ export default function SpeakersPage() {
     const libraryData = {}
     const pipelineData = {}
     for (const [key, val] of Object.entries(allData)) {
-      if (PIPELINE_FIELDS.includes(key)) {
+      if (SPEAKER_PIPELINE_FIELDS.includes(key)) {
         pipelineData[key] = val
       } else {
         libraryData[key] = val

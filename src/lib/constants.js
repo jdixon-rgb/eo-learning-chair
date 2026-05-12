@@ -121,6 +121,23 @@ export const PIPELINE_STAGES = [
   { id: 'confirmed', label: 'Confirmed', color: '#22c55e' },
 ]
 
+// Fields that live on speaker_pipeline (per fiscal year), NOT on the
+// shared speakers library row. Source of truth for splitting a speaker
+// form between the two tables — both SpeakersPage and the store's
+// addSpeaker must agree, or new-speaker inserts leak pipeline columns
+// into the speakers table and PostgREST rejects with "column not found".
+export const SPEAKER_PIPELINE_FIELDS = [
+  'pipeline_stage', 'fit_score',
+  'fee_estimated', 'fee_actual',
+  'fee_estimated_private', 'fee_actual_private',
+  'contract_storage_path', 'contract_file_name',
+  'w9_storage_path', 'w9_file_name',
+  'notes',
+  'deposit_amount', 'deposit_due_date',
+  'final_payment_amount', 'final_payment_due_date',
+  'payment_terms_notes',
+]
+
 // Venue pipeline stages
 export const VENUE_PIPELINE_STAGES = [
   { id: 'researching', label: 'Researching', color: '#64648c' },
