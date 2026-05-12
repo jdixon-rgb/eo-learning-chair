@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES, EVENT_FORMATS } from '@/lib/constants'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CalendarDays, MapPin, Users, Wallet, ArrowRight, Trash2, Handshake, Download } from 'lucide-react'
@@ -15,6 +16,7 @@ export default function EventsPage() {
   const navigate = useNavigate()
   const { chapter, events, speakers, venues, budgetItems, contractChecklists, eventDocuments, saps, deleteEvent } = useStore()
   const { activeFiscalYear } = useFiscalYear()
+  const formatCurrency = useFormatCurrency()
 
   const sortedEvents = [...events].sort((a, b) => (a.month_index ?? 99) - (b.month_index ?? 99))
 

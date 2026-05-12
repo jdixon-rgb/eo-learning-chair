@@ -6,7 +6,8 @@ import { useBoardStore } from '@/lib/boardStore'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_FORMATS } from '@/lib/constants'
-import { formatCurrency, formatDateWithDay, formatTime } from '@/lib/utils'
+import { formatDateWithDay, formatTime } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import ThemeInfo from '@/components/ThemeInfo'
 import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ export default function CalendarPage() {
   const { chapter, events, speakers, venues, budgetItems, saps, addEvent } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription, activePresidentName } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
+  const formatCurrency = useFormatCurrency()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const incomingPresident = activePresidentName || chapter.president_name || ''
   const [createMonth, setCreateMonth] = useState(null)

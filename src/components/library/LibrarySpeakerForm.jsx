@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { useCurrencySymbol } from '@/lib/useFormatCurrency'
 
 // Shared form fields for creating or editing a public speaker library
 // row. Used by AddLibrarySpeakerDialog and EditLibrarySpeakerDialog.
 // Lifts state into the parent so the parent owns the submit/save flow.
 export default function LibrarySpeakerForm({ value, onChange }) {
   const set = (patch) => onChange({ ...value, ...patch })
+  const currencySymbol = useCurrencySymbol()
 
   return (
     <div className="space-y-3">
@@ -79,7 +81,7 @@ export default function LibrarySpeakerForm({ value, onChange }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <Label htmlFor="lib-honorarium">Honorarium ($)</Label>
+          <Label htmlFor="lib-honorarium">Honorarium ({currencySymbol})</Label>
           <Input
             id="lib-honorarium"
             type="number"
@@ -103,7 +105,7 @@ export default function LibrarySpeakerForm({ value, onChange }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <Label htmlFor="lib-travel">Travel cost ($)</Label>
+          <Label htmlFor="lib-travel">Travel cost ({currencySymbol})</Label>
           <Input
             id="lib-travel"
             type="number"

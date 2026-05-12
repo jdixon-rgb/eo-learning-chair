@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import PageHeader from '@/lib/pageHeader'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import AddLibrarySpeakerDialog from '@/components/library/AddLibrarySpeakerDialog'
 
 // The Public Speaker Library — cross-chapter, shared catalog. Seeded
@@ -27,6 +27,7 @@ import AddLibrarySpeakerDialog from '@/components/library/AddLibrarySpeakerDialo
 export default function SpeakerLibraryPage() {
   const { effectiveRole } = useAuth()
   const canEdit = hasPermission(effectiveRole, 'canEditSpeakerLibrary')
+  const formatCurrency = useFormatCurrency()
 
   const [speakers, setSpeakers] = useState([])
   const [reviews, setReviews] = useState([])

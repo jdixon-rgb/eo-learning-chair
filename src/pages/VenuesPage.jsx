@@ -3,7 +3,7 @@ import { useStore } from '@/lib/store'
 import { VENUE_PIPELINE_STAGES, AV_QUALITY, ARCHIVE_REASONS } from '@/lib/constants'
 import TourTip from '@/components/TourTip'
 import PageHeader from '@/lib/pageHeader'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency, useCurrencySymbol } from '@/lib/useFormatCurrency'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
 import { Button } from '@/components/ui/button'
@@ -72,6 +72,8 @@ function StarRating({ value, onChange, size = 'sm', readonly = false }) {
 export default function VenuesPage() {
   const { chapter, venues, events, speakers, budgetItems, addVenue, updateVenue, deleteVenue, updateEvent, archiveVenue, restoreVenue } = useStore()
   const { activeFiscalYear } = useFiscalYear()
+  const formatCurrency = useFormatCurrency()
+  const currencySymbol = useCurrencySymbol()
   const [showForm, setShowForm] = useState(false)
   const [editVenue, setEditVenue] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -802,7 +804,7 @@ export default function VenuesPage() {
                     <Input type="number" value={form.capacity} onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} placeholder="150" />
                   </div>
                   <div>
-                    <label className="text-xs font-medium">Base Rental Cost ($)</label>
+                    <label className="text-xs font-medium">Base Rental Cost ({currencySymbol})</label>
                     <Input type="number" value={form.base_rental_cost} onChange={e => setForm(p => ({ ...p, base_rental_cost: e.target.value }))} placeholder="5000" />
                   </div>
                   <div>
@@ -812,7 +814,7 @@ export default function VenuesPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium">AV Cost Estimate ($)</label>
+                    <label className="text-xs font-medium">AV Cost Estimate ({currencySymbol})</label>
                     <Input type="number" value={form.av_cost_estimate} onChange={e => setForm(p => ({ ...p, av_cost_estimate: e.target.value }))} placeholder="3000" />
                   </div>
                   <div>
@@ -874,7 +876,7 @@ export default function VenuesPage() {
                   <Input value={form.fb_vendor} onChange={e => setForm(p => ({ ...p, fb_vendor: e.target.value }))} placeholder="In-house, or external caterer name" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium">Estimated F&B Cost ($)</label>
+                  <label className="text-xs font-medium">Estimated F&B Cost ({currencySymbol})</label>
                   <Input type="number" value={form.fb_estimated_cost} onChange={e => setForm(p => ({ ...p, fb_estimated_cost: e.target.value }))} placeholder="12000" />
                 </div>
                 <div>

@@ -11,7 +11,7 @@ import { isSupabaseConfigured } from '@/lib/supabase'
 import { BUILDER, APP_NAME } from '@/lib/appBranding'
 import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
-import { formatCurrency } from '@/lib/utils'
+import { useFormatCurrency, useCurrencySymbol } from '@/lib/useFormatCurrency'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { getFiscalYearOptions } from '@/lib/fiscalYear'
 import { useChapter } from '@/lib/chapter'
@@ -38,6 +38,8 @@ export default function SettingsPage() {
     getMemberName, getMemberEmail, upsertStaffInvite,
   } = useBoardStore()
   const { role } = useAuth()
+  const formatCurrency = useFormatCurrency()
+  const currencySymbol = useCurrencySymbol()
   const { activeChapter } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
   const canEditChapterName = hasPermission(role, 'canEditChapterConfig')
@@ -223,7 +225,7 @@ export default function SettingsPage() {
             )}
           </div>
           <div>
-            <label className="text-xs font-medium">Default Budget ($)</label>
+            <label className="text-xs font-medium">Default Budget ({currencySymbol})</label>
             <Input
               type="number"
               value={chapter.total_budget}
@@ -592,7 +594,7 @@ export default function SettingsPage() {
                           ) : (
                             <Input
                               type="number"
-                              placeholder="Budget ($)"
+                              placeholder={`Budget (${currencySymbol})`}
                               value={assignForm.budget}
                               onChange={e => setAssignForm(prev => ({ ...prev, budget: e.target.value }))}
                               className="h-7 text-sm w-28"

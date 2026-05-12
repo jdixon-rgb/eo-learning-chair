@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { insertRow } from '@/lib/db'
 import { SAP_TIERS, SAP_CONTRIBUTION_TYPES } from '@/lib/constants'
+import { useCurrencySymbol } from '@/lib/useFormatCurrency'
 import TourTip from '@/components/TourTip'
 import PageHeader from '@/lib/pageHeader'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ export default function SAPPartnersPage() {
   const { addVendor: addVendorRecord, deleteVendor: deleteVendorRecord, vendorForSAP } = useVendorStore()
   const { profile, canSwitchRoles, setViewAsRole, setViewAsSapContactId, effectiveRole } = useAuth()
   const canEdit = hasPermission(effectiveRole, 'canEditSAPs')
+  const currencySymbol = useCurrencySymbol()
   // The renewal chip in the partner-card header reuses the same gate.
   const canEditRenewal = canEdit
   // Sponsorship amounts are restricted: SAP Chair, President /
@@ -625,11 +627,11 @@ export default function SAPPartnersPage() {
               {canViewAmounts && (
                 <>
                   <div>
-                    <label className="text-xs font-medium">Current Sponsorship ($)</label>
+                    <label className="text-xs font-medium">Current Sponsorship ({currencySymbol})</label>
                     <Input type="number" value={partnerForm.annual_sponsorship} onChange={e => setPartnerForm(p => ({ ...p, annual_sponsorship: e.target.value }))} placeholder="What they pay now" />
                   </div>
                   <div>
-                    <label className="text-xs font-medium">Renewal Amount ($)</label>
+                    <label className="text-xs font-medium">Renewal Amount ({currencySymbol})</label>
                     <Input type="number" value={partnerForm.renewal_amount} onChange={e => setPartnerForm(p => ({ ...p, renewal_amount: e.target.value }))} placeholder="Proposed for next term" />
                   </div>
                 </>

@@ -5,7 +5,8 @@ import {
   FISCAL_MONTHS, STRATEGIC_MAP, EVENT_TYPES, EVENT_STATUSES, EVENT_FORMATS,
   BUDGET_CATEGORIES, CONTRACT_CHECKLIST_ITEMS, DEFAULT_MARKETING_MILESTONES,
 } from '@/lib/constants'
-import { formatCurrency, formatDate, daysUntil } from '@/lib/utils'
+import { formatDate, daysUntil } from '@/lib/utils'
+import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -31,6 +32,7 @@ export default function EventDetailPage() {
     addBudgetItem, updateBudgetItem,
     getChecklist, setChecklistField,
   } = useStore()
+  const formatCurrency = useFormatCurrency()
 
   const { partners: sapPartners, contactsForPartner, engagementsForEvent, addEngagement, updateEngagement, deleteEngagement } = useSAPStore()
   const [editingTitle, setEditingTitle] = useState(false)

@@ -17,6 +17,68 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.10 — 2026-05-12
+
+### Fix: input labels and placeholders also respect chapter currency
+
+Follow-up to v2.7.8. Display formatters were chapter-aware, but the
+labels next to currency inputs still hardcoded `($)` and at least one
+input placeholder was a literal `"$"`. So an EO Demoland-Foreign user
+saw "Fee Low ($)", "Estimated Fee ($)", etc. on the speaker edit
+dialog despite the chapter being set to CNY. Same issue on the
+venue cost fields, the SAP renewal/sponsorship dialog, the staff
+budget assignment input, and the public Speaker Library form.
+
+Added `useCurrencySymbol()` to `useFormatCurrency.js` (uses Intl with
+`currencyDisplay: 'narrowSymbol'` so CNY → ¥, EUR → €, etc.). Each
+affected file now derives the symbol from the active chapter and
+interpolates it into the label.
+
+The fee-range filter buckets in the public Speaker Library
+("Under $5,000" etc.) were left as-is — those are cross-chapter
+buckets, not chapter-relative amounts.
+
+---
+
+## v2.7.9 — 2026-05-12
+
+### Ops: CNY-currency staging demo chapter
+
+Added `scripts/seed-staging-demo-foreign.js` — a companion to
+`seed-staging-demo.js` that seeds "EO Demoland-Foreign" with
+`currency: CNY` and enough speakers/venues/events/budget items/SAPs
+to visually verify the v2.7.8 currency fix across every money-display
+surface. Hard-pinned to staging, idempotent. No user-visible app
+change; bumped to keep version-per-push traceability.
+
+---
+
+## v2.7.8 — 2026-05-12
+
+### Fix: chapter currency now applied everywhere, not just the dashboard
+
+Reported by the Shanghai chair: dashboard correctly displayed CNY, but
+speaker fees on the Speakers page rendered as USD. The same gap existed
+on Venues, Events, Event Detail, Calendar, Scenarios, Speaker Library
+(both pages), President Dashboard, Past SAPs, Settings, and the
+send-payment-package email — anywhere `formatCurrency()` was called
+without the chapter's currency explicitly passed in. The util's
+`currency = 'USD'` default kicked in, so every chapter's non-dashboard
+money displays were dollars regardless of what they set in Settings.
+
+Fix: introduced the `useFormatCurrency()` hook that the JSDoc in
+`utils.js` already promised but never had. The hook reads the active
+chapter's currency from the store and returns a bound formatter, so
+each page now sets `const formatCurrency = useFormatCurrency()` once
+and every existing call site at that page works correctly. Server-side
+`send-payment-package` endpoint also now selects `chapters.currency`
+and threads it through to its email formatter.
+
+`DashboardPage` and `BudgetPage` already passed currency explicitly
+and were correct — left untouched.
+
+---
+
 ## v2.7.7 — 2026-05-12
 
 ### Fix: New speaker save failed with "deposit_amount column not found"
