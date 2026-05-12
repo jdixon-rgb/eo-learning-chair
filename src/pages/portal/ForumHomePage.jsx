@@ -292,16 +292,18 @@ export default function ForumHomePage({ focusTab }) {
           subtitle={FOCUS_HEADERS[focusTab]?.subtitleFn(member.forum)}
         />
       ) : (
-        <div className="text-center py-4">
-          <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
-          <button
-            type="button"
-            onClick={() => setTab('members')}
-            className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
-          >
-            {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
-          </button>
-        </div>
+        <PageHeader
+          title={member.forum}
+          subtitle={
+            <button
+              type="button"
+              onClick={() => setTab('members')}
+              className="hover:text-foreground/90 transition-colors cursor-pointer"
+            >
+              {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
+            </button>
+          }
+        />
       )}
 
       {pageError && (

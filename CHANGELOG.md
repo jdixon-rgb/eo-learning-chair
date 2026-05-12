@@ -17,6 +17,46 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.12 — 2026-05-12
+
+### Feature: Forum sidebar group now lists every forum surface as a child
+
+Forum in the sidebar now expands to nine children: the three personal
+tools (Reflections, Lifeline, Parking Lot) and six forum-wide
+surfaces (Members, SAPs, Constitution, Calendar, Agenda, History).
+The forum-wide children deep-link into `/portal/forum?tab=...`, so a
+click takes the user straight to that tab. Active-state highlighting
+considers the `?tab=` param, so only the matching child lights up.
+Forum stays permanently expanded for every role view that has the
+Member section (every chair, every member, every president; staff
+and SAP contacts still have no Member section by design).
+
+### Feature: Forum name + member count + founded year now live in the top bar
+
+The forum hero (e.g. `212° · 10 members · Founded 2023`) previously
+rendered as a centered block inside the page body, pushing the tab
+strip and content downward. It now flows through the existing
+`PageHeader` context into the desktop TopBar, where every other page
+already surfaces its title + subtitle. On mobile the hero still
+renders in-body (TopBar is showing the chapter name there).
+Subtitle remains click-to-jump-to-Members.
+
+---
+
+## v2.7.11 — 2026-05-12
+
+### Fix: President no longer sees the Coordinator nav item
+
+The Admin section's "Coordinator" link is the chapter Experience
+Coordinator's working surface; the President doesn't need a button to
+it in their sidebar. `canViewCoordinator` previously inherited the
+entire `ADMIN_ROLES` list (minus SAP Chair), so President and
+President-Elect both saw it. Now President is explicitly excluded.
+President-Elect, Learning Chair, the Coordinator themselves, and the
+Executive Director still see it.
+
+---
+
 ## v2.7.10 — 2026-05-12
 
 ### Fix: input labels and placeholders also respect chapter currency

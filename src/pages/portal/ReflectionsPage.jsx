@@ -243,9 +243,6 @@ export default function ReflectionsPage() {
         <ParkingLotView
           entries={parkingLot}
           currentMemberId={member.id}
-          canEditAll={isAdmin || isSuperAdmin}
-          chapterMembers={chapterMembers}
-          currentForum={member.forum}
           onAddNew={() => setShowAddParkingLot(true)}
           onUpdate={async (id, patch) => { await updateParkingLotEntry(id, patch); refreshParkingLot() }}
           onDelete={async (id) => { await deleteParkingLotEntry(id); refreshParkingLot() }}
@@ -767,46 +764,22 @@ function FeelingsPillInput({ value, onChange, feelings, onAddFeeling }) {
 }
 
 // ── Parking lot view ───────────────────────────────────────
-function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, currentForum, onAddNew, onUpdate, onDelete }) {
+function ParkingLotView({ entries, currentMemberId, onAddNew, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(null)
-  const [filterMemberId, setFilterMemberId] = useState('all')
 
-  // Build member name lookup
-  const memberById = useMemo(() => {
-    const m = new Map()
-    ;(chapterMembers || []).forEach(cm => m.set(cm.id, cm))
-    return m
-  }, [chapterMembers])
+  // Privacy rule: members see only their own parking-lot items here.
+  // Forum-wide visibility belongs to the moderator surface
+  // (/portal/moderator/parking), never to a member view.
+  const myEntries = useMemo(
+    () => entries.filter(e => e.author_member_id === currentMemberId),
+    [entries, currentMemberId],
+  )
 
-  const getAuthorName = (authorId) => {
-    if (authorId === currentMemberId) return 'You'
-    return memberById.get(authorId)?.name || 'Unknown'
-  }
-
-  // Unique authors in this parking lot (for the filter dropdown)
-  const authors = useMemo(() => {
-    const ids = [...new Set(entries.map(e => e.author_member_id))]
-    return ids
-      .map(id => ({ id, name: id === currentMemberId ? 'You' : (memberById.get(id)?.name || 'Unknown') }))
-      .sort((a, b) => a.name === 'You' ? -1 : b.name === 'You' ? 1 : a.name.localeCompare(b.name))
-  }, [entries, memberById, currentMemberId])
-
-  // Forum mates (for author reassignment in the edit modal)
-  const forumMembers = useMemo(() => {
-    return (chapterMembers || [])
-      .filter(cm => cm.forum === currentForum && cm.status === 'active')
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-  }, [chapterMembers, currentForum])
-
-  const filteredEntries = filterMemberId === 'all'
-    ? entries
-    : entries.filter(e => e.author_member_id === filterMemberId)
-
-  if (entries.length === 0) {
+  if (myEntries.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="text-muted-foreground/80 text-sm mb-4">
-          Nothing on the parking lot yet. Add an item directly, or declare one from a reflection.
+          Nothing on your parking lot yet. Add an item directly, or declare one from a reflection.
         </p>
         <button
           onClick={onAddNew}
@@ -821,20 +794,7 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">Show:</label>
-          <select
-            value={filterMemberId}
-            onChange={(e) => setFilterMemberId(e.target.value)}
-            className="bg-muted/40 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground hover:border-foreground/40 focus:border-primary focus:outline-none cursor-pointer"
-          >
-            <option value="all" className="bg-card">Everyone</option>
-            {authors.map(a => (
-              <option key={a.id} value={a.id} className="bg-card">{a.name}</option>
-            ))}
-          </select>
-        </div>
+      <div className="flex items-center justify-end">
         <button
           onClick={onAddNew}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-muted/40 hover:bg-muted/70 border border-border text-foreground"
@@ -848,7 +808,6 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground/80">
           <tr>
             <th className="text-left px-4 py-3">Name</th>
-            <th className="text-left px-3 py-3 w-32">Author</th>
             <th className="text-center px-3 py-3 w-24">Importance</th>
             <th className="text-center px-3 py-3 w-24">Urgency</th>
             <th className="text-center px-3 py-3 w-24">Combined</th>
@@ -856,55 +815,40 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
           </tr>
         </thead>
         <tbody>
-          {filteredEntries.map(e => {
-            const canEdit = true // all forum mates are equal
-            return (
-              <tr key={e.id} className="border-t border-border/60">
-                <td className="px-4 py-3 text-foreground">{e.name}</td>
-                <td className="px-3 py-3 text-muted-foreground text-xs">{getAuthorName(e.author_member_id)}</td>
-                <td className="text-center px-3 py-3 text-foreground/80">
-                  {canEdit ? (
-                    <ScoreSelect
-                      value={e.importance}
-                      onChange={(v) => onUpdate(e.id, { importance: v })}
-                    />
-                  ) : (
-                    e.importance
-                  )}
-                </td>
-                <td className="text-center px-3 py-3 text-foreground/80">
-                  {canEdit ? (
-                    <ScoreSelect
-                      value={e.urgency}
-                      onChange={(v) => onUpdate(e.id, { urgency: v })}
-                    />
-                  ) : (
-                    e.urgency
-                  )}
-                </td>
-                <td className="text-center px-3 py-3 text-foreground font-semibold">{e.importance + e.urgency}</td>
-                <td className="px-3 py-3">
-                  {canEdit && (
-                    <div className="flex gap-1">
-                      <button onClick={() => setEditing(e)} className="text-muted-foreground/70 hover:text-foreground" title="Edit name">
-                        <Save className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => onDelete(e.id)} className="text-muted-foreground/70 hover:text-red-400" title="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            )
-          })}
+          {myEntries.map(e => (
+            <tr key={e.id} className="border-t border-border/60">
+              <td className="px-4 py-3 text-foreground">{e.name}</td>
+              <td className="text-center px-3 py-3 text-foreground/80">
+                <ScoreSelect
+                  value={e.importance}
+                  onChange={(v) => onUpdate(e.id, { importance: v })}
+                />
+              </td>
+              <td className="text-center px-3 py-3 text-foreground/80">
+                <ScoreSelect
+                  value={e.urgency}
+                  onChange={(v) => onUpdate(e.id, { urgency: v })}
+                />
+              </td>
+              <td className="text-center px-3 py-3 text-foreground font-semibold">{e.importance + e.urgency}</td>
+              <td className="px-3 py-3">
+                <div className="flex gap-1">
+                  <button onClick={() => setEditing(e)} className="text-muted-foreground/70 hover:text-foreground" title="Edit name">
+                    <Save className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => onDelete(e.id)} className="text-muted-foreground/70 hover:text-red-400" title="Delete">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
       {editing && (
         <EditParkingLotModal
           entry={editing}
-          forumMembers={forumMembers}
           onClose={() => setEditing(null)}
           onSave={async (patch) => {
             await onUpdate(editing.id, patch)
@@ -917,12 +861,10 @@ function ParkingLotView({ entries, currentMemberId, canEditAll, chapterMembers, 
   )
 }
 
-// ── Edit parking lot modal (with author reassignment) ──────
-function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
+function EditParkingLotModal({ entry, onClose, onSave }) {
   const [name, setName] = useState(entry.name || '')
   const [importance, setImportance] = useState(entry.importance ?? 5)
   const [urgency, setUrgency] = useState(entry.urgency ?? 5)
-  const [authorId, setAuthorId] = useState(entry.author_member_id || '')
 
   return (
     <Modal onClose={onClose}>
@@ -939,19 +881,6 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
           />
         </div>
         <div>
-          <Label>Author (forum mate)</Label>
-          <select
-            value={authorId}
-            onChange={(e) => setAuthorId(e.target.value)}
-            className="w-full rounded-lg bg-muted/40 border border-border px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none cursor-pointer"
-          >
-            <option value="" className="bg-card">Unknown</option>
-            {forumMembers.map(m => (
-              <option key={m.id} value={m.id} className="bg-card">{m.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
           <Label>Importance: {importance}</Label>
           <input type="range" min="1" max="10" value={importance} onChange={(e) => setImportance(Number(e.target.value))} className="w-full" />
         </div>
@@ -964,7 +893,7 @@ function EditParkingLotModal({ entry, forumMembers, onClose, onSave }) {
           <button
             className="px-4 py-2 rounded-lg text-sm bg-primary hover:bg-primary/90 text-white disabled:opacity-40"
             disabled={!name.trim()}
-            onClick={() => onSave({ name: name.trim(), importance, urgency, author_member_id: authorId || null })}
+            onClick={() => onSave({ name: name.trim(), importance, urgency })}
           >
             Save
           </button>

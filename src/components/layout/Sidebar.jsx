@@ -39,6 +39,7 @@ import {
   ChevronUp,
   ChevronRight,
   Settings as SettingsIcon,
+  History as HistoryIcon,
 } from 'lucide-react'
 
 const CONTEXT_EXPANDED_KEY = 'eo-sidebar-context-expanded'
@@ -51,6 +52,23 @@ import { isStaging } from '@/lib/env'
 const activeNavClass = isStaging
   ? 'bg-staging text-staging-foreground'
   : 'bg-primary text-primary-foreground'
+
+// Default tab for /portal/forum when no ?tab= is present. Mirrors the
+// initialTab logic in ForumHomePage.
+const FORUM_DEFAULT_TAB = 'parking'
+
+// Children that deep-link via query string (e.g. /portal/forum?tab=members)
+// need active-state matching that considers the tab param, not just the
+// pathname. Plain-path children fall back to a simple pathname match.
+function isChildActive(childTo, location) {
+  const qIdx = childTo.indexOf('?')
+  if (qIdx === -1) return location.pathname === childTo
+  const childPath = childTo.slice(0, qIdx)
+  if (location.pathname !== childPath) return false
+  const childTab = new URLSearchParams(childTo.slice(qIdx)).get('tab')
+  const currentTab = new URLSearchParams(location.search).get('tab') || FORUM_DEFAULT_TAB
+  return childTab === currentTab
+}
 
 // Admin sub-pages.
 // Survey Results moved to the Learning Chair's main nav. Notifications
@@ -74,19 +92,30 @@ const boardItems = [
 
 // Member-section sub-pages. Every chair (except staff) is also a member,
 // so this section gives them a one-click path into their personal forum
-// experience without leaving the chair shell. Forum and Vendors are
-// expandable groups (they auto-expand when the user navigates to a
-// member route inside them, auto-collapse when they leave). Currently
-// links route into the Compass member-portal layout; retiring that
-// shell into the unified sidebar happens in a follow-on slice.
+// experience without leaving the chair shell. Forum is permanently
+// expanded so Reflections / Lifeline / Parking Lot are visible to every
+// member the moment they sign in.
 const memberItems = [
   {
     to: '/portal/forum',
     icon: Users,
     label: 'Forum',
+    // alwaysExpanded: children always visible regardless of route, so
+    // every member who can see this section gets one-click access to
+    // every forum surface the moment they sign in. The previous
+    // route-driven auto-expand kept these tools invisible until the
+    // user already knew to click Forum.
+    alwaysExpanded: true,
     children: [
       { to: '/portal/reflections', icon: Sparkles, label: 'Reflections' },
       { to: '/portal/lifeline', icon: Heart, label: 'Lifeline' },
+      { to: '/portal/parking', icon: Pin, label: 'Parking Lot' },
+      { to: '/portal/forum?tab=members', icon: Users2, label: 'Members' },
+      { to: '/portal/forum?tab=partners', icon: Handshake, label: 'SAPs' },
+      { to: '/portal/forum?tab=constitution', icon: ScrollText, label: 'Constitution' },
+      { to: '/portal/forum?tab=calendar', icon: CalendarIcon, label: 'Calendar' },
+      { to: '/portal/forum?tab=agenda', icon: ClipboardList, label: 'Agenda' },
+      { to: '/portal/forum?tab=history', icon: HistoryIcon, label: 'History' },
     ],
   },
   // Vendors is the broader catalog. SAPs (formal partners) don't get
@@ -484,6 +513,7 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
               {memberItems.map((item) => {
                 const Icon = item.icon
                 const inGroup = item.children && (
+                  item.alwaysExpanded ||
                   location.pathname === item.to ||
                   item.children.some(c => c.to === location.pathname)
                 )
@@ -510,23 +540,30 @@ export default function Sidebar({ isOpen, onClose, onNavigate }) {
                     </NavLink>
                     {item.children && inGroup && (
                       <div className="mt-1 mb-1 ml-4 pl-3 border-l border-sidebar-border space-y-1">
-                        {item.children.map(({ to: childTo, icon: ChildIcon, label: childLabel }) => (
+                        {item.children.map(({ to: childTo, icon: ChildIcon, label: childLabel }) => {
+                          // Children with ?tab= deep-link to a specific
+                          // tab on the same route (e.g. /portal/forum).
+                          // NavLink's default active match only compares
+                          // pathname, so every child would highlight at
+                          // once on /portal/forum. Compute active state
+                          // here so the right one lights up.
+                          const childActive = isChildActive(childTo, location)
+                          return (
                           <NavLink
                             key={childTo}
                             to={childTo}
                             onClick={onNavigate}
-                            className={({ isActive }) =>
-                              `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                                isActive
-                                  ? activeNavClass
-                                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                              }`
-                            }
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                              childActive
+                                ? activeNavClass
+                                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                            }`}
                           >
                             <ChildIcon className="h-3.5 w-3.5" />
                             {childLabel}
                           </NavLink>
-                        ))}
+                          )
+                        })}
                       </div>
                     )}
                   </div>

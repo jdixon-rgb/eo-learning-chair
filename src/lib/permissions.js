@@ -49,7 +49,7 @@ export const FEATURE_PERMISSIONS = {
   canManageComms:        BOARD_ROLES,
   canManageForums:       BOARD_ROLES,
   canViewScorecards:     BOARD_ROLES,
-  canViewCoordinator:    ADMIN_ROLES.filter(r => r !== 'sap_chair'),
+  canViewCoordinator:    ADMIN_ROLES.filter(r => !['sap_chair', 'president'].includes(r)),
   // Engagement Chair module
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance
