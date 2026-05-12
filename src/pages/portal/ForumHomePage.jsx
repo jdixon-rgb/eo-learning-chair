@@ -100,6 +100,24 @@ export default function ForumHomePage({ focusTab }) {
   useEffect(() => {
     if (focusTab) setTabState(focusTab)
   }, [focusTab])
+  // Sidebar children deep-link to /portal/forum?tab=X. The route doesn't
+  // change (still /portal/forum), so React Router doesn't re-mount the
+  // page — only `searchParams` updates. Without this effect, clicking a
+  // different forum sidebar item would update the URL but leave the
+  // rendered tab stuck on whatever first mounted (so every tab looked
+  // identical). Sync the tab state whenever ?tab= changes.
+  useEffect(() => {
+    if (focusTab) return
+    const urlTab = searchParams.get('tab')
+    if (urlTab && validTabs.includes(urlTab)) {
+      setTabState(urlTab)
+    } else {
+      setTabState('members')
+    }
+    // validTabs is a stable literal — including it would needlessly
+    // refire this effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, focusTab])
   const setTab = (next) => {
     setTabState(next)
     if (focusTab) return

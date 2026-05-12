@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.15 — 2026-05-12
+
+### Fix: Forum sidebar children now actually switch tabs
+
+Clicking Members, SAP Interest, Constitution, Calendar, Agenda, or
+History in the left nav updated the URL (`/portal/forum?tab=…`) but
+the page kept showing whichever tab was active when it first
+mounted. ForumHomePage had a `useEffect` that synced tab state to
+the `focusTab` prop (used by moderator focus routes), but no
+matching effect to sync from `searchParams` — so deep-linked sidebar
+clicks were silently ignored. Added the `searchParams` sync. The
+four "blank" tabs (Calendar, Agenda, Constitution, History) that
+looked identical because they were all rendering the same Members
+content will now render their own content.
+
+---
+
 ## v2.7.14 — 2026-05-12
 
 ### Cleanup: in-page Forum tab strip removed; default landing is Members
