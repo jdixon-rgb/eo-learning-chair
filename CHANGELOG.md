@@ -17,6 +17,29 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.10 — 2026-05-12
+
+### Fix: input labels and placeholders also respect chapter currency
+
+Follow-up to v2.7.8. Display formatters were chapter-aware, but the
+labels next to currency inputs still hardcoded `($)` and at least one
+input placeholder was a literal `"$"`. So an EO Demoland-Foreign user
+saw "Fee Low ($)", "Estimated Fee ($)", etc. on the speaker edit
+dialog despite the chapter being set to CNY. Same issue on the
+venue cost fields, the SAP renewal/sponsorship dialog, the staff
+budget assignment input, and the public Speaker Library form.
+
+Added `useCurrencySymbol()` to `useFormatCurrency.js` (uses Intl with
+`currencyDisplay: 'narrowSymbol'` so CNY → ¥, EUR → €, etc.). Each
+affected file now derives the symbol from the active chapter and
+interpolates it into the label.
+
+The fee-range filter buckets in the public Speaker Library
+("Under $5,000" etc.) were left as-is — those are cross-chapter
+buckets, not chapter-relative amounts.
+
+---
+
 ## v2.7.9 — 2026-05-12
 
 ### Ops: CNY-currency staging demo chapter

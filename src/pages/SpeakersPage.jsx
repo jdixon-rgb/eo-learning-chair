@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { hasPermission } from '@/lib/permissions'
 import TourTip from '@/components/TourTip'
 import { PIPELINE_STAGES, CONTACT_METHODS, ALLOWED_FILE_TYPES, MAX_FILE_SIZE_MB, SPEAKER_PIPELINE_FIELDS } from '@/lib/constants'
-import { useFormatCurrency } from '@/lib/useFormatCurrency'
+import { useFormatCurrency, useCurrencySymbol } from '@/lib/useFormatCurrency'
 import { uploadFile, deleteFile, getSignedDownloadUrl } from '@/lib/db'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
@@ -47,6 +47,7 @@ export default function SpeakersPage() {
   const canViewFees = hasPermission(effectiveRole, 'canViewSpeakerFees')
   const { activeFiscalYear } = useFiscalYear()
   const formatCurrency = useFormatCurrency()
+  const currencySymbol = useCurrencySymbol()
   const [activeTab, setActiveTab] = useState('pipeline')
   const [showForm, setShowForm] = useState(false)
   const [editSpeaker, setEditSpeaker] = useState(null)
@@ -688,11 +689,11 @@ export default function SpeakersPage() {
                 <Input value={form.topic} onChange={e => setForm(p => ({ ...p, topic: e.target.value }))} placeholder="AI, Leadership, etc." />
               </div>
               <div>
-                <label className="text-xs font-medium">Fee Low ($)</label>
+                <label className="text-xs font-medium">Fee Low ({currencySymbol})</label>
                 <Input type="number" value={form.fee_range_low} onChange={e => setForm(p => ({ ...p, fee_range_low: e.target.value }))} placeholder="15000" />
               </div>
               <div>
-                <label className="text-xs font-medium">Fee High ($)</label>
+                <label className="text-xs font-medium">Fee High ({currencySymbol})</label>
                 <Input type="number" value={form.fee_range_high} onChange={e => setForm(p => ({ ...p, fee_range_high: e.target.value }))} placeholder="25000" />
               </div>
 
@@ -701,7 +702,7 @@ export default function SpeakersPage() {
                 <>
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium">Estimated Fee ($)</label>
+                      <label className="text-xs font-medium">Estimated Fee ({currencySymbol})</label>
                       <button
                         type="button"
                         onClick={() => setForm(p => ({ ...p, fee_estimated_private: !p.fee_estimated_private }))}
@@ -716,7 +717,7 @@ export default function SpeakersPage() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium">Actual Fee ($)</label>
+                      <label className="text-xs font-medium">Actual Fee ({currencySymbol})</label>
                       <button
                         type="button"
                         onClick={() => setForm(p => ({ ...p, fee_actual_private: !p.fee_actual_private }))}
@@ -794,7 +795,7 @@ export default function SpeakersPage() {
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Terms</label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">Deposit ($)</label>
+                      <label className="text-[10px] font-medium text-muted-foreground">Deposit ({currencySymbol})</label>
                       <Input type="number" value={form.deposit_amount} onChange={e => setForm(p => ({ ...p, deposit_amount: e.target.value }))} placeholder="e.g. 7500" />
                     </div>
                     <div>
@@ -802,7 +803,7 @@ export default function SpeakersPage() {
                       <Input type="date" value={form.deposit_due_date} onChange={e => setForm(p => ({ ...p, deposit_due_date: e.target.value }))} />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-muted-foreground">Final payment ($)</label>
+                      <label className="text-[10px] font-medium text-muted-foreground">Final payment ({currencySymbol})</label>
                       <Input type="number" value={form.final_payment_amount} onChange={e => setForm(p => ({ ...p, final_payment_amount: e.target.value }))} placeholder="e.g. 7500" />
                     </div>
                     <div>
@@ -1113,6 +1114,7 @@ function SharedLibraryTab({ activeChapterId, ownSpeakers, onFork }) {
 // ── Stable helper: local state prevents unmount on every keystroke ──
 function InlineFeeInput({ label, value, onSave }) {
   const [local, setLocal] = useState(value ?? '')
+  const currencySymbol = useCurrencySymbol()
 
   useEffect(() => { setLocal(value ?? '') }, [value])
 
@@ -1123,7 +1125,7 @@ function InlineFeeInput({ label, value, onSave }) {
         className="h-7 text-xs text-right"
         type="number"
         value={local}
-        placeholder="$"
+        placeholder={currencySymbol}
         onClick={e => e.stopPropagation()}
         onDragStart={e => e.stopPropagation()}
         onChange={e => {
