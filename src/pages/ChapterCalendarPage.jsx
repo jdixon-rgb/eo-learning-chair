@@ -80,7 +80,7 @@ export default function ChapterCalendarPage() {
       const stored = localStorage.getItem(VIEW_MODE_KEY)
       if (stored === 'list' || stored === 'months') return stored
     } catch { /* unavailable */ }
-    return 'list'
+    return 'months'
   })
 
   useEffect(() => {
