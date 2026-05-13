@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { CalendarDays, AlertTriangle, Plus } from 'lucide-react'
+import { CalendarDays, AlertTriangle, Plus, List, LayoutGrid } from 'lucide-react'
 
 // Chapter Calendar — board-level shared calendar that aggregates events
 // from every chair into one conflict-spotting surface. Distinct from
@@ -34,6 +34,16 @@ import { CalendarDays, AlertTriangle, Plus } from 'lucide-react'
 
 function chairFilterKey(chapterId, fiscalYear) {
   return `eo-chapter-cal-chair-filters-${chapterId || 'na'}-${fiscalYear || 'na'}`
+}
+
+const VIEW_MODE_KEY = 'eo-chapter-cal-view-mode'
+
+function monthKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function formatMonth(d) {
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
 
 // Returns the Monday of the ISO week for a given Date.
@@ -65,6 +75,17 @@ export default function ChapterCalendarPage() {
   const { activeFiscalYear } = useFiscalYear()
 
   const [chairFilter, setChairFilter] = useState(() => new Set(EVENT_OWNER_CHAIRS.map(c => c.id)))
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem(VIEW_MODE_KEY)
+      if (stored === 'list' || stored === 'months') return stored
+    } catch { /* unavailable */ }
+    return 'list'
+  })
+
+  useEffect(() => {
+    try { localStorage.setItem(VIEW_MODE_KEY, viewMode) } catch { /* storage full */ }
+  }, [viewMode])
 
   useEffect(() => {
     try {
@@ -96,20 +117,25 @@ export default function ChapterCalendarPage() {
   }
 
   // Build the agenda model: events filtered by chair, sorted by date,
-  // grouped by ISO week.
-  const { weeks, conflictWeeks } = useMemo(() => {
+  // grouped by ISO week AND by calendar month. Both views share the same
+  // conflict signal (multi-chair within the same ISO week).
+  const { weeks, months, conflictWeeks } = useMemo(() => {
     const filtered = events
       .filter(e => e.event_date) // only dated events show up — undated drafts skipped
       .filter(e => chairFilter.has(e.owner_chair || 'learning'))
       .sort((a, b) => a.event_date.localeCompare(b.event_date))
 
     const byWeek = new Map()
+    const byMonth = new Map()
     for (const e of filtered) {
       const d = new Date(e.event_date)
       if (isNaN(d.getTime())) continue
-      const k = weekKey(d)
-      if (!byWeek.has(k)) byWeek.set(k, [])
-      byWeek.get(k).push(e)
+      const wk = weekKey(d)
+      if (!byWeek.has(wk)) byWeek.set(wk, [])
+      byWeek.get(wk).push(e)
+      const mk = monthKey(d)
+      if (!byMonth.has(mk)) byMonth.set(mk, [])
+      byMonth.get(mk).push(e)
     }
 
     // Conflict = a single ISO week containing 2+ events from different
@@ -125,7 +151,19 @@ export default function ChapterCalendarPage() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, list]) => ({ key: k, monday: new Date(k), events: list }))
 
-    return { weeks: sortedWeeks, conflictWeeks: conflicts }
+    const sortedMonths = [...byMonth.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, list]) => {
+        const [y, m] = k.split('-').map(Number)
+        return {
+          key: k,
+          start: new Date(y, m - 1, 1),
+          events: list,
+          hasConflict: list.some(e => conflicts.has(weekKey(new Date(e.event_date)))),
+        }
+      })
+
+    return { weeks: sortedWeeks, months: sortedMonths, conflictWeeks: conflicts }
   }, [events, chairFilter])
 
   const chairsInUse = useMemo(() => {
@@ -169,7 +207,25 @@ export default function ChapterCalendarPage() {
         }
       />
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-2">
+        <div className="flex rounded-lg border overflow-hidden text-xs">
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-1.5 font-medium flex items-center gap-1 transition-colors ${viewMode === 'list' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
+            aria-pressed={viewMode === 'list'}
+          >
+            <List className="h-3 w-3" /> List
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('months')}
+            className={`px-3 py-1.5 font-medium flex items-center gap-1 transition-colors border-l ${viewMode === 'months' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
+            aria-pressed={viewMode === 'months'}
+          >
+            <LayoutGrid className="h-3 w-3" /> Month cards
+          </button>
+        </div>
         <Button size="sm" onClick={() => setShowAdd(true)}>
           <Plus className="h-3.5 w-3.5" /> Add event
         </Button>
@@ -203,12 +259,12 @@ export default function ChapterCalendarPage() {
         })}
       </div>
 
-      {/* Agenda by week */}
+      {/* Agenda — list (by week) or month cards */}
       {weeks.length === 0 ? (
         <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
           No events match the current filter. Toggle a chair on, or click "Add event" to schedule one.
         </div>
-      ) : (
+      ) : viewMode === 'list' ? (
         <div className="space-y-3">
           {weeks.map(week => {
             const isConflict = conflictWeeks.has(week.key)
@@ -230,50 +286,52 @@ export default function ChapterCalendarPage() {
                   <span className="text-[10px] text-muted-foreground">{week.events.length} event{week.events.length === 1 ? '' : 's'}</span>
                 </div>
                 <ul className="divide-y divide-border">
-                  {week.events.map(e => {
-                    const chair = EVENT_OWNER_CHAIRS.find(c => c.id === (e.owner_chair || 'learning'))
-                    // Subtitle preference: explicit notes win (a chair may
-                    // have written something specific). Otherwise auto-
-                    // derive "<speaker> at <venue>" from the FKs so an
-                    // event with a finalized speaker doesn't look empty.
-                    const speaker = e.speaker_id ? speakers.find(s => s.id === e.speaker_id) : null
-                    const venue = e.venue_id ? venues.find(v => v.id === e.venue_id) : null
-                    let subtitle = e.notes
-                    if (!subtitle && (speaker || venue)) {
-                      if (speaker && venue) subtitle = `${speaker.name} at ${venue.name}`
-                      else if (speaker) subtitle = speaker.name
-                      else subtitle = venue.name
-                    }
-                    return (
-                      <li
-                        key={e.id}
-                        className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/40 cursor-pointer"
-                        onClick={() => navigate(`/events/${e.id}`)}
-                      >
-                        <span className="w-1.5 h-8 rounded-full shrink-0" style={{ backgroundColor: chair?.color || '#3d46f2' }} />
-                        <div className="text-[11px] text-muted-foreground w-28 shrink-0 tabular-nums">
-                          {formatDateWithDay(e.event_date)}
-                          {e.event_time && <span className="block text-[10px]">{formatTime(e.event_time)}</span>}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{e.title || 'Untitled event'}</div>
-                          {subtitle && (
-                            <div className="text-[11px] text-muted-foreground truncate">{subtitle}</div>
-                          )}
-                        </div>
-                        <span
-                          className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
-                          style={{ borderColor: chair?.color, color: chair?.color, backgroundColor: `${chair?.color}10` }}
-                        >
-                          {chair?.label || 'Learning'}
-                        </span>
-                      </li>
-                    )
-                  })}
+                  {week.events.map(e => (
+                    <EventRow
+                      key={e.id}
+                      event={e}
+                      speakers={speakers}
+                      venues={venues}
+                      onOpen={() => navigate(`/events/${e.id}`)}
+                    />
+                  ))}
                 </ul>
               </div>
             )
           })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {months.map(month => (
+            <div
+              key={month.key}
+              className={`rounded-lg border bg-card overflow-hidden ${month.hasConflict ? 'border-amber-400 ring-1 ring-amber-200' : 'border-border'}`}
+            >
+              <div className={`px-3 py-2 flex items-center justify-between ${month.hasConflict ? 'bg-amber-50' : 'bg-muted/30'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground">{formatMonth(month.start)}</span>
+                  {month.hasConflict && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-2 py-0.5">
+                      <AlertTriangle className="h-2.5 w-2.5" />
+                      Multi-chair week
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-muted-foreground">{month.events.length} event{month.events.length === 1 ? '' : 's'}</span>
+              </div>
+              <ul className="divide-y divide-border">
+                {month.events.map(e => (
+                  <EventRow
+                    key={e.id}
+                    event={e}
+                    speakers={speakers}
+                    venues={venues}
+                    onOpen={() => navigate(`/events/${e.id}`)}
+                  />
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
 
@@ -344,5 +402,44 @@ export default function ChapterCalendarPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function EventRow({ event, speakers, venues, onOpen }) {
+  const chair = EVENT_OWNER_CHAIRS.find(c => c.id === (event.owner_chair || 'learning'))
+  // Subtitle preference: explicit notes win (a chair may have written
+  // something specific). Otherwise auto-derive "<speaker> at <venue>"
+  // from the FKs so an event with a finalized speaker doesn't look empty.
+  const speaker = event.speaker_id ? speakers.find(s => s.id === event.speaker_id) : null
+  const venue = event.venue_id ? venues.find(v => v.id === event.venue_id) : null
+  let subtitle = event.notes
+  if (!subtitle && (speaker || venue)) {
+    if (speaker && venue) subtitle = `${speaker.name} at ${venue.name}`
+    else if (speaker) subtitle = speaker.name
+    else subtitle = venue.name
+  }
+  return (
+    <li
+      className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/40 cursor-pointer"
+      onClick={onOpen}
+    >
+      <span className="w-1.5 h-8 rounded-full shrink-0" style={{ backgroundColor: chair?.color || '#3d46f2' }} />
+      <div className="text-[11px] text-muted-foreground w-28 shrink-0 tabular-nums">
+        {formatDateWithDay(event.event_date)}
+        {event.event_time && <span className="block text-[10px]">{formatTime(event.event_time)}</span>}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium truncate">{event.title || 'Untitled event'}</div>
+        {subtitle && (
+          <div className="text-[11px] text-muted-foreground truncate">{subtitle}</div>
+        )}
+      </div>
+      <span
+        className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
+        style={{ borderColor: chair?.color, color: chair?.color, backgroundColor: `${chair?.color}10` }}
+      >
+        {chair?.label || 'Learning'}
+      </span>
+    </li>
   )
 }
