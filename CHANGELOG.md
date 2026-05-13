@@ -17,6 +17,30 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.21 — 2026-05-12
+
+### Feature: President Dashboard projects chair rotations across fiscal years
+
+Viewing a future fiscal year on the President Dashboard would show
+"Not assigned" for chair roles that didn't have a row in that FY
+yet, even though the current FY clearly had a President-Elect who
+will rotate into President next year. The Board & Chair Assignments
+list now forecasts: when a role has no explicit assignment in the
+viewed FY, the dashboard looks at the prior FY's feeder role
+(`X_elect` for any role `X`) and, if someone holds that with status
+Elect or Active, displays them in the new role with a small
+"Projected" badge. So FY 2026-2027 now shows Karl Bickmore as
+President (projected from being President-Elect this year) and
+Stephanie Waldrop as President-Elect (projected from President-
+Elect-Elect). Works for any role whose `role_key` has an `_elect`
+companion (President → President-Elect, Learning Chair → Learning
+Chair Elect, etc.), so chair rotations are visible as soon as the
+user navigates forward in time. Explicit assignments still win;
+projection only fills gaps. Budget intentionally not carried
+forward — that belongs to the actual-year assignment.
+
+---
+
 ## v2.7.20 — 2026-05-12
 
 ### Fix: Chapter Calendar rows now show speaker + venue automatically

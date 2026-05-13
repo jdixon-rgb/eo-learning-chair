@@ -49,3 +49,15 @@ export function parseFiscalYear(fy) {
   const [s, e] = (fy || '').split('-').map(Number)
   return { startYear: s, endYear: e }
 }
+
+/**
+ * Shift a fiscal year string by a number of years.
+ * @param {string} fy - e.g. "2026-2027"
+ * @param {number} delta - +1 = next FY, -1 = prior FY
+ * @returns {string} e.g. shiftFiscalYear("2026-2027", -1) === "2025-2026"
+ */
+export function shiftFiscalYear(fy, delta) {
+  const { startYear, endYear } = parseFiscalYear(fy)
+  if (!startYear || !endYear) return fy
+  return `${startYear + delta}-${endYear + delta}`
+}
