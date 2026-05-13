@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
-import { formatFiscalYear } from '@/lib/fiscalYear'
+import { formatFiscalYear, parseFiscalYear } from '@/lib/fiscalYear'
 import { EVENT_OWNER_CHAIRS } from '@/lib/constants'
 import { formatDateWithDay, formatTime } from '@/lib/utils'
 import PageHeader from '@/lib/pageHeader'
@@ -151,20 +151,29 @@ export default function ChapterCalendarPage() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, list]) => ({ key: k, monday: new Date(k), events: list }))
 
-    const sortedMonths = [...byMonth.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([k, list]) => {
-        const [y, m] = k.split('-').map(Number)
-        return {
-          key: k,
-          start: new Date(y, m - 1, 1),
+    // Month cards: always render every month of the active fiscal year
+    // (Aug → Jul), even when empty. December / June / July look like
+    // gaps in the year if we hide them, and a board scanning for an
+    // empty slot needs the empty cards visible to plan into them.
+    const { startYear } = parseFiscalYear(activeFiscalYear) || { startYear: null }
+    const months = []
+    if (startYear) {
+      for (let i = 0; i < 12; i++) {
+        const calMonth = ((7 + i) % 12) // 0-indexed: Aug=7, Sep=8, …, Jul=6
+        const y = i <= 4 ? startYear : startYear + 1 // Aug-Dec in start year, Jan-Jul in start+1
+        const mk = `${y}-${String(calMonth + 1).padStart(2, '0')}`
+        const list = byMonth.get(mk) || []
+        months.push({
+          key: mk,
+          start: new Date(y, calMonth, 1),
           events: list,
           hasConflict: list.some(e => conflicts.has(weekKey(new Date(e.event_date)))),
-        }
-      })
+        })
+      }
+    }
 
-    return { weeks: sortedWeeks, months: sortedMonths, conflictWeeks: conflicts }
-  }, [events, chairFilter])
+    return { weeks: sortedWeeks, months, conflictWeeks: conflicts }
+  }, [events, chairFilter, activeFiscalYear])
 
   const chairsInUse = useMemo(() => {
     const used = new Set()
@@ -259,8 +268,10 @@ export default function ChapterCalendarPage() {
         })}
       </div>
 
-      {/* Agenda — list (by week) or month cards */}
-      {weeks.length === 0 ? (
+      {/* Agenda — list (by week) or month cards. Month-cards always
+          renders the full fiscal year (12 cards), even if empty, so
+          gaps in the year are visible. */}
+      {viewMode === 'list' && weeks.length === 0 ? (
         <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
           No events match the current filter. Toggle a chair on, or click "Add event" to schedule one.
         </div>
@@ -319,17 +330,23 @@ export default function ChapterCalendarPage() {
                 </div>
                 <span className="text-[10px] text-muted-foreground">{month.events.length} event{month.events.length === 1 ? '' : 's'}</span>
               </div>
-              <ul className="divide-y divide-border">
-                {month.events.map(e => (
-                  <EventRow
-                    key={e.id}
-                    event={e}
-                    speakers={speakers}
-                    venues={venues}
-                    onOpen={() => navigate(`/events/${e.id}`)}
-                  />
-                ))}
-              </ul>
+              {month.events.length === 0 ? (
+                <div className="px-3 py-4 text-[11px] text-muted-foreground italic">
+                  Nothing scheduled this month.
+                </div>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {month.events.map(e => (
+                    <EventRow
+                      key={e.id}
+                      event={e}
+                      speakers={speakers}
+                      venues={venues}
+                      onOpen={() => navigate(`/events/${e.id}`)}
+                    />
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>

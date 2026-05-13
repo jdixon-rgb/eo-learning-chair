@@ -1,6 +1,8 @@
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
 import { useChapter } from '@/lib/chapter'
+import { useAuth } from '@/lib/auth'
+import { CALENDAR_FULL_YEAR_ROLES } from '@/lib/permissions'
 import ThemeInfo from '@/components/ThemeInfo'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { formatFiscalYear } from '@/lib/fiscalYear'
@@ -44,18 +46,37 @@ function isEventPast(event) {
   return d < new Date()
 }
 
+// First half of the fiscal year = Aug–Dec (calendar months 8–12,
+// fiscal month_index 0–4). Second-half programming (Jan–May) is in
+// flux and isn't surfaced to non-board members until the board has
+// it locked.
+function isFirstHalf(event) {
+  if (event.month_index != null) return event.month_index <= 4
+  if (!event.event_date) return false
+  const d = new Date(event.event_date + 'T12:00:00')
+  const m = d.getMonth() + 1
+  return m >= 8 && m <= 12
+}
+
 export default function MemberCalendarPage({ embedded = false }) {
   const { chapter, events, speakers, venues, saps } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription } = useBoardStore()
   const { activeChapter } = useChapter()
+  const { effectiveRole } = useAuth()
   const chapterName = activeChapter?.name || 'OurChapter OS'
   const { activeFiscalYear } = useFiscalYear()
   const incomingTheme = activePresidentTheme || chapter.president_theme || ''
   const windowMonths = getMonthWindow()
 
+  // Board members and chairs see the entire fiscal year. Everyone else
+  // (member, moderator, sap_contact, slp) sees only the first half
+  // until the board locks the spring programming.
+  const showFullYear = CALENDAR_FULL_YEAR_ROLES.includes(effectiveRole)
+
   // Sort events by date
   const sortedEvents = [...events]
     .filter(e => e.event_date && !isEventPast(e))
+    .filter(e => showFullYear || isFirstHalf(e))
     .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
 
   const upcomingDetailed = sortedEvents.filter(e => isEventInWindow(e, windowMonths))
@@ -243,6 +264,20 @@ export default function MemberCalendarPage({ embedded = false }) {
           <p className="text-center mt-8 text-xs text-muted-foreground/60">
             Event details are revealed as they get closer. This keeps the surprise alive and ensures every event gets the attendance it deserves.
           </p>
+        </section>
+      )}
+
+      {/* Spring teaser for non-board viewers — sets the expectation that
+          Feb–May programming is coming, just not published yet. */}
+      {!showFullYear && (
+        <section className="max-w-4xl mx-auto px-6 pb-16">
+          <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+            <Lock className="h-5 w-5 text-muted-foreground/50 mx-auto mb-2" />
+            <p className="text-sm font-medium text-foreground/80">More to come in the new year</p>
+            <p className="text-xs text-muted-foreground/70 mt-1 max-w-lg mx-auto">
+              Spring programming (Feb–May) finalizes after the holiday break. Watch this calendar — events appear here as the board confirms them.
+            </p>
+          </div>
         </section>
       )}
 
