@@ -1516,7 +1516,10 @@ function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onTogg
                     </button>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-foreground font-medium">{name}</span>
+                    <div className="text-foreground font-medium">{name}</div>
+                    {sap.industry && (
+                      <div className="text-[11px] text-muted-foreground/80 mt-0.5">{sap.industry}</div>
+                    )}
                   </td>
                   <td className="px-3 py-3">
                     {sap.tier && (

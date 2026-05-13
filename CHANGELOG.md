@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.17 — 2026-05-12
+
+### Polish: SAP Interest table now shows each partner's industry
+
+The Partner column rendered only the company name, leaving members
+to guess "what does Crestline Wealth actually do?" before checking
+the box. Added the partner's `industry` as a small muted line under
+the name. No new data — the field was already populated; we just
+weren't showing it.
+
+---
+
 ## v2.7.16 — 2026-05-12
 
 ### Fix: "Add to my pipeline" from Speaker Library now actually works
