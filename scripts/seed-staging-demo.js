@@ -198,6 +198,23 @@ const AGENDA_ITEMS_TEMPLATE = [
   { title: 'Forum Closing & Action',  minutes: 20, sort_order: 6, description: 'Commitments + parking lot triage.' },
 ]
 
+// SAP partners — company-level records. `popularity` is the target
+// number of EO Demoland members (out of 35) who declare interest, so
+// the moderator's collective view shows obvious leaders (Lighthouse
+// Coaching, Crestline Wealth) and obvious long-tail (Spire Marketing,
+// Verdant Health). The distribution is deterministic: members are
+// included in interest sets by index so re-runs produce stable data.
+const SAP_PARTNERS = [
+  { key: 'lighthouse',  name: 'Lighthouse Executive Coaching', industry: 'Executive Coaching', tier: 'gold',     popularity: 26, contact: { name: 'Adrienne Hollis',  role: 'Senior Coach' } },
+  { key: 'crestline',   name: 'Crestline Wealth Partners',     industry: 'Financial Services', tier: 'platinum', popularity: 24, contact: { name: 'Marcus Holloway',  role: 'Managing Director' } },
+  { key: 'atlas',       name: 'Atlas Commercial Real Estate',  industry: 'Real Estate',        tier: 'platinum', popularity: 22, contact: { name: 'Genevieve Park',   role: 'Principal Broker' } },
+  { key: 'granite',     name: 'Granite Tech Advisors',         industry: 'IT Services',        tier: 'gold',     popularity: 16, contact: { name: 'Devon Ashbury',    role: 'CTO Advisor' } },
+  { key: 'northwind',   name: 'Northwind Insurance Group',     industry: 'Insurance',          tier: 'gold',     popularity: 14, contact: { name: 'Renata Cosgrove',  role: 'VP, Commercial' } },
+  { key: 'beaconlight', name: 'Beaconlight Legal',             industry: 'Legal',              tier: 'gold',     popularity: 12, contact: { name: 'Theo Pemberton',   role: 'Founding Partner' } },
+  { key: 'verdant',     name: 'Verdant Health & Wellness',     industry: 'Healthcare',         tier: 'silver',   popularity: 10, contact: { name: 'Dr. Imani Cole',   role: 'Medical Director' } },
+  { key: 'spire',       name: 'Spire Marketing Studio',        industry: 'Marketing',          tier: 'silver',   popularity: 8,  contact: { name: 'Quinlan Tate',     role: 'Creative Director' } },
+]
+
 const CONSTITUTION_SECTIONS = [
   { id: 'sec-1', title: 'Confidentiality',   body: 'What is shared in forum stays in forum, with no exceptions outside the formal escalation paths.' },
   { id: 'sec-2', title: 'Attendance',        body: 'Members commit to 90% attendance. Two missed meetings without notice triggers a check-in.' },
@@ -367,6 +384,70 @@ async function main() {
     }
     const r = await sb.from('slps').insert(slpRows)
     check(r, 'insert slps')
+  })
+
+  // SAP partners + their primary contacts. Member interest below
+  // depends on these IDs, so insert order matters.
+  await step(`Insert ${SAP_PARTNERS.length} SAP partners`, async () => {
+    const rows = SAP_PARTNERS.map(p => ({
+      id: uuidFor('77777777', `sap:${p.key}`),
+      chapter_id: CHAPTER_ID,
+      name: p.name,
+      industry: p.industry,
+      tier: p.tier,
+      status: 'active',
+      website: `https://${p.key}.demoland.example`,
+      description: `${p.industry} partner serving EO Demoland members.`,
+    }))
+    const r = await sb.from('saps').insert(rows)
+    check(r, 'insert saps')
+  })
+
+  await step('Insert SAP contacts (primary per partner)', async () => {
+    const rows = SAP_PARTNERS.map(p => ({
+      sap_id: uuidFor('77777777', `sap:${p.key}`),
+      name: p.contact.name,
+      role: p.contact.role,
+      email: `${p.contact.name.toLowerCase().replace(/[^a-z]/g, '.')}@${p.key}.demoland.example`,
+      is_primary: true,
+    }))
+    const r = await sb.from('sap_contacts').insert(rows)
+    check(r, 'insert sap_contacts')
+  })
+
+  // SAP member interest — deterministic spread so the moderator's
+  // "who in my forum wants to spend time with which SAP" view shows
+  // a clear popularity gradient. Each SAP's `popularity` (target
+  // member count out of 35) picks members by index, rotating the
+  // start offset by SAP so different forums see different leaders.
+  await step('Insert SAP member interest (deterministic spread)', async () => {
+    const memberIds = memberRows.map(m => m.id) // 35 ids in stable order
+    const rows = []
+    SAP_PARTNERS.forEach((p, sapIdx) => {
+      const sapId = uuidFor('77777777', `sap:${p.key}`)
+      const offset = (sapIdx * 5) % memberIds.length
+      for (let i = 0; i < p.popularity; i++) {
+        const memberId = memberIds[(offset + i) % memberIds.length]
+        const member = memberRows.find(m => m.id === memberId)
+        rows.push({
+          chapter_id: CHAPTER_ID,
+          sap_id: sapId,
+          chapter_member_id: memberId,
+        })
+        void member // explicitly unused — kept for debugging if needed
+      }
+    })
+    // De-dupe by (sap_id, chapter_member_id) — modulo wrap-around at
+    // high popularity would otherwise violate the unique constraint.
+    const seen = new Set()
+    const dedup = rows.filter(r => {
+      const k = `${r.sap_id}:${r.chapter_member_id}`
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    const r = await sb.from('sap_member_interest').insert(dedup)
+    check(r, 'insert sap_member_interest')
   })
 
   await step('Insert role assignments (current + previous FY)', async () => {
