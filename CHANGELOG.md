@@ -17,6 +17,60 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.0 — 2026-05-12
+
+### Feature: Member Engagement Chair — Phase 1
+
+Built the Engagement Chair surface to spec from Sergei's brief.
+Sits alongside Learning Chair and reuses the same patterns, not a
+separate app.
+
+**Navigator Program**
+- Pairings page rebuilt as a hierarchy: navigators on top, their
+  assigned new members below. Same shape as Learning Chair's
+  lead/learner layout.
+- Inline touch-logging (under 30 seconds per touch), so navigator
+  activity is captured without leaving the page.
+- Two-way feedback: navigator notes via the touch log; new member's
+  reaction via one-tap pill (great / helpful / silent / no touches /
+  not the right fit). No survey.
+- Per-pairing new-member profile: EO join date, placement notes,
+  expectations conversation, first-year renewal status. Backed by a
+  separate `new_member_profiles` table so Forum Placement Chair (next
+  term) can extend without refactor.
+- Navigator ranking: inline 5-star rating on the Navigators page,
+  same pattern as venues and speakers. Sort toggle: by status or
+  ranked.
+- Unpaired-member callout banner so no new member quietly stays
+  un-navigated.
+- Reassign action preserves the original pairing's history and
+  starts a fresh one with the new navigator.
+
+**Breaking Barriers Dinners**
+- New `/engagement/breaking-barriers` surface for scheduling small
+  mixed dinners.
+- Venue picker reads from the same venue library the Learning Chair
+  curates. Rate once, see everywhere.
+- Per-dinner attendee list with RSVP status and reminder timestamping.
+- Per-dinner line-item budget reusing the existing `budget_items`
+  table via a polymorphic dinner_id / event_id parent. Rolls up to a
+  dinner total and a year-to-date total.
+- Post-dinner host and facilitator ratings, with rollup cards on the
+  page showing "Ranked Hosts" and "Ranked Facilitators" across all
+  completed dinners.
+
+Schema (migration 095): adds `navigators.staff_rating`,
+`new_member_profiles`, `navigator_feedback`,
+`breaking_barriers_dinners`, `breaking_barriers_attendees`, and
+extends `budget_items` with a nullable `dinner_id` plus an
+exclusive-parent check constraint.
+
+Out of scope, by design: Forum Placement role (next term);
+cross-chapter venue catalog (planned later). New-member fields are
+already structured so neither needs a schema refactor.
+
+---
+
 ## v2.7.22 — 2026-05-12
 
 ### Fix: chair-rotation projection now chains within the viewed FY
