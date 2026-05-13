@@ -17,6 +17,23 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.1 — 2026-05-12
+
+### Feature: Chapter Calendar view toggle — List or Month cards
+
+Chapter Calendar now offers two views, persisted per-browser:
+
+- **List** (existing) — events grouped by ISO week, optimized for
+  scanning cross-chair conflicts.
+- **Month cards** (new) — events grouped into responsive month cards
+  (1/2/3 columns), one card per calendar month. Each card surfaces
+  the same multi-chair conflict signal as the list view.
+
+Same event row renders in both, so chair color coding, conflict
+highlighting, and the click-to-open-event behavior stay consistent.
+
+---
+
 ## v2.8.0 — 2026-05-12
 
 ### Feature: Member Engagement Chair — Phase 1
