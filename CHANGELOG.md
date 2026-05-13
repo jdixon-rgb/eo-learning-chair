@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.2 — 2026-05-12
+
+### Polish: Chapter Calendar defaults to month cards
+
+First-time visitors now land on the month-card view instead of the
+ISO-week list. Anyone who already chose a view keeps their choice
+(localStorage preserves it).
+
+---
+
 ## v2.8.1 — 2026-05-12
 
 ### Feature: Chapter Calendar view toggle — List or Month cards
