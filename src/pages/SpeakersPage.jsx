@@ -29,6 +29,7 @@ const emptyForm = {
   contact_method: 'direct', fit_score: 7, notes: '', sizzle_reel_url: '',
   routing_flexibility: false, multi_chapter_interest: false,
   share_scope: 'chapter_only',
+  pipeline_stage: 'researching',
   deposit_amount: '', deposit_due_date: '',
   final_payment_amount: '', final_payment_due_date: '',
   payment_terms_notes: '',
@@ -191,7 +192,7 @@ export default function SpeakersPage() {
     } else {
       // Await both DB inserts so a quick follow-up delete can't race
       // ahead of the speaker_pipeline insert (FK violation otherwise).
-      const newSpeaker = await addSpeaker({ ...libraryData, ...pipelineData, pipeline_stage: 'researching' })
+      const newSpeaker = await addSpeaker({ ...libraryData, ...pipelineData })
       if (!newSpeaker) return
       speakerId = newSpeaker.id
     }
@@ -256,6 +257,7 @@ export default function SpeakersPage() {
       sizzle_reel_url: speaker.sizzle_reel_url || '',
       routing_flexibility: speaker.routing_flexibility || false,
       multi_chapter_interest: speaker.multi_chapter_interest || false,
+      pipeline_stage: speaker.pipeline_stage || 'researching',
       deposit_amount: speaker.deposit_amount ?? '',
       deposit_due_date: speaker.deposit_due_date || '',
       final_payment_amount: speaker.final_payment_amount ?? '',
@@ -700,6 +702,16 @@ export default function SpeakersPage() {
               {/* Pipeline-specific fields */}
               {(editSpeaker?._pipeline_id || !editSpeaker) && (
                 <>
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium">Pipeline Stage</label>
+                    <Select value={form.pipeline_stage} onChange={e => setForm(p => ({ ...p, pipeline_stage: e.target.value }))}>
+                      {PIPELINE_STAGES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                      <option value="passed">Passed</option>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Touch-screen friendly alternative to dragging cards between columns.
+                    </p>
+                  </div>
                   <div>
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-medium">Estimated Fee ({currencySymbol})</label>

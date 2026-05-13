@@ -17,6 +17,40 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.20 — 2026-05-12
+
+### Fix: Chapter Calendar rows now show speaker + venue automatically
+
+Each row's subtitle was rendered from `event.notes` only, so events
+with a finalized speaker (e.g. CHANGE: The Imagination Age with
+Harris III) appeared empty under the title while events whose chair
+had typed something into `notes` (Joyful Rebellion → "Brad Montague
+at the Heard Museum.") looked complete. Now: notes still win when
+present, but if notes is blank and the event has a `speaker_id`
+and/or `venue_id`, we auto-build "<speaker> at <venue>" from the
+joined records so the chapter calendar shows the same information
+the event detail page already has.
+
+---
+
+## v2.7.19 — 2026-05-12
+
+### Feature: pipeline-stage dropdown in Edit Speaker (touch-screen accessible)
+
+Shanghai LC reported that on a touch screen they couldn't drag speaker
+cards between Researching/Outreach/Negotiating/Contracted/Confirmed
+columns — drag-and-drop relies on a mouse. Added a Pipeline Stage
+dropdown to the top of the Edit Speaker dialog (gated to pipeline
+speakers and new-speaker creation) so the stage can be changed without
+drag. Saves through the same `updatePipelineEntry` path as the
+drag-drop flow.
+
+Drag-drop still works for desktop users; this is purely an additive
+fallback. Also includes "Passed" as a manual-set option (the kanban
+hides the Passed column by default).
+
+---
+
 ## v2.7.18 — 2026-05-12
 
 ### Polish: SAP Interest instructions are now actually readable
