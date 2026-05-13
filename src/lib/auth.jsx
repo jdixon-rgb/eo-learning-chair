@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, createElement } from 'react'
 import { supabase, isSupabaseConfigured } from './supabase'
 import { fetchCurrentBetaTerms, hasAckedCurrentBetaTerms, acknowledgeBetaTerms } from './betaTerms'
+import { REGIONAL_ROLES } from './permissions'
 
 const AuthContext = createContext(null)
 
@@ -204,7 +205,7 @@ export function AuthProvider({ children }) {
       setViewAsSapContactIdState(null)
     }
     // Clear region impersonation when switching away from regional roles
-    if (nextRole !== 'regional_learning_chair_expert') {
+    if (!REGIONAL_ROLES.includes(nextRole)) {
       try { localStorage.removeItem(VIEW_AS_REGION_KEY) } catch { /* ignore */ }
       setViewAsRegionState(null)
     }
@@ -235,7 +236,7 @@ export function AuthProvider({ children }) {
   // their picked region wins; otherwise fall back to the profile's region.
   // Any dashboard that groups data by region (e.g. RegionalLearningDashboard)
   // should read this — never profile.region directly.
-  const effectiveRegion = canSwitchRoles && viewAsRole === 'regional_learning_chair_expert' && viewAsRegion
+  const effectiveRegion = canSwitchRoles && REGIONAL_ROLES.includes(viewAsRole) && viewAsRegion
     ? viewAsRegion
     : profile?.region ?? null
 

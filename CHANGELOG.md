@@ -17,6 +17,31 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.9 — 2026-05-13
+
+### Feature: Regional Manager role
+
+A new region-scoped role for EO Global staff who support chapters in
+their region — read-only across chapters, no chapter-private (forum
+/ reflections / lifeline) access. Sits alongside Regional Learning
+Chair Expert: both are listed in `REGIONAL_ROLES` and share the
+region-scoped Chapter Switcher behavior, so once a Regional Manager
+signs in they can step through any chapter in their region and read
+its Chapter Calendar, Year Arc, Speakers, Events, SAPs, Venues,
+Budget, Speaker Library, and Survey Results — but never write.
+
+Refactor: `chapter.jsx` and `auth.jsx` now derive regional behavior
+from the `REGIONAL_ROLES` list rather than checking the
+`regional_learning_chair_expert` literal, so any future regional
+role lights up automatically.
+
+Schema: migration `097_regional_manager_role.sql` adds
+`regional_manager` to the role check constraints on `profiles.role`
+and `member_invites.role`. Staging already migrated; prod runs at
+deploy time.
+
+---
+
 ## v2.8.8 — 2026-05-13
 
 ### Feature: Learning Chair can invite members and assign role + fiscal year

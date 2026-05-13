@@ -90,6 +90,27 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
     ],
   },
+  regional_manager: {
+    title: 'Regional Manager',
+    // EO Global staff who supports chapters in their region — read-only
+    // across chapters. Same region-scoped chapter switcher as the
+    // Regional Learning Chair Expert; broader nav (chapter ops, not just
+    // learning-chair surfaces). No dedicated regional dashboard yet, so
+    // home is the chapter-level Chapter Calendar — they pick a chapter
+    // in the switcher and drill in from there.
+    homePath: '/chapter-calendar',
+    navItems: [
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/events', icon: CalendarDays, label: 'Events' },
+      { to: '/speakers', icon: Users, label: 'Speakers' },
+      { to: '/library/speakers', icon: BookOpen, label: 'Speaker Library', permission: 'canViewSpeakerLibrary' },
+      { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
+      { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
+      { to: '/budget', icon: Wallet, label: 'Budget', permission: 'canViewBudget' },
+      { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
+    ],
+  },
   sap_chair: {
     title: 'SAP Chair',
     homePath: '/partners',
