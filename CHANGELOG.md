@@ -17,6 +17,31 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.22 — 2026-05-12
+
+### Fix: chair-rotation projection now chains within the viewed FY
+
+v2.7.21 added forward projection from FY-1, but EO Arizona's actual
+data shape doesn't backfill prior-FY rows — admins enter "Karl will
+be P-Elect for FY 2026-2027" directly. The prior-FY lookup found
+nothing and Karl stayed pinned to P-Elect even though the user
+expects him projected to President.
+
+The resolver now does both: it tries forward projection from FY-1
+first, then falls back to **same-FY chain promotion**. If the
+President row has no active assignment, it moves the FY's P-Elect
+up (and consumes that row); if P-Elect is then empty, it moves the
+FY's P-E-E up. The chain cascades top-down so each step's consumed
+source disappears from its original row. So FY 2026-2027 now shows
+Karl as President (projected from same-FY P-Elect) and Stephanie as
+P-Elect (projected from same-FY P-E-E), with both Projected badges.
+
+Explicit `status='active'` assignments always win over projection;
+explicit `status='elect'` rows are only used as-is when no senior
+role wants to promote them. Budget still doesn't carry forward.
+
+---
+
 ## v2.7.21 — 2026-05-12
 
 ### Feature: President Dashboard projects chair rotations across fiscal years
