@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Compass, UserCheck, BookOpen, Send } from 'lucide-react'
+import { Compass, UserCheck, BookOpen, Send, Utensils } from 'lucide-react'
 import { useEngagementStore } from '@/lib/engagementStore'
 import { useStore } from '@/lib/store'
 import TourTip from '@/components/TourTip'
@@ -7,13 +7,14 @@ import ChapterWelcomeGuide from '@/components/ChapterWelcomeGuide'
 import PageHeader from '@/lib/pageHeader'
 
 export default function EngagementDashboard() {
-  const { navigators, pairings, resources, broadcasts } = useEngagementStore()
+  const { navigators, pairings, resources, broadcasts, bbDinners } = useEngagementStore()
   const { chapter } = useStore()
 
   const activeNavigators = navigators.filter(n => n.status === 'active').length
   const activePairings = pairings.filter(p => p.status === 'active').length
   const publishedResources = resources.filter(r => r.status === 'published').length
   const openBroadcasts = broadcasts.filter(b => b.status === 'open').length
+  const upcomingDinners = bbDinners.filter(d => d.status === 'planning' || d.status === 'confirmed').length
 
   // Brand-new chapter signal for the Engagement Chair's welcome guide.
   const isEmptyChapter =
@@ -21,6 +22,7 @@ export default function EngagementDashboard() {
     && pairings.length === 0
     && resources.length === 0
     && broadcasts.length === 0
+    && bbDinners.length === 0
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -53,6 +55,12 @@ export default function EngagementDashboard() {
             label: 'Send your first broadcast',
             description: 'A one-tap check-in to every active Navigator — great for monthly rhythm.',
             to: '/engagement/broadcasts',
+          },
+          {
+            icon: Utensils,
+            label: 'Schedule a Breaking Barriers dinner',
+            description: 'Mix new and tenured members over dinner. Reuses the shared venue library.',
+            to: '/engagement/breaking-barriers',
           },
         ]}
       />
@@ -108,6 +116,18 @@ export default function EngagementDashboard() {
           </div>
           <h3 className="text-sm font-semibold text-gray-900">Broadcasts</h3>
           <p className="text-xs text-gray-500 mt-1">One-tap check-ins sent to every active navigator</p>
+        </Link>
+
+        <Link
+          to="/engagement/breaking-barriers"
+          className="rounded-2xl border border-gray-200 bg-white p-6 hover:border-primary hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <Utensils className="h-6 w-6 text-amber-600" />
+            <span className="text-2xl font-bold text-gray-900">{upcomingDinners}</span>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-900">Breaking Barriers</h3>
+          <p className="text-xs text-gray-500 mt-1">Upcoming dinners that mix new and tenured members</p>
         </Link>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useEngagementStore } from '@/lib/engagementStore'
 import { useBoardStore } from '@/lib/boardStore'
-import { Compass, Plus, Pencil, Archive, RotateCcw, Trash2, X } from 'lucide-react'
+import { Compass, Plus, Pencil, Archive, RotateCcw, Trash2, X, Trophy } from 'lucide-react'
 import TourTip from '@/components/TourTip'
+import StarRating from '@/components/StarRating'
 
 export default function NavigatorsPage() {
   const {
@@ -15,6 +16,7 @@ export default function NavigatorsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null) // navigator row or null
   const [form, setForm] = useState({ chapter_member_id: '', bio: '', max_concurrent_pairings: '' })
+  const [sortMode, setSortMode] = useState('status') // 'status' or 'rating'
 
   // Index members for quick name lookup
   const memberById = useMemo(() => {
@@ -32,9 +34,22 @@ export default function NavigatorsPage() {
       .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
   }, [chapterMembers, navigators, editing])
 
-  // Sort: active first, then paused, then retired; alpha within each
+  // Sort: by rating (desc) or by status (active → paused → retired) → alpha
   const sortedNavigators = useMemo(() => {
     const order = { active: 0, paused: 1, retired: 2 }
+    if (sortMode === 'rating') {
+      return [...navigators].sort((a, b) => {
+        // Active first, then by rating desc, then by name
+        const so = (order[a.status] ?? 9) - (order[b.status] ?? 9)
+        if (so !== 0) return so
+        const ra = a.staff_rating || 0
+        const rb = b.staff_rating || 0
+        if (rb !== ra) return rb - ra
+        const an = memberById.get(a.chapter_member_id)?.name || ''
+        const bn = memberById.get(b.chapter_member_id)?.name || ''
+        return an.localeCompare(bn)
+      })
+    }
     return [...navigators].sort((a, b) => {
       const so = (order[a.status] ?? 9) - (order[b.status] ?? 9)
       if (so !== 0) return so
@@ -42,7 +57,7 @@ export default function NavigatorsPage() {
       const bn = memberById.get(b.chapter_member_id)?.name || ''
       return an.localeCompare(bn)
     })
-  }, [navigators, memberById])
+  }, [navigators, memberById, sortMode])
 
   const openAdd = () => {
     setEditing(null)
@@ -101,13 +116,29 @@ export default function NavigatorsPage() {
             Members appointed to guide new members through their first year. Set capacity to help with assignment decisions.
           </p>
         </div>
-        <button
-          onClick={openAdd}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold px-4 py-2 hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Add Navigator
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-lg border overflow-hidden text-xs">
+            <button
+              className={`px-3 py-1.5 font-medium transition-colors ${sortMode === 'status' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
+              onClick={() => setSortMode('status')}
+            >
+              By Status
+            </button>
+            <button
+              className={`px-3 py-1.5 font-medium transition-colors flex items-center gap-1 ${sortMode === 'rating' ? 'bg-ink text-white' : 'hover:bg-muted'}`}
+              onClick={() => setSortMode('rating')}
+            >
+              <Trophy className="h-3 w-3" /> Ranked
+            </button>
+          </div>
+          <button
+            onClick={openAdd}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold px-4 py-2 hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Navigator
+          </button>
+        </div>
       </header>
 
       {sortedNavigators.length === 0 ? (
@@ -132,6 +163,7 @@ export default function NavigatorsPage() {
               <tr>
                 <th className="px-4 py-3">Navigator</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Rating</th>
                 <th className="px-4 py-3">Active pairings</th>
                 <th className="px-4 py-3">Capacity</th>
                 <th className="px-4 py-3">Bio</th>
@@ -153,6 +185,13 @@ export default function NavigatorsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <StatusPill status={nav.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StarRating
+                        value={nav.staff_rating || 0}
+                        onChange={(val) => updateNavigator(nav.id, { staff_rating: val || null })}
+                        size="sm"
+                      />
                     </td>
                     <td className="px-4 py-3">{activePairings}</td>
                     <td className={`px-4 py-3 ${overCap ? 'text-amber-600 font-semibold' : ''}`}>{capText}</td>

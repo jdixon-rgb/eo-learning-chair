@@ -63,6 +63,7 @@ import MentorsPage from '@/pages/engagement/MentorsPage'
 import PairingsPage from '@/pages/engagement/PairingsPage'
 import ConversationLibraryPage from '@/pages/engagement/ConversationLibraryPage'
 import NavigatorBroadcastsPage from '@/pages/engagement/NavigatorBroadcastsPage'
+import BreakingBarriersPage from '@/pages/engagement/BreakingBarriersPage'
 import SAPPartnersPage from '@/pages/SAPPartnersPage'
 import SAPPipelinePage from '@/pages/SAPPipelinePage'
 import PresidentDashboard from '@/pages/president/PresidentDashboard'
@@ -207,6 +208,9 @@ function App() {
                 } />
                 <Route path="/engagement/broadcasts" element={
                   <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><NavigatorBroadcastsPage /></ProtectedRoute>
+                } />
+                <Route path="/engagement/breaking-barriers" element={
+                  <ProtectedRoute allowedRoles={ENGAGEMENT_ROLES}><BreakingBarriersPage /></ProtectedRoute>
                 } />
 
                 {/* President routes */}

@@ -36,6 +36,7 @@ import {
   GitBranch,
   Megaphone,
   AlertTriangle,
+  Utensils,
 } from 'lucide-react'
 
 // Shared nav items reused across similar role configs
@@ -145,8 +146,9 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/engagement', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/engagement/navigators', icon: Compass, label: 'Navigators' },
-      { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/pairings', icon: UserCheck, label: 'Pairings' },
+      { to: '/engagement/breaking-barriers', icon: Utensils, label: 'Breaking Barriers' },
+      { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/library', icon: BookOpen, label: 'Conversation Library' },
     ],
   },
