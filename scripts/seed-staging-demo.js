@@ -415,26 +415,32 @@ async function main() {
     check(r, 'insert sap_contacts')
   })
 
-  // SAP member interest — deterministic spread so the moderator's
+  // SAP forum interest — deterministic spread so the moderator's
   // "who in my forum wants to spend time with which SAP" view shows
   // a clear popularity gradient. Each SAP's `popularity` (target
   // member count out of 35) picks members by index, rotating the
   // start offset by SAP so different forums see different leaders.
-  await step('Insert SAP member interest (deterministic spread)', async () => {
-    const memberIds = memberRows.map(m => m.id) // 35 ids in stable order
+  // The table is forum-scoped: rows are keyed by (sap_id,
+  // chapter_member_id) and forum_id comes from the member's forum.
+  await step('Insert SAP forum interest (deterministic spread)', async () => {
+    const memberById = new Map(memberRows.map(m => [m.id, m]))
+    // forum.name → forum_id lookup
+    const forumIdByName = new Map(FORUMS.map(f => [f.name, FORUM_IDS[f.key]]))
+    const memberIds = memberRows.map(m => m.id)
     const rows = []
     SAP_PARTNERS.forEach((p, sapIdx) => {
       const sapId = uuidFor('77777777', `sap:${p.key}`)
       const offset = (sapIdx * 5) % memberIds.length
       for (let i = 0; i < p.popularity; i++) {
         const memberId = memberIds[(offset + i) % memberIds.length]
-        const member = memberRows.find(m => m.id === memberId)
+        const member = memberById.get(memberId)
         rows.push({
           chapter_id: CHAPTER_ID,
           sap_id: sapId,
           chapter_member_id: memberId,
+          forum_id: forumIdByName.get(member.forum),
+          interested: true,
         })
-        void member // explicitly unused — kept for debugging if needed
       }
     })
     // De-dupe by (sap_id, chapter_member_id) — modulo wrap-around at
@@ -446,8 +452,8 @@ async function main() {
       seen.add(k)
       return true
     })
-    const r = await sb.from('sap_member_interest').insert(dedup)
-    check(r, 'insert sap_member_interest')
+    const r = await sb.from('sap_forum_interest').insert(dedup)
+    check(r, 'insert sap_forum_interest')
   })
 
   await step('Insert role assignments (current + previous FY)', async () => {
