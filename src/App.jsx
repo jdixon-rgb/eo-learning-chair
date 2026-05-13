@@ -37,6 +37,7 @@ import MemberProfilePage from '@/pages/portal/MemberProfilePage'
 import SurveyPage from '@/pages/portal/SurveyPage'
 import ReflectionsPage from '@/pages/portal/ReflectionsPage'
 import LifelinePage from '@/pages/portal/LifelinePage'
+import MyParkingLotPage from '@/pages/portal/MyParkingLotPage'
 import ForumHomePage from '@/pages/portal/ForumHomePage'
 import ModeratorEventsPage from '@/pages/portal/ModeratorEventsPage'
 import MemberManagementPage from '@/pages/admin/MemberManagementPage'
@@ -272,10 +273,8 @@ function App() {
               </Route>
 
               {/* Member routes — render inside the unified sidebar shell.
-                  Compass had its own top-nav layout; we retired it so every
-                  signed-in human sees the same chrome. The PORTAL_ROLES gate
-                  still excludes regional_learning_chair_expert from member-
-                  private content (reflections, lifeline, forum). */}
+                  The PORTAL_ROLES gate excludes regional_learning_chair_expert
+                  from member-private content (reflections, lifeline, forum). */}
               <Route element={
                 <ProtectedRoute allowedRoles={PORTAL_ROLES}>
                   <AppLayout />
@@ -285,6 +284,7 @@ function App() {
                 <Route path="/portal/calendar" element={<MemberCalendarPage embedded />} />
                 <Route path="/portal/survey" element={<SurveyPage />} />
                 <Route path="/portal/reflections" element={<ReflectionsPage />} />
+                <Route path="/portal/parking" element={<MyParkingLotPage />} />
                 <Route path="/portal/forum" element={<ForumHomePage />} />
                 <Route path="/portal/moderator/agenda" element={<ForumHomePage focusTab="agenda" />} />
                 <Route path="/portal/moderator/calendar" element={<ForumHomePage focusTab="calendar" />} />

@@ -17,6 +17,149 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.18 — 2026-05-12
+
+### Polish: SAP Interest instructions are now actually readable
+
+The intro line above the partner checklist rendered at `text-xs` /
+70% opacity, which combined into "barely-there grey." Bumped to
+`text-sm` with full muted-foreground contrast so it reads as
+instruction rather than fine print.
+
+---
+
+## v2.7.17 — 2026-05-12
+
+### Polish: SAP Interest table now shows each partner's industry
+
+The Partner column rendered only the company name, leaving members
+to guess "what does Crestline Wealth actually do?" before checking
+the box. Added the partner's `industry` as a small muted line under
+the name. No new data — the field was already populated; we just
+weren't showing it.
+
+---
+
+## v2.7.16 — 2026-05-12
+
+### Fix: "Add to my pipeline" from Speaker Library now actually works
+
+Shanghai LC reported `null value in column "pipeline_stage" of
+relation "speakers" violates not-null constraint` when clicking
+"Add to my pipeline" on a public Speaker Library entry (e.g. ANNA
+LECAT from EO Zurich).
+
+Two bugs in `handleImport` on `SpeakerLibraryDetailPage`:
+
+1. `speakers.pipeline_stage` is NOT NULL but the insert didn't set
+   it — immediate constraint violation, what the user saw.
+2. Even if (1) had worked, the function never created the matching
+   `speaker_pipeline` row for the active fiscal year, so the success
+   message "Added to your chapter pipeline" would have been a lie.
+
+Fix sets `pipeline_stage: 'researching'` on the speakers insert and
+creates the `speaker_pipeline` row in the same flow (matching what
+`store.addSpeaker` does for fresh-create, fixed in v2.7.7). Also
+imports the library's `honorarium_amount` as `fee_estimated` so the
+value carries over.
+
+The Shared Library tab's "Add to Pipeline" button on the Speakers
+page was already correct (uses the store's `addSpeaker`).
+
+Code change shipped in commit `95def11` (mislabeled v2.7.11 in its
+message because that commit raced with parallel v2.7.12–v2.7.15
+work in another session — this version bump is what reaches users.)
+
+---
+
+## v2.7.15 — 2026-05-12
+
+### Fix: Forum sidebar children now actually switch tabs
+
+Clicking Members, SAP Interest, Constitution, Calendar, Agenda, or
+History in the left nav updated the URL (`/portal/forum?tab=…`) but
+the page kept showing whichever tab was active when it first
+mounted. ForumHomePage had a `useEffect` that synced tab state to
+the `focusTab` prop (used by moderator focus routes), but no
+matching effect to sync from `searchParams` — so deep-linked sidebar
+clicks were silently ignored. Added the `searchParams` sync. The
+four "blank" tabs (Calendar, Agenda, Constitution, History) that
+looked identical because they were all rendering the same Members
+content will now render their own content.
+
+---
+
+## v2.7.14 — 2026-05-12
+
+### Cleanup: in-page Forum tab strip removed; default landing is Members
+
+The Forum page rendered a horizontal tab strip (Parking Lot, Tools,
+Agenda, Calendar, Constitution, SAP Interest, Members, History)
+across the top of its content. The left-nav Forum group now owns
+all that navigation, so the in-page strip was duplicative. Removed.
+
+Side-effect fix: the default tab when landing on `/portal/forum`
+with no `?tab=` was `parking`, which rendered the forum-wide
+moderator-flavored Parking Lot view (everyone's items). That
+violated the member-private rule. New default is `members`, which
+is forum-public and the natural "home" view for a forum.
+
+Sidebar active-state default tab updated to match.
+
+---
+
+## v2.7.13 — 2026-05-12
+
+### Polish: "SAPs" → "SAP Interest" inside the Forum context
+
+Inside a forum the tab is about which SAPs *this forum* wants to host
+or visit — that's interest, not the partner roster itself. Renamed
+the sidebar child under Forum and the in-page tab label from "SAPs"
+to "SAP Interest". The chapter-level SAPs nav (/partners) stays
+"SAPs" since that page is the actual partner roster.
+
+---
+
+## v2.7.12 — 2026-05-12
+
+### Feature: Forum sidebar group now lists every forum surface as a child
+
+Forum in the sidebar now expands to nine children: the three personal
+tools (Reflections, Lifeline, Parking Lot) and six forum-wide
+surfaces (Members, SAPs, Constitution, Calendar, Agenda, History).
+The forum-wide children deep-link into `/portal/forum?tab=...`, so a
+click takes the user straight to that tab. Active-state highlighting
+considers the `?tab=` param, so only the matching child lights up.
+Forum stays permanently expanded for every role view that has the
+Member section (every chair, every member, every president; staff
+and SAP contacts still have no Member section by design).
+
+### Feature: Forum name + member count + founded year now live in the top bar
+
+The forum hero (e.g. `212° · 10 members · Founded 2023`) previously
+rendered as a centered block inside the page body, pushing the tab
+strip and content downward. It now flows through the existing
+`PageHeader` context into the desktop TopBar, where every other page
+already surfaces its title + subtitle. On mobile the hero still
+renders in-body (TopBar is showing the chapter name there).
+Subtitle remains click-to-jump-to-Members.
+
+---
+
+## v2.7.11 — 2026-05-12
+
+### Fix: President no longer sees the Coordinator nav item
+
+The Admin section's "Coordinator" link is the chapter Experience
+Coordinator's working surface; the President doesn't need a button to
+it in their sidebar. `canViewCoordinator` previously inherited the
+entire `ADMIN_ROLES` list (minus SAP Chair), so President and
+President-Elect both saw it. Now President is explicitly excluded.
+President-Elect, Learning Chair, the Coordinator themselves, and the
+Executive Director still see it.
+
+---
+
 ## v2.7.10 — 2026-05-12
 
 ### Fix: input labels and placeholders also respect chapter currency

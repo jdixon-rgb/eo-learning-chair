@@ -86,7 +86,11 @@ export default function ForumHomePage({ focusTab }) {
   // focus mode the chrome (forum hero + tab strip) is hidden and the
   // page renders only that tab — no URL syncing needed.
   const validTabs = ['parking', 'tools', 'agenda', 'calendar', 'constitution', 'partners', 'members', 'history']
-  const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'parking')
+  // Default tab on /portal/forum (no ?tab=) is 'members' — it's the
+  // safest forum-public view to land on. The old default was 'parking',
+  // but that rendered the moderator-style forum-wide parking lot
+  // (everyone's items), which leaked across the member privacy line.
+  const initialTab = focusTab || (validTabs.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'members')
   const [tab, setTabState] = useState(initialTab)
   // Navigating between focus routes (e.g. /portal/moderator/agenda →
   // /portal/moderator/constitution) reuses the same ForumHomePage
@@ -96,11 +100,29 @@ export default function ForumHomePage({ focusTab }) {
   useEffect(() => {
     if (focusTab) setTabState(focusTab)
   }, [focusTab])
+  // Sidebar children deep-link to /portal/forum?tab=X. The route doesn't
+  // change (still /portal/forum), so React Router doesn't re-mount the
+  // page — only `searchParams` updates. Without this effect, clicking a
+  // different forum sidebar item would update the URL but leave the
+  // rendered tab stuck on whatever first mounted (so every tab looked
+  // identical). Sync the tab state whenever ?tab= changes.
+  useEffect(() => {
+    if (focusTab) return
+    const urlTab = searchParams.get('tab')
+    if (urlTab && validTabs.includes(urlTab)) {
+      setTabState(urlTab)
+    } else {
+      setTabState('members')
+    }
+    // validTabs is a stable literal — including it would needlessly
+    // refire this effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, focusTab])
   const setTab = (next) => {
     setTabState(next)
     if (focusTab) return
     const params = new URLSearchParams(searchParams)
-    if (next === 'parking') params.delete('tab'); else params.set('tab', next)
+    if (next === 'members') params.delete('tab'); else params.set('tab', next)
     setSearchParams(params, { replace: true })
   }
   const [parkingLot, setParkingLot] = useState([])
@@ -264,17 +286,6 @@ export default function ForumHomePage({ focusTab }) {
     )
   }
 
-  const tabs = [
-    { key: 'parking', label: 'Parking Lot', icon: Pin },
-    { key: 'tools', label: 'Tools', icon: BookOpen },
-    { key: 'agenda', label: 'Agenda', icon: ClipboardList },
-    { key: 'calendar', label: 'Calendar', icon: Calendar },
-    { key: 'constitution', label: 'Constitution', icon: FileText },
-    { key: 'partners', label: 'SAPs', icon: Handshake },
-    { key: 'members', label: 'Members', icon: Users },
-    { key: 'history', label: 'History', icon: History },
-  ]
-
   return (
     <div className="space-y-6">
       {isSynthetic && (
@@ -292,16 +303,18 @@ export default function ForumHomePage({ focusTab }) {
           subtitle={FOCUS_HEADERS[focusTab]?.subtitleFn(member.forum)}
         />
       ) : (
-        <div className="text-center py-4">
-          <h1 className="text-2xl md:text-3xl font-bold">{member.forum}</h1>
-          <button
-            type="button"
-            onClick={() => setTab('members')}
-            className="text-muted-foreground text-sm mt-1 hover:text-foreground/90 transition-colors cursor-pointer"
-          >
-            {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
-          </button>
-        </div>
+        <PageHeader
+          title={member.forum}
+          subtitle={
+            <button
+              type="button"
+              onClick={() => setTab('members')}
+              className="hover:text-foreground/90 transition-colors cursor-pointer"
+            >
+              {forumMembers.length} members{effectiveForum.founded_year ? ` · Founded ${effectiveForum.founded_year}` : ''}
+            </button>
+          }
+        />
       )}
 
       {pageError && (
@@ -317,26 +330,10 @@ export default function ForumHomePage({ focusTab }) {
         </div>
       )}
 
-      {/* Tab nav — hidden in moderator focus mode (single tab forced
-          via the route, no need for the strip). */}
-      {!focusTab && (
-      <div className="flex flex-wrap justify-center gap-1 border-b border-border">
-        {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-3 text-xs font-medium flex items-center gap-1.5 border-b-2 transition-colors ${
-              tab === t.key ? 'border-primary text-primary font-semibold' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <t.icon className="h-3.5 w-3.5" />
-            {t.label}
-          </button>
-        ))}
-      </div>
-      )}
-
-      {/* Tab content */}
+      {/* Tab content — the in-page tab strip used to live here but
+          the left-nav Forum group now owns navigation between
+          surfaces. Each sidebar child deep-links via ?tab=… and
+          this page reads that param to render the right block. */}
       {tab === 'calendar' && (
         <CalendarTab
           forum={effectiveForum}
@@ -1485,8 +1482,8 @@ function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onTogg
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground/70">
-        Check the partners you're interested in hearing from. Your moderator uses this to decide who to invite — the more interest, the better the fit.
+      <p className="text-sm text-muted-foreground">
+        Check the partners you're interested in hearing from. Your moderator uses this to decide who to invite. The more interest, the better the fit.
       </p>
       <div className="rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
@@ -1519,7 +1516,10 @@ function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onTogg
                     </button>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="text-foreground font-medium">{name}</span>
+                    <div className="text-foreground font-medium">{name}</div>
+                    {sap.industry && (
+                      <div className="text-[11px] text-muted-foreground/80 mt-0.5">{sap.industry}</div>
+                    )}
                   </td>
                   <td className="px-3 py-3">
                     {sap.tier && (

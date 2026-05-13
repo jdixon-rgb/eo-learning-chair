@@ -195,7 +195,7 @@ export default function SLPManagementPage() {
 
       <p className="text-xs text-muted-foreground/70">
         <Heart className="h-3 w-3 inline mr-1 text-muted-foreground/60" />
-        SLP records are created and edited by each member from their Compass profile. Admins can view and remove, but not edit on behalf of a member.
+        SLP records are created and edited by each member from their own profile. Admins can view and remove, but not edit on behalf of a member.
       </p>
     </div>
   )
