@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { getChairConfig } from '@/lib/chairRoles'
 import TourTip from '@/components/TourTip'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
-import { formatFiscalYear } from '@/lib/fiscalYear'
+import { formatFiscalYear, shiftFiscalYear } from '@/lib/fiscalYear'
 import { useFormatCurrency } from '@/lib/useFormatCurrency'
 import { Badge } from '@/components/ui/badge'
 import ThemeInfo from '@/components/ThemeInfo'
@@ -30,15 +30,45 @@ export default function PresidentDashboard() {
 
   const theme = activePresidentTheme || ''
 
-  // Get all chair assignments for this FY
+  // Chair assignments for this FY plus the prior FY (used as a feeder
+  // for projection — see below).
   const fyAssignments = roleAssignments.filter(a => a.fiscal_year === activeFiscalYear)
+  const priorFY = shiftFiscalYear(activeFiscalYear, -1)
+  const priorAssignments = roleAssignments.filter(a => a.fiscal_year === priorFY)
+  const roleByKey = new Map(chapterRoles.map(r => [r.role_key, r]))
+
+  // Pipeline projection. The President of FY Y was the President-Elect
+  // of FY Y-1; the President-Elect of FY Y was the President-Elect-
+  // Elect of FY Y-1. Same idea for any role whose role_key has an
+  // `_elect` companion in this chapter's chapter_roles. When the FY
+  // the user is viewing has no explicit assignment for a role, we
+  // forecast it from the prior FY's feeder so chair rotations are
+  // visible as soon as someone navigates forward in time. The
+  // synthetic assignment is flagged with status='projected' so the
+  // UI can distinguish it from a real-this-year assignment.
+  function projectAssignmentForRole(role) {
+    const explicit = fyAssignments.find(a => a.chapter_role_id === role.id && (a.status === 'active' || a.status === 'elect'))
+    if (explicit) return explicit
+    const feederRole = roleByKey.get(`${role.role_key}_elect`)
+    if (!feederRole) return null
+    const feeder = priorAssignments.find(a => a.chapter_role_id === feederRole.id && (a.status === 'elect' || a.status === 'active'))
+    if (!feeder) return null
+    return {
+      ...feeder,
+      chapter_role_id: role.id,
+      fiscal_year: activeFiscalYear,
+      status: 'projected',
+      // Budget belongs to the actual-year assignment, not the projection.
+      budget: 0,
+    }
+  }
 
   // Build chair summary from role assignments
   const chairSummary = chapterRoles
     .filter(r => !r.is_staff)
     .sort((a, b) => a.sort_order - b.sort_order)
     .map(role => {
-      const assignment = fyAssignments.find(a => a.chapter_role_id === role.id && (a.status === 'active' || a.status === 'elect'))
+      const assignment = projectAssignmentForRole(role)
       const memberName = assignment
         ? (assignment.member_id
             ? chapterMembers.find(m => m.id === assignment.member_id)?.name || assignment.member_name
@@ -227,6 +257,9 @@ export default function PresidentDashboard() {
                   <span className="text-sm font-medium">{chair.label}</span>
                   {chair.assignment?.status === 'elect' && (
                     <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/30">Elect</Badge>
+                  )}
+                  {chair.assignment?.status === 'projected' && (
+                    <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30">Projected</Badge>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
