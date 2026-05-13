@@ -17,6 +17,38 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.16 — 2026-05-12
+
+### Fix: "Add to my pipeline" from Speaker Library now actually works
+
+Shanghai LC reported `null value in column "pipeline_stage" of
+relation "speakers" violates not-null constraint` when clicking
+"Add to my pipeline" on a public Speaker Library entry (e.g. ANNA
+LECAT from EO Zurich).
+
+Two bugs in `handleImport` on `SpeakerLibraryDetailPage`:
+
+1. `speakers.pipeline_stage` is NOT NULL but the insert didn't set
+   it — immediate constraint violation, what the user saw.
+2. Even if (1) had worked, the function never created the matching
+   `speaker_pipeline` row for the active fiscal year, so the success
+   message "Added to your chapter pipeline" would have been a lie.
+
+Fix sets `pipeline_stage: 'researching'` on the speakers insert and
+creates the `speaker_pipeline` row in the same flow (matching what
+`store.addSpeaker` does for fresh-create, fixed in v2.7.7). Also
+imports the library's `honorarium_amount` as `fee_estimated` so the
+value carries over.
+
+The Shared Library tab's "Add to Pipeline" button on the Speakers
+page was already correct (uses the store's `addSpeaker`).
+
+Code change shipped in commit `95def11` (mislabeled v2.7.11 in its
+message because that commit raced with parallel v2.7.12–v2.7.15
+work in another session — this version bump is what reaches users.)
+
+---
+
 ## v2.7.15 — 2026-05-12
 
 ### Fix: Forum sidebar children now actually switch tabs
