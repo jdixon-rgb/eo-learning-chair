@@ -17,6 +17,37 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.7 — 2026-05-13
+
+### Feature: All board roles can flag at-risk members
+
+Previously only Forum Health Chair, Forum Placement Chair, and chapter
+admins could add to the at-risk ledger. Now every chapter-board role
+(Learning, Engagement, SAP, Finance, President track, CED, CEC,
+board_liaison, committee_member) can flag a member — but only the
+Health/Placement chairs and chapter admins see the existing roster.
+
+**SLP Chair is intentionally excluded** — their scope is SLP-only,
+not member at-risk.
+
+**Schema (migration 096):** new `can_flag_at_risk(chapter_id)` helper;
+INSERT policy on `forum_at_risk_entries` accepts the broader role
+list. SELECT / UPDATE / DELETE policies are unchanged.
+
+**UI:**
+- New permissions `canViewAtRisk` (narrow) and `canFlagAtRisk` (broad).
+- `AtRiskMembersPage` renders a submission-only form for board roles
+  who can flag but not view (forum + member + risk + reasons + notes,
+  then a thank-you). Posts directly through Supabase so RLS or
+  unique-constraint errors surface to the submitter — they have no
+  list to verify the entry landed.
+- Sidebar entry "Flag At-Risk Member" added to LC / Engagement / SAP /
+  Finance chair configs. President / CED / CEC get "At-Risk Members"
+  (full view). Forum Health Chair and Forum Placement Chair keep
+  their existing entries.
+
+---
+
 ## v2.8.6 — 2026-05-13
 
 ### Fix: SLP Chair view of Forums now shows only SLP forums

@@ -72,6 +72,13 @@ export const FEATURE_PERMISSIONS = {
   canManageComms:        BOARD_ROLES,
   canManageForums:       BOARD_ROLES,
   canViewScorecards:     BOARD_ROLES,
+  // At-risk ledger. View/edit/resolve is narrow (Forum Health + Forum
+  // Placement chairs + chapter admins). Flag-only is broad: any chapter-
+  // board role can add an entry but won't see the existing list. Mirrors
+  // RLS in migration 096 (can_flag_at_risk). SLP Chair excluded by
+  // design — their scope is SLP-only, not member at-risk.
+  canViewAtRisk:         ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'forum_health_chair', 'forum_placement_chair'],
+  canFlagAtRisk:         ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair', 'learning_chair_elect', 'engagement_chair', 'sap_chair', 'forum_health_chair', 'forum_placement_chair', 'chapter_executive_director', 'chapter_experience_coordinator', 'board_liaison', 'committee_member'],
   canViewCoordinator:    ADMIN_ROLES.filter(r => !['sap_chair', 'president'].includes(r)),
   // Engagement Chair module
   canManageEngagement:   ENGAGEMENT_ROLES,
