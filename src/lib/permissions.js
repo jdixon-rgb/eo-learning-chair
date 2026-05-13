@@ -12,6 +12,29 @@ export const PRESIDENT_ROLES = ['super_admin', 'president', 'president_elect', '
 // Board roles that can access the board module
 export const BOARD_ROLES = ['super_admin', 'president', 'finance_chair', 'board_liaison', 'forum_health_chair', 'forum_placement_chair', 'chapter_experience_coordinator', 'chapter_executive_director']
 
+// Roles that see the full fiscal year on the Member calendar. Everyone
+// else (member, moderator, sap_contact, slp, demo_user) sees only the
+// first half (Aug–Dec) — second-half programming is still in flux and
+// shouldn't be surfaced to members until the board has finalized it.
+// Moderator is intentionally NOT included: it's a Member-section
+// elevation, not a board seat.
+export const CALENDAR_FULL_YEAR_ROLES = [
+  'super_admin',
+  'regional_learning_chair_expert',
+  'president', 'president_elect', 'president_elect_elect',
+  'finance_chair',
+  'learning_chair', 'learning_chair_elect',
+  'engagement_chair',
+  'sap_chair',
+  'slp_chair',
+  'forum_health_chair',
+  'forum_placement_chair',
+  'chapter_executive_director',
+  'chapter_experience_coordinator',
+  'board_liaison',
+  'committee_member',
+]
+
 // Roles that can manage board positions, assignments, and chapter settings
 export const SETTINGS_ROLES = ['super_admin', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']
 

@@ -17,6 +17,26 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.4 — 2026-05-12
+
+### Feature: Calendar visibility now scales with role
+
+**Member calendar** (`/portal/calendar`) — non-board viewers (member,
+moderator, sap_contact, slp, demo_user) now see only the first half
+of the fiscal year (Aug–Dec). Spring programming (Feb–May) is in flux
+and shouldn't be surfaced until the board has finalized it. A small
+locked teaser at the bottom sets the expectation that more is coming.
+Board members and chairs keep the full-year view via the new
+`CALENDAR_FULL_YEAR_ROLES` allowlist. Moderator is intentionally
+excluded — it's a Member-section elevation, not a board seat.
+
+**Chapter calendar** (`/chapter-calendar`, board surface) — the
+month-cards view now renders every month of the fiscal year (Aug→Jul),
+including empty ones. December / June / July are typically light or
+off, and the board needs to see those slots to plan into them.
+
+---
+
 ## v2.8.3 — 2026-05-12
 
 ### Polish: Chapter Calendar event-owner categories now match reality
