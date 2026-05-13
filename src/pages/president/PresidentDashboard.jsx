@@ -37,38 +37,93 @@ export default function PresidentDashboard() {
   const priorAssignments = roleAssignments.filter(a => a.fiscal_year === priorFY)
   const roleByKey = new Map(chapterRoles.map(r => [r.role_key, r]))
 
-  // Pipeline projection. The President of FY Y was the President-Elect
-  // of FY Y-1; the President-Elect of FY Y was the President-Elect-
-  // Elect of FY Y-1. Same idea for any role whose role_key has an
-  // `_elect` companion in this chapter's chapter_roles. When the FY
-  // the user is viewing has no explicit assignment for a role, we
-  // forecast it from the prior FY's feeder so chair rotations are
-  // visible as soon as someone navigates forward in time. The
-  // synthetic assignment is flagged with status='projected' so the
-  // UI can distinguish it from a real-this-year assignment.
-  function projectAssignmentForRole(role) {
-    const explicit = fyAssignments.find(a => a.chapter_role_id === role.id && (a.status === 'active' || a.status === 'elect'))
-    if (explicit) return explicit
-    const feederRole = roleByKey.get(`${role.role_key}_elect`)
-    if (!feederRole) return null
-    const feeder = priorAssignments.find(a => a.chapter_role_id === feederRole.id && (a.status === 'elect' || a.status === 'active'))
-    if (!feeder) return null
-    return {
-      ...feeder,
-      chapter_role_id: role.id,
-      fiscal_year: activeFiscalYear,
-      status: 'projected',
-      // Budget belongs to the actual-year assignment, not the projection.
-      budget: 0,
+  // Pipeline projection. Two flavors stitched together so the
+  // dashboard reflects whatever data shape an admin has entered:
+  //
+  //   (A) Forward projection from prior FY: when the viewed FY has no
+  //       explicit President row but FY-1 has someone in
+  //       President-Elect (status active/elect), we forecast them as
+  //       this year's President.
+  //
+  //   (B) Same-FY chain promotion: when admins enter "Karl is the
+  //       upcoming P-Elect for 2026-2027" without first backfilling
+  //       FY 2025-2026 rows, the prior-FY lookup turns up empty. To
+  //       still surface a rotation, we walk each pipeline chain top-
+  //       down and promote within the same FY: if President is empty,
+  //       move P-Elect up (consuming that row); if P-Elect is then
+  //       empty too, move P-E-E up.
+  //
+  // Either way, the synthesized row is flagged status='projected' so
+  // the UI can mark it distinct from a real-this-year assignment.
+  // Budget intentionally doesn't carry — it belongs to whoever is
+  // actually in the seat this year.
+  const consumedAssignmentIds = new Set()
+  function findExplicit(role, statuses) {
+    return fyAssignments.find(a =>
+      a.chapter_role_id === role.id
+      && !consumedAssignmentIds.has(a.id)
+      && statuses.includes(a.status))
+  }
+  function resolveAssignment(roleKey) {
+    const role = roleByKey.get(roleKey)
+    if (!role) return null
+    // 1. Explicit active in this FY
+    const active = findExplicit(role, ['active'])
+    if (active) return active
+    // 2. Prior-FY feeder (forward projection)
+    const feederRole = roleByKey.get(`${roleKey}_elect`)
+    if (feederRole) {
+      const priorFeeder = priorAssignments.find(a =>
+        a.chapter_role_id === feederRole.id
+        && !consumedAssignmentIds.has(a.id)
+        && (a.status === 'active' || a.status === 'elect'))
+      if (priorFeeder) {
+        consumedAssignmentIds.add(priorFeeder.id)
+        return {
+          ...priorFeeder,
+          chapter_role_id: role.id,
+          fiscal_year: activeFiscalYear,
+          status: 'projected',
+          budget: 0,
+        }
+      }
     }
+    // 3. Explicit elect in this FY (only if we couldn't project — an
+    //    "elect" sitting in this row IS the holder for this view).
+    const elect = findExplicit(role, ['elect'])
+    if (elect) return elect
+    // 4. Same-FY feeder (chain promotion). Recursive: resolves the
+    //    feeder role first, which itself may chain further down.
+    if (feederRole) {
+      const feeder = resolveAssignment(feederRole.role_key)
+      if (feeder && feeder.status === 'elect') {
+        consumedAssignmentIds.add(feeder.id)
+        return {
+          ...feeder,
+          chapter_role_id: role.id,
+          fiscal_year: activeFiscalYear,
+          status: 'projected',
+          budget: 0,
+        }
+      }
+    }
+    return null
   }
 
-  // Build chair summary from role assignments
-  const chairSummary = chapterRoles
-    .filter(r => !r.is_staff)
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map(role => {
-      const assignment = projectAssignmentForRole(role)
+  // Iterate chain tops first (roles whose key doesn't end in `_elect`)
+  // so promotion always cascades from the senior role downward and
+  // each consumed assignment is marked before junior rows look at it.
+  const chairSummary = (() => {
+    const sorted = [...chapterRoles].filter(r => !r.is_staff).sort((a, b) => a.sort_order - b.sort_order)
+    const tops = sorted.filter(r => !r.role_key.endsWith('_elect'))
+    const electLevels = sorted.filter(r => r.role_key.endsWith('_elect'))
+    const ordered = [...tops, ...electLevels]
+    const resolved = new Map()
+    for (const role of ordered) {
+      resolved.set(role.role_key, resolveAssignment(role.role_key))
+    }
+    return sorted.map(role => {
+      const assignment = resolved.get(role.role_key)
       const memberName = assignment
         ? (assignment.member_id
             ? chapterMembers.find(m => m.id === assignment.member_id)?.name || assignment.member_name
@@ -81,6 +136,7 @@ export default function PresidentDashboard() {
         budget: assignment?.budget ?? 0,
       }
     })
+  })()
 
   const totalAllocated = chairSummary.reduce((sum, c) => sum + c.budget, 0)
   const totalBudget = chapter.total_budget || 0
