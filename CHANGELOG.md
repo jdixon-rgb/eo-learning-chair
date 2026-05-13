@@ -17,6 +17,24 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.19 — 2026-05-12
+
+### Feature: pipeline-stage dropdown in Edit Speaker (touch-screen accessible)
+
+Shanghai LC reported that on a touch screen they couldn't drag speaker
+cards between Researching/Outreach/Negotiating/Contracted/Confirmed
+columns — drag-and-drop relies on a mouse. Added a Pipeline Stage
+dropdown to the top of the Edit Speaker dialog (gated to pipeline
+speakers and new-speaker creation) so the stage can be changed without
+drag. Saves through the same `updatePipelineEntry` path as the
+drag-drop flow.
+
+Drag-drop still works for desktop users; this is purely an additive
+fallback. Also includes "Passed" as a manual-set option (the kanban
+hides the Passed column by default).
+
+---
+
 ## v2.7.18 — 2026-05-12
 
 ### Polish: SAP Interest instructions are now actually readable
