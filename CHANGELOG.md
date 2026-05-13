@@ -17,6 +17,32 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.5 — 2026-05-13
+
+### Fix: President-pipeline projection now uses presidency-year semantics
+
+The earlier projection attempts (v2.7.21 + v2.7.22) reasoned about
+the wrong axis. The actual data convention is: each pipeline row's
+`fiscal_year` is the year the person will eventually be **President**,
+and `role` records where they sit in the rotation today. So Chad's
+row (fy=2025-2026, role=president) means "Chad is the President of
+2025-2026"; Karl's row (fy=2026-2027, role=president_elect) means
+"Karl will be the President of 2026-2027 (currently P-Elect)";
+Stephanie's row (fy=2027-2028, role=president_elect_elect) means
+"Stephanie will be the President of 2027-2028 (currently P-E-E)."
+
+The dashboard now resolves each pipeline slot by **viewedFY + depth**,
+where depth counts `_elect` suffixes in the slot's role_key
+(President=0, P-Elect=1, P-E-E=2). Whichever pipeline row's
+fiscal_year matches that target lights up the slot; if it isn't an
+exact role+year match the row is flagged "Projected." So viewing FY
+2026-2027 now shows Karl as President (Projected) and Stephanie as
+President-Elect (Projected), matching how chair rotations actually
+flow forward year over year. Generic: applies to any pipeline (e.g.
+Learning Chair ↔ Learning Chair Elect) without per-role hardcoding.
+
+---
+
 ## v2.8.4 — 2026-05-12
 
 ### Feature: Calendar visibility now scales with role
