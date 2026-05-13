@@ -17,6 +17,45 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.8 — 2026-05-13
+
+### Feature: Learning Chair can invite members and assign role + fiscal year
+
+The Learning Chair has become the de-facto entry point for many
+chapters' new-member flows, but the invite UI was super-admin / CED /
+CEC only, and even where it existed it didn't capture a role — every
+invitee was implicitly `member`, so they signed in with the default
+view regardless of what seat they were really being recruited for.
+
+Two changes:
+
+1. `canManageMembers` now includes `learning_chair`. The Members link
+   in the sidebar appears for the active LC, and `/admin/members`
+   resolves. Did NOT include `learning_chair_elect` because the
+   `/admin/*` route guard uses `ADMIN_ROLES` which doesn't list the
+   elect — adding only one half of the gate would have produced a
+   confusing "I see the link but get bounced" experience.
+
+2. The Add Member form on `/admin/members` gained a **Role** select
+   (pulling from the chapter's `chapter_roles` registry, falling back
+   to the global `CHAIR_ROLES` catalog) and a **Fiscal Year** select.
+   - Default is `Member` and the FY field is greyed out — no behavior
+     change for invites that aren't naming a chair seat.
+   - When a chair role is picked: the invite's `member_invites.role`
+     reflects it (so `handle_new_user` sets `profiles.role` correctly
+     on signup, and the invitee logs in with the right sidebar/view)
+     AND a `role_assignments` row is created for the chosen FY, tying
+     the new chapter_members record into the board roster.
+
+Also extended `syncMemberInvites` in `boardStore` with a `merge`
+option — explicit single-invite calls (this Add Member flow, plus
+any future "re-invite Maria as Forum Health Chair" path) upsert with
+update-on-conflict, while bulk imports keep `ignoreDuplicates: true`
+so a CSV with no role column doesn't silently clobber chair seats
+someone already assigned.
+
+---
+
 ## v2.8.7 — 2026-05-13
 
 ### Feature: All board roles can flag at-risk members
