@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.6 — 2026-05-13
+
+### Fix: SLP Chair view of Forums now shows only SLP forums
+
+`/board/forums` previously showed every forum in the chapter
+regardless of who was looking. The SLP Chair's view now filters
+to `population='slp'` and the Add Forum dialog locks the new
+forum to SLP (no Member/SLP toggle in that seat). Forum Health
+Chair, President, super-admin, and every other role continue to
+see both populations — they rely on the small "SLP" pill on the
+card to differentiate. The page title becomes "SLP Forums" in
+the SLP Chair view.
+
+---
+
 ## v2.8.5 — 2026-05-13
 
 ### Fix: President-pipeline projection now uses presidency-year semantics

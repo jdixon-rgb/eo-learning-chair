@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth'
 import { useBoardStore } from '@/lib/boardStore'
 import { FORUM_HEALTH } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -30,15 +31,28 @@ const emptyForum = {
 }
 
 export default function ForumsPage() {
+  const { effectiveRole } = useAuth()
   const { forums, addForum, updateForum, deleteForum, chapterMembers } = useBoardStore()
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ ...emptyForum })
+
+  // SLP Chair view shows only SLP forums (the two populations never
+  // intermix from that seat). Everyone else (Forum Health Chair,
+  // President, super-admin, member chairs, etc.) sees both and
+  // differentiates by the SLP pill on the card.
+  const isSlpView = effectiveRole === 'slp_chair'
+
+  const [form, setForm] = useState({ ...emptyForum, population: isSlpView ? 'slp' : 'member' })
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [expandedForum, setExpandedForum] = useState(null)
 
-  const active = forums.filter(f => f.is_active)
-  const inactive = forums.filter(f => !f.is_active)
+  // population may be null on legacy rows that pre-dated migration 089;
+  // treat null as 'member' so they're visible to every-forum viewers.
+  const scoped = isSlpView
+    ? forums.filter(f => (f.population || 'member') === 'slp')
+    : forums
+  const active = scoped.filter(f => f.is_active)
+  const inactive = scoped.filter(f => !f.is_active)
 
   // Derive forum membership from chapter_members
   function getForumMembers(forumName) {
@@ -77,7 +91,7 @@ export default function ForumsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <PageHeader
-          title="Forums"
+          title={isSlpView ? 'SLP Forums' : 'Forums'}
           subtitle={`${active.length} active forum${active.length !== 1 ? 's' : ''} · ${totalMembers} total members`}
         />
         <Button onClick={() => setShowForm(!showForm)} className="ml-auto">
@@ -95,25 +109,30 @@ export default function ForumsPage() {
               <label className="text-xs font-medium text-muted-foreground">Forum Name</label>
               <Input className="mt-1" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g., Forum Alpha" />
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Population</label>
-              <div className="mt-1 flex rounded-md border bg-background p-0.5 text-sm">
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, population: 'member' })}
-                  className={`flex-1 px-3 py-1.5 rounded ${form.population === 'member' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  Member
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, population: 'slp' })}
-                  className={`flex-1 px-3 py-1.5 rounded ${form.population === 'slp' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  SLP
-                </button>
+            {/* Population toggle hidden for SLP Chair (they only create
+                SLP forums). Visible for everyone else so a Forum Health
+                Chair or President can stand up either kind. */}
+            {!isSlpView && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Population</label>
+                <div className="mt-1 flex rounded-md border bg-background p-0.5 text-sm">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, population: 'member' })}
+                    className={`flex-1 px-3 py-1.5 rounded ${form.population === 'member' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Member
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, population: 'slp' })}
+                    className={`flex-1 px-3 py-1.5 rounded ${form.population === 'slp' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    SLP
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
             <div>
               <label className="text-xs font-medium text-muted-foreground">Moderator</label>
               <Input className="mt-1" value={form.moderator_name} onChange={e => setForm({ ...form, moderator_name: e.target.value })} placeholder="Moderator name" />
