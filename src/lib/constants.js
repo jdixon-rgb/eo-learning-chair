@@ -188,9 +188,12 @@ export const EVENT_OWNER_CHAIRS = [
   { id: 'learning',   label: 'Learning',   color: '#3d46f2' }, // indigo (matches primary)
   { id: 'engagement', label: 'Engagement', color: '#10b981' }, // emerald
   { id: 'membership', label: 'Membership', color: '#f59e0b' }, // amber
-  { id: 'social',     label: 'Social',     color: '#ec4899' }, // pink
   { id: 'forum',      label: 'Forum',      color: '#8b5cf6' }, // violet
-  { id: 'finance',    label: 'Finance',    color: '#14b8a6' }, // teal
+  { id: 'moderator',  label: 'Moderator',  color: '#0ea5e9' }, // sky
+  { id: 'social',     label: 'Social',     color: '#ec4899' }, // pink
+  { id: 'myeo',       label: 'MyEO',       color: '#06b6d4' }, // cyan
+  { id: 'sap',        label: 'SAP',        color: '#fa653c' }, // coral (matches SAP brand tone)
+  { id: 'slp',        label: 'SLP',        color: '#f43f5e' }, // rose
   { id: 'board',      label: 'Board',      color: '#64748b' }, // slate
 ]
 

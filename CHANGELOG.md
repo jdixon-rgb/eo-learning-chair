@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.3 — 2026-05-12
+
+### Polish: Chapter Calendar event-owner categories now match reality
+
+Finance doesn't run events — removed from the filter chips. Added
+the categories that do generate calendar activity: Moderator, MyEO,
+SAP, and SLP. Each gets its own color and filter chip alongside
+Learning / Engagement / Membership / Forum / Social / Board.
+
+Existing events with `owner_chair = 'finance'` (if any) keep their
+value in the DB and just fall back to the Learning chair color when
+rendered — no migration required.
+
+---
+
 ## v2.8.2 — 2026-05-12
 
 ### Polish: Chapter Calendar defaults to month cards
