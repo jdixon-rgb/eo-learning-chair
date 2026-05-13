@@ -17,6 +17,22 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.20 — 2026-05-12
+
+### Fix: Chapter Calendar rows now show speaker + venue automatically
+
+Each row's subtitle was rendered from `event.notes` only, so events
+with a finalized speaker (e.g. CHANGE: The Imagination Age with
+Harris III) appeared empty under the title while events whose chair
+had typed something into `notes` (Joyful Rebellion → "Brad Montague
+at the Heard Museum.") looked complete. Now: notes still win when
+present, but if notes is blank and the event has a `speaker_id`
+and/or `venue_id`, we auto-build "<speaker> at <venue>" from the
+joined records so the chapter calendar shows the same information
+the event detail page already has.
+
+---
+
 ## v2.7.19 — 2026-05-12
 
 ### Feature: pipeline-stage dropdown in Edit Speaker (touch-screen accessible)

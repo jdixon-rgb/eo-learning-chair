@@ -60,7 +60,7 @@ function formatWeekRange(monday) {
 
 export default function ChapterCalendarPage() {
   const navigate = useNavigate()
-  const { events, addEvent } = useStore()
+  const { events, speakers, venues, addEvent } = useStore()
   const { activeChapterId } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
 
@@ -232,6 +232,18 @@ export default function ChapterCalendarPage() {
                 <ul className="divide-y divide-border">
                   {week.events.map(e => {
                     const chair = EVENT_OWNER_CHAIRS.find(c => c.id === (e.owner_chair || 'learning'))
+                    // Subtitle preference: explicit notes win (a chair may
+                    // have written something specific). Otherwise auto-
+                    // derive "<speaker> at <venue>" from the FKs so an
+                    // event with a finalized speaker doesn't look empty.
+                    const speaker = e.speaker_id ? speakers.find(s => s.id === e.speaker_id) : null
+                    const venue = e.venue_id ? venues.find(v => v.id === e.venue_id) : null
+                    let subtitle = e.notes
+                    if (!subtitle && (speaker || venue)) {
+                      if (speaker && venue) subtitle = `${speaker.name} at ${venue.name}`
+                      else if (speaker) subtitle = speaker.name
+                      else subtitle = venue.name
+                    }
                     return (
                       <li
                         key={e.id}
@@ -245,8 +257,8 @@ export default function ChapterCalendarPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium truncate">{e.title || 'Untitled event'}</div>
-                          {e.notes && (
-                            <div className="text-[11px] text-muted-foreground truncate">{e.notes}</div>
+                          {subtitle && (
+                            <div className="text-[11px] text-muted-foreground truncate">{subtitle}</div>
                           )}
                         </div>
                         <span
