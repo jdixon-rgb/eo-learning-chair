@@ -1482,8 +1482,8 @@ function PartnersTab({ forum, saps, interest, memberId, forumMemberCount, onTogg
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground/70">
-        Check the partners you're interested in hearing from. Your moderator uses this to decide who to invite — the more interest, the better the fit.
+      <p className="text-sm text-muted-foreground">
+        Check the partners you're interested in hearing from. Your moderator uses this to decide who to invite. The more interest, the better the fit.
       </p>
       <div className="rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">

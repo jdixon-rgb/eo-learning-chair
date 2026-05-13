@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.7.18 — 2026-05-12
+
+### Polish: SAP Interest instructions are now actually readable
+
+The intro line above the partner checklist rendered at `text-xs` /
+70% opacity, which combined into "barely-there grey." Bumped to
+`text-sm` with full muted-foreground contrast so it reads as
+instruction rather than fine print.
+
+---
+
 ## v2.7.17 — 2026-05-12
 
 ### Polish: SAP Interest table now shows each partner's industry
