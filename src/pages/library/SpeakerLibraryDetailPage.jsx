@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { useChapter } from '@/lib/chapter'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { hasPermission } from '@/lib/permissions'
 import {
   ArrowLeft, Star, Pencil, Plus, ExternalLink, Loader2, Globe2,
@@ -41,6 +42,7 @@ export default function SpeakerLibraryDetailPage() {
   const navigate = useNavigate()
   const { effectiveRole, profile } = useAuth()
   const { activeChapterId, allChapters } = useChapter()
+  const { activeFiscalYear } = useFiscalYear()
   const canEdit = hasPermission(effectiveRole, 'canEditSpeakerLibrary')
   const canReview = hasPermission(effectiveRole, 'canReviewSpeakers')
   const canImport = hasPermission(effectiveRole, 'canImportFromLibrary')
@@ -141,13 +143,17 @@ export default function SpeakerLibraryDetailPage() {
       }
 
       // Copy the relevant fields. The library row stays untouched.
+      // pipeline_stage is NOT NULL on speakers; default new imports to
+      // 'researching' so they show up at the start of the kanban.
       const insertPayload = {
         chapter_id: activeChapterId,
         name: speaker.name,
         topic: speaker.topic || '',
         bio: speaker.bio || '',
+        fee_estimated: speaker.honorarium_amount ?? null,
         imported_from_library_id: speaker.id,
         share_scope: 'chapter_only',
+        pipeline_stage: 'researching',
       }
       const { data: inserted, error } = await supabase
         .from('speakers')
@@ -155,6 +161,25 @@ export default function SpeakerLibraryDetailPage() {
         .select('id')
         .single()
       if (error) throw error
+
+      // Speakers row exists in the chapter library now; also create the
+      // per-FY speaker_pipeline row so the speaker actually appears in
+      // the Pipeline kanban (otherwise "Add to my pipeline" lies).
+      const { error: pipelineErr } = await supabase
+        .from('speaker_pipeline')
+        .insert({
+          speaker_id: inserted.id,
+          chapter_id: activeChapterId,
+          fiscal_year: activeFiscalYear,
+          pipeline_stage: 'researching',
+          fee_estimated: speaker.honorarium_amount ?? null,
+        })
+      if (pipelineErr) {
+        // Speakers row landed but pipeline row failed — surface the
+        // partial state so the user can recover (e.g. re-import or
+        // edit on the Speakers page).
+        throw new Error(`Imported to library but failed to add to pipeline: ${pipelineErr.message}`)
+      }
       setImportMsg('Added to your chapter pipeline. Open Speakers to set stage and fees.')
     } catch (e) {
       setImportMsg(e.message || 'Failed to import.')
