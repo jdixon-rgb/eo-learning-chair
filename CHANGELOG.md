@@ -17,6 +17,31 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.10 — 2026-05-13
+
+### Feature: Super Admin Staff page
+
+A new `/super-admin/staff` surface for inviting the three non-member
+staff roles in one place: **Regional Manager**, **Executive
+Director**, **Experience Coordinator**. The form has a role dropdown
+that swaps the third input conditionally — Regional Manager needs a
+**Region**, Executive Director and Experience Coordinator need a
+**Chapter**. Writes to `member_invites` with the appropriate
+`region` or `chapter_id` set. Magic-link generation, claim-status
+chip, and delete affordances mirror the Regional Experts page.
+
+**Naming distinction (per user clarification):** Regional Experts
+(`/super-admin/regional-experts`) is for EO **members** in
+cross-chapter oversight roles. Staff (`/super-admin/staff`) is for
+**non-members** paid by EO Global or the chapter. Both pages live
+under Super Admin's sidebar.
+
+Chapter admins still invite their own Executive Director / Experience
+Coordinator via `/admin/staff` for chapter-level workflows — the new
+Super Admin surface handles cross-chapter and Regional Manager cases.
+
+---
+
 ## v2.8.9 — 2026-05-13
 
 ### Feature: Regional Manager role
