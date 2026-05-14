@@ -15,6 +15,7 @@ import {
   Calendar,
   Users,
   Users2,
+  UserCog,
   UserPlus,
   CalendarDays,
   MapPin,
@@ -66,6 +67,7 @@ export const CHAIR_ROLE_CONFIGS = {
     navItems: [
       { to: '/super-admin', icon: LayoutDashboard, label: 'Platform Dashboard' },
       { to: '/super-admin/regional-experts', icon: Globe2, label: 'Regional Experts' },
+      { to: '/super-admin/staff', icon: UserCog, label: 'Staff' },
       { to: '/super-admin/analytics', icon: BarChart3, label: 'Analytics' },
     ],
   },

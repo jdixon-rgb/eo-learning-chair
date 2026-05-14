@@ -51,6 +51,7 @@ import SuperAdminDashboard from '@/pages/super-admin/SuperAdminDashboard'
 import ChapterConfigPage from '@/pages/super-admin/ChapterConfigPage'
 import AnalyticsPage from '@/pages/super-admin/AnalyticsPage'
 import RegionalExpertsPage from '@/pages/super-admin/RegionalExpertsPage'
+import SuperAdminStaffPage from '@/pages/super-admin/StaffPage'
 import BoardDashboardPage from '@/pages/board/BoardDashboardPage'
 import ChairReportsPage from '@/pages/board/ChairReportsPage'
 import CommunicationsPage from '@/pages/board/CommunicationsPage'
@@ -329,6 +330,7 @@ function App() {
                 <Route path="/super-admin" element={<SuperAdminDashboard />} />
                 <Route path="/super-admin/analytics" element={<AnalyticsPage />} />
                 <Route path="/super-admin/regional-experts" element={<RegionalExpertsPage />} />
+                <Route path="/super-admin/staff" element={<SuperAdminStaffPage />} />
                 <Route path="/super-admin/chapters/:id" element={<ChapterConfigPage />} />
               </Route>
 
