@@ -53,6 +53,7 @@ const LEARNING_CHAIR_NAV = [
   { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
   { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
   { to: '/recommendations', icon: Lightbulb, label: 'Recommendations' },
+  { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'Flag At-Risk Member', permission: 'canFlagAtRisk' },
 ]
 
 export const CHAIR_ROLE_CONFIGS = {
@@ -89,6 +90,27 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
     ],
   },
+  regional_manager: {
+    title: 'Regional Manager',
+    // EO Global staff who supports chapters in their region — read-only
+    // across chapters. Same region-scoped chapter switcher as the
+    // Regional Learning Chair Expert; broader nav (chapter ops, not just
+    // learning-chair surfaces). No dedicated regional dashboard yet, so
+    // home is the chapter-level Chapter Calendar — they pick a chapter
+    // in the switcher and drill in from there.
+    homePath: '/chapter-calendar',
+    navItems: [
+      { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
+      { to: '/calendar', icon: Calendar, label: 'Year Arc' },
+      { to: '/events', icon: CalendarDays, label: 'Events' },
+      { to: '/speakers', icon: Users, label: 'Speakers' },
+      { to: '/library/speakers', icon: BookOpen, label: 'Speaker Library', permission: 'canViewSpeakerLibrary' },
+      { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
+      { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
+      { to: '/budget', icon: Wallet, label: 'Budget', permission: 'canViewBudget' },
+      { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
+    ],
+  },
   sap_chair: {
     title: 'SAP Chair',
     homePath: '/partners',
@@ -97,6 +119,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/partners', icon: Handshake, label: 'Manage SAPs' },
       { to: '/calendar', icon: Calendar, label: 'Year Arc' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'Flag At-Risk Member', permission: 'canFlagAtRisk' },
     ],
   },
   slp_chair: {
@@ -116,11 +139,15 @@ export const CHAIR_ROLE_CONFIGS = {
   president: {
     title: 'President',
     homePath: '/president',
+    // President sees the full ledger via canViewAtRisk (broader view set
+    // includes president track). Label stays "At-Risk Members" since
+    // they see the list, not just a submission form.
     navItems: [
       { to: '/president', icon: Crown, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/admin/surveys', icon: ClipboardList, label: 'Survey Results', permission: 'canViewSurveyResults' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members', permission: 'canViewAtRisk' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
@@ -132,6 +159,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/finance', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/chapter-calendar', icon: CalendarDays, label: 'Chapter Calendar' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'Flag At-Risk Member', permission: 'canFlagAtRisk' },
     ],
   },
   learning_chair: {
@@ -150,6 +178,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/engagement/breaking-barriers', icon: Utensils, label: 'Breaking Barriers' },
       { to: '/engagement/mentors', icon: Heart, label: 'Mentors' },
       { to: '/engagement/library', icon: BookOpen, label: 'Conversation Library' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'Flag At-Risk Member', permission: 'canFlagAtRisk' },
     ],
   },
   forum_health_chair: {
@@ -191,6 +220,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
       { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members', permission: 'canViewAtRisk' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],
@@ -207,6 +237,7 @@ export const CHAIR_ROLE_CONFIGS = {
       { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canViewPartners' },
       { to: '/venues', icon: MapPin, label: 'Venues', permission: 'canViewVenues' },
       { to: '/scenarios', icon: Shuffle, label: 'Scenarios', permission: 'canViewScenarios' },
+      { to: '/forum-health/at-risk', icon: AlertTriangle, label: 'At-Risk Members', permission: 'canViewAtRisk' },
       { to: '/president/budget', icon: Wallet, label: 'Chapter Budget', permission: 'canManageFYBudget' },
       { to: '/settings', icon: Settings, label: 'Settings', permission: 'canManageSettings' },
     ],

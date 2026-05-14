@@ -5,7 +5,10 @@ import {
 } from 'lucide-react'
 import { useBoardStore } from '@/lib/boardStore'
 import { useForumStore } from '@/lib/forumStore'
+import { useChapter } from '@/lib/chapter'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import PageHeader from '@/lib/pageHeader'
@@ -76,10 +79,16 @@ export default function AtRiskMembersPage() {
     addAtRiskEntry, updateAtRiskEntry, resolveAtRiskEntry,
     reopenAtRiskEntry, touchAtRiskReviewed, deleteAtRiskEntry,
   } = useForumStore()
-  const { user, profile } = useAuth()
+  const { user, profile, effectiveRole } = useAuth()
+  const { activeChapterId } = useChapter()
+
+  const canView = hasPermission(effectiveRole, 'canViewAtRisk')
+  const canFlag = hasPermission(effectiveRole, 'canFlagAtRisk')
 
   const [showAdd, setShowAdd] = useState(false)
   const [draft, setDraft] = useState(EMPTY_DRAFT)
+  const [flagSubmitted, setFlagSubmitted] = useState(false)
+  const [flagError, setFlagError] = useState('')
   const [filterForum, setFilterForum] = useState('all')
   const [filterStatus, setFilterStatus] = useState('open')
   const [editingId, setEditingId] = useState(null)
@@ -192,6 +201,160 @@ export default function AtRiskMembersPage() {
 
   const totalOpen = atRiskEntries.filter(e => e.status === 'open').length
   const totalHigh = atRiskEntries.filter(e => e.status === 'open' && e.risk_level === 'high').length
+
+  // Submission-only view for board roles that can FLAG but not VIEW.
+  // No tiles, no filters, no roster — just the form + a thank-you on
+  // submit. Goes through supabase directly (not the optimistic store)
+  // so we can surface RLS / unique-constraint errors to the submitter
+  // — they have no list view to verify the entry landed.
+  async function handleFlagSubmit() {
+    if (!draft.forum_id || !draft.chapter_member_id) return
+    setFlagError('')
+    if (!isSupabaseConfigured()) {
+      setFlagError('Supabase is not configured in this environment.')
+      return
+    }
+    const now = new Date().toISOString()
+    const row = {
+      chapter_id: activeChapterId,
+      forum_id: draft.forum_id,
+      chapter_member_id: draft.chapter_member_id,
+      risk_level: draft.risk_level,
+      reasons: draft.reasons,
+      notes: draft.notes,
+      better_fit_note: draft.better_fit_note,
+      recommended_action: draft.recommended_action,
+      status: 'open',
+      last_reviewed_at: now,
+      created_by: myMemberId,
+    }
+    const { error } = await supabase.from('forum_at_risk_entries').insert(row)
+    if (error) {
+      // Unique-constraint hit means an open entry already exists for
+      // (forum, member). That's good news — the chair is already on it.
+      if (error.code === '23505') {
+        setFlagError('The Forum Health Chair already has an open entry for this person — no need to flag again.')
+      } else {
+        setFlagError(`Could not submit: ${error.message}`)
+      }
+      return
+    }
+    setDraft(EMPTY_DRAFT)
+    setFlagSubmitted(true)
+  }
+
+  if (!canView && canFlag) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <PageHeader
+          title="Flag a Member At Risk"
+          subtitle="Quietly tell the Forum Health Chair you're worried about someone. The list of who's been flagged stays private to the Health and Placement chairs."
+        />
+
+        {flagSubmitted ? (
+          <div className="rounded-xl border bg-card p-6 text-center space-y-3">
+            <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-600" />
+            <p className="text-sm font-medium">Thanks — the Forum Health Chair will take it from here.</p>
+            <Button variant="outline" onClick={() => setFlagSubmitted(false)}>Flag another</Button>
+          </div>
+        ) : (
+          <div className="rounded-xl border bg-card p-5 shadow-sm space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Forum</label>
+                <select
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  value={draft.forum_id}
+                  onChange={e => setDraft(d => ({ ...d, forum_id: e.target.value, chapter_member_id: '' }))}
+                >
+                  <option value="">Select a forum…</option>
+                  {activeForums.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Member</label>
+                <select
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
+                  value={draft.chapter_member_id}
+                  onChange={e => setDraft(d => ({ ...d, chapter_member_id: e.target.value }))}
+                  disabled={!draft.forum_id}
+                >
+                  <option value="">{draft.forum_id ? 'Select a member…' : 'Pick a forum first'}</option>
+                  {draft.forum_id && membersInForum(draft.forum_id).map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Risk level</label>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {RISK_LEVELS.map(r => (
+                  <button
+                    key={r.value} type="button"
+                    onClick={() => setDraft(d => ({ ...d, risk_level: r.value }))}
+                    className={`text-xs px-2.5 py-1 rounded-md border ${draft.risk_level === r.value ? r.tone : 'bg-background text-foreground border-border hover:bg-muted'}`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Why are you concerned?</label>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {REASON_PRESETS.map(r => {
+                  const on = draft.reasons.includes(r.value)
+                  return (
+                    <button
+                      key={r.value} type="button"
+                      onClick={() => setDraft(d => ({ ...d, reasons: toggleReason(d.reasons, r.value) }))}
+                      className={`text-xs px-2.5 py-1 rounded-md border ${on ? 'bg-primary/10 border-primary text-primary' : 'bg-background text-foreground border-border hover:bg-muted'}`}
+                    >
+                      {r.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Context for the Forum Health Chair</label>
+              <textarea
+                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm min-h-[80px]"
+                placeholder="What you've seen or heard. Will only be visible to the Health and Placement chairs."
+                value={draft.notes}
+                onChange={e => setDraft(d => ({ ...d, notes: e.target.value }))}
+              />
+            </div>
+
+            {flagError && (
+              <p className="text-xs text-destructive">{flagError}</p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button onClick={handleFlagSubmit} disabled={!draft.forum_id || !draft.chapter_member_id}>
+                Submit flag
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (!canView && !canFlag) {
+    return (
+      <div className="max-w-md mx-auto text-center py-12">
+        <h1 className="text-xl font-bold">You don't have access to At-Risk Members</h1>
+        <p className="text-sm text-muted-foreground mt-2">
+          This ledger is managed by the Forum Health and Forum Placement chairs.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

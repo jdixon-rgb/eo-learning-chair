@@ -330,6 +330,7 @@ export const ALLOWED_FILE_TYPES = [
 export const USER_ROLES = [
   { id: 'super_admin', label: 'Super Admin', access: 'full' },
   { id: 'regional_learning_chair_expert', label: 'Regional Learning Chair Expert', access: 'regional' },
+  { id: 'regional_manager', label: 'Regional Manager', access: 'regional' },
   { id: 'learning_chair', label: 'Learning Chair', access: 'full' },
   { id: 'chapter_experience_coordinator', label: 'Chapter Experience Coordinator', access: 'full' },
   { id: 'chapter_executive_director', label: 'Chapter Executive Director', access: 'full' },

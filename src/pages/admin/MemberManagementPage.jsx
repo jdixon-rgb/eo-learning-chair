@@ -3,7 +3,8 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { useChapter } from '@/lib/chapter'
 import { useBoardStore } from '@/lib/boardStore'
 import { useAuth } from '@/lib/auth'
-import { USER_ROLES } from '@/lib/constants'
+import { useFiscalYear } from '@/lib/fiscalYearContext'
+import { USER_ROLES, CHAIR_ROLES } from '@/lib/constants'
 import {
   Users, Search, Mail, UserPlus, Trash2, Loader2, Upload,
   ChevronDown, ChevronUp, FileSpreadsheet, Pencil, Check, X,
@@ -12,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import PageHeader from '@/lib/pageHeader'
 
@@ -21,10 +23,26 @@ const loadXLSX = () => import('xlsx')
 export default function MemberManagementPage() {
   const { activeChapterId } = useChapter()
   const { isSuperAdmin } = useAuth()
+  const { activeFiscalYear, fiscalYearOptions } = useFiscalYear()
   const {
     chapterMembers, addChapterMember, updateChapterMember, deleteChapterMember,
     syncMemberInvites, pendingProfileChangeRequests, resolveProfileCheckin,
+    chapterRoles, addRoleAssignment,
   } = useBoardStore()
+
+  // Role list for invite dropdown. Prefer the per-chapter chapter_roles
+  // registry (so chapter-specific labels / extra positions show up);
+  // fall back to the global CHAIR_ROLES catalog if the registry hasn't
+  // been seeded for this chapter yet. 'member' is always the default.
+  const inviteRoleOptions = (() => {
+    if (chapterRoles?.length > 0) {
+      return [{ key: 'member', label: 'Member (default)' },
+        ...chapterRoles.map(r => ({ key: r.role_key, label: r.label }))]
+    }
+    return [{ key: 'member', label: 'Member (default)' },
+      ...CHAIR_ROLES.map(r => ({ key: r.id, label: r.label }))]
+  })()
+
 
   // Generate-magic-link admin tool
   const [linkModalOpen, setLinkModalOpen] = useState(false)
@@ -85,7 +103,10 @@ export default function MemberManagementPage() {
   const [search, setSearch] = useState('')
 
   // Add member form
-  const [addForm, setAddForm] = useState({ name: '', email: '', company: '', phone: '', forum: '', industry: '' })
+  const [addForm, setAddForm] = useState({
+    name: '', email: '', company: '', phone: '', forum: '', industry: '',
+    role: 'member', fiscal_year: activeFiscalYear,
+  })
   const [addMsg, setAddMsg] = useState('')
 
   // Inline edit
@@ -299,11 +320,12 @@ export default function MemberManagementPage() {
     if (!addForm.name.trim() && !addForm.email.trim()) return
 
     const name = addForm.name.trim() || addForm.email.trim()
+    const email = addForm.email.trim()
     const member = {
       name,
       first_name: name.split(' ')[0] || '',
       last_name: name.split(' ').slice(1).join(' ') || '',
-      email: addForm.email.trim(),
+      email,
       company: addForm.company.trim(),
       phone: addForm.phone.trim(),
       forum: addForm.forum.trim(),
@@ -312,14 +334,37 @@ export default function MemberManagementPage() {
       is_forum_moderator: false,
     }
 
-    addChapterMember(member)
+    const newMember = addChapterMember(member)
 
-    // Also create invite for Magic Link
-    if (member.email) {
-      syncMemberInvites([member])
+    // Magic-link invite carries the chosen role so handle_new_user
+    // sets profiles.role on signup → invitee lands with the right view.
+    // merge=true lets the inviter overwrite role/name on a re-invite.
+    if (email) {
+      syncMemberInvites([{ ...member, role: addForm.role }], { merge: true })
     }
 
-    setAddForm({ name: '', email: '', company: '', phone: '', forum: '', industry: '' })
+    // For non-member invites, also create an FY-scoped role_assignments
+    // row so the chapter board view reflects "this person holds X seat
+    // for FY Y" even before the invitee signs up. member_id ties to the
+    // chapter_members row we just created.
+    if (addForm.role && addForm.role !== 'member') {
+      const chapterRoleRow = chapterRoles?.find(r => r.role_key === addForm.role)
+      if (chapterRoleRow) {
+        addRoleAssignment({
+          chapter_role_id: chapterRoleRow.id,
+          member_id: newMember?.id || null,
+          member_name: name,
+          member_email: email,
+          fiscal_year: addForm.fiscal_year,
+          status: 'active',
+        })
+      }
+    }
+
+    setAddForm({
+      name: '', email: '', company: '', phone: '', forum: '', industry: '',
+      role: 'member', fiscal_year: activeFiscalYear,
+    })
     setAddMsg('Member added!')
     fetchStatus()
     setTimeout(() => setAddMsg(''), 3000)
@@ -449,16 +494,37 @@ export default function MemberManagementPage() {
           <UserPlus className="h-4 w-4 text-primary" />
           Add Member
         </h2>
-        <form onSubmit={handleAddMember} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Input placeholder="Full name" value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} required className="col-span-2 sm:col-span-1" />
-          <Input type="email" placeholder="Email" value={addForm.email} onChange={e => setAddForm(p => ({ ...p, email: e.target.value }))} />
-          <Input placeholder="Company" value={addForm.company} onChange={e => setAddForm(p => ({ ...p, company: e.target.value }))} />
-          <Input placeholder="Phone" value={addForm.phone} onChange={e => setAddForm(p => ({ ...p, phone: e.target.value }))} />
-          <Input placeholder="Forum" value={addForm.forum} onChange={e => setAddForm(p => ({ ...p, forum: e.target.value }))} />
-          <Input placeholder="Industry" value={addForm.industry} onChange={e => setAddForm(p => ({ ...p, industry: e.target.value }))} />
-          <Button type="submit" disabled={!addForm.name.trim() && !addForm.email.trim()} className="shrink-0">
-            Add
-          </Button>
+        <form onSubmit={handleAddMember} className="space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <Input placeholder="Full name" value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} required className="col-span-2 sm:col-span-1" />
+            <Input type="email" placeholder="Email" value={addForm.email} onChange={e => setAddForm(p => ({ ...p, email: e.target.value }))} />
+            <Input placeholder="Company" value={addForm.company} onChange={e => setAddForm(p => ({ ...p, company: e.target.value }))} />
+            <Input placeholder="Phone" value={addForm.phone} onChange={e => setAddForm(p => ({ ...p, phone: e.target.value }))} />
+            <Input placeholder="Forum" value={addForm.forum} onChange={e => setAddForm(p => ({ ...p, forum: e.target.value }))} />
+            <Input placeholder="Industry" value={addForm.industry} onChange={e => setAddForm(p => ({ ...p, industry: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
+            <div className="col-span-2 sm:col-span-2">
+              <label className="text-[11px] font-medium text-muted-foreground">Role</label>
+              <Select value={addForm.role} onChange={e => setAddForm(p => ({ ...p, role: e.target.value }))}>
+                {inviteRoleOptions.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+              </Select>
+            </div>
+            <div className={addForm.role === 'member' ? 'opacity-50 pointer-events-none' : ''}>
+              <label className="text-[11px] font-medium text-muted-foreground">Fiscal Year</label>
+              <Select value={addForm.fiscal_year} onChange={e => setAddForm(p => ({ ...p, fiscal_year: e.target.value }))}>
+                {fiscalYearOptions.map(fy => <option key={fy} value={fy}>{fy}</option>)}
+              </Select>
+            </div>
+            <Button type="submit" disabled={!addForm.name.trim() && !addForm.email.trim()} className="shrink-0">
+              Add
+            </Button>
+          </div>
+          {addForm.role !== 'member' && (
+            <p className="text-[11px] text-muted-foreground">
+              Assigning a chair role: the invitee signs in with that view, and an FY {addForm.fiscal_year} role assignment is created in the board roster.
+            </p>
+          )}
         </form>
         {addMsg && <p className="text-xs text-green-600 mt-2">{addMsg}</p>}
       </div>

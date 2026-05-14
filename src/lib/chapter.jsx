@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, createElement } from 'react'
 import { useAuth } from './auth'
 import { supabase, isSupabaseConfigured } from './supabase'
+import { REGIONAL_ROLES } from './permissions'
 
 const ChapterContext = createContext(null)
 
@@ -8,7 +9,7 @@ const STORAGE_KEY = 'eo-active-chapter'
 
 export function ChapterProvider({ children }) {
   const { profile, isSuperAdmin, effectiveRegion } = useAuth()
-  const isRegionalRole = profile?.role === 'regional_learning_chair_expert'
+  const isRegionalRole = REGIONAL_ROLES.includes(profile?.role)
 
   const [allChapters, setAllChapters] = useState([])
   const [activeChapterId, setActiveChapterIdRaw] = useState(null)

@@ -17,6 +17,116 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.9 — 2026-05-13
+
+### Feature: Regional Manager role
+
+A new region-scoped role for EO Global staff who support chapters in
+their region — read-only across chapters, no chapter-private (forum
+/ reflections / lifeline) access. Sits alongside Regional Learning
+Chair Expert: both are listed in `REGIONAL_ROLES` and share the
+region-scoped Chapter Switcher behavior, so once a Regional Manager
+signs in they can step through any chapter in their region and read
+its Chapter Calendar, Year Arc, Speakers, Events, SAPs, Venues,
+Budget, Speaker Library, and Survey Results — but never write.
+
+Refactor: `chapter.jsx` and `auth.jsx` now derive regional behavior
+from the `REGIONAL_ROLES` list rather than checking the
+`regional_learning_chair_expert` literal, so any future regional
+role lights up automatically.
+
+Schema: migration `097_regional_manager_role.sql` adds
+`regional_manager` to the role check constraints on `profiles.role`
+and `member_invites.role`. Staging already migrated; prod runs at
+deploy time.
+
+---
+
+## v2.8.8 — 2026-05-13
+
+### Feature: Learning Chair can invite members and assign role + fiscal year
+
+The Learning Chair has become the de-facto entry point for many
+chapters' new-member flows, but the invite UI was super-admin / CED /
+CEC only, and even where it existed it didn't capture a role — every
+invitee was implicitly `member`, so they signed in with the default
+view regardless of what seat they were really being recruited for.
+
+Two changes:
+
+1. `canManageMembers` now includes `learning_chair`. The Members link
+   in the sidebar appears for the active LC, and `/admin/members`
+   resolves. Did NOT include `learning_chair_elect` because the
+   `/admin/*` route guard uses `ADMIN_ROLES` which doesn't list the
+   elect — adding only one half of the gate would have produced a
+   confusing "I see the link but get bounced" experience.
+
+2. The Add Member form on `/admin/members` gained a **Role** select
+   (pulling from the chapter's `chapter_roles` registry, falling back
+   to the global `CHAIR_ROLES` catalog) and a **Fiscal Year** select.
+   - Default is `Member` and the FY field is greyed out — no behavior
+     change for invites that aren't naming a chair seat.
+   - When a chair role is picked: the invite's `member_invites.role`
+     reflects it (so `handle_new_user` sets `profiles.role` correctly
+     on signup, and the invitee logs in with the right sidebar/view)
+     AND a `role_assignments` row is created for the chosen FY, tying
+     the new chapter_members record into the board roster.
+
+Also extended `syncMemberInvites` in `boardStore` with a `merge`
+option — explicit single-invite calls (this Add Member flow, plus
+any future "re-invite Maria as Forum Health Chair" path) upsert with
+update-on-conflict, while bulk imports keep `ignoreDuplicates: true`
+so a CSV with no role column doesn't silently clobber chair seats
+someone already assigned.
+
+---
+
+## v2.8.7 — 2026-05-13
+
+### Feature: All board roles can flag at-risk members
+
+Previously only Forum Health Chair, Forum Placement Chair, and chapter
+admins could add to the at-risk ledger. Now every chapter-board role
+(Learning, Engagement, SAP, Finance, President track, CED, CEC,
+board_liaison, committee_member) can flag a member — but only the
+Health/Placement chairs and chapter admins see the existing roster.
+
+**SLP Chair is intentionally excluded** — their scope is SLP-only,
+not member at-risk.
+
+**Schema (migration 096):** new `can_flag_at_risk(chapter_id)` helper;
+INSERT policy on `forum_at_risk_entries` accepts the broader role
+list. SELECT / UPDATE / DELETE policies are unchanged.
+
+**UI:**
+- New permissions `canViewAtRisk` (narrow) and `canFlagAtRisk` (broad).
+- `AtRiskMembersPage` renders a submission-only form for board roles
+  who can flag but not view (forum + member + risk + reasons + notes,
+  then a thank-you). Posts directly through Supabase so RLS or
+  unique-constraint errors surface to the submitter — they have no
+  list to verify the entry landed.
+- Sidebar entry "Flag At-Risk Member" added to LC / Engagement / SAP /
+  Finance chair configs. President / CED / CEC get "At-Risk Members"
+  (full view). Forum Health Chair and Forum Placement Chair keep
+  their existing entries.
+
+---
+
+## v2.8.6 — 2026-05-13
+
+### Fix: SLP Chair view of Forums now shows only SLP forums
+
+`/board/forums` previously showed every forum in the chapter
+regardless of who was looking. The SLP Chair's view now filters
+to `population='slp'` and the Add Forum dialog locks the new
+forum to SLP (no Member/SLP toggle in that seat). Forum Health
+Chair, President, super-admin, and every other role continue to
+see both populations — they rely on the small "SLP" pill on the
+card to differentiate. The page title becomes "SLP Forums" in
+the SLP Chair view.
+
+---
+
 ## v2.8.5 — 2026-05-13
 
 ### Fix: President-pipeline projection now uses presidency-year semantics

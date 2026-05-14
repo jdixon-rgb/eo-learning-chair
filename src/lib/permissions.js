@@ -21,6 +21,7 @@ export const BOARD_ROLES = ['super_admin', 'president', 'finance_chair', 'board_
 export const CALENDAR_FULL_YEAR_ROLES = [
   'super_admin',
   'regional_learning_chair_expert',
+  'regional_manager',
   'president', 'president_elect', 'president_elect_elect',
   'finance_chair',
   'learning_chair', 'learning_chair_elect',
@@ -52,17 +53,17 @@ export const FINANCE_ROLES = ['super_admin', 'president', 'finance_chair', 'chap
 export const FEATURE_PERMISSIONS = {
   canEditEvents:         [...ADMIN_ROLES, 'committee_member'],
   canEditSpeakers:       [...ADMIN_ROLES, 'committee_member'],
-  canViewBudget:         [...ADMIN_ROLES, 'finance_chair', 'regional_learning_chair_expert'],
+  canViewBudget:         [...ADMIN_ROLES, 'finance_chair', 'regional_learning_chair_expert', 'regional_manager'],
   canEditBudget:         ADMIN_ROLES,
-  canViewVenues:         [...ADMIN_ROLES, 'regional_learning_chair_expert'],
-  canViewScenarios:      [...ADMIN_ROLES, 'regional_learning_chair_expert'],
+  canViewVenues:         [...ADMIN_ROLES, 'regional_learning_chair_expert', 'regional_manager'],
+  canViewScenarios:      [...ADMIN_ROLES, 'regional_learning_chair_expert', 'regional_manager'],
   canEditChapterConfig:  ['super_admin', 'president', 'chapter_executive_director'],
   canManageSettings:     SETTINGS_ROLES,
-  canManageMembers:      ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  canManageMembers:      ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator', 'learning_chair'],
   canSendNotifications:  ADMIN_ROLES,
   // Survey Results are aggregate (no member-identifying data), so Regional
   // Learning Chair Expert can see how events landed across her region.
-  canViewSurveyResults:  ['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'regional_learning_chair_expert'],
+  canViewSurveyResults:  ['president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'regional_learning_chair_expert', 'regional_manager'],
   // Speaker fee amounts (fee_estimated, fee_actual). Regional expert sees
   // ranges but not specific amounts — those are often privately negotiated.
   canViewSpeakerFees:    [...ADMIN_ROLES, 'finance_chair', 'committee_member'],
@@ -72,13 +73,20 @@ export const FEATURE_PERMISSIONS = {
   canManageComms:        BOARD_ROLES,
   canManageForums:       BOARD_ROLES,
   canViewScorecards:     BOARD_ROLES,
+  // At-risk ledger. View/edit/resolve is narrow (Forum Health + Forum
+  // Placement chairs + chapter admins). Flag-only is broad: any chapter-
+  // board role can add an entry but won't see the existing list. Mirrors
+  // RLS in migration 096 (can_flag_at_risk). SLP Chair excluded by
+  // design — their scope is SLP-only, not member at-risk.
+  canViewAtRisk:         ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'forum_health_chair', 'forum_placement_chair'],
+  canFlagAtRisk:         ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair', 'learning_chair_elect', 'engagement_chair', 'sap_chair', 'forum_health_chair', 'forum_placement_chair', 'chapter_executive_director', 'chapter_experience_coordinator', 'board_liaison', 'committee_member'],
   canViewCoordinator:    ADMIN_ROLES.filter(r => !['sap_chair', 'president'].includes(r)),
   // Engagement Chair module
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance
   canManageFYBudget:     ['super_admin', 'president', 'finance_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
-  // Partners (SAP) — visible to leadership, learning chairs, staff, and regional expert
-  canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'regional_learning_chair_expert'],
+  // Partners (SAP) — visible to leadership, learning chairs, staff, and regional roles
+  canViewPartners:       ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'regional_learning_chair_expert', 'regional_manager'],
   // Editing SAPs — partners, contacts, renewal intent, prospect
   // pipeline, archive/revive — is the SAP Chair's domain. Super-admin
   // retained for cross-chapter support. Other roles view but don't
@@ -92,7 +100,7 @@ export const FEATURE_PERMISSIONS = {
   // see the partner roster itself.
   canViewSAPAmounts:     ['super_admin', 'sap_chair', 'president', 'president_elect', 'chapter_executive_director'],
   // Public Speaker Library — shared cross-chapter catalog
-  canViewSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  canViewSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'regional_manager', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Editing + reviewing mirror the SQL helper can_edit_speaker_library()
   canEditSpeakerLibrary:   ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
   canReviewSpeakers:       ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator'],
@@ -104,15 +112,18 @@ export function hasPermission(role, feature) {
   return FEATURE_PERMISSIONS[feature]?.includes(role) ?? false
 }
 
-// Regional oversight roles (span multiple chapters, no chapter_id)
-export const REGIONAL_ROLES = ['regional_learning_chair_expert']
+// Regional oversight roles (span multiple chapters, no chapter_id).
+// Regional Manager is EO Global staff supporting chapters in their
+// region — read-only across chapters, no chapter-private access.
+export const REGIONAL_ROLES = ['regional_learning_chair_expert', 'regional_manager']
 
 // Speaker Library access — anyone who consumes or contributes to the
 // public catalog. Mirrors canViewSpeakerLibrary above.
-export const SPEAKER_LIBRARY_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator']
+export const SPEAKER_LIBRARY_ROLES = ['super_admin', 'regional_learning_chair_expert', 'regional_manager', 'president', 'president_elect', 'president_elect_elect', 'learning_chair', 'learning_chair_elect', 'chapter_executive_director', 'chapter_experience_coordinator']
 
-// All roles that can access the admin layout (sidebar)
-export const ADMIN_LAYOUT_ROLES = ['super_admin', 'regional_learning_chair_expert', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', 'slp_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison', 'forum_health_chair', 'forum_placement_chair']
+// All roles that can access the admin layout (sidebar). Regional roles
+// spread via REGIONAL_ROLES so any future regional addition flows in.
+export const ADMIN_LAYOUT_ROLES = ['super_admin', ...REGIONAL_ROLES, 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair_elect', 'sap_chair', 'slp_chair', ...ADMIN_ROLES, 'engagement_chair', 'committee_member', 'board_liaison', 'forum_health_chair', 'forum_placement_chair']
 
 // All roles that can access the member portal.
 // Regional oversight roles are explicitly excluded — forum / reflections /

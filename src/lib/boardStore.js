@@ -305,23 +305,31 @@ export function BoardStoreProvider({ children }) {
   // ── Sync member_invites (auth whitelist) ──
   // Phone is included so members can also use the SMS-OTP sign-in path.
   // Stored digits-only to match chapter_members.phone format.
-  const syncMemberInvites = useCallback(async (members) => {
+  const syncMemberInvites = useCallback(async (members, { merge = false } = {}) => {
     if (!isSupabaseConfigured() || !activeChapterId) return
     const rows = members
       .filter(m => m.email)
       .map(m => ({
         email: m.email.trim().toLowerCase(),
         full_name: m.name || `${m.first_name || ''} ${m.last_name || ''}`.trim(),
-        role: 'member',
+        // Inviter can preselect a chair role; defaults to 'member'.
+        // handle_new_user trigger reads member_invites.role into
+        // profiles.role on signup, so the invitee logs in with the
+        // right sidebar/view applied immediately.
+        role: m.role || 'member',
         chapter_id: activeChapterId,
         phone: m.phone ? String(m.phone).replace(/\D/g, '') || null : null,
       }))
     if (rows.length === 0) return
+    // merge=true: explicit single-invite calls where the inviter is
+    // intentionally setting role — re-invite should UPDATE the row.
+    // merge=false (default): bulk imports — keep existing role to
+    // avoid clobbering a chair assignment with a default 'member'.
     for (let i = 0; i < rows.length; i += 50) {
       const batch = rows.slice(i, i + 50)
       const { error } = await supabase
         .from('member_invites')
-        .upsert(batch, { onConflict: 'email', ignoreDuplicates: true })
+        .upsert(batch, { onConflict: 'email', ignoreDuplicates: !merge })
       if (error) captureSilentError('boardStore:syncMemberInvites-batch', error, { chapter_id: activeChapterId })
     }
   }, [activeChapterId])
