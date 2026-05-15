@@ -100,6 +100,13 @@ export const FEATURE_PERMISSIONS = {
   canViewAtRisk:         ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'chapter_executive_director', 'chapter_experience_coordinator', 'forum_health_chair', 'forum_placement_chair'],
   canFlagAtRisk:         ['super_admin', 'president', 'president_elect', 'president_elect_elect', 'finance_chair', 'learning_chair', 'learning_chair_elect', 'engagement_chair', 'sap_chair', 'forum_health_chair', 'forum_placement_chair', 'chapter_executive_director', 'chapter_experience_coordinator', 'board_liaison', 'committee_member'],
   canViewCoordinator:    ADMIN_ROLES.filter(r => !['sap_chair', 'president'].includes(r)),
+  // SLP visibility in /portal/directory. SAPs are public-to-members
+  // (chapter partners — their info is like a phone book) so they
+  // don't need this gate. SLPs are the spouses/SLPs of members and
+  // are deliberately hidden from regular EO-member view to protect
+  // them from broader chapter exposure. Granted to SLP Chair (their
+  // workflow), chapter staff (operations), and super_admin (support).
+  canViewSLPsInDirectory: ['super_admin', 'slp_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
   // Engagement Chair module
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance
