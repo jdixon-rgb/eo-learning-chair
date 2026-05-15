@@ -17,6 +17,108 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.14 — 2026-05-15
+
+### Polish: sidebar admin link now reads "Invite Member"
+
+The admin entry that points at `/admin/members` was labeled "Members"
+with a Shield icon — chairs were missing it because that read as
+"directory / admin tool" rather than "the place to bring new people
+in." Renamed to **Invite Member** with a UserPlus icon so it matches
+how chairs think about the task. The page itself is unchanged — the
+full member directory still renders below the invite form.
+
+---
+
+## v2.8.13 — 2026-05-15
+
+### Feature: every board chair (and SLP Chair) can invite members
+
+v2.8.8 opened invite access to the Learning Chair only. Expanding now
+to every chair seat that actually recruits people: President +
+electeds, Finance Chair, Learning Chair (+ elect), SAP Chair, SLP
+Chair, Engagement Chair, Forum Health Chair, Forum Placement Chair,
+and Board Liaison. Plus chapter staff (CED / CEC) and super-admin who
+already had access.
+
+Two parallel changes:
+
+1. New `MEMBER_INVITER_ROLES` constant in `permissions.js` enumerating
+   the full list, and `canManageMembers` switched to use it. The
+   Members sidebar link now surfaces for every chair.
+2. `/admin/members` route guard in `App.jsx` switched from
+   `ADMIN_ROLES` to `MEMBER_INVITER_ROLES`. Without this the chairs
+   would have seen the link but been bounced from the route — same
+   trap that caught `learning_chair_elect` in v2.8.8.
+
+Intentionally excluded:
+- `committee_member` (broad team-member helper, not a chair seat)
+- `regional_*` roles (cross-chapter — no single chapter to invite to)
+- `member` (no admin access by definition)
+
+The Add Member form's Role + Fiscal Year selects (v2.8.8) apply to
+every inviter. We trust the chair to pick the correct role for their
+recruit — same logic as the v2.8.8 LC decision.
+
+---
+
+## v2.8.12 — 2026-05-15
+
+### Feature: Save chapter members to your phone's contacts
+
+New **Directory** entry in the Member sidebar (`/portal/directory`)
+lists every chapter member with search and one-tap "Save to Contacts"
+per row. Headlines the bulk action: a single **Download .vcf** button
+that bundles the entire visible roster into one file. Open it on your
+phone, confirm once, and every member lands in your native address
+book — which means WhatsApp, Messages, Mail, and Gmail autocomplete
+all start resolving them by name automatically. No per-app sync work.
+
+Added the same bulk action inside the Forum members tab as **Save
+forum to contacts** so a member can pull just their forum-mates in
+one tap. Per-member Save buttons appear next to Email / Call too.
+
+Implementation: new `src/lib/vcard.js` builds RFC 2426 vCard 3.0
+output. Normalizes the mixed-format `chapter_members.phone` values
+to E.164 (`+1XXXXXXXXXX`) so WhatsApp / iMessage actually match the
+phone's address book lookups. Tags each card with a `CATEGORIES`
+line (chapter name, plus forum name when bulk-saving from a forum)
+so the contacts land grouped in Apple / Google Contacts.
+
+Caveat: iOS and Android both require the user to confirm the import
+once — silent contact injection isn't allowed by either platform.
+The bulk pattern collapses that to a single confirmation for the
+whole bundle, which is the best UX their security models permit.
+
+---
+
+## v2.8.11 — 2026-05-15
+
+### Feature: persistent Quick Actions row on the Learning Chair dashboard
+
+The v2.8.8 Add-Member-with-role flow was already shipped, but it
+was only discoverable from two places: the sidebar nav and the
+dismissible empty-chapter Welcome Guide. Once a chapter had a single
+event or speaker, the welcome guide vanished and the invite became
+a sidebar-only feature — easy to forget.
+
+Added a persistent Quick Actions row directly under the dashboard
+header on `DashboardPage`. Four cards (three for roles without invite
+power):
+
+- **Invite a member** → `/admin/members` — gated to `canManageMembers`
+  so the LC, CED, CEC, and super-admin see it; everyone else gets
+  three cards instead of four.
+- **Add a speaker** → `/speakers`
+- **Plan an event** → `/events`
+- **Review budget** → `/budget`
+
+The row stays visible regardless of chapter state, so the LC
+always has a one-tap path to invite a new chair or member without
+hunting through the sidebar.
+
+---
+
 ## v2.8.10 — 2026-05-13
 
 ### Feature: Super Admin Staff page

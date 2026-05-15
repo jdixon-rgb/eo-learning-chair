@@ -11,9 +11,10 @@ import { loadCurrentMember, loadParkingLot, createParkingLotEntry, updateParking
 import { lazy, Suspense } from 'react'
 import {
   Pin, Calendar, Users, FileText, BookOpen, History, Handshake,
-  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download, Loader2, FileUp,
+  Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download, Loader2, FileUp, UserPlus,
 } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
+import { saveMemberToContacts, saveMembersToContacts } from '@/lib/vcard'
 
 // jsPDF is a heavy dep; load on first download click rather than on every Forum page view.
 async function downloadConstitutionPdfLazy(args) {
@@ -484,6 +485,8 @@ export default function ForumHomePage({ focusTab }) {
           forumMembers={forumMembers}
           currentMemberId={member.id}
           forumId={effectiveForum.id}
+          forumName={effectiveForum.name}
+          chapterLabel={activeChapter?.name}
           roles={myForumRoles}
           isModerator={isModerator}
           onAddRole={addForumRole}
@@ -511,7 +514,7 @@ export default function ForumHomePage({ focusTab }) {
 // Members Tab — visible to every forum mate; moderators can assign
 // and remove forum roles inline per member.
 // ────────────────────────────────────────────────────────────
-function MembersTab({ forumMembers, currentMemberId, forumId, roles, isModerator, onAddRole, onDeleteRole, activeFiscalYear }) {
+function MembersTab({ forumMembers, currentMemberId, forumId, forumName, chapterLabel, roles, isModerator, onAddRole, onDeleteRole, activeFiscalYear }) {
   const [addingFor, setAddingFor] = useState(null)
   const [addRole, setAddRole] = useState('timer')
   const [addFY, setAddFY] = useState(activeFiscalYear || '')
@@ -553,11 +556,37 @@ function MembersTab({ forumMembers, currentMemberId, forumId, roles, isModerator
     )
   }
 
+  // Bulk save: pull every forum-mate into the user's phone contacts in
+  // one .vcf. Tagged with both forum and chapter so the contacts land
+  // grouped in Apple/Google Contacts. Excludes "me" — no one needs to
+  // save themselves to their own address book.
+  const savableForumMembers = forumMembers.filter(m => m.id !== currentMemberId)
+  const handleSaveForumMates = () => {
+    saveMembersToContacts(savableForumMembers, {
+      filename: `${(forumName || 'forum').replace(/\s+/g, '_')}_forum_mates`,
+      chapterLabel: forumName && chapterLabel
+        ? `${chapterLabel} — ${forumName}`
+        : forumName || chapterLabel,
+    })
+  }
+
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground/70 px-1">
-        Your forum mates{isModerator ? ' — tap + Role to assign, × to remove' : ''}.
-      </p>
+      <div className="flex items-center justify-between gap-3 px-1">
+        <p className="text-xs text-muted-foreground/70">
+          Your forum mates{isModerator ? ' — tap + Role to assign, × to remove' : ''}.
+        </p>
+        {savableForumMembers.length > 0 && (
+          <button
+            onClick={handleSaveForumMates}
+            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/80 hover:text-foreground bg-muted/30 hover:bg-muted/50 px-2.5 py-1 rounded-full transition-colors shrink-0"
+            title="Download a .vcf with every forum-mate — opens in your phone's Contacts app"
+          >
+            <Download className="h-3 w-3" />
+            Save forum to contacts
+          </button>
+        )}
+      </div>
       <div className="rounded-xl border border-border overflow-hidden divide-y divide-white/5">
         {forumMembers.map(m => {
           const isMe = m.id === currentMemberId
@@ -594,6 +623,20 @@ function MembersTab({ forumMembers, currentMemberId, forumId, roles, isModerator
                     >
                       Call
                     </a>
+                  )}
+                  {!isMe && (
+                    <button
+                      onClick={() => saveMemberToContacts(m, {
+                        chapterLabel: forumName && chapterLabel
+                          ? `${chapterLabel} — ${forumName}`
+                          : forumName || chapterLabel,
+                      })}
+                      className="hover:text-foreground/90 transition-colors inline-flex items-center gap-1"
+                      title="Add to your phone's contacts"
+                    >
+                      <UserPlus className="h-3 w-3" />
+                      <span className="hidden sm:inline">Save</span>
+                    </button>
                   )}
                 </div>
               </div>

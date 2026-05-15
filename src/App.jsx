@@ -10,7 +10,7 @@ import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
 import { ForumStoreProvider } from '@/lib/forumStore'
 import { VendorStoreProvider } from '@/lib/vendorStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES, REGIONAL_ROLES, SPEAKER_LIBRARY_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES, REGIONAL_ROLES, SPEAKER_LIBRARY_ROLES, MEMBER_INVITER_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import BetaTermsAckGate from '@/components/BetaTermsAckGate'
 import { PageHeaderProvider } from '@/lib/pageHeader'
@@ -80,6 +80,7 @@ import ForumPlacementDashboard from '@/pages/forum-placement/ForumPlacementDashb
 import MemberLeadsPage from '@/pages/forum-placement/MemberLeadsPage'
 import VendorsPage from '@/pages/portal/VendorsPage'
 import MemberSAPInterestPage from '@/pages/portal/MemberSAPInterestPage'
+import MemberDirectoryPage from '@/pages/portal/MemberDirectoryPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
 import SAPPortalDashboard from '@/pages/sap-portal/SAPPortalDashboard'
 import SAPEventListPage from '@/pages/sap-portal/SAPEventListPage'
@@ -169,7 +170,7 @@ function App() {
                 } />
                 {/* Admin sub-pages */}
                 <Route path="/admin/members" element={
-                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><MemberManagementPage /></ProtectedRoute>
+                  <ProtectedRoute allowedRoles={MEMBER_INVITER_ROLES}><MemberManagementPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/staff" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><StaffManagementPage /></ProtectedRoute>
@@ -298,6 +299,7 @@ function App() {
                 <Route path="/portal/moderator/constitution" element={<ForumHomePage focusTab="constitution" />} />
                 <Route path="/portal/moderator/events" element={<ModeratorEventsPage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
+                <Route path="/portal/directory" element={<MemberDirectoryPage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
                 <Route path="/portal/partners" element={<MemberSAPInterestPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />
