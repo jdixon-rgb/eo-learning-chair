@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, Download, UserPlus, Mail, Phone } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
-import { saveMemberToContacts, saveMembersToContacts } from '@/lib/vcard'
+import { saveMemberToContacts, saveMembersToContacts, isMobileDevice } from '@/lib/vcard'
 
 // Chapter-wide member directory. Lets any signed-in member browse the
 // roster, search by name / company / industry, and pull contact cards
@@ -20,6 +20,14 @@ export default function MemberDirectoryPage() {
   const [search, setSearch] = useState('')
 
   const chapterLabel = activeChapter?.name || 'Chapter'
+  // Helper copy differs by platform: phones get the "open it, confirm
+  // once" native-sheet flow; desktops get the "import + iCloud/Google
+  // syncs to your phone" flow. Both end in the same place — the
+  // device address book that WhatsApp / Messages / Mail read from.
+  const onMobile = isMobileDevice()
+  const bulkHelper = onMobile
+    ? "Downloads one .vcf file. Open it, confirm once, and every member appears in WhatsApp, Messages, and email autocomplete."
+    : "Downloads one .vcf file. Import into Google Contacts (any browser), Apple Contacts (Mac), or the People app (Windows) — it'll sync to your phone, where WhatsApp, Messages, and email autocomplete pick everyone up."
 
   // Active roster only — soft-deleted / departed members shouldn't
   // appear in the directory or land in someone's address book.
@@ -64,9 +72,7 @@ export default function MemberDirectoryPage() {
               Save all {visibleMembers.length} members to your phone
             </p>
             <p className="text-xs text-muted-foreground/80 mt-0.5">
-              Downloads one .vcf file. Open it on your phone, confirm
-              once, and every member appears in WhatsApp, Messages, and
-              email autocomplete.
+              {bulkHelper}
             </p>
           </div>
           <Button

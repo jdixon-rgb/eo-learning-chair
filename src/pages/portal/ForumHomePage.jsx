@@ -14,7 +14,7 @@ import {
   Plus, Trash2, Save, X, Star, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Upload, ClipboardList, Download, Loader2, FileUp, UserPlus,
 } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
-import { saveMemberToContacts, saveMembersToContacts } from '@/lib/vcard'
+import { saveMemberToContacts, saveMembersToContacts, isMobileDevice } from '@/lib/vcard'
 
 // jsPDF is a heavy dep; load on first download click rather than on every Forum page view.
 async function downloadConstitutionPdfLazy(args) {
@@ -569,6 +569,16 @@ function MembersTab({ forumMembers, currentMemberId, forumId, forumName, chapter
         : forumName || chapterLabel,
     })
   }
+  // Tooltip copy varies by platform: mobile uses the native Contacts
+  // import sheet, desktop relies on Mac Contacts / Google Contacts
+  // syncing back to the phone.
+  const onMobile = isMobileDevice()
+  const bulkTooltip = onMobile
+    ? 'Download a .vcf and add every forum-mate to your phone Contacts in one go'
+    : 'Download a .vcf — import to Google Contacts, Apple Contacts (Mac), or the People app (Windows); it syncs to your phone'
+  const singleTooltip = onMobile
+    ? "Add to your phone's contacts"
+    : "Save as .vcf — opens in your computer's Contacts app and syncs to your phone"
 
   return (
     <div className="space-y-2">
@@ -580,7 +590,7 @@ function MembersTab({ forumMembers, currentMemberId, forumId, forumName, chapter
           <button
             onClick={handleSaveForumMates}
             className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/80 hover:text-foreground bg-muted/30 hover:bg-muted/50 px-2.5 py-1 rounded-full transition-colors shrink-0"
-            title="Download a .vcf with every forum-mate — opens in your phone's Contacts app"
+            title={bulkTooltip}
           >
             <Download className="h-3 w-3" />
             Save forum to contacts
@@ -632,7 +642,7 @@ function MembersTab({ forumMembers, currentMemberId, forumId, forumName, chapter
                           : forumName || chapterLabel,
                       })}
                       className="hover:text-foreground/90 transition-colors inline-flex items-center gap-1"
-                      title="Add to your phone's contacts"
+                      title={singleTooltip}
                     >
                       <UserPlus className="h-3 w-3" />
                       <span className="hidden sm:inline">Save</span>
