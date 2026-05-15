@@ -17,6 +17,38 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.13 — 2026-05-15
+
+### Feature: every board chair (and SLP Chair) can invite members
+
+v2.8.8 opened invite access to the Learning Chair only. Expanding now
+to every chair seat that actually recruits people: President +
+electeds, Finance Chair, Learning Chair (+ elect), SAP Chair, SLP
+Chair, Engagement Chair, Forum Health Chair, Forum Placement Chair,
+and Board Liaison. Plus chapter staff (CED / CEC) and super-admin who
+already had access.
+
+Two parallel changes:
+
+1. New `MEMBER_INVITER_ROLES` constant in `permissions.js` enumerating
+   the full list, and `canManageMembers` switched to use it. The
+   Members sidebar link now surfaces for every chair.
+2. `/admin/members` route guard in `App.jsx` switched from
+   `ADMIN_ROLES` to `MEMBER_INVITER_ROLES`. Without this the chairs
+   would have seen the link but been bounced from the route — same
+   trap that caught `learning_chair_elect` in v2.8.8.
+
+Intentionally excluded:
+- `committee_member` (broad team-member helper, not a chair seat)
+- `regional_*` roles (cross-chapter — no single chapter to invite to)
+- `member` (no admin access by definition)
+
+The Add Member form's Role + Fiscal Year selects (v2.8.8) apply to
+every inviter. We trust the chair to pick the correct role for their
+recruit — same logic as the v2.8.8 LC decision.
+
+---
+
 ## v2.8.12 — 2026-05-15
 
 ### Feature: Save chapter members to your phone's contacts

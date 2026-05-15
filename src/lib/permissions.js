@@ -39,6 +39,25 @@ export const CALENDAR_FULL_YEAR_ROLES = [
 // Roles that can manage board positions, assignments, and chapter settings
 export const SETTINGS_ROLES = ['super_admin', 'president', 'chapter_executive_director', 'chapter_experience_coordinator']
 
+// Roles that can invite people into the chapter via /admin/members.
+// Intentionally broad: every chair (board + chair seats including SLP)
+// recruits their own people, so they should all be able to bring them in
+// without having to go through the ED. Excludes committee_member (broad
+// team-member helper role, not a chair) and any regional_* role (those
+// are cross-chapter, with no single chapter to invite into).
+export const MEMBER_INVITER_ROLES = [
+  'super_admin',
+  'chapter_executive_director', 'chapter_experience_coordinator',
+  'president', 'president_elect', 'president_elect_elect',
+  'finance_chair',
+  'learning_chair', 'learning_chair_elect',
+  'sap_chair',
+  'slp_chair',
+  'engagement_chair',
+  'forum_health_chair', 'forum_placement_chair',
+  'board_liaison',
+]
+
 // Engagement Chair scope — chapter staff also have access
 export const ENGAGEMENT_ROLES = ['super_admin', 'engagement_chair', 'chapter_executive_director', 'chapter_experience_coordinator']
 
@@ -59,7 +78,7 @@ export const FEATURE_PERMISSIONS = {
   canViewScenarios:      [...ADMIN_ROLES, 'regional_learning_chair_expert', 'regional_manager'],
   canEditChapterConfig:  ['super_admin', 'president', 'chapter_executive_director'],
   canManageSettings:     SETTINGS_ROLES,
-  canManageMembers:      ['super_admin', 'chapter_executive_director', 'chapter_experience_coordinator', 'learning_chair'],
+  canManageMembers:      MEMBER_INVITER_ROLES,
   canSendNotifications:  ADMIN_ROLES,
   // Survey Results are aggregate (no member-identifying data), so Regional
   // Learning Chair Expert can see how events landed across her region.

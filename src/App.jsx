@@ -10,7 +10,7 @@ import { EngagementStoreProvider } from '@/lib/engagementStore'
 import { SAPStoreProvider } from '@/lib/sapStore'
 import { ForumStoreProvider } from '@/lib/forumStore'
 import { VendorStoreProvider } from '@/lib/vendorStore'
-import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES, REGIONAL_ROLES, SPEAKER_LIBRARY_ROLES } from '@/lib/permissions'
+import { ADMIN_ROLES, ADMIN_LAYOUT_ROLES, PORTAL_ROLES, SAP_PORTAL_ROLES, SUPER_ADMIN_ROLES, BOARD_ROLES, ENGAGEMENT_ROLES, SETTINGS_ROLES, PRESIDENT_ROLES, FINANCE_ROLES, REGIONAL_ROLES, SPEAKER_LIBRARY_ROLES, MEMBER_INVITER_ROLES } from '@/lib/permissions'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import BetaTermsAckGate from '@/components/BetaTermsAckGate'
 import { PageHeaderProvider } from '@/lib/pageHeader'
@@ -170,7 +170,7 @@ function App() {
                 } />
                 {/* Admin sub-pages */}
                 <Route path="/admin/members" element={
-                  <ProtectedRoute allowedRoles={ADMIN_ROLES}><MemberManagementPage /></ProtectedRoute>
+                  <ProtectedRoute allowedRoles={MEMBER_INVITER_ROLES}><MemberManagementPage /></ProtectedRoute>
                 } />
                 <Route path="/admin/staff" element={
                   <ProtectedRoute allowedRoles={ADMIN_ROLES}><StaffManagementPage /></ProtectedRoute>
