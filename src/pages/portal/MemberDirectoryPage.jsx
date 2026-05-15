@@ -18,6 +18,7 @@ export default function MemberDirectoryPage() {
   const { chapterMembers } = useBoardStore()
   const { activeChapter } = useChapter()
   const [search, setSearch] = useState('')
+  const [forumFilter, setForumFilter] = useState('all')
 
   const chapterLabel = activeChapter?.name || 'Chapter'
   // Helper copy differs by platform: phones get the "open it, confirm
@@ -29,23 +30,51 @@ export default function MemberDirectoryPage() {
     ? "Downloads one .vcf file. Open it, confirm once, and every member appears in WhatsApp, Messages, and email autocomplete."
     : "Downloads one .vcf file. Import into Google Contacts (any browser), Apple Contacts (Mac), or the People app (Windows) — it'll sync to your phone, where WhatsApp, Messages, and email autocomplete pick everyone up."
 
+  // Unique forum names across the active roster, plus "Unassigned" if
+  // any active members have no forum string. Drives the filter dropdown.
+  const forumOptions = useMemo(() => {
+    const set = new Set()
+    let hasUnassigned = false
+    for (const m of chapterMembers || []) {
+      if ((m.status || 'active') !== 'active') continue
+      const f = (m.forum || '').trim()
+      if (f) set.add(f); else hasUnassigned = true
+    }
+    const list = [...set].sort((a, b) => a.localeCompare(b))
+    if (hasUnassigned) list.push('__unassigned__')
+    return list
+  }, [chapterMembers])
+
   // Active roster only — soft-deleted / departed members shouldn't
   // appear in the directory or land in someone's address book.
+  // Sort by first name (then last name as tiebreaker).
   const visibleMembers = useMemo(() => {
     const q = search.trim().toLowerCase()
     return (chapterMembers || [])
       .filter(m => (m.status || 'active') === 'active')
+      .filter(m => {
+        if (forumFilter === 'all') return true
+        const f = (m.forum || '').trim()
+        if (forumFilter === '__unassigned__') return !f
+        return f.toLowerCase() === forumFilter.toLowerCase()
+      })
       .filter(m => {
         if (!q) return true
         const hay = `${m.first_name || ''} ${m.last_name || ''} ${m.name || ''} ${m.company || ''} ${m.industry || ''} ${m.email || ''}`.toLowerCase()
         return hay.includes(q)
       })
       .sort((a, b) => {
-        const an = (a.last_name || a.name || '').toLowerCase()
-        const bn = (b.last_name || b.name || '').toLowerCase()
-        return an.localeCompare(bn)
+        // First-name sort. Fall back to first word of the combined
+        // `name` field when first_name isn't populated.
+        const aFirst = (a.first_name || (a.name || '').split(' ')[0] || '').toLowerCase()
+        const bFirst = (b.first_name || (b.name || '').split(' ')[0] || '').toLowerCase()
+        const byFirst = aFirst.localeCompare(bFirst)
+        if (byFirst !== 0) return byFirst
+        const aLast = (a.last_name || '').toLowerCase()
+        const bLast = (b.last_name || '').toLowerCase()
+        return aLast.localeCompare(bLast)
       })
-  }, [chapterMembers, search])
+  }, [chapterMembers, search, forumFilter])
 
   const handleDownloadAll = () => {
     saveMembersToContacts(visibleMembers, {
@@ -86,15 +115,32 @@ export default function MemberDirectoryPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="h-4 w-4 text-muted-foreground/60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, company, or industry"
-          className="pl-9"
-        />
+      {/* Search + Forum filter */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="h-4 w-4 text-muted-foreground/60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, company, or industry"
+            className="pl-9"
+          />
+        </div>
+        {forumOptions.length > 0 && (
+          <select
+            value={forumFilter}
+            onChange={(e) => setForumFilter(e.target.value)}
+            className="rounded-md border bg-background px-3 py-2 text-sm sm:w-56"
+            title="Filter by forum"
+          >
+            <option value="all">All forums</option>
+            {forumOptions.map(f => (
+              <option key={f} value={f}>
+                {f === '__unassigned__' ? 'No forum assigned' : f}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Roster */}

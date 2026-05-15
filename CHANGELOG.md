@@ -17,6 +17,24 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.20 — 2026-05-15
+
+### Polish: directory sorts by first name + forum filter
+
+Two changes to `/portal/directory`:
+
+- **Sort by first name** (last name as tiebreaker). People look up
+  others by first name, not last.
+- **Forum filter** dropdown next to the search box. Lists every forum
+  the active roster spans, plus a "No forum assigned" option when
+  there are unforumed members. Useful for finding your forum-mates
+  inside the chapter directory without having to navigate elsewhere.
+
+The bulk **Download All Contacts** button respects the filter — if
+you filter to your forum, you'll only download those contacts.
+
+---
+
 ## v2.8.19 — 2026-05-15
 
 ### Polish: drop "Moderator stepping down" from At-Risk reasons
