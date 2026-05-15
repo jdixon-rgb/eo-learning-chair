@@ -17,6 +17,41 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.22 — 2026-05-15
+
+### Feature: cross-population Directory for SLP Chair + staff
+
+`/portal/directory` now supports SAP contacts and SLPs in addition
+to EO members for roles with the new `canViewCrossPopulationDirectory`
+permission:
+
+- super_admin
+- slp_chair
+- chapter_executive_director
+- chapter_experience_coordinator
+
+These roles see a **Population** filter dropdown next to the search
+box (EO members / SAP contacts / SLPs / All) plus a small pill on
+each non-EO row identifying who they are. Counts live in the filter
+labels.
+
+Regular EO members see the directory unchanged — EO members only,
+no population filter, no SLP exposure. This asymmetric privacy
+boundary is intentional: SLPs are the spouses and significant life
+partners of EO members and have a smaller, more trust-bounded
+audience. Their own EO partner already has their info; other
+members don't need it.
+
+Bulk **Download All Contacts** and per-row **Save** respect every
+filter. SAP contacts pull their parent partner's company onto the
+vCard's `ORG` line. SLPs and SAPs are tagged in the vCard's
+`CATEGORIES` field so they land grouped in Apple/Google Contacts.
+
+SLPs are fetched on demand only for permitted viewers — regular
+members never trigger the query.
+
+---
+
 ## v2.8.21 — 2026-05-15
 
 ### Fix: directory forum filter always renders
