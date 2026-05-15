@@ -91,6 +91,15 @@ export function buildVCardBundle(members, opts) {
     .join('')
 }
 
+// Best-effort mobile detection. iPads now report as Mac in Safari
+// (Apple's "iPadOS desktop" mode), but that's fine for our purposes:
+// on a tablet the user lands in Contacts.app + iCloud sync, which is
+// the same flow we describe to desktop users.
+export function isMobileDevice() {
+  if (typeof navigator === 'undefined') return false
+  return /iPhone|iPod|Android.*Mobile/i.test(navigator.userAgent || '')
+}
+
 // Browser-side download trigger. Creates a Blob URL, clicks an anchor,
 // revokes the URL on next tick. Works in iOS Safari, Android Chrome,
 // and desktop browsers.

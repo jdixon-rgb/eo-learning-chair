@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.15 — 2026-05-15
+
+### Polish: platform-aware Save-to-Contacts copy (Win + Mac + mobile)
+
+The v2.8.12 Save-to-Contacts copy assumed everyone was on a phone,
+which read as wrong on desktop. First pass at platform-aware copy
+named "Mac" and "Google Contacts" only — leaving Windows users
+guessing whether the feature applied to them.
+
+Updated to detect mobile via UA and swap copy + tooltips:
+- **Mobile**: "open it, confirm once, every member appears in
+  WhatsApp / Messages / email autocomplete."
+- **Desktop (all OSes)**: "Import into Google Contacts (any
+  browser), Apple Contacts (Mac), or the People app (Windows).
+  It'll sync to your phone."
+
+Same .vcf payload — only the helper text changes by platform. Added
+`isMobileDevice()` to `src/lib/vcard.js`.
+
+---
+
 ## v2.8.14 — 2026-05-15
 
 ### Polish: sidebar admin link now reads "Invite Member"
