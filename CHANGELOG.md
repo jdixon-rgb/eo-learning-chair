@@ -17,6 +17,40 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.24 — 2026-05-15
+
+### Feature: Peer Network — cross-chapter chair directory
+
+New **Peers** entry in the sidebar for any chair / staff / regional
+role. Routes to `/portal/peers`. Shows counterpart chairs across
+chapters with Save-to-Contacts (bulk + per-row), so a Learning
+Chair in U.S. West can pull every other Learning Chair (plus the
+Regional Learning Chair Expert) into their phone in one tap.
+
+**Two toggles**:
+- **Scope**: *My region* (default) ↔ *Global*
+- **Role**: *My role* (default) ↔ *All chairs*
+
+**Role-track mapping** for *My role*:
+- President / President-Elect / President-Elect-Elect see each
+  other, plus Regional Manager.
+- Learning Chair / LC-Elect see each other, plus Regional Learning
+  Chair Expert.
+- Each other chair role sees same-role peers.
+- CED / CEC peer each other across chapters.
+
+**Default-on for chairs** — no opt-in. Matches the "chairs already
+represent their chapter externally" posture. Backed by SECURITY
+DEFINER RPC `get_peer_chairs(p_fiscal_year, p_scope, p_role_filter)`
+in migration 098, which enforces the caller-must-be-a-chair check
+server-side. Regular members can't query it.
+
+Fiscal year is taken from the active FY context; status filter is
+`active` + `elect` so an elect chair sees both current and incoming
+peers in their track.
+
+---
+
 ## v2.8.23 — 2026-05-15
 
 ### Feature: SAPs visible to every directory viewer
