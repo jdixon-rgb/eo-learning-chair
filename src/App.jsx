@@ -80,6 +80,7 @@ import ForumPlacementDashboard from '@/pages/forum-placement/ForumPlacementDashb
 import MemberLeadsPage from '@/pages/forum-placement/MemberLeadsPage'
 import VendorsPage from '@/pages/portal/VendorsPage'
 import MemberSAPInterestPage from '@/pages/portal/MemberSAPInterestPage'
+import MemberDirectoryPage from '@/pages/portal/MemberDirectoryPage'
 import SAPPortalLayout from '@/components/layout/SAPPortalLayout'
 import SAPPortalDashboard from '@/pages/sap-portal/SAPPortalDashboard'
 import SAPEventListPage from '@/pages/sap-portal/SAPEventListPage'
@@ -298,6 +299,7 @@ function App() {
                 <Route path="/portal/moderator/constitution" element={<ForumHomePage focusTab="constitution" />} />
                 <Route path="/portal/moderator/events" element={<ModeratorEventsPage />} />
                 <Route path="/portal/lifeline" element={<LifelinePage />} />
+                <Route path="/portal/directory" element={<MemberDirectoryPage />} />
                 <Route path="/portal/vendors" element={<VendorsPage />} />
                 <Route path="/portal/partners" element={<MemberSAPInterestPage />} />
                 <Route path="/portal/notifications" element={<MemberNotificationsPage />} />

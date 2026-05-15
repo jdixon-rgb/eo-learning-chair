@@ -17,6 +17,36 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.12 — 2026-05-15
+
+### Feature: Save chapter members to your phone's contacts
+
+New **Directory** entry in the Member sidebar (`/portal/directory`)
+lists every chapter member with search and one-tap "Save to Contacts"
+per row. Headlines the bulk action: a single **Download .vcf** button
+that bundles the entire visible roster into one file. Open it on your
+phone, confirm once, and every member lands in your native address
+book — which means WhatsApp, Messages, Mail, and Gmail autocomplete
+all start resolving them by name automatically. No per-app sync work.
+
+Added the same bulk action inside the Forum members tab as **Save
+forum to contacts** so a member can pull just their forum-mates in
+one tap. Per-member Save buttons appear next to Email / Call too.
+
+Implementation: new `src/lib/vcard.js` builds RFC 2426 vCard 3.0
+output. Normalizes the mixed-format `chapter_members.phone` values
+to E.164 (`+1XXXXXXXXXX`) so WhatsApp / iMessage actually match the
+phone's address book lookups. Tags each card with a `CATEGORIES`
+line (chapter name, plus forum name when bulk-saving from a forum)
+so the contacts land grouped in Apple / Google Contacts.
+
+Caveat: iOS and Android both require the user to confirm the import
+once — silent contact injection isn't allowed by either platform.
+The bulk pattern collapses that to a single confirmation for the
+whole bundle, which is the best UX their security models permit.
+
+---
+
 ## v2.8.11 — 2026-05-15
 
 ### Feature: persistent Quick Actions row on the Learning Chair dashboard
