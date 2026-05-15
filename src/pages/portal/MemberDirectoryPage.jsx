@@ -11,14 +11,21 @@ import { Search, Download, UserPlus, Mail, Phone } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
 import { saveMemberToContacts, saveMembersToContacts, isMobileDevice } from '@/lib/vcard'
 
-// Chapter-wide directory. Default audience (regular EO members) sees
-// only fellow EO members. Roles with `canViewCrossPopulationDirectory`
-// (SLP Chair, chapter staff, super_admin) also see SAP contacts and
-// SLPs, with a Population filter to narrow down.
+// Chapter-wide directory.
 //
-// The asymmetric privacy boundary: EO members never see SLP info —
-// SLPs are the spouses of EO members and have a smaller, more
-// trust-bounded audience by design.
+// Audience matrix:
+//   - Every viewer sees EO members + SAP contacts (SAPs are chapter
+//     partners; their info is public-to-members like a phone book).
+//   - SLPs (spouses / significant life partners) only render for
+//     viewers with `canViewSLPsInDirectory` (SLP Chair, chapter staff,
+//     super_admin). EO members never see SLP info — see
+//     [[slp-privacy-boundary]].
+//   - SAP-role users (sap_contact) don't access this directory at
+//     all; they have their own portal and will get a separate
+//     opted-in-only directory later.
+//
+// FUTURE: Key Executives are coming as a fourth population, likely
+// under Engagement Chair scope. Not yet scoped in this page.
 
 // Normalize different population row shapes into a single object the
 // directory + vCard builder can consume uniformly.
@@ -50,18 +57,27 @@ const POPULATION_LABELS = {
   slp: 'SLP',
 }
 
+const POPULATION_SECTION_HEADINGS = {
+  eo: 'EO Members',
+  sap: 'SAPs',
+  slp: 'SLPs',
+}
+
 const POPULATION_PILL_CLASS = {
   eo:  'bg-primary/15 text-primary',
   sap: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
   slp: 'bg-rose-500/15 text-rose-600 dark:text-rose-300',
 }
 
+// Order sections render in when multiple populations are visible.
+const POPULATION_ORDER = ['eo', 'sap', 'slp']
+
 export default function MemberDirectoryPage() {
   const { chapterMembers } = useBoardStore()
   const { activeChapter, activeChapterId } = useChapter()
   const { effectiveRole } = useAuth()
   const { partners: sapPartners, contacts: sapContacts } = useSAPStore()
-  const canViewCrossPop = hasPermission(effectiveRole, 'canViewCrossPopulationDirectory')
+  const canSeeSLPs = hasPermission(effectiveRole, 'canViewSLPsInDirectory')
 
   const [search, setSearch] = useState('')
   const [forumFilter, setForumFilter] = useState('all')
@@ -75,7 +91,7 @@ export default function MemberDirectoryPage() {
   useEffect(() => {
     let cancelled = false
     async function loadSLPs() {
-      if (!canViewCrossPop || !isSupabaseConfigured() || !activeChapterId) {
+      if (!canSeeSLPs || !isSupabaseConfigured() || !activeChapterId) {
         setSlps([])
         return
       }
@@ -90,7 +106,7 @@ export default function MemberDirectoryPage() {
     }
     loadSLPs()
     return () => { cancelled = true }
-  }, [canViewCrossPop, activeChapterId])
+  }, [canSeeSLPs, activeChapterId])
 
   const chapterLabel = activeChapter?.name || 'Chapter'
   const onMobile = isMobileDevice()
@@ -98,34 +114,31 @@ export default function MemberDirectoryPage() {
     ? "Downloads one .vcf file. Open it, confirm once, and every contact appears in WhatsApp, Messages, and email autocomplete."
     : "Downloads one .vcf file. Import into Google Contacts (any browser), Apple Contacts (Mac), or the People app (Windows) — it'll sync to your phone, where WhatsApp, Messages, and email autocomplete pick everyone up."
 
-  // Build the unified roster. SAP/SLP rows only included when the
-  // viewer has permission. Each SAP contact pulls its parent partner's
-  // company for the "ORG" line on the contact card.
+  // Build the unified roster. EO + SAPs flow to everyone; SLPs only
+  // to permitted viewers. Each SAP contact pulls its parent partner's
+  // company for the contact card's ORG line.
   const allRows = useMemo(() => {
     const rows = []
     for (const m of (chapterMembers || [])) {
       if ((m.status || 'active') !== 'active') continue
       rows.push(toDirectoryRow(m, 'eo'))
     }
-    if (canViewCrossPop) {
-      const sapById = new Map((sapPartners || []).map(p => [p.id, p]))
-      for (const c of (sapContacts || [])) {
-        const parent = sapById.get(c.sap_id)
-        // Hide contacts whose parent SAP is archived; active + prospect stay.
-        if (parent && parent.status && parent.status !== 'active' && parent.status !== 'prospect') continue
-        rows.push(toDirectoryRow(c, 'sap', { company: parent?.company || parent?.name || '' }))
-      }
+    const sapById = new Map((sapPartners || []).map(p => [p.id, p]))
+    for (const c of (sapContacts || [])) {
+      const parent = sapById.get(c.sap_id)
+      // Hide contacts whose parent SAP is archived; active + prospect stay.
+      if (parent && parent.status && parent.status !== 'active' && parent.status !== 'prospect') continue
+      rows.push(toDirectoryRow(c, 'sap', { company: parent?.company || parent?.name || '' }))
+    }
+    if (canSeeSLPs) {
       for (const s of slps) {
         rows.push(toDirectoryRow(s, 'slp'))
       }
     }
     return rows
-  }, [chapterMembers, sapContacts, sapPartners, slps, canViewCrossPop])
+  }, [chapterMembers, sapContacts, sapPartners, slps, canSeeSLPs])
 
   // Forum options aggregated across whatever populations are loaded.
-  // SLP forums and EO forums live in the same `forums` table with a
-  // `population` column, but row.forum here is just the forum name
-  // string the entity is tagged with — same picker works for both.
   const forumOptions = useMemo(() => {
     const set = new Set()
     let hasUnassigned = false
@@ -162,42 +175,67 @@ export default function MemberDirectoryPage() {
       })
   }, [allRows, search, forumFilter, populationFilter])
 
-  // Counts for the population filter labels — gives the user a sense
-  // of "what's in there" before they pick.
+  // Group visible rows by population so we can render section headers.
+  const grouped = useMemo(() => {
+    const buckets = { eo: [], sap: [], slp: [] }
+    for (const r of visibleRows) buckets[r.population]?.push(r)
+    return buckets
+  }, [visibleRows])
+
   const populationCounts = useMemo(() => {
     const c = { eo: 0, sap: 0, slp: 0 }
     for (const r of allRows) c[r.population] = (c[r.population] || 0) + 1
     return c
   }, [allRows])
 
+  // What populations are actually represented in the current visible
+  // set? Drives the bulk-button label and the section-header logic.
+  const visiblePopulations = POPULATION_ORDER.filter(p => grouped[p].length > 0)
+
+  // Smart bulk-button label: tell the user exactly what they're about
+  // to download. "Download All Contacts" is the default; if SAPs
+  // and/or SLPs are part of the mix, the label spells that out.
+  const downloadLabel = (() => {
+    if (visibleRows.length === 0) return 'Download All Contacts'
+    if (visiblePopulations.length === 1) {
+      const only = visiblePopulations[0]
+      if (only === 'eo') return 'Download All Members'
+      if (only === 'sap') return 'Download All SAPs'
+      if (only === 'slp') return 'Download All SLPs'
+    }
+    const extras = visiblePopulations.filter(p => p !== 'eo')
+    if (extras.length === 0) return 'Download All Contacts'
+    if (extras.length === 1) {
+      const which = extras[0] === 'sap' ? 'all SAPs' : 'all SLPs'
+      return `Download All Contacts (includes ${which})`
+    }
+    return 'Download All Contacts (includes SAPs and SLPs)'
+  })()
+
   const handleDownloadAll = () => {
-    const populationTag = populationFilter === 'all'
+    const tag = populationFilter === 'all'
       ? chapterLabel
       : `${chapterLabel} — ${POPULATION_LABELS[populationFilter] || populationFilter}`
     saveMembersToContacts(visibleRows, {
-      filename: `${populationTag.replace(/\s+/g, '_')}_contacts`,
-      chapterLabel: populationTag,
+      filename: `${tag.replace(/\s+/g, '_')}_contacts`,
+      chapterLabel: tag,
     })
   }
-
-  // What does the user actually see and download? Words shift slightly
-  // based on whether SAPs/SLPs are in the mix.
-  const noun = canViewCrossPop ? 'contacts' : 'members'
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Directory"
-        subtitle={canViewCrossPop
+        subtitle={canSeeSLPs
           ? `Browse ${chapterLabel} members, SAPs, and SLPs — and save them to your phone's contacts.`
-          : `Browse ${chapterLabel} members and save them to your phone's contacts.`}
+          : `Browse ${chapterLabel} members and SAPs — and save them to your phone's contacts.`}
       />
 
       <div className="rounded-2xl border border-border bg-muted/30 p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-medium text-foreground">
-              Save all {visibleRows.length} {noun} to your phone
+              Save {visibleRows.length} contact{visibleRows.length === 1 ? '' : 's'} to your phone
             </p>
             <p className="text-xs text-muted-foreground/80 mt-0.5">
               {bulkHelper}
@@ -209,7 +247,7 @@ export default function MemberDirectoryPage() {
             className="shrink-0"
           >
             <Download className="h-4 w-4 mr-2" />
-            Download All Contacts
+            {downloadLabel}
           </Button>
         </div>
       </div>
@@ -220,25 +258,23 @@ export default function MemberDirectoryPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={canViewCrossPop
-              ? 'Search by name, company, or industry'
-              : 'Search by name, company, or industry'}
+            placeholder="Search by name, company, or industry"
             className="pl-9"
           />
         </div>
-        {canViewCrossPop && (
-          <select
-            value={populationFilter}
-            onChange={(e) => setPopulationFilter(e.target.value)}
-            className="rounded-md border bg-background px-3 py-2 text-sm sm:w-48"
-            title="Filter by population"
-          >
-            <option value="all">All populations</option>
-            <option value="eo">EO members ({populationCounts.eo})</option>
-            <option value="sap">SAP contacts ({populationCounts.sap})</option>
+        <select
+          value={populationFilter}
+          onChange={(e) => setPopulationFilter(e.target.value)}
+          className="rounded-md border bg-background px-3 py-2 text-sm sm:w-48"
+          title="Filter by population"
+        >
+          <option value="all">All populations</option>
+          <option value="eo">EO members ({populationCounts.eo})</option>
+          <option value="sap">SAPs ({populationCounts.sap})</option>
+          {canSeeSLPs && (
             <option value="slp">SLPs ({populationCounts.slp})</option>
-          </select>
-        )}
+          )}
+        </select>
         <select
           value={forumFilter}
           onChange={(e) => setForumFilter(e.target.value)}
@@ -258,51 +294,73 @@ export default function MemberDirectoryPage() {
         <div className="text-center py-12 text-muted-foreground/70 text-sm">
           {search || forumFilter !== 'all' || populationFilter !== 'all'
             ? 'Nothing matches the current filters.'
-            : `No ${noun} yet.`}
+            : 'No contacts yet.'}
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden divide-y divide-white/5">
-          {visibleRows.map(r => (
-            <div key={r.id} className="px-4 py-3 flex items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-medium text-foreground truncate">{r.name}</span>
-                  {canViewCrossPop && r.population !== 'eo' && (
-                    <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${POPULATION_PILL_CLASS[r.population]} shrink-0`}>
-                      {POPULATION_LABELS[r.population]}
-                    </span>
-                  )}
+        <div className="space-y-6">
+          {visiblePopulations.map(pop => (
+            <div key={pop} className="space-y-2">
+              {/* Section header — only renders when more than one
+                  population is visible. Single-population view stays
+                  clean and headerless. */}
+              {visiblePopulations.length > 1 && (
+                <div className="flex items-center gap-2 px-1">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {POPULATION_SECTION_HEADINGS[pop]}
+                  </h2>
+                  <span className="text-xs text-muted-foreground/60">
+                    {grouped[pop].length}
+                  </span>
                 </div>
-                {r.company && (
-                  <div className="text-xs text-muted-foreground/70 truncate">{r.company}</div>
-                )}
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/70">
-                  {r.email && (
-                    <a href={`mailto:${r.email}`} className="inline-flex items-center gap-1 hover:text-foreground/90">
-                      <Mail className="h-3 w-3" /> Email
-                    </a>
-                  )}
-                  {r.phone && (
-                    <a href={`tel:${r.phone}`} className="inline-flex items-center gap-1 hover:text-foreground/90">
-                      <Phone className="h-3 w-3" /> Call
-                    </a>
-                  )}
-                </div>
+              )}
+              <div className="rounded-xl border border-border overflow-hidden divide-y divide-white/5">
+                {grouped[pop].map(r => (
+                  <div key={r.id} className="px-4 py-3 flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium text-foreground truncate">{r.name}</span>
+                        {/* Pill only on non-EO rows in single-section view; in
+                            multi-section view the section header already tells
+                            you which population you're in. */}
+                        {visiblePopulations.length === 1 && r.population !== 'eo' && (
+                          <span className={`text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded-full ${POPULATION_PILL_CLASS[r.population]} shrink-0`}>
+                            {POPULATION_LABELS[r.population]}
+                          </span>
+                        )}
+                      </div>
+                      {r.company && (
+                        <div className="text-xs text-muted-foreground/70 truncate">{r.company}</div>
+                      )}
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/70">
+                        {r.email && (
+                          <a href={`mailto:${r.email}`} className="inline-flex items-center gap-1 hover:text-foreground/90">
+                            <Mail className="h-3 w-3" /> Email
+                          </a>
+                        )}
+                        {r.phone && (
+                          <a href={`tel:${r.phone}`} className="inline-flex items-center gap-1 hover:text-foreground/90">
+                            <Phone className="h-3 w-3" /> Call
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => saveMemberToContacts(r, {
+                        chapterLabel: r.population === 'eo'
+                          ? chapterLabel
+                          : `${chapterLabel} — ${POPULATION_LABELS[r.population]}`,
+                      })}
+                      className="shrink-0"
+                      title="Add to your phone's contacts"
+                    >
+                      <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                      Save
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => saveMemberToContacts(r, {
-                  chapterLabel: r.population === 'eo'
-                    ? chapterLabel
-                    : `${chapterLabel} — ${POPULATION_LABELS[r.population]}`,
-                })}
-                className="shrink-0"
-                title="Add to your phone's contacts"
-              >
-                <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-                Save
-              </Button>
             </div>
           ))}
         </div>
