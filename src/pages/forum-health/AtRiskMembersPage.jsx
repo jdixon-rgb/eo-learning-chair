@@ -19,16 +19,32 @@ const RISK_LEVELS = [
   { value: 'high', label: 'High', tone: 'bg-rose-50 text-rose-700 border-rose-200' },
 ]
 
+// Reasons reflect the actual churn signals board chairs report. Order
+// is roughly strongest-to-weakest churn signal so the high-risk
+// reasons sit at the top of the picker. Older `no_show_seeding`
+// entries (if any exist) fall through to the raw-value display in
+// reasonLabel() — that label was jargon and was removed from the
+// picker on 2026-05-15.
 const REASON_PRESETS = [
-  { value: 'no_show_seeding', label: "Didn't show to seeding" },
+  { value: 'not_renewing', label: 'Not renewing' },
+  { value: 'missing_events', label: 'Missing events' },
+  { value: 'left_forum', label: 'Left their forum' },
+  { value: 'moderator_leaving', label: 'Moderator stepping down' },
   { value: 'on_the_fence_call', label: 'On-the-fence call' },
   { value: 'disengaged', label: 'Disengaged' },
   { value: 'culture_fit', label: 'Culture fit concern' },
-  { value: 'attendance', label: 'Attendance issues' },
   { value: 'life_pressure', label: 'Life pressure' },
-  { value: 'considering_exit', label: 'Considering leaving EO' },
   { value: 'other', label: 'Other' },
 ]
+
+// Display-only lookup so historical entries with the old reason keys
+// still render with a readable label instead of the raw enum value.
+// Don't add new keys here — add them to REASON_PRESETS above.
+const LEGACY_REASON_LABELS = {
+  no_show_seeding: "Didn't show to seeding",
+  attendance: 'Attendance issues',
+  considering_exit: 'Considering leaving EO',
+}
 
 const ACTIONS = [
   { value: 'watch', label: 'Watch' },
@@ -44,7 +60,9 @@ function riskTone(level) {
 }
 
 function reasonLabel(value) {
-  return REASON_PRESETS.find(r => r.value === value)?.label ?? value
+  return REASON_PRESETS.find(r => r.value === value)?.label
+    ?? LEGACY_REASON_LABELS[value]
+    ?? value
 }
 
 function actionLabel(value) {

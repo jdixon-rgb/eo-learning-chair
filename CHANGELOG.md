@@ -17,6 +17,28 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.17 — 2026-05-15
+
+### Polish: At-Risk reasons reflect the actual churn signals
+
+"Didn't show to seeding" was jargon — board chairs reporting concerns
+don't think in those terms. Removed it from the picker (kept a legacy
+label fallback for any historical entries).
+
+Renamed for clarity and added the real signals chairs describe:
+
+- **Not renewing** (was "Considering leaving EO")
+- **Missing events** (was "Attendance issues")
+- **Left their forum** (new)
+- **Moderator stepping down** (new — when a moderator quits, the forum
+  often follows, so flagging the cascade matters)
+
+Reordered strongest-churn-signal-first so the high-risk reasons sit
+at the top of the picker. Other reasons (On-the-fence call,
+Disengaged, Culture fit concern, Life pressure, Other) unchanged.
+
+---
+
 ## v2.8.16 — 2026-05-15
 
 ### Fix: At-Risk flag form no longer requires knowing the forum first
