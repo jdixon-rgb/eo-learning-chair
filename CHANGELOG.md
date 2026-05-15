@@ -17,6 +17,16 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.18 — 2026-05-15
+
+### Polish: directory bulk button now reads "Download All Contacts"
+
+`Download .vcf` was developer-speak — nobody outside the team knows
+what a .vcf is. Renamed the bulk button on `/portal/directory` to
+**Download All Contacts**.
+
+---
+
 ## v2.8.17 — 2026-05-15
 
 ### Polish: At-Risk reasons reflect the actual churn signals
