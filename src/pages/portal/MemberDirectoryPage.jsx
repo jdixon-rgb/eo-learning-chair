@@ -81,7 +81,7 @@ export default function MemberDirectoryPage() {
             className="shrink-0"
           >
             <Download className="h-4 w-4 mr-2" />
-            Download .vcf
+            Download All Contacts
           </Button>
         </div>
       </div>

@@ -17,6 +17,70 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.19 — 2026-05-15
+
+### Polish: drop "Moderator stepping down" from At-Risk reasons
+
+It's a forum-level signal, not a per-member one — flagging a
+specific member because their moderator is leaving doesn't say
+anything about that member's churn risk. Removed from the picker;
+kept in the legacy-labels fallback so any test entries still render.
+
+---
+
+## v2.8.18 — 2026-05-15
+
+### Polish: directory bulk button now reads "Download All Contacts"
+
+`Download .vcf` was developer-speak — nobody outside the team knows
+what a .vcf is. Renamed the bulk button on `/portal/directory` to
+**Download All Contacts**.
+
+---
+
+## v2.8.17 — 2026-05-15
+
+### Polish: At-Risk reasons reflect the actual churn signals
+
+"Didn't show to seeding" was jargon — board chairs reporting concerns
+don't think in those terms. Removed it from the picker (kept a legacy
+label fallback for any historical entries).
+
+Renamed for clarity and added the real signals chairs describe:
+
+- **Not renewing** (was "Considering leaving EO")
+- **Missing events** (was "Attendance issues")
+- **Left their forum** (new)
+- **Moderator stepping down** (new — when a moderator quits, the forum
+  often follows, so flagging the cascade matters)
+
+Reordered strongest-churn-signal-first so the high-risk reasons sit
+at the top of the picker. Other reasons (On-the-fence call,
+Disengaged, Culture fit concern, Life pressure, Other) unchanged.
+
+---
+
+## v2.8.16 — 2026-05-15
+
+### Fix: At-Risk flag form no longer requires knowing the forum first
+
+The flagger-only "Flag a Member At Risk" form gated the member picker
+behind a forum picker — board chairs reporting concerns ("I heard
+Carl might not renew") usually know the person, not which forum
+they're in. The forum dependency made the form feel like a quiz.
+
+Flipped to member-first. The picker now lists every active chapter
+member alphabetically with their company; forum auto-derives from
+`chapter_members.forum` and renders below the picker as confirmation
+("Forum: Forum Velocity"). If the selected member has no forum
+assignment, a fallback forum picker appears — `forum_id` is still
+required by the DB schema (`forum_at_risk_entries`), so we keep one
+path for the unassigned edge case.
+
+No schema change; touches only `AtRiskMembersPage.jsx`.
+
+---
+
 ## v2.8.15 — 2026-05-15
 
 ### Polish: platform-aware Save-to-Contacts copy (Win + Mac + mobile)
