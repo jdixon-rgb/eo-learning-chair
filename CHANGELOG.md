@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.11 — 2026-05-15
+
+### Feature: persistent Quick Actions row on the Learning Chair dashboard
+
+The v2.8.8 Add-Member-with-role flow was already shipped, but it
+was only discoverable from two places: the sidebar nav and the
+dismissible empty-chapter Welcome Guide. Once a chapter had a single
+event or speaker, the welcome guide vanished and the invite became
+a sidebar-only feature — easy to forget.
+
+Added a persistent Quick Actions row directly under the dashboard
+header on `DashboardPage`. Four cards (three for roles without invite
+power):
+
+- **Invite a member** → `/admin/members` — gated to `canManageMembers`
+  so the LC, CED, CEC, and super-admin see it; everyone else gets
+  three cards instead of four.
+- **Add a speaker** → `/speakers`
+- **Plan an event** → `/events`
+- **Review budget** → `/budget`
+
+The row stays visible regardless of chapter state, so the LC
+always has a one-tap path to invite a new chair or member without
+hunting through the sidebar.
+
+---
+
 ## v2.8.10 — 2026-05-13
 
 ### Feature: Super Admin Staff page

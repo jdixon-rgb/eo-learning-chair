@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/lib/store'
 import { useBoardStore } from '@/lib/boardStore'
+import { useAuth } from '@/lib/auth'
+import { hasPermission } from '@/lib/permissions'
 import { formatCurrency, daysUntil, formatDate } from '@/lib/utils'
 import ThemeInfo from '@/components/ThemeInfo'
 import TourTip from '@/components/TourTip'
@@ -29,7 +31,9 @@ export default function DashboardPage() {
   const { chapter, events, speakers, pipelineSpeakers, budgetItems, totalBudgeted, budgetRemaining } = useStore()
   const { activePresidentTheme, activePresidentThemeDescription, activePresidentName, getChairBudget } = useBoardStore()
   const { activeFiscalYear } = useFiscalYear()
+  const { effectiveRole } = useAuth()
   const currency = chapter?.currency || 'USD'
+  const canInvite = hasPermission(effectiveRole, 'canManageMembers')
 
   const theme = activePresidentTheme || chapter.president_theme || ''
   const learningBudget = getChairBudget('learning')
@@ -124,6 +128,67 @@ export default function DashboardPage() {
             <Plus className="h-4 w-4" /> Create Event
           </Button>
         </div>
+      </div>
+
+      {/* Quick Actions — persistent shortcuts that stay visible after the
+          empty-state welcome guide is gone. Invite gated to canManageMembers
+          so it surfaces for LC/CED/CEC (post-v2.8.8) but doesn't appear for
+          roles without invite power. */}
+      <div className={`grid grid-cols-2 ${canInvite ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-3`}>
+        {canInvite && (
+          <button
+            type="button"
+            onClick={() => navigate('/admin/members')}
+            className="rounded-xl border bg-card p-4 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
+          >
+            <div className="flex items-center gap-2 text-primary">
+              <UserPlus className="h-4 w-4" />
+              <span className="text-sm font-semibold">Invite a member</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Add a co-chair, committee member, or new member to your chapter.
+            </p>
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => navigate('/speakers')}
+          className="rounded-xl border bg-card p-4 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
+        >
+          <div className="flex items-center gap-2 text-primary">
+            <Mic className="h-4 w-4" />
+            <span className="text-sm font-semibold">Add a speaker</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Build your pipeline or browse the public library.
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/events')}
+          className="rounded-xl border bg-card p-4 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
+        >
+          <div className="flex items-center gap-2 text-primary">
+            <Calendar className="h-4 w-4" />
+            <span className="text-sm font-semibold">Plan an event</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Anchor a month on the calendar.
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/budget')}
+          className="rounded-xl border bg-card p-4 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
+        >
+          <div className="flex items-center gap-2 text-primary">
+            <Wallet className="h-4 w-4" />
+            <span className="text-sm font-semibold">Review budget</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            See what's allocated to learning this FY.
+          </p>
+        </button>
       </div>
 
       {/* Stats Grid */}
