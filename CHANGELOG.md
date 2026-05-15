@@ -17,6 +17,17 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.19 — 2026-05-15
+
+### Polish: drop "Moderator stepping down" from At-Risk reasons
+
+It's a forum-level signal, not a per-member one — flagging a
+specific member because their moderator is leaving doesn't say
+anything about that member's churn risk. Removed from the picker;
+kept in the legacy-labels fallback so any test entries still render.
+
+---
+
 ## v2.8.18 — 2026-05-15
 
 ### Polish: directory bulk button now reads "Download All Contacts"

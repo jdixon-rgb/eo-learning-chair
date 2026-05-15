@@ -29,7 +29,6 @@ const REASON_PRESETS = [
   { value: 'not_renewing', label: 'Not renewing' },
   { value: 'missing_events', label: 'Missing events' },
   { value: 'left_forum', label: 'Left their forum' },
-  { value: 'moderator_leaving', label: 'Moderator stepping down' },
   { value: 'on_the_fence_call', label: 'On-the-fence call' },
   { value: 'disengaged', label: 'Disengaged' },
   { value: 'culture_fit', label: 'Culture fit concern' },
@@ -44,6 +43,7 @@ const LEGACY_REASON_LABELS = {
   no_show_seeding: "Didn't show to seeding",
   attendance: 'Attendance issues',
   considering_exit: 'Considering leaving EO',
+  moderator_leaving: 'Moderator stepping down',
 }
 
 const ACTIONS = [
