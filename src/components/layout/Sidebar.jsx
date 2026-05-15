@@ -15,6 +15,7 @@ import {
   LogOut,
   Shield,
   UserCog,
+  UserPlus,
   Heart,
   Handshake,
   MessageSquarePlus,
@@ -74,7 +75,12 @@ function isChildActive(childTo, location) {
 // Survey Results moved to the Learning Chair's main nav. Notifications
 // moved to a bell icon in the TopBar (upper right).
 const adminItems = [
-  { to: '/admin/members', icon: Shield, label: 'Members', permission: 'canManageMembers' },
+  // "Invite Member" is the primary CTA — the chair's most-common admin
+  // task. Was originally labeled "Members" with a Shield icon, but
+  // chairs were missing it because that read as "directory/admin" rather
+  // than "the place to bring new people in." The page itself still
+  // shows the full directory below the invite form.
+  { to: '/admin/members', icon: UserPlus, label: 'Invite Member', permission: 'canManageMembers' },
   { to: '/admin/staff', icon: UserCog, label: 'Staff', permission: 'canManageMembers' },
   { to: '/admin/slps', icon: Heart, label: 'SLPs', permission: 'canManageMembers' },
   { to: '/partners', icon: Handshake, label: 'SAPs', permission: 'canManageMembers' },

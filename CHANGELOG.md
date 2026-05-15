@@ -17,6 +17,19 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.14 — 2026-05-15
+
+### Polish: sidebar admin link now reads "Invite Member"
+
+The admin entry that points at `/admin/members` was labeled "Members"
+with a Shield icon — chairs were missing it because that read as
+"directory / admin tool" rather than "the place to bring new people
+in." Renamed to **Invite Member** with a UserPlus icon so it matches
+how chairs think about the task. The page itself is unchanged — the
+full member directory still renders below the invite form.
+
+---
+
 ## v2.8.13 — 2026-05-15
 
 ### Feature: every board chair (and SLP Chair) can invite members
