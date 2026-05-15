@@ -126,21 +126,19 @@ export default function MemberDirectoryPage() {
             className="pl-9"
           />
         </div>
-        {forumOptions.length > 0 && (
-          <select
-            value={forumFilter}
-            onChange={(e) => setForumFilter(e.target.value)}
-            className="rounded-md border bg-background px-3 py-2 text-sm sm:w-56"
-            title="Filter by forum"
-          >
-            <option value="all">All forums</option>
-            {forumOptions.map(f => (
-              <option key={f} value={f}>
-                {f === '__unassigned__' ? 'No forum assigned' : f}
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          value={forumFilter}
+          onChange={(e) => setForumFilter(e.target.value)}
+          className="rounded-md border bg-background px-3 py-2 text-sm sm:w-56"
+          title="Filter by forum"
+        >
+          <option value="all">All forums</option>
+          {forumOptions.map(f => (
+            <option key={f} value={f}>
+              {f === '__unassigned__' ? 'No forum assigned' : f}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Roster */}

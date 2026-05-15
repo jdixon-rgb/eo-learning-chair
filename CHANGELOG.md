@@ -17,6 +17,18 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.21 — 2026-05-15
+
+### Fix: directory forum filter always renders
+
+The `forumOptions.length > 0` guard was hiding the filter dropdown
+on chapters where no member has a forum populated yet (the staging
+chapter, for example). Removed the guard — the filter now always
+renders. If no forums exist, the dropdown just shows "All forums"
+and that's harmless.
+
+---
+
 ## v2.8.20 — 2026-05-15
 
 ### Polish: directory sorts by first name + forum filter
