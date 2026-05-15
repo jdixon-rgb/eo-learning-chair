@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.16 — 2026-05-15
+
+### Fix: At-Risk flag form no longer requires knowing the forum first
+
+The flagger-only "Flag a Member At Risk" form gated the member picker
+behind a forum picker — board chairs reporting concerns ("I heard
+Carl might not renew") usually know the person, not which forum
+they're in. The forum dependency made the form feel like a quiz.
+
+Flipped to member-first. The picker now lists every active chapter
+member alphabetically with their company; forum auto-derives from
+`chapter_members.forum` and renders below the picker as confirmation
+("Forum: Forum Velocity"). If the selected member has no forum
+assignment, a fallback forum picker appears — `forum_id` is still
+required by the DB schema (`forum_at_risk_entries`), so we keep one
+path for the unassigned edge case.
+
+No schema change; touches only `AtRiskMembersPage.jsx`.
+
+---
+
 ## v2.8.15 — 2026-05-15
 
 ### Polish: platform-aware Save-to-Contacts copy (Win + Mac + mobile)

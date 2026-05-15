@@ -120,6 +120,16 @@ export default function AtRiskMembersPage() {
     return m
   }, [chapterMembers])
 
+  // Every active chapter member, alphabetical — drives the member-first
+  // flag flow so flaggers don't have to know which forum the person is
+  // in before they can pick them.
+  const assignableMembers = useMemo(() => {
+    return chapterMembers
+      .filter(m => m.status === 'active')
+      .slice()
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  }, [chapterMembers])
+
   // Members assignable to a given forum (matches by name today, like the rest of the app)
   function membersInForum(forumId) {
     const f = forums.find(x => x.id === forumId)
@@ -207,8 +217,12 @@ export default function AtRiskMembersPage() {
   // submit. Goes through supabase directly (not the optimistic store)
   // so we can surface RLS / unique-constraint errors to the submitter
   // — they have no list view to verify the entry landed.
-  async function handleFlagSubmit() {
-    if (!draft.forum_id || !draft.chapter_member_id) return
+  // forumIdOverride lets the member-first flow pass the forum_id we
+  // derived from the selected member, since `draft.forum_id` is only
+  // populated in the fallback case where the member has no forum.
+  async function handleFlagSubmit(forumIdOverride) {
+    const forumId = forumIdOverride || draft.forum_id
+    if (!forumId || !draft.chapter_member_id) return
     setFlagError('')
     if (!isSupabaseConfigured()) {
       setFlagError('Supabase is not configured in this environment.')
@@ -217,7 +231,7 @@ export default function AtRiskMembersPage() {
     const now = new Date().toISOString()
     const row = {
       chapter_id: activeChapterId,
-      forum_id: draft.forum_id,
+      forum_id: forumId,
       chapter_member_id: draft.chapter_member_id,
       risk_level: draft.risk_level,
       reasons: draft.reasons,
@@ -257,34 +271,60 @@ export default function AtRiskMembersPage() {
             <p className="text-sm font-medium">Thanks — the Forum Health Chair will take it from here.</p>
             <Button variant="outline" onClick={() => setFlagSubmitted(false)}>Flag another</Button>
           </div>
-        ) : (
+        ) : (() => {
+          // Member-first flow: most flaggers don't know which forum the
+          // person is in — they just know the person. Pick the member
+          // from the full active roster; forum auto-derives from
+          // chapter_members.forum (string-matched to forums.name, the
+          // same way the rest of the app does it). Only fall back to a
+          // forum picker if the selected member isn't assigned to one,
+          // because the DB requires forum_id NOT NULL.
+          const selectedMember = draft.chapter_member_id ? memberById.get(draft.chapter_member_id) : null
+          const derivedForumId = (() => {
+            const fname = (selectedMember?.forum || '').trim().toLowerCase()
+            if (!fname) return ''
+            return forums.find(f => (f.name || '').toLowerCase() === fname)?.id || ''
+          })()
+          const effectiveForumId = derivedForumId || draft.forum_id
+          const derivedForumName = derivedForumId
+            ? forumNameById.get(derivedForumId)
+            : ''
+          return (
           <div className="rounded-xl border bg-card p-5 shadow-sm space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Forum</label>
-                <select
-                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
-                  value={draft.forum_id}
-                  onChange={e => setDraft(d => ({ ...d, forum_id: e.target.value, chapter_member_id: '' }))}
-                >
-                  <option value="">Select a forum…</option>
-                  {activeForums.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Member</label>
-                <select
-                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
-                  value={draft.chapter_member_id}
-                  onChange={e => setDraft(d => ({ ...d, chapter_member_id: e.target.value }))}
-                  disabled={!draft.forum_id}
-                >
-                  <option value="">{draft.forum_id ? 'Select a member…' : 'Pick a forum first'}</option>
-                  {draft.forum_id && membersInForum(draft.forum_id).map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">Member</label>
+              <select
+                className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                value={draft.chapter_member_id}
+                onChange={e => setDraft(d => ({ ...d, chapter_member_id: e.target.value, forum_id: '' }))}
+              >
+                <option value="">Search or select a member…</option>
+                {assignableMembers.map(m => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}{m.company ? ` · ${m.company}` : ''}
+                  </option>
+                ))}
+              </select>
+              {selectedMember && derivedForumName && (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Forum: <span className="text-foreground font-medium">{derivedForumName}</span>
+                </p>
+              )}
+              {selectedMember && !derivedForumId && (
+                <div className="mt-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {selectedMember.name} isn't assigned to a forum yet — pick one
+                  </label>
+                  <select
+                    className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                    value={draft.forum_id}
+                    onChange={e => setDraft(d => ({ ...d, forum_id: e.target.value }))}
+                  >
+                    <option value="">Select a forum…</option>
+                    {activeForums.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div>
@@ -335,12 +375,16 @@ export default function AtRiskMembersPage() {
             )}
 
             <div className="flex justify-end gap-2">
-              <Button onClick={handleFlagSubmit} disabled={!draft.forum_id || !draft.chapter_member_id}>
+              <Button
+                onClick={() => handleFlagSubmit(effectiveForumId)}
+                disabled={!effectiveForumId || !draft.chapter_member_id}
+              >
                 Submit flag
               </Button>
             </div>
           </div>
-        )}
+          )
+        })()}
       </div>
     )
   }
