@@ -246,7 +246,7 @@ export default function PeersPage() {
                       </div>
                       <div className="text-xs text-muted-foreground/70 truncate">
                         {r.is_regional
-                          ? (r.region || 'Regional')
+                          ? `${r.chapter_name || 'Home chapter'}${r.region ? ` · ${r.region} oversight` : ''}`
                           : `${r.chapter_name}${r.region ? ` · ${r.region}` : ''}`}
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/70">
@@ -274,7 +274,7 @@ export default function PeersPage() {
                         industry: r.role_label,
                       }, {
                         chapterLabel: r.is_regional
-                          ? `EO Peers — ${r.region || 'Regional'}`
+                          ? `EO Peers — ${r.chapter_name || r.region || 'Regional'}`
                           : `EO Peers — ${r.chapter_name}`,
                       })}
                       className="shrink-0"

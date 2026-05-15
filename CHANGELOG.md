@@ -17,6 +17,27 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.25 — 2026-05-15
+
+### Fix: Peer Network shows regional experts' home chapter
+
+Regional experts (Regional Learning Chair Expert, Regional Manager)
+do belong to a home chapter — their additional duty is overseeing
+their role across multiple chapters in the region. The v2.8.24
+release rendered them as chapter-less, which read as wrong.
+
+E.g., Julie Broad is in EO Las Vegas but is the U.S. West Regional
+Learning Chair Expert. Her row now reads:
+**Julie Broad** · *EO Las Vegas · U.S. West oversight* with the
+"Regional" pill alongside.
+
+Migration 099 updates the `get_peer_chairs` RPC to join
+`profiles.chapter_id → chapters` for regional experts and
+opportunistically pull phone / company from `chapter_members` when
+they're also a member of their home chapter.
+
+---
+
 ## v2.8.24 — 2026-05-15
 
 ### Feature: Peer Network — cross-chapter chair directory
