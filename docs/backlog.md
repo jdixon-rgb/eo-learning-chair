@@ -1,9 +1,9 @@
-# Backlog — EO Learn Share (OurChapter OS)
+# Backlog — EO Learning Chair
 
 > Everything that came up, didn't make the current release, isn't dead. Sorted by status.
 > See the [Capture and track a project backlog](https://github.com/Aidan-Taylor-Marketing/playbook/blob/main/content/playbooks/capture-and-track-a-project-backlog.mdx) playbook for the discipline.
 
-**Naming note:** the user refers to this project as **EO Learn Share**. The internal product name in `docs/HANDOFF.md` is **OurChapter OS**; the repo is `eo-learning-chair`. All three names point at the same codebase at `app.ourchapteros.com`.
+**Naming note:** the project is **EO Learning Chair**. The product name in `docs/HANDOFF.md` is **OurChapter OS**, and the repo is `eo-learning-chair`. Same codebase, different surface labels — the app lives at `app.ourchapteros.com`.
 
 **Seeded from:** `docs/HANDOFF.md` "Pending items (flagged but not yet worked)" section, dated 2026-04-18. Items below preserve the original framing from that handoff; new items should be added per the per-item shape in the Playbook.
 
