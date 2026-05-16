@@ -7,7 +7,7 @@ import { hasPermission } from '@/lib/permissions'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Download, UserPlus, Mail, Phone } from 'lucide-react'
+import { Search, Download, UserPlus, Mail, Phone, Sparkles } from 'lucide-react'
 import PageHeader from '@/lib/pageHeader'
 import { saveMemberToContacts, saveMembersToContacts, isMobileDevice } from '@/lib/vcard'
 
@@ -83,6 +83,25 @@ export default function MemberDirectoryPage() {
   const [forumFilter, setForumFilter] = useState('all')
   const [populationFilter, setPopulationFilter] = useState('all')
   const [slps, setSlps] = useState([])
+
+  // Per-chapter "last sync" timestamp, kept in localStorage so the
+  // banner can quietly nudge the user when N new members have joined
+  // since they last refreshed their phone contacts. Per-device only
+  // — no server table — which is fine for v1; if you sync on your
+  // laptop and then open the page on your phone, the phone will
+  // still pester you to re-sync there.
+  const syncKey = activeChapterId ? `directory:lastSyncedAt:${activeChapterId}` : null
+  const [lastSyncedAt, setLastSyncedAt] = useState(() => {
+    if (typeof window === 'undefined' || !syncKey) return null
+    try { return localStorage.getItem(syncKey) } catch { return null }
+  })
+  // Reload the stored timestamp when the active chapter changes (e.g.
+  // a super_admin switching chapter context shouldn't carry one
+  // chapter's sync time into another).
+  useEffect(() => {
+    if (typeof window === 'undefined' || !syncKey) { setLastSyncedAt(null); return }
+    try { setLastSyncedAt(localStorage.getItem(syncKey)) } catch { setLastSyncedAt(null) }
+  }, [syncKey])
 
   // Fetch SLPs only for roles that can see them. Regular members never
   // trigger this query — RLS would block it anyway, but keeping the
@@ -212,6 +231,30 @@ export default function MemberDirectoryPage() {
     return 'Download All Contacts (includes SAPs and SLPs)'
   })()
 
+  // EO members that joined since the user last synced. Drives the
+  // "X new members" banner. SAPs and SLPs are out of scope for the
+  // banner — the typical re-sync trigger is "someone joined the
+  // chapter," not "a partner was added." Easy to extend later.
+  const newMembersSinceSync = useMemo(() => {
+    if (!lastSyncedAt) return []
+    const cutoff = new Date(lastSyncedAt).getTime()
+    if (Number.isNaN(cutoff)) return []
+    return (chapterMembers || [])
+      .filter(m => (m.status || 'active') === 'active')
+      .filter(m => {
+        const created = m.created_at ? new Date(m.created_at).getTime() : 0
+        return created > cutoff
+      })
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  }, [chapterMembers, lastSyncedAt])
+
+  const markSyncedNow = () => {
+    if (typeof window === 'undefined' || !syncKey) return
+    const now = new Date().toISOString()
+    try { localStorage.setItem(syncKey, now) } catch { /* ignore */ }
+    setLastSyncedAt(now)
+  }
+
   const handleDownloadAll = () => {
     const tag = populationFilter === 'all'
       ? chapterLabel
@@ -220,6 +263,7 @@ export default function MemberDirectoryPage() {
       filename: `${tag.replace(/\s+/g, '_')}_contacts`,
       chapterLabel: tag,
     })
+    markSyncedNow()
   }
 
   return (
@@ -231,6 +275,28 @@ export default function MemberDirectoryPage() {
           : `Browse ${chapterLabel} members and SAPs — and save them to your phone's contacts.`}
       />
 
+      {/* "X new members since your last download" nudge. Only renders
+          when the user has previously synced AND new members have
+          joined since. Tapping Download All Contacts (below) clears
+          it. */}
+      {newMembersSinceSync.length > 0 && (
+        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {newMembersSinceSync.length} new {newMembersSinceSync.length === 1 ? 'member' : 'members'} since your last download
+              </p>
+              <p className="text-xs text-muted-foreground/80 mt-0.5">
+                {newMembersSinceSync.slice(0, 5).map(m => m.name || `${m.first_name || ''} ${m.last_name || ''}`.trim()).filter(Boolean).join(', ')}
+                {newMembersSinceSync.length > 5 ? `, and ${newMembersSinceSync.length - 5} more` : ''}.
+                {' '}Tap <strong>{downloadLabel}</strong> below to refresh your phone contacts.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-border bg-muted/30 p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
@@ -240,6 +306,11 @@ export default function MemberDirectoryPage() {
             <p className="text-xs text-muted-foreground/80 mt-0.5">
               {bulkHelper}
             </p>
+            {lastSyncedAt && (
+              <p className="text-[11px] text-muted-foreground/60 mt-1.5">
+                Last synced {new Date(lastSyncedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            )}
           </div>
           <Button
             onClick={handleDownloadAll}
