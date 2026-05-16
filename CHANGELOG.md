@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.30 — 2026-05-15
+
+### Feature: "X new members since your last download" nudge
+
+Directory now tracks (per device, via localStorage) when you last
+hit **Download All Contacts**. On subsequent visits, if any active
+members have joined since that timestamp, a small emerald banner
+shows above the bulk action: e.g. *"3 new members since your last
+download — Carl Bickmore, Dario Westbridge, and 1 more. Tap
+Download All Contacts to refresh."* Tapping the button re-downloads
+and resets the timestamp; the banner disappears until the next new
+joiner.
+
+Also shows a "Last synced [date]" line under the bulk-action helper
+text once you've synced at least once.
+
+Per-chapter scoped: switching chapter context reads a different
+key. Per-device only for v1 — syncing on your laptop won't silence
+the banner on your phone. Server-side per-user sync log is a v2
+upgrade if that becomes annoying.
+
+EO members only for the nudge (SAP / SLP changes don't trigger it)
+since "someone joined" is the common re-sync trigger; easy to
+extend later.
+
+---
+
 ## v2.8.29 — 2026-05-15
 
 ### Fix: Peer Network — viewAs region + drop super_admin override
