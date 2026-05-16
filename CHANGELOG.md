@@ -17,6 +17,34 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.31 — 2026-05-16
+
+### Feature: super-admin invite dropdown now includes every board seat
+
+The role dropdown on the super-admin Chapter Config invite form was
+pulling from `USER_ROLES`, which only listed 8 entries — `president`,
+`president_elect`, all the chair seats (`finance_chair`, `sap_chair`,
+`slp_chair`, `engagement_chair`, `forum_health_chair`,
+`forum_placement_chair`, `learning_chair_elect`), and the staff /
+regional / electeds were missing. So an SA could invite an LC or an
+ED but couldn't directly invite a President.
+
+Expanded `USER_ROLES` to cover the full set of valid `profiles.role`
+values that the rest of the app cares about. The invite dropdown now
+shows: Super Admin · Regional Learning Chair Expert · Regional Manager
+· President · President Elect · President Elect-Elect · Finance Chair
+· Learning Chair · Learning Chair Elect · SAP Chair · SLP Chair ·
+Member Engagement Chair · Forum Health Chair · Forum Placement Chair ·
+Chapter Executive Director · Chapter Experience Coordinator ·
+Committee Member · Board Liaison · Member.
+
+Also benefits: the inline role-edit dropdown on existing members
+(also on Chapter Config) now lets SA reassign anyone to any role,
+and `roleLabel()` lookups across the app render friendly labels for
+chair roles instead of falling back to the raw id like `forum_health_chair`.
+
+---
+
 ## v2.8.30 — 2026-05-15
 
 ### Feature: "X new members since your last download" nudge

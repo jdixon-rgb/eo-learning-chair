@@ -326,14 +326,32 @@ export const ALLOWED_FILE_TYPES = [
   'image/webp',
 ]
 
-// User roles
+// User roles — also drives the role dropdown on the super-admin invite
+// form (ChapterConfigPage) and the role-label lookup elsewhere. Every
+// `id` here must be a valid value for profiles.role; expanding this
+// list automatically surfaces those roles in the SA invite UI.
 export const USER_ROLES = [
+  // Platform / regional
   { id: 'super_admin', label: 'Super Admin', access: 'full' },
   { id: 'regional_learning_chair_expert', label: 'Regional Learning Chair Expert', access: 'regional' },
   { id: 'regional_manager', label: 'Regional Manager', access: 'regional' },
+  // Presidency line
+  { id: 'president', label: 'President', access: 'full' },
+  { id: 'president_elect', label: 'President Elect', access: 'full' },
+  { id: 'president_elect_elect', label: 'President Elect-Elect', access: 'full' },
+  // Chair seats
+  { id: 'finance_chair', label: 'Finance Chair', access: 'full' },
   { id: 'learning_chair', label: 'Learning Chair', access: 'full' },
-  { id: 'chapter_experience_coordinator', label: 'Chapter Experience Coordinator', access: 'full' },
+  { id: 'learning_chair_elect', label: 'Learning Chair Elect', access: 'full' },
+  { id: 'sap_chair', label: 'SAP Chair', access: 'full' },
+  { id: 'slp_chair', label: 'SLP Chair', access: 'full' },
+  { id: 'engagement_chair', label: 'Member Engagement Chair', access: 'full' },
+  { id: 'forum_health_chair', label: 'Forum Health Chair', access: 'full' },
+  { id: 'forum_placement_chair', label: 'Forum Placement Chair', access: 'full' },
+  // Chapter staff
   { id: 'chapter_executive_director', label: 'Chapter Executive Director', access: 'full' },
+  { id: 'chapter_experience_coordinator', label: 'Chapter Experience Coordinator', access: 'full' },
+  // Other / catch-all
   { id: 'committee_member', label: 'Committee Member', access: 'edit_limited' },
   { id: 'board_liaison', label: 'Board Liaison', access: 'view' },
   { id: 'member', label: 'Member', access: 'portal_only' },
