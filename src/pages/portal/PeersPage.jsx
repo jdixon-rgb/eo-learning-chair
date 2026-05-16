@@ -64,6 +64,11 @@ export default function PeersPage() {
         p_fiscal_year: activeFiscalYear,
         p_scope: scope,
         p_role_filter: roleFilter,
+        // Pass the effective viewAs role so super_admin / president
+        // previewing as a chair sees the right peer track. The RPC
+        // ignores p_view_as_role for non-impersonating roles, so this
+        // is safe to always send.
+        p_view_as_role: effectiveRole || null,
       })
       if (cancelled) return
       if (rpcError) {
@@ -77,7 +82,7 @@ export default function PeersPage() {
     }
     load()
     return () => { cancelled = true }
-  }, [canView, activeFiscalYear, scope, roleFilter])
+  }, [canView, activeFiscalYear, scope, roleFilter, effectiveRole])
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase()

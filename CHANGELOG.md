@@ -17,6 +17,47 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.28 — 2026-05-15
+
+### Fix: Peer Network honors super_admin's viewAs role
+
+A super_admin previewing the page as a Learning Chair was getting
+*every* chair + regional role across the region instead of the
+Learning track, because the RPC was reading `profiles.role` directly
+and hitting its super_admin short-circuit. The frontend's
+`effectiveRole` (viewAs context) wasn't propagating to the server.
+
+Migration 101 adds an optional `p_view_as_role` parameter. When the
+actual caller is super_admin or president, the RPC uses that as the
+effective role for filter logic. Other roles can't spoof — the
+parameter is ignored unless the caller is in an impersonating role.
+
+Frontend now passes `effectiveRole` on every `get_peer_chairs` call,
+so switching role view in the topbar refreshes the peer list to
+match the new role's track.
+
+(v2.8.27 was a no-frontend-deploy housekeeping bump for the
+migration 100 ambiguous-region hotfix; included here for traceability.)
+
+---
+
+## v2.8.27 — 2026-05-15
+
+### Hotfix: Peer Network "column reference 'region' is ambiguous"
+
+The `get_peer_chairs` function's `returns table (..., region text, ...)`
+declared an OUT parameter named `region` visible inside the function
+body. The opening `select role, region into …` read `region`
+unqualified and Postgres flagged it as ambiguous at runtime — the
+function was created fine in migrations 098 / 099, but every caller
+tripped this error.
+
+Migration 100 qualifies the SELECT with a `prof.` alias on profiles.
+Already applied directly to staging and prod DBs to clear the live
+error; this bump just records it in the sidebar version + changelog.
+
+---
+
 ## v2.8.26 — 2026-05-15
 
 ### Docs: project backlog file (`docs/backlog.md`)
