@@ -17,6 +17,21 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.26 — 2026-05-15
+
+### Docs: project backlog file (`docs/backlog.md`)
+
+Adds a project backlog file at `docs/backlog.md` following the Aidan
+Taylor Playbook standard. Four sections — Phase 2 candidates, Awaiting
+client decision, Internal ideas, Killed — seeded from the "Pending
+items" list in `docs/HANDOFF.md` dated 2026-04-18.
+
+Reference: https://github.com/Aidan-Taylor-Marketing/playbook/blob/main/content/playbooks/capture-and-track-a-project-backlog.mdx
+
+No code changes.
+
+---
+
 ## v2.8.25 — 2026-05-15
 
 ### Fix: Peer Network shows regional experts' home chapter
