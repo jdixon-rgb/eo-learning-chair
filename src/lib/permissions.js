@@ -107,6 +107,21 @@ export const FEATURE_PERMISSIONS = {
   // them from broader chapter exposure. Granted to SLP Chair (their
   // workflow), chapter staff (operations), and super_admin (support).
   canViewSLPsInDirectory: ['super_admin', 'slp_chair', 'chapter_executive_director', 'chapter_experience_coordinator'],
+  // Cross-chapter peer network. Any chair / staff / regional role can
+  // see counterparts across chapters; regular members cannot. Matches
+  // the "chairs already represent their chapter externally" posture
+  // — see migration 098 for the SECURITY DEFINER function backing it.
+  canViewPeerNetwork: [
+    'super_admin',
+    'president', 'president_elect', 'president_elect_elect',
+    'finance_chair',
+    'learning_chair', 'learning_chair_elect',
+    'engagement_chair',
+    'sap_chair', 'slp_chair',
+    'forum_health_chair', 'forum_placement_chair',
+    'chapter_executive_director', 'chapter_experience_coordinator',
+    'regional_learning_chair_expert', 'regional_manager',
+  ],
   // Engagement Chair module
   canManageEngagement:   ENGAGEMENT_ROLES,
   // President / Finance

@@ -25,6 +25,7 @@ import {
   Mail,
   Users,
   Users2,
+  Globe2,
   Store,
   Sparkles,
   GraduationCap,
@@ -128,6 +129,9 @@ const memberItems = [
   // every member into the user's phone address book so WhatsApp /
   // Messages / Mail auto-resolve them by name.
   { to: '/portal/directory', icon: Users2, label: 'Directory' },
+  // Cross-chapter peer network — only renders for chair / staff /
+  // regional roles via the canViewPeerNetwork permission.
+  { to: '/portal/peers', icon: Globe2, label: 'Peers', permission: 'canViewPeerNetwork' },
   // Vendors is the broader catalog. SAPs (formal partners) don't get
   // their own sidebar entry — inside /portal/vendors they rise to the
   // top of each category and are flagged with a shield/badge so members
