@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/auth'
+import { useChapter } from '@/lib/chapter'
 import { useFiscalYear } from '@/lib/fiscalYearContext'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { hasPermission } from '@/lib/permissions'
@@ -35,6 +36,7 @@ const STATUS_PILL = {
 
 export default function PeersPage() {
   const { effectiveRole, profile } = useAuth()
+  const { activeChapter } = useChapter()
   const { activeFiscalYear } = useFiscalYear()
   const canView = hasPermission(effectiveRole, 'canViewPeerNetwork')
 
@@ -45,7 +47,11 @@ export default function PeersPage() {
   const [scope, setScope] = useState('region')
   const [roleFilter, setRoleFilter] = useState('my_role')
 
-  const callerRegion = profile?.region || ''
+  // Effective region for display + the viewAs hint we pass to the RPC.
+  // Falls back to the active chapter's region so a super_admin
+  // previewing as a chair sees the chair's region, not their own
+  // (typically empty) profile region.
+  const callerRegion = profile?.region || activeChapter?.region || ''
   const onMobile = isMobileDevice()
   const bulkHelper = onMobile
     ? "Downloads one .vcf file. Open it, confirm once, and every peer appears in WhatsApp, Messages, and email autocomplete."
@@ -64,11 +70,11 @@ export default function PeersPage() {
         p_fiscal_year: activeFiscalYear,
         p_scope: scope,
         p_role_filter: roleFilter,
-        // Pass the effective viewAs role so super_admin / president
-        // previewing as a chair sees the right peer track. The RPC
-        // ignores p_view_as_role for non-impersonating roles, so this
-        // is safe to always send.
+        // viewAs role + region — super_admin / president can preview
+        // the page as a chair in a chapter. The RPC ignores both for
+        // non-impersonating roles, so safe to always send.
         p_view_as_role: effectiveRole || null,
+        p_view_as_region: activeChapter?.region || null,
       })
       if (cancelled) return
       if (rpcError) {
@@ -82,7 +88,7 @@ export default function PeersPage() {
     }
     load()
     return () => { cancelled = true }
-  }, [canView, activeFiscalYear, scope, roleFilter, effectiveRole])
+  }, [canView, activeFiscalYear, scope, roleFilter, effectiveRole, activeChapter?.region])
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase()
