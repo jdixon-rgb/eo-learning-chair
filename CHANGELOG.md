@@ -17,6 +17,33 @@ Displayed in the app sidebar footer.
 
 ---
 
+## v2.8.29 — 2026-05-15
+
+### Fix: Peer Network — viewAs region + drop super_admin override
+
+Two related fixes so super_admin previewing as a chair actually sees
+their chair-role peers.
+
+**Migration 102** adds a `p_view_as_region` parameter to the
+`get_peer_chairs` RPC. Without it, a super_admin viewing-as
+Learning Chair filtered by their own (typically empty) profile
+region and matched no other chapters — zero peers despite peers
+existing in the same region. The frontend now passes
+`activeChapter.region` so the region context follows the viewAs
+role.
+
+**Migration 103** removes the super_admin "see everything"
+short-circuit. Super_admin is a privilege level (RLS bypass, edit
+permissions), not a role override (you ARE every chair). Now
+super_admin filters like any other role:
+- Viewing as Learning Chair → Learning track peers in your active
+  chapter's region (or global, if toggled)
+- Not viewing as anyone → empty (super_admin isn't a chair)
+- To see across chairs/regions → use the existing "All chairs" +
+  "Global" toggles (opt-in, not imposed)
+
+---
+
 ## v2.8.28 — 2026-05-15
 
 ### Fix: Peer Network honors super_admin's viewAs role
